@@ -15,6 +15,7 @@ import {
   AA,
   Reports,
   Login,
+  AddPromoter,
 } from './pages/index.js'
 
 const router = createBrowserRouter([
@@ -32,7 +33,11 @@ const router = createBrowserRouter([
       },
       {
         path: "/promoters",
-        element: <Promoters />,
+        element: <Promoters />, 
+      },
+      {
+        path: "/promoters/add",
+        element: <AddPromoter />,
       },
       {
         path: "/projects",

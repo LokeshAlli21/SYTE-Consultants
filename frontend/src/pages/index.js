@@ -7,6 +7,7 @@ import QPR from "./QPR";
 import AA from "./AA";
 import Reports from "./Reports";
 import Login from "./Login";
+import AddPromoter from "./AddPromoter";
 
 export {
     Dashboard,
@@ -18,4 +19,5 @@ export {
     AA,
     Reports,
     Login,
+    AddPromoter,
 }
