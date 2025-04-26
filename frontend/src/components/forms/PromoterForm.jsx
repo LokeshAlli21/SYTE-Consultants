@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import FileInputWithPreview from './FileInputWithPreview ';
 
 const PromoterForm = () => {
   const [formData, setFormData] = useState({
@@ -25,6 +26,9 @@ const PromoterForm = () => {
     profile_photo_url: '',
   });
 
+  
+const [filePreviews, setFilePreviews] = useState({});
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -48,7 +52,29 @@ const PromoterForm = () => {
     }
   };
 
+  const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    const file = files[0];
+    if (file) {
+      setFormData(prev => ({ ...prev, [name]: file }));
+  
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreviews(prev => ({
+          ...prev,
+          [name]: { url: reader.result, type: file.type }
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+  
+
+
+  const commonInputClass = "border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] focus:border-[#5CAAAB] focus:outline-none transition ease-in-out duration-150";
   const renderConditionalFields = () => {
+
+  
     switch (formData.promoter_type) {
       case 'individual':
         return (
@@ -61,10 +87,10 @@ const PromoterForm = () => {
                 value={formData.full_name}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
+  
             <div className="flex flex-col">
               <label className="mb-2 font-medium">Aadhar Number</label>
               <input
@@ -73,22 +99,17 @@ const PromoterForm = () => {
                 value={formData.aadhar_number}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
-            <div className="flex flex-col">
-              <label className="mb-2 font-medium">Aadhar Document URL</label>
-              <input
-                type="text"
-                name="aadhar_uploaded_url"
-                value={formData.aadhar_uploaded_url}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
-              />
-            </div>
-
+  
+            <FileInputWithPreview
+              label="Upload Aadhar Document"
+              name="aadhar_uploaded_url"
+              onChange={handleFileChange}
+              filePreview={filePreviews.aadhar_uploaded_url}
+            />
+  
             <div className="flex flex-col">
               <label className="mb-2 font-medium">PAN Number</label>
               <input
@@ -97,22 +118,17 @@ const PromoterForm = () => {
                 value={formData.pan_number}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
-            <div className="flex flex-col">
-              <label className="mb-2 font-medium">PAN Document URL</label>
-              <input
-                type="text"
-                name="pan_uploaded_url"
-                value={formData.pan_uploaded_url}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
-              />
-            </div>
-
+  
+            <FileInputWithPreview
+              label="Upload PAN Document"
+              name="pan_uploaded_url"
+              onChange={handleFileChange}
+              filePreview={filePreviews.pan_uploaded_url}
+            />
+  
             <div className="flex flex-col">
               <label className="mb-2 font-medium">Date of Birth</label>
               <input
@@ -121,10 +137,10 @@ const PromoterForm = () => {
                 value={formData.dob}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
+  
             <div className="flex flex-col">
               <label className="mb-2 font-medium">Contact Number</label>
               <input
@@ -133,10 +149,10 @@ const PromoterForm = () => {
                 value={formData.contact_number}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
+  
             <div className="flex flex-col">
               <label className="mb-2 font-medium">Email ID</label>
               <input
@@ -145,15 +161,16 @@ const PromoterForm = () => {
                 value={formData.email_id}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
           </>
         );
+  
       case 'partnership_firm':
         return (
           <>
-            <div className="flex flex-col w-full max-w-[45%]">
+            <div className="flex flex-col">
               <label className="mb-2 font-medium">Contact Person Name</label>
               <input
                 type="text"
@@ -161,11 +178,11 @@ const PromoterForm = () => {
                 value={formData.contact_person_name}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
-            <div className="flex flex-col w-full max-w-[45%]">
+  
+            <div className="flex flex-col">
               <label className="mb-2 font-medium">Partnership PAN Number</label>
               <input
                 type="text"
@@ -173,23 +190,18 @@ const PromoterForm = () => {
                 value={formData.partnership_pan_number}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
-            <div className="flex flex-col w-full max-w-[45%]">
-              <label className="mb-2 font-medium">Partnership PAN Document URL</label>
-              <input
-                type="text"
-                name="partnership_pan_uploaded_url"
-                value={formData.partnership_pan_uploaded_url}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
-              />
-            </div>
-
-            <div className="flex flex-col w-full max-w-[45%]">
+  
+            <FileInputWithPreview
+              label="Upload Partnership PAN Document"
+              name="partnership_pan_uploaded_url"
+              onChange={handleFileChange}
+              filePreview={filePreviews.partnership_pan_uploaded_url}
+            />
+  
+            <div className="flex flex-col">
               <label className="mb-2 font-medium">Contact Number</label>
               <input
                 type="text"
@@ -197,11 +209,11 @@ const PromoterForm = () => {
                 value={formData.contact_number}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
-            <div className="flex flex-col w-full max-w-[45%]">
+  
+            <div className="flex flex-col">
               <label className="mb-2 font-medium">Email ID</label>
               <input
                 type="email"
@@ -209,15 +221,16 @@ const PromoterForm = () => {
                 value={formData.email_id}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
           </>
         );
+  
       case 'pvt_ltd':
         return (
           <>
-            <div className="flex flex-col w-full max-w-[45%]">
+            <div className="flex flex-col">
               <label className="mb-2 font-medium">Contact Person Name</label>
               <input
                 type="text"
@@ -225,11 +238,11 @@ const PromoterForm = () => {
                 value={formData.contact_person_name}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
-            <div className="flex flex-col w-full max-w-[45%]">
+  
+            <div className="flex flex-col">
               <label className="mb-2 font-medium">Company PAN Number</label>
               <input
                 type="text"
@@ -237,23 +250,18 @@ const PromoterForm = () => {
                 value={formData.company_pan_number}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
-            <div className="flex flex-col w-full max-w-[45%]">
-              <label className="mb-2 font-medium">Company PAN Document URL</label>
-              <input
-                type="text"
-                name="company_pan_uploaded_url"
-                value={formData.company_pan_uploaded_url}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
-              />
-            </div>
-
-            <div className="flex flex-col w-full max-w-[45%]">
+  
+            <FileInputWithPreview
+              label="Upload Company PAN Document"
+              name="company_pan_uploaded_url"
+              onChange={handleFileChange}
+              filePreview={filePreviews.company_pan_uploaded_url}
+            />
+  
+            <div className="flex flex-col">
               <label className="mb-2 font-medium">Company Incorporation Number</label>
               <input
                 type="text"
@@ -261,23 +269,18 @@ const PromoterForm = () => {
                 value={formData.company_incorporation_number}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
-            <div className="flex flex-col w-full max-w-[45%]">
-              <label className="mb-2 font-medium">Company Incorporation Document URL</label>
-              <input
-                type="text"
-                name="company_incorporation_uploaded_url"
-                value={formData.company_incorporation_uploaded_url}
-                onChange={handleChange}
-                onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
-              />
-            </div>
-
-            <div className="flex flex-col w-full max-w-[45%]">
+  
+            <FileInputWithPreview
+              label="Upload Company Incorporation Document"
+              name="company_incorporation_uploaded_url"
+              onChange={handleFileChange}
+              filePreview={filePreviews.company_incorporation_uploaded_url}
+            />
+  
+            <div className="flex flex-col">
               <label className="mb-2 font-medium">Contact Number</label>
               <input
                 type="text"
@@ -285,11 +288,11 @@ const PromoterForm = () => {
                 value={formData.contact_number}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
-
-            <div className="flex flex-col w-full max-w-[45%]">
+  
+            <div className="flex flex-col">
               <label className="mb-2 font-medium">Email ID</label>
               <input
                 type="email"
@@ -297,24 +300,34 @@ const PromoterForm = () => {
                 value={formData.email_id}
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
-                className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+                className={commonInputClass}
               />
             </div>
           </>
         );
+  
       default:
         return null;
     }
   };
-
+  
+  
+  
   return (
-    <form onSubmit={handleSubmit} className="max-w-6xl mx-auto p-8 bg-white rounded-xl shadow-lg space-y-6">
-      <h2 className="text-2xl font-semibold text-[#5CAAAB]">Promoter Information</h2>
-      <div className="flex flex-wrap w-full gap-4 items-center justify-center p-0">
-
+    <form
+      onSubmit={handleSubmit}
+      className="max-w-6xl mx-auto p-8 bg-white rounded-2xl shadow-xl space-y-8"
+    >
+      <h2 className="text-3xl font-bold text-[#5CAAAB] text-center mb-6">
+        Promoter Information
+      </h2>
+  
+      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Common Fields */}
-        <div className="flex flex-col w-full max-w-[45%]">
-          <label className="mb-2 font-medium">Promoter Name *</label>
+        <div className="flex flex-col gap-2">
+          <label className="text-gray-700 font-semibold text-sm mb-1">
+            Promoter Name *
+          </label>
           <input
             type="text"
             name="promoter_name"
@@ -322,19 +335,21 @@ const PromoterForm = () => {
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             required
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+            className={commonInputClass}
           />
         </div>
-
-        <div className="flex flex-col w-full max-w-[45%]">
-          <label className="mb-2 font-medium">Promoter Type *</label>
+  
+        <div className="flex flex-col gap-2">
+          <label className="text-gray-700 font-semibold text-sm mb-1">
+            Promoter Type *
+          </label>
           <select
             name="promoter_type"
             value={formData.promoter_type}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             required
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+            className={commonInputClass}
           >
             <option value="">Select Promoter Type</option>
             <option value="individual">Individual</option>
@@ -342,9 +357,11 @@ const PromoterForm = () => {
             <option value="pvt_ltd">PVT LTD</option>
           </select>
         </div>
-
-        <div className="flex flex-col w-full max-w-[45%]">
-          <label className="mb-2 font-medium">District *</label>
+  
+        <div className="flex flex-col gap-2">
+          <label className="text-gray-700 font-semibold text-sm mb-1">
+            District *
+          </label>
           <input
             type="text"
             name="district"
@@ -352,12 +369,14 @@ const PromoterForm = () => {
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             required
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+            className={commonInputClass}
           />
         </div>
-
-        <div className="flex flex-col w-full max-w-[45%]">
-          <label className="mb-2 font-medium">City *</label>
+  
+        <div className="flex flex-col gap-2">
+          <label className="text-gray-700 font-semibold text-sm mb-1">
+            City *
+          </label>
           <input
             type="text"
             name="city"
@@ -365,34 +384,37 @@ const PromoterForm = () => {
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             required
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+            className={commonInputClass}
           />
         </div>
-
-        <div className="flex flex-col w-full max-w-[45%]">
-          <label className="mb-2 font-medium">Office Address</label>
+  
+        <div className="flex flex-col gap-2 md:col-span-2">
+          <label className="text-gray-700 font-semibold text-sm mb-1">
+            Office Address
+          </label>
           <input
             type="text"
             name="office_address"
             value={formData.office_address}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] transition"
+            className={commonInputClass}
           />
         </div>
-
-
+  
+        {/* Conditional Fields */}
         {renderConditionalFields()}
       </div>
-
+  
       <button
         type="submit"
-        className="bg-[#5CAAAB] text-white px-6 w-full py-3 rounded-lg shadow hover:bg-[#489496] transition"
+        className="w-full bg-[#5CAAAB] hover:bg-[#489496] text-white py-3 rounded-md font-semibold transition"
       >
         Submit
       </button>
     </form>
   );
+  
 };
 
 export default PromoterForm;
