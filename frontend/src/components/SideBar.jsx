@@ -21,7 +21,7 @@ function SideBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   useEffect(() => {
     let matchedTab = null;
@@ -45,11 +45,13 @@ function SideBar() {
 
   return (
     <>
+    {sidebarOpen && location.pathname !== '/login' && (
       <div className='absolute px-3 py-4 flex justify-between items-center'>
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className='text-gray-800'>
           {sidebarOpen ? <IoMdClose size={30} /> : <FaBars size={30} />}
         </button>
-      </div>
+      </div> 
+    )}
 
       {sidebarOpen && location.pathname !== '/login' && (
         <div className='max-w-70 flex flex-col items-center bg-white text-black pl-4 pt-8 pr-0 space-y-2 min-h-full left-0 top-0 bottom-0'>
