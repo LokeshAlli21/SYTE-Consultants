@@ -5,6 +5,11 @@ import App from './App.jsx'
 
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
 
+import AuthLayout from './auth/AuthLayout.jsx'
+
+import store from "./store/store.js"
+import { Provider } from "react-redux"
+
 import {
   Dashboard,
   Promoters,
@@ -25,43 +30,75 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/login",
-        element: <Login />,
+        element: 
+        <AuthLayout authentication={false}>
+          <Login />
+         </AuthLayout>,
       },
       {
         path: "/",
-        element: <Dashboard />,
+        element:
+        <AuthLayout authentication>
+           <Dashboard />
+         </AuthLayout>,
       },
       {
         path: "/promoters",
-        element: <Promoters />, 
+        element: 
+        <AuthLayout authentication>
+          {" "}
+          <Promoters />
+         </AuthLayout>, 
       },
       {
         path: "/promoters/add",
-        element: <AddPromoter />,
+        element: 
+        <AuthLayout authentication>
+          <AddPromoter />
+         </AuthLayout>,
       },
       {
         path: "/projects",
-        element: <Projects />,
+        element: 
+        <AuthLayout authentication>
+          <Projects />
+         </AuthLayout>,
       },
       {
         path: "/assignments",
-        element: <Assignments />,
+        element: 
+        <AuthLayout authentication>
+          <Assignments />
+         </AuthLayout>,
       },
       {
         path: "/channel-partners",
-        element: <ChannelPartners />,
+        element: 
+        <AuthLayout authentication>
+          <ChannelPartners />
+         </AuthLayout>,
       },
       {
         path: "/qpr",
-        element: <QPR />,
+        element: 
+        <AuthLayout authentication>
+          <QPR />
+         </AuthLayout>,
       },
       {
         path: "/aa",
-        element: <AA />,
+        element: 
+        <AuthLayout authentication>
+          <AA />
+         </AuthLayout>,
       },
       {
         path: "/reports",
-        element: <Reports />,
+        element: 
+        <AuthLayout authentication>
+          {" "}
+          <Reports />
+         </AuthLayout>,
       },
     ],
   },
@@ -69,6 +106,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <Provider store={store}>
+      <RouterProvider router={router} />
+    </Provider>
   </StrictMode>,
 )
