@@ -69,6 +69,17 @@ const [filePreviews, setFilePreviews] = useState({});
     }
   };
   
+ const handleFileDelete = (name) => {
+  setFormData(prev => ({ ...prev, [name]: null }));
+
+  setFilePreviews(prev => {
+    const updatedPreviews = { ...prev };
+    delete updatedPreviews[name];
+    return updatedPreviews;
+  });
+};
+
+  
 
 
   const commonInputClass = "border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] focus:border-[#5CAAAB] focus:outline-none transition ease-in-out duration-150";
@@ -108,6 +119,7 @@ const [filePreviews, setFilePreviews] = useState({});
               name="aadhar_uploaded_url"
               onChange={handleFileChange}
               filePreview={filePreviews.aadhar_uploaded_url}
+              onDelete={() => handleFileDelete("aadhar_uploaded_url")}
             />
   
             <div className="flex flex-col">
@@ -127,6 +139,7 @@ const [filePreviews, setFilePreviews] = useState({});
               name="pan_uploaded_url"
               onChange={handleFileChange}
               filePreview={filePreviews.pan_uploaded_url}
+              onDelete={() => handleFileDelete("pan_uploaded_url")}
             />
   
             <div className="flex flex-col">
@@ -199,6 +212,7 @@ const [filePreviews, setFilePreviews] = useState({});
               name="partnership_pan_uploaded_url"
               onChange={handleFileChange}
               filePreview={filePreviews.partnership_pan_uploaded_url}
+              onDelete={() => handleFileDelete("partnership_pan_uploaded_url")}
             />
   
             <div className="flex flex-col">
@@ -259,6 +273,7 @@ const [filePreviews, setFilePreviews] = useState({});
               name="company_pan_uploaded_url"
               onChange={handleFileChange}
               filePreview={filePreviews.company_pan_uploaded_url}
+              onDelete={() => handleFileDelete("company_pan_uploaded_url")}
             />
   
             <div className="flex flex-col">
@@ -278,6 +293,7 @@ const [filePreviews, setFilePreviews] = useState({});
               name="company_incorporation_uploaded_url"
               onChange={handleFileChange}
               filePreview={filePreviews.company_incorporation_uploaded_url}
+              onDelete={() => handleFileDelete("company_incorporation_uploaded_url")}
             />
   
             <div className="flex flex-col">
