@@ -149,3 +149,21 @@ export const uploadPromoterFiles = async (req, res) => {
   }
 };
 
+export const getAllPromoters = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('promoters')
+      .select('id, promoter_name, contact_number, email_id, district, city')
+      .eq('status','active');
+
+    if (error) {
+      console.error('❌ Error fetching promoters:', error);
+      return res.status(500).json({ error: 'Failed to fetch promoters', details: error });
+    }
+
+    res.status(200).json({ promoters: data });
+  } catch (err) {
+    console.error('❌ Unexpected error in getAllPromoters:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
