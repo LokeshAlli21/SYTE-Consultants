@@ -2,8 +2,14 @@ import React, { useState } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
 import databaseService from '../../backend-services/database/database';
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
+import { FaSpinner } from "react-icons/fa";
 
 const PromoterForm = () => {
+
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState({
     promoter_name: '',
     contact_number: '',
@@ -41,13 +47,17 @@ const [filePreviews, setFilePreviews] = useState({});
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Form Data:', formData);
+    setLoading(true);
     try {
       const response = await databaseService.uploadPromoterData(formData);
       console.log("✅ Upload response:", response);
       toast.success("✅ Promoter created successfully!");
+      navigate("/promoters"); // 👈 Navigate on success
     } catch (error) {
       console.error("❌ Error creating Promoter:", error);
       toast.error(`❌ Failed to create Promoter: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -342,6 +352,14 @@ const [filePreviews, setFilePreviews] = useState({});
       onSubmit={handleSubmit}
       className="max-w-6xl mx-auto p-8 bg-white rounded-2xl shadow-xl space-y-8"
     >
+      {loading ? (
+          <div className="fixed inset-0 min-h-screen bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+          <div className="flex items-center space-x-2 text-white">
+            <FaSpinner className="animate-spin text-4xl" />
+            <span className="text-xl">Submitting...</span>
+          </div>
+        </div>
+        ) : (<>
       <h2 className="text-3xl font-bold text-[#5CAAAB] text-center mb-6">
         Promoter Information
       </h2>
@@ -436,6 +454,7 @@ const [filePreviews, setFilePreviews] = useState({});
       >
         Submit
       </button>
+      </>)}
     </form>
   );
   
