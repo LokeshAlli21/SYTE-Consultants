@@ -167,3 +167,25 @@ export const getAllPromoters = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const softDeletePromoterById = async (req, res) => {
+  const promoterId = req.params.id;
+
+  try {
+    const { error } = await supabase
+      .from('promoters')
+      .update({ status: 'inactive' })
+      .eq('id', promoterId);
+
+    if (error) {
+      console.error('❌ Error soft deleting promoter:', error);
+      return res.status(500).json({ error: 'Failed to delete promoter', details: error });
+    }
+
+    res.status(200).json({ message: '✅ Promoter marked as inactive' });
+  } catch (err) {
+    console.error('❌ Unexpected error in softDeletePromoterById:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+

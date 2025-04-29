@@ -1,5 +1,6 @@
 import { FaArrowLeft, FaBell, FaRegCircleUser , FaPlus } from 'react-icons/fa6';
-import { FaSearch } from "react-icons/fa";
+import { FaSearch,FaWhatsapp  } from "react-icons/fa";
+import { IoMail } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 
 import { useEffect, useState } from "react";
@@ -74,6 +75,20 @@ const PromotersPage = () => {
     setCurrentPage(pageNumber);
   };
 
+  const handleDelete = async (id, name) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete promoter "${name}"?`);
+    if (!confirmDelete) return;
+  
+    try {
+      await databaseService.deletePromoterById(id);
+      setPromoters(prev => prev.filter(promoter => promoter.id !== id));
+      toast.success(`✅ Promoter "${name}" deleted successfully.`);
+    } catch (error) {
+      console.error(error);
+      toast.error("❌ Failed to delete promoter.");
+    }
+  };
+    
   return (
     <div className="p-8 pt-3">
       <div className="flex items-center justify-between mb-6 pl-6">
@@ -196,7 +211,13 @@ const PromotersPage = () => {
                         <button title="Edit" className="text-yellow-500 hover:text-yellow-600">
                           <FaEdit />
                         </button>
-                        <button title="Delete" className="text-red-400 hover:text-red-600">
+                        <button title="Edit" className="text-green-500 hover:text-green-700">
+                          <FaWhatsapp  />
+                        </button>
+                        <button title="Edit" className="text-gray-500 hover:text-gray-600">
+                          <IoMail  />
+                        </button>
+                        <button title="Delete" onClick={() => handleDelete(p.id, p.promoter_name)} className="text-red-400 hover:text-red-600">
                           <FaTrash />
                         </button>
                       </div>
