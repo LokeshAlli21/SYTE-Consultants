@@ -28,27 +28,41 @@ export const uploadPromoterData = async (req, res) => {
     } = req.body;
 
     // Step 2: Insert promoter basic data into 'Promoters' table
-    const { data: promoterData, error: promoterError } = await supabase
-      .from('Promoters')
-      .insert([{
-        promoter_name,
-        contact_number,
-        email_id,
-        district,
-        city,
-        promoter_type,
-      }])
-      .select()
-      .single();
+    const response = await supabase
+  .from('promoters')
+  .insert([{
+    promoter_name,
+    contact_number,
+    email_id,
+    district,
+    city,
+    promoter_type,
+  }])
+  .select('id');
 
-    if (promoterError) {
-      console.error('Error inserting into Promoters:', promoterError);
-      return res.status(500).json({ error: 'Failed to insert promoter data', details: promoterError });
+console.log("🔍 Raw Supabase insert response:", response);
+const { data: promoterData, error: promoterError, status, statusText } = response;
+
+if (promoterError) {
+  console.error('❌ Error inserting into Promoters:', promoterError);
+  console.error('🔎 Supabase insert status:', status, statusText);
+  return res.status(500).json({
+    error: 'Failed to insert promoter data',
+    details: promoterError,
+    status,
+    statusText
+  });
+}
+
+    const promoterId = promoterData?.[0]?.id;
+
+    if (!promoterId) {
+      return res.status(500).json({ error: 'Failed to retrieve promoter ID after insert' });
     }
 
     // Step 3: Insert promoter details into 'PromoterDetails' table
     const { data: detailsData, error: detailsError } = await supabase
-      .from('PromoterDetails')
+      .from('promoterdetails')
       .insert([{
         full_name,
         office_address,
@@ -56,7 +70,7 @@ export const uploadPromoterData = async (req, res) => {
         aadhar_uploaded_url,
         pan_number,
         pan_uploaded_url,
-        dob,
+        dob: dob || null,
         contact_person_name,
         partnership_pan_number,
         partnership_pan_uploaded_url,
@@ -64,7 +78,7 @@ export const uploadPromoterData = async (req, res) => {
         company_pan_uploaded_url,
         company_incorporation_number,
         company_incorporation_uploaded_url,
-        promoter_id: promoterData.id // Link the promoter details to the promoter
+        promoter_id: promoterId // Link the promoter details to the promoter
       }]);
 
     if (detailsError) {
