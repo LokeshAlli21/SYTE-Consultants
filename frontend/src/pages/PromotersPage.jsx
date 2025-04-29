@@ -88,7 +88,25 @@ const PromotersPage = () => {
       toast.error("❌ Failed to delete promoter.");
     }
   };
+
+  const handleEdit = (id) => {
+    console.log(`handleEdit got clicked for id: ${id}`);
+    navigate(`/promoters/edit/${id}`)
     
+  }
+  const handleMail = (id) => {
+    console.log(`handleMail got clicked for id: ${id}`);
+    
+  }
+  const handleWhatsapp = (id) => {
+    console.log(`handleWhatsapp got clicked for id: ${id}`);
+    
+  }
+  const handleView = (id) => {
+    console.log(`handleView got clicked for id: ${id}`);
+    
+  }
+
   return (
     <div className="p-8 pt-3">
       <div className="flex items-center justify-between mb-6 pl-6">
@@ -205,16 +223,16 @@ const PromotersPage = () => {
                     <td className="p-3">{p.city}</td>
                     <td className="p-3">
                       <div className="flex items-center justify-center gap-3 text-[15px]">
-                        <button title="View" className="text-blue-400 hover:text-blue-800">
+                        <button title="View" onClick={() => handleView(p.id, p.promoter_name)}  className="text-blue-400 hover:text-blue-800">
                           <FaEye />
                         </button>
-                        <button title="Edit" className="text-yellow-500 hover:text-yellow-600">
+                        <button title="Edit" onClick={() => handleEdit(p.id)}  className="text-yellow-500 hover:text-yellow-600">
                           <FaEdit />
                         </button>
-                        <button title="Edit" className="text-green-500 hover:text-green-700">
+                        <button title="Whatsapp" onClick={() => handleWhatsapp(p.id, p.promoter_name)}  className="text-green-500 hover:text-green-700">
                           <FaWhatsapp  />
                         </button>
-                        <button title="Edit" className="text-gray-500 hover:text-gray-600">
+                        <button title="Mail" onClick={() => handleMail(p.id, p.promoter_name)}  className="text-gray-500 hover:text-gray-600">
                           <IoMail  />
                         </button>
                         <button title="Delete" onClick={() => handleDelete(p.id, p.promoter_name)} className="text-red-400 hover:text-red-600">

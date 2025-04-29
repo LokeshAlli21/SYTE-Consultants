@@ -174,6 +174,29 @@ class DatabaseService {
     }
   }
   
+  async getPromoterDetailsById(id) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/promoters/get/${id}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch promoter details.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Promoter details fetched successfully!");
+      return data.promoter;
+  
+    } catch (error) {
+      console.error("❌ Error fetching promoter details:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
   
 }
 

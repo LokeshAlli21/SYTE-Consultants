@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
 import databaseService from '../../backend-services/database/database';
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
 
-const PromoterForm = () => {
+const PromoterForm = ({id}) => { 
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -96,6 +96,58 @@ const [filePreviews, setFilePreviews] = useState({});
     return updatedPreviews;
   });
 };
+
+useEffect(() => {
+  const fetchPromoterData = async (id) => {
+    try {
+      const result = await databaseService.getPromoterDetailsById(id);
+
+      // Extract data, exclude URLs, and update formData
+      const { promoter_name, contact_number, email_id, district, city, promoter_type } = result;
+      const {
+        full_name,
+        aadhar_number,
+        office_address,
+        pan_number,
+        dob,
+        contact_person_name,
+        partnership_pan_number,
+        company_pan_number,
+        company_incorporation_number
+      } = result.promoterdetails[0]; // Accessing the first (and only) item in the array
+
+      setFormData({
+        promoter_name,
+        contact_number,
+        email_id,
+        district,
+        city,
+        office_address,
+        promoter_type,
+        full_name,
+        aadhar_number,
+        aadhar_uploaded_url: '',  // Leave empty or do not set
+        pan_number,
+        pan_uploaded_url: '',  // Leave empty or do not set
+        dob,
+        contact_person_name,
+        partnership_pan_number,
+        partnership_pan_uploaded_url: '',  // Leave empty or do not set
+        company_pan_number,
+        company_pan_uploaded_url: '',  // Leave empty or do not set
+        company_incorporation_number,
+        company_incorporation_uploaded_url: ''  // Leave empty or do not set
+      });
+    } catch (error) {
+      console.error("Error fetching promoter details:", error);
+      toast.error("Failed to fetch promoter details.");
+    }
+  };
+
+  if (id !== null) {
+    fetchPromoterData(id);
+  }
+}, [id]);
 
   
 

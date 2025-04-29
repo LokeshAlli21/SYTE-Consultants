@@ -189,3 +189,62 @@ export const softDeletePromoterById = async (req, res) => {
   }
 };
 
+export const getPromoterById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from('promoters')
+      .select(`
+        id,
+        promoter_name,
+        contact_number,
+        email_id,
+        district,
+        city,
+        promoter_type,
+        status,
+        promoterdetails (
+          full_name,
+          office_address,
+          aadhar_number,
+          aadhar_uploaded_url,
+          pan_number,
+          pan_uploaded_url,
+          dob,
+          contact_person_name,
+          partnership_pan_number,
+          partnership_pan_uploaded_url,
+          company_pan_number,
+          company_pan_uploaded_url,
+          company_incorporation_number,
+          company_incorporation_uploaded_url
+        )
+      `)
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error(`❌ Error fetching promoter with ID ${id}:`, error);
+      return res.status(500).json({ error: 'Failed to fetch promoter', details: error });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: 'Promoter not found or inactive' });
+    }
+
+    // Merge promoter and promoterDetails
+    const merged = {
+      ...data,
+      ...(data.PromoterDetails || {})
+    };
+    delete merged.PromoterDetails;
+
+    res.status(200).json({ promoter: merged });
+
+  } catch (err) {
+    console.error('❌ Unexpected error in getPromoterById:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+

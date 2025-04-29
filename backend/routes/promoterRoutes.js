@@ -1,6 +1,6 @@
 import express from 'express';
 import { protect } from '../middlewares/protect.js';
-import { uploadPromoterData, uploadPromoterFiles, getAllPromoters, softDeletePromoterById} from '../controllers/promoterController.js';
+import { uploadPromoterData, uploadPromoterFiles, getAllPromoters, softDeletePromoterById, getPromoterById} from '../controllers/promoterController.js';
 import {upload} from '../supabase/supabaseClient.js'
 
 const router = express.Router();
@@ -15,6 +15,8 @@ router.post(
 router.post('/upload-files', protect, upload.any(), uploadPromoterFiles);
 
 router.get('/get-all', protect, getAllPromoters);
+
+router.get('/get/:id', protect, getPromoterById);
 
 router.delete('/delete/:id', protect, softDeletePromoterById);
 

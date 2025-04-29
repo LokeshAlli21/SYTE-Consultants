@@ -58,6 +58,13 @@ const router = createBrowserRouter([
          </AuthLayout>,
       },
       {
+        path: "/promoters/edit/:id",
+        element: 
+        <AuthLayout authentication>
+          <AddPromoter />
+         </AuthLayout>,
+      },
+      {
         path: "/projects",
         element: 
         <AuthLayout authentication>
