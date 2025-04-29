@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
+import databaseService from '../../backend-services/database/database';
+import { toast } from "react-toastify";
 
 const PromoterForm = () => {
   const [formData, setFormData] = useState({
@@ -23,7 +25,6 @@ const PromoterForm = () => {
     company_pan_uploaded_url: '',
     company_incorporation_number: '',
     company_incorporation_uploaded_url: '',
-    profile_photo_url: '',
   });
 
   
@@ -37,10 +38,17 @@ const [filePreviews, setFilePreviews] = useState({});
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Form Data:', formData);
-    // TODO: Send to backend API
+    try {
+      const response = await databaseService.uploadPromoterData(formData);
+      console.log("✅ Upload response:", response);
+      toast.success("✅ Promoter created successfully!");
+    } catch (error) {
+      console.error("❌ Error creating Promoter:", error);
+      toast.error(`❌ Failed to create Promoter: ${error.message}`);
+    }
   };
 
   const handleKeyDown = (e) => {

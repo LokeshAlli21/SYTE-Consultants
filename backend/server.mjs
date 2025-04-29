@@ -5,7 +5,7 @@ import { loggerMiddleware } from './middlewares/loggerMiddleware.js';
 import { errorMiddleware } from './middlewares/errorMiddleware.js';
 // Importing routes
 import authRoutes from './routes/authRoutes.js';
-// import noAuthRoutes from './routes/noAuthRoutes.js';
+import promoterRoutes from './routes/promoterRoutes.js';
 // import testWithAuth from './routes/routes.js';
 // import profileRoute from './routes/profileRoute.js';
 // import blockRoutes from './routes/blockRoutes.js';
@@ -28,10 +28,10 @@ app.get('/api/test', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/promoters', promoterRoutes);
 // app.use('/api/test-with-auth', testWithAuth);
 // app.use('/api/no-auth', noAuthRoutes);
 // app.use('/api/profiles', profileRoute);
-// app.use('/api/block', blockRoutes);
 // app.use('/api/super-admin', superAdminRoutes);
 
 // Main route
