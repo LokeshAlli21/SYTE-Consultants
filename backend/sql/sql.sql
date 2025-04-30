@@ -245,3 +245,48 @@ CREATE TRIGGER update_project_unit_updated_at
 BEFORE UPDATE ON project_units
 FOR EACH ROW
 EXECUTE FUNCTION update_project_unit_timestamp();
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------TABLE project_documents-------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-- Creating the ProjectDocuments table
+CREATE TABLE project_documents (
+    id SERIAL PRIMARY KEY,  -- Unique identifier for each record
+    project_id INT NOT NULL,  -- Foreign key to Projects table
+
+    -- Document URLs
+    cc_uploaded_url TEXT,  -- Completion Certificate
+    plan_uploaded_url TEXT,  -- Project Plan
+    search_report_uploaded_url TEXT,  -- Search Report
+    da_uploaded_url TEXT,  -- Development Agreement
+    pa_uploaded_url TEXT,  -- Power of Attorney
+    satbara_uploaded_url TEXT,  -- 7/12 Extract
+    promoter_letter_head_uploaded_url TEXT,  -- Promoter's Letter Head
+    promoter_sign_stamp_uploaded_url TEXT,  -- Promoter's Sign & Stamp
+
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+
+    -- Foreign Key Constraint
+    CONSTRAINT fk_project
+        FOREIGN KEY (project_id)
+        REFERENCES projects(id)
+        ON DELETE CASCADE
+);
+
+-- Trigger function to auto-update updated_at
+CREATE OR REPLACE FUNCTION update_project_documents_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to auto-update 'updated_at' on row updates
+CREATE TRIGGER update_project_documents_updated_at
+BEFORE UPDATE ON project_documents
+FOR EACH ROW
+EXECUTE FUNCTION update_project_documents_timestamp();
