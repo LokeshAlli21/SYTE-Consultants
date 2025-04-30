@@ -25,6 +25,7 @@ export const uploadPromoterData = async (req, res) => {
       partnership_pan_uploaded_url,
       company_pan_uploaded_url,
       company_incorporation_uploaded_url,
+      promoter_photo_uploaded_url,
     } = req.body;
 
     // Step 2: Insert promoter basic data into 'Promoters' table
@@ -78,6 +79,7 @@ if (promoterError) {
         company_pan_uploaded_url,
         company_incorporation_number,
         company_incorporation_uploaded_url,
+        promoter_photo_uploaded_url,
         promoter_id: promoterId // Link the promoter details to the promoter
       }]);
 
@@ -117,6 +119,7 @@ export const uploadPromoterFiles = async (req, res) => {
       else if (fieldName.includes("partnership")) folder = "partnership";
       else if (fieldName.includes("company")) folder = "company";
       else if (fieldName.includes("address")) folder = "address";
+      else if (fieldName.includes("photo")) folder = "photo";
 
       const fileExt = originalName.split('.').pop();
       const filePath = `promoter-files/${folder}/${originalName}`;
@@ -139,6 +142,8 @@ export const uploadPromoterFiles = async (req, res) => {
         .getPublicUrl(filePath);
 
       uploadedUrls[fieldName] = publicUrlData.publicUrl;
+      console.log(uploadedUrls);
+      
     }
 
     return res.status(200).json(uploadedUrls);
@@ -218,7 +223,8 @@ export const getPromoterById = async (req, res) => {
           company_pan_number,
           company_pan_uploaded_url,
           company_incorporation_number,
-          company_incorporation_uploaded_url
+          company_incorporation_uploaded_url,
+          promoter_photo_uploaded_url
         )
       `)
       .eq('id', id)

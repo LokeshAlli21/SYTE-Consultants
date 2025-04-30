@@ -65,6 +65,8 @@ class DatabaseService {
             identifier = formData.company_pan_number || "NoCompanyPAN";
           } else if (key === "company_incorporation_uploaded_url") {
             identifier = formData.company_incorporation_number || "NoIncorpNumber";
+          } else if (key === "promoter_photo_uploaded_url") {
+            identifier = "";
           }
   
           const extension = file.name?.split('.').pop() || 'pdf';

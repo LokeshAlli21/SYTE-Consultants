@@ -31,6 +31,7 @@ const PromoterForm = ({id}) => {
     company_pan_uploaded_url: '',
     company_incorporation_number: '',
     company_incorporation_uploaded_url: '',
+    promoter_photo_uploaded_url: '',
   });
 
   
@@ -136,7 +137,8 @@ useEffect(() => {
         company_pan_number,
         company_pan_uploaded_url: '',  // Leave empty or do not set
         company_incorporation_number,
-        company_incorporation_uploaded_url: ''  // Leave empty or do not set
+        company_incorporation_uploaded_url: '',  // Leave empty or do not set
+        promoter_photo_uploaded_url: '',
       });
     } catch (error) {
       console.error("Error fetching promoter details:", error);
@@ -466,6 +468,14 @@ useEffect(() => {
             className={commonInputClass}
           />
         </div>
+
+        <FileInputWithPreview
+              label="Upload Photo"
+              name="promoter_photo_uploaded_url"
+              onChange={handleFileChange}
+              filePreview={filePreviews.promoter_photo_uploaded_url}
+              onDelete={() => handleFileDelete("promoter_photo_uploaded_url")}
+            />
   
         <div className="flex flex-col gap-2">
           <label className="text-gray-700 font-semibold text-sm mb-1">
@@ -482,7 +492,7 @@ useEffect(() => {
           />
         </div>
   
-        <div className="flex flex-col gap-2 md:col-span-2">
+        <div className="flex flex-col gap-2">
           <label className="text-gray-700 font-semibold text-sm mb-1">
             Office Address
           </label>
