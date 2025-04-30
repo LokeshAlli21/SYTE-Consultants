@@ -8,6 +8,7 @@ import Reports from "./Reports";
 import Login from "./Login";
 import AddPromoter from "./AddPromoter";
 import PromotersPage from './PromotersPage'
+import AddProject from './AddProject'
 
 export {
     Dashboard,
@@ -20,4 +21,5 @@ export {
     Login,
     AddPromoter,
     PromotersPage,
+    AddProject,
 }

@@ -11,20 +11,19 @@ const Header = () => {
       </div>
 
       <div className="flex items-center gap-6">
-        <div className="relative">
+        {/* <div className="relative">
           <input
             type="text"
             placeholder="Search here..."
             className="bg-white rounded-full px-4 py-2 w-64 pl-10 shadow-sm"
           />
           <span className="absolute top-2.5 left-3 text-gray-400">🔍</span>
-        </div>
+        </div> */}
 
         <div className="text-right">
           <p className="text-sm font-medium">Admin Name</p>
           <p className="text-xs text-gray-500">Admin</p>
         </div>
-{/* need to fit profile photo */}
         <div className="w-10 h-10 bg-[#C2C2FF] rounded-full"></div> 
       </div>
     </div>

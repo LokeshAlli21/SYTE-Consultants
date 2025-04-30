@@ -21,6 +21,7 @@ import {
   Login,
   AddPromoter,
   PromotersPage,
+  AddProject,
 } from './pages/index.js'
 
 const router = createBrowserRouter([
@@ -69,6 +70,13 @@ const router = createBrowserRouter([
         element: 
         <AuthLayout authentication>
           <Projects />
+         </AuthLayout>,
+      },
+      {
+        path: "/projects/add",
+        element: 
+        <AuthLayout authentication>
+          <AddProject />
          </AuthLayout>,
       },
       {
