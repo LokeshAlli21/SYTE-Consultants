@@ -290,3 +290,58 @@ CREATE TRIGGER update_project_documents_updated_at
 BEFORE UPDATE ON project_documents
 FOR EACH ROW
 EXECUTE FUNCTION update_project_documents_timestamp();
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------TABLE site_progress-------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-- Creating the SiteProgress table
+CREATE TABLE site_progress (
+    id SERIAL PRIMARY KEY,
+    project_id INT NOT NULL,
+
+    excavation TEXT,  -- 1. Excavation
+
+    basement_and_plinth TEXT,  -- 2. X number of Basement(s) and Plinth
+
+    podiums TEXT,  -- 3. X number of Podiums
+
+    stilt_floor TEXT,  -- 4. Stilt Floor
+
+    super_structure_slabs TEXT,  -- 5. X number of Slabs of Super Structure
+
+    internal_finishing TEXT,  -- 6. Internal walls, plaster, floorings, doors/windows
+
+    internal_fittings TEXT,  -- 7. Sanitary & electrical fittings within flats/premises
+
+    vertical_circulation_and_water_tanks TEXT,  -- 8. Staircases, lift lobbies, water tanks
+
+    external_finishing TEXT,  -- 9. External plastering, elevation, terraces waterproofing
+
+    final_installations_and_compliance TEXT,  -- 10. Lifts, pumps, firefighting, lobby finishing, etc.
+
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+
+    CONSTRAINT fk_project_site_progress
+        FOREIGN KEY (project_id)
+        REFERENCES projects(id)
+        ON DELETE CASCADE
+);
+
+-- Trigger function to auto-update updated_at
+CREATE OR REPLACE FUNCTION update_site_progress_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to auto-update 'updated_at' on row updates
+CREATE TRIGGER update_site_progress_updated_at
+BEFORE UPDATE ON site_progress
+FOR EACH ROW
+EXECUTE FUNCTION update_site_progress_timestamp();
+
