@@ -1,5 +1,4 @@
 import Dashboard from "./Dashboard";
-import Promoters from "./Promoters";
 import Projects from "./Projects";
 import Assignments from "./Assignments";
 import ChannelPartners from "./ChannelPartners";
@@ -8,10 +7,10 @@ import AA from "./AA";
 import Reports from "./Reports";
 import Login from "./Login";
 import AddPromoter from "./AddPromoter";
+import PromotersPage from './PromotersPage'
 
 export {
     Dashboard,
-    Promoters,
     Projects,
     Assignments,
     ChannelPartners,
@@ -20,4 +19,5 @@ export {
     Reports,
     Login,
     AddPromoter,
+    PromotersPage,
 }

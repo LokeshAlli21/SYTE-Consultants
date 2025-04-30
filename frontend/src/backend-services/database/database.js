@@ -154,6 +154,31 @@ class DatabaseService {
     }
   }
 
+
+  async getAllProjects() {
+    // try {
+    //   const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {
+    //     method: "GET",
+    //     headers: this.getAuthHeaders(),
+    //   });
+  
+    //   if (!response.ok) {
+    //     const errorData = await response.json();
+    //     throw new Error(errorData.message || "Failed to fetch promoters.");
+    //   }
+  
+    //   const data = await response.json();
+    //   toast.success("✅ Promoters fetched successfully!");
+    //   return data.promoters;
+  
+    // } catch (error) {
+    //   console.error("❌ Error fetching promoters:", error);
+    //   toast.error(`❌ ${error.message}`);
+    //   throw error;
+    // }
+    return []
+  }
+
   async deletePromoterById(id) {
     try {
       const response = await fetch(`${this.baseUrl}/api/promoters/delete/${id}`, {
