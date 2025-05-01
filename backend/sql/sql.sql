@@ -11,7 +11,7 @@ CREATE TABLE promoters (
     district VARCHAR(100) NOT NULL,  -- District where the promoter is located
     city VARCHAR(100) NOT NULL,  -- City where the promoter is located
     promoter_type VARCHAR(50) NOT NULL,  -- Type of the promoter (e.g., "Agent", "Manager", etc.)
-    status VARCHAR(20) DEFAULT 'active',  -- Status of the promoter (default to 'active')
+    status_for_delete VARCHAR(20) DEFAULT 'active',  -- Status of the promoter (default to 'active')
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Automatically stores the creation time in IST
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')  -- Automatically stores the update time in IST
 );
@@ -37,7 +37,7 @@ CREATE TABLE promoterdetails (
     id SERIAL PRIMARY KEY,  -- Unique identifier for each promoter's details
     full_name VARCHAR(255),  -- Full name of the promoter
     office_address TEXT,  -- Office address of the promoter
-    aadhar_number VARCHAR(12) ,  -- Aadhar number (12 digits, unique)
+    aadhar_number NUMERIC(12, 0) ,  -- Aadhar number (12 digits, unique)
     aadhar_uploaded_url TEXT,  -- URL where the Aadhar document is uploaded
     pan_number VARCHAR(10) ,  -- PAN number (10 characters, unique)
     pan_uploaded_url TEXT,  -- URL where the PAN document is uploaded
@@ -74,7 +74,7 @@ CREATE TABLE projects (
     project_name VARCHAR(255) NOT NULL,  -- Project name (NOT NULL)
     project_type VARCHAR(100),  -- Type of the project (e.g., Residential, Commercial, etc.)
     project_address TEXT,  -- Full address of the project
-    project_pincode VARCHAR(6),  -- Pincode of the project's location
+    project_pincode NUMERIC(10, 0),  -- Pincode of the project's location
     login_id VARCHAR(255),  -- Login ID for the project
     password VARCHAR(255),  -- Password for the project
     district VARCHAR(100),  -- District where the project is located
@@ -112,6 +112,48 @@ EXECUTE FUNCTION update_project_timestamp();
 ----------------------------------------------------TABLE ProjectProfessionalDetails-------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------
 
+CREATE TABLE engineers (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    contact_number VARCHAR(15),
+    email_id VARCHAR(255),
+    office_address TEXT,
+    licence_number VARCHAR(100),
+    licence_uploaded_url TEXT,
+    pan_number VARCHAR(10),
+    pan_uploaded_url TEXT,
+    letter_head_uploaded_url TEXT,
+    sign_stamp_uploaded_url TEXT
+);
+
+CREATE TABLE architects (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    contact_number VARCHAR(15),
+    email_id VARCHAR(255),
+    office_address TEXT,
+    licence_number VARCHAR(100),
+    licence_uploaded_url TEXT,
+    pan_number VARCHAR(10),
+    pan_uploaded_url TEXT,
+    letter_head_uploaded_url TEXT,
+    sign_stamp_uploaded_url TEXT
+);
+
+CREATE TABLE cas (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255),
+    contact_number VARCHAR(15),
+    email_id VARCHAR(255),
+    office_address TEXT,
+    licence_number VARCHAR(100),
+    licence_uploaded_url TEXT,
+    pan_number VARCHAR(10),
+    pan_uploaded_url TEXT,
+    letter_head_uploaded_url TEXT,
+    sign_stamp_uploaded_url TEXT
+);
+
 
 -- Creating the ProjectProfessionalDetails table
 CREATE TABLE project_professional_details (
@@ -119,40 +161,13 @@ CREATE TABLE project_professional_details (
     project_id INT NOT NULL,  -- Foreign key to Projects table
 
     -- Engineer Details
-    engineer_name VARCHAR(255),
-    engineer_contact_number VARCHAR(15),
-    engineer_email_id VARCHAR(255),
-    engineer_office_address TEXT,
-    engineer_licence_number VARCHAR(100),
-    engineer_licence_uploaded_url TEXT,
-    engineer_pan_number VARCHAR(10),
-    engineer_pan_uploaded_url TEXT,
-    engineer_letter_head_uploaded_url TEXT,
-    engineer_sign_stamp_uploaded_url TEXT,
+    engineer_id INT REFERENCES engineers(id),
 
     -- Architect Details
-    architect_name VARCHAR(255),
-    architect_contact_number VARCHAR(15),
-    architect_email_id VARCHAR(255),
-    architect_office_address TEXT,
-    architect_licence_number VARCHAR(100),
-    architect_licence_uploaded_url TEXT,
-    architect_pan_number VARCHAR(10),
-    architect_pan_uploaded_url TEXT,
-    architect_letter_head_uploaded_url TEXT,
-    architect_sign_stamp_uploaded_url TEXT,
+   architect_id INT REFERENCES architects(id),
 
     -- CA (Chartered Accountant) Details
-    ca_name VARCHAR(255),
-    ca_contact_number VARCHAR(15),
-    ca_email_id VARCHAR(255),
-    ca_office_address TEXT,
-    ca_licence_number VARCHAR(100),
-    ca_licence_uploaded_url TEXT,
-    ca_pan_number VARCHAR(10),
-    ca_pan_uploaded_url TEXT,
-    ca_letter_head_uploaded_url TEXT,
-    ca_sign_stamp_uploaded_url TEXT,
+    ca_id INT REFERENCES cas(id),
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
@@ -213,8 +228,10 @@ CREATE TABLE project_units (
     received_fy_2028_29 NUMERIC(15, 2) DEFAULT 0,
     received_fy_2029_30 NUMERIC(15, 2) DEFAULT 0,
 
-    -- Aggregated Financials
+    -- Aggregated Financials (Total Received from all years)
     total_received NUMERIC(15, 2) DEFAULT 0,
+
+    -- Balance amount based on agreement_value and total_received
     balance_amount NUMERIC(15, 2) DEFAULT 0,
 
     -- Documents
@@ -230,6 +247,32 @@ CREATE TABLE project_units (
         REFERENCES projects(id)
         ON DELETE CASCADE
 );
+
+
+-- Create trigger function to calculate total_received
+CREATE OR REPLACE FUNCTION update_total_received_and_balance_amount()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.total_received := NEW.received_fy_2018_19 + NEW.received_fy_2019_20 + 
+                          NEW.received_fy_2020_21 + NEW.received_fy_2021_22 + 
+                          NEW.received_fy_2022_23 + NEW.received_fy_2023_24 + 
+                          NEW.received_fy_2024_25 + NEW.received_fy_2025_26 + 
+                          NEW.received_fy_2026_27 + NEW.received_fy_2027_28 + 
+                          NEW.received_fy_2028_29 + NEW.received_fy_2029_30;
+
+    NEW.balance_amount := NEW.agreement_value - NEW.total_received;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to auto-update 'total_received' and 'balance_amount' before insert or update
+CREATE TRIGGER update_project_unit_total_received_balance
+BEFORE INSERT OR UPDATE ON project_units
+FOR EACH ROW
+EXECUTE FUNCTION update_total_received_and_balance_amount();
+
+
+
 
 -- Trigger function to auto-update updated_at
 CREATE OR REPLACE FUNCTION update_project_unit_timestamp()
@@ -295,31 +338,73 @@ EXECUTE FUNCTION update_project_documents_timestamp();
 ----------------------------------------------------TABLE site_progress-------------------------------------------------------------------------
 -------------------------------------------------------------------------------------------------------------------------------------------
 
+---------------------- project_building_progress ----------------------
+-- 1.	excavation              : Excavation	
+-- 2.	basement                : Basements (if any)	
+-- 3.	podium                  : Podiums (if any)	
+-- 4.	plinth                  : Plinth	
+-- 5.	stilt                   : Stilt Floor	
+-- 6.	superstructure          : Slabs of Super Structure	
+-- 7.	interior_finishing      : Internal walls, Internal Plaster, Floorings, Doors and Windows within Flats/Premises	
+-- 8.	sanitary_fittings       : Sanitary Fittings within the Flat/Premises	
+-- 9.	common_infrastructure   : Staircases, Lifts Wells and Lobbies at each Floor level, Overhead and Underground Water Tanks	
+-- 10.	external_works          : External plumbing and external plaster, elevation, completion of terraces with waterproofing of the Building/Wing.	
+-- 11.	final_installations     : Installation of lifts, water pumps, Fire Fighting Fittings And Equipment as per CFO NOC, Electrical fittings, mechanical equipment, Compliance to conditions of environment/CRZ NOC, Finishing to entrance lobby/s, plinth protection, paving of areas appurtenant to Building / Wing, Compound Wall and all other requirements as maybe required to complete project as per specifications in agreement of Sale. Any other activities.	
+
+---------------------- project_common_areas_progress  ------------------
+-- 1.	Internal Roads&Footpaths			
+-- 2.	Water Supply			
+-- 3.	Sewerage (chamber, lines, Septic Tank, STP)			
+-- 4.	Storm Water Drains			
+-- 5.	Landscaping & Tree Planting			
+-- 6.	Street Lighting			
+-- 7.	Community Buildings			
+-- 8.	Treatment and disposal of sewage and sullage water			
+-- 9.	Solid Waste management & Disposal			
+-- 10.	Water conservation, Rain water harvesting			
+-- 11.	Energy management			
+-- 12.	Fire protectionAnd fire safety requirements			
+-- 13.	Electrical meter room, sub-station, receiving station			
+
 
 -- Creating the SiteProgress table
 CREATE TABLE site_progress (
     id SERIAL PRIMARY KEY,
     project_id INT NOT NULL,
 
-    excavation TEXT,  -- 1. Excavation
+    -- project_building_progress 
+    excavation NUMERIC(5,2) CHECK (excavation BETWEEN 0 AND 100),   -- 1. Excavation
+    basement NUMERIC(5,2) CHECK (basement BETWEEN 0 AND 100),       -- 2. Basements (if any)
+    podium NUMERIC(5,2) CHECK (podium BETWEEN 0 AND 100),           -- 3. Podiums (if any)	
+    plinth NUMERIC(5,2) CHECK (plinth BETWEEN 0 AND 100),           -- 4. Plinth	
+    stilt NUMERIC(5,2) CHECK (stilt BETWEEN 0 AND 100),                                 -- 5. Stilt Floor	
+    superstructure NUMERIC(5,2) CHECK (superstructure BETWEEN 0 AND 100),               -- 6.	Slabs of Super Structure	
+    interior_finishing NUMERIC(5,2) CHECK (interior_finishing BETWEEN 0 AND 100),       -- 7.	nternal walls, Internal Plaster, Floorings, Doors and Windows within Flats/Premises	
+    sanitary_fittings NUMERIC(5,2) CHECK (sanitary_fittings BETWEEN 0 AND 100),         -- 8. Sanitary Fittings within the Flat/Premises	
+    common_infrastructure NUMERIC(5,2) CHECK (common_infrastructure BETWEEN 0 AND 100), -- 9. Staircases, Lifts Wells and Lobbies at each Floor level, Overhead and Underground Water Tanks	
+    external_works NUMERIC(5,2) CHECK (external_works BETWEEN 0 AND 100),               -- 10. External plumbing and external plaster, elevation, completion of terraces with waterproofing of the Building/Wing.	
+    final_installations NUMERIC(5,2) CHECK (final_installations BETWEEN 0 AND 100),      -- 11. Installation of lifts, water pumps, Fire Fighting Fittings And Equipment as per CFO NOC, Electrical fittings, mechanical equipment, Compliance to conditions of environment/CRZ NOC, Finishing to entrance lobby/s, plinth protection, paving of areas appurtenant to Building / Wing, Compound Wall and all other requirements as maybe required to complete project as per specifications in agreement of Sale. Any other activities.	
 
-    basement_and_plinth TEXT,  -- 2. X number of Basement(s) and Plinth
-
-    podiums TEXT,  -- 3. X number of Podiums
-
-    stilt_floor TEXT,  -- 4. Stilt Floor
-
-    super_structure_slabs TEXT,  -- 5. X number of Slabs of Super Structure
-
-    internal_finishing TEXT,  -- 6. Internal walls, plaster, floorings, doors/windows
-
-    internal_fittings TEXT,  -- 7. Sanitary & electrical fittings within flats/premises
-
-    vertical_circulation_and_water_tanks TEXT,  -- 8. Staircases, lift lobbies, water tanks
-
-    external_finishing TEXT,  -- 9. External plastering, elevation, terraces waterproofing
-
-    final_installations_and_compliance TEXT,  -- 10. Lifts, pumps, firefighting, lobby finishing, etc.
+    -- project_common_areas_progress 
+    
+        -- {
+        -- "proposed": true,
+        -- "percentage_of_work": 80.5,
+        -- "details": "STP completed and tested"
+        -- }
+    internal_roads_footpaths JSONB, -- 1.	Internal Roads&Footpaths
+    water_supply JSONB,             -- 2.	Water Supply
+    sewerage JSONB,                 -- 3.	Sewerage (chamber, lines, Septic Tank, STP)	
+    storm_water_drains JSONB,       -- 4.	Storm Water Drains		
+    landscaping_tree_planting JSONB,-- 5.	Landscaping & Tree Planting	
+    street_lighting JSONB,          -- 6.	Street Lighting		
+    community_buildings JSONB,      -- 7.	Community Buildings	
+    sewage_treatment JSONB,         -- 8.	Treatment and disposal of sewage and sullage water	
+    solid_waste_management JSONB,   -- 9.	Solid Waste management & Disposal	
+    rain_water_harvesting JSONB,    -- 10.	Water conservation, Rain water harvesting
+    energy_management JSONB,        -- 11.	Energy management
+    fire_safety JSONB,              -- 12.	Fire protectionAnd fire safety requirements	
+    electrical_metering JSONB,      -- 13.	Electrical meter room, sub-station, receiving station
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
