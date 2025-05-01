@@ -35,6 +35,13 @@ EXECUTE FUNCTION update_promoter_timestamp();
 -- Creating the PromoteDetails table with foreign key to Promoters
 CREATE TABLE promoterdetails (
     id SERIAL PRIMARY KEY,  -- Unique identifier for each promoter's details
+
+    -- Adding Foreign Key Constraint
+    CONSTRAINT fk_promoter
+        FOREIGN KEY (promoter_id) 
+        REFERENCES promoters(id)
+        ON DELETE CASCADE,
+
     full_name VARCHAR(255),  -- Full name of the promoter
     office_address TEXT,  -- Office address of the promoter
     aadhar_number NUMERIC(12, 0) ,  -- Aadhar number (12 digits, unique)
@@ -52,13 +59,8 @@ CREATE TABLE promoterdetails (
     promoter_id INT NOT NULL,  -- Foreign key linking to Promoters table
     profile_photo_uploaded_url TEXT,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Creation timestamp
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Update timestamp
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')  -- Update timestamp
 
-    -- Adding Foreign Key Constraint
-    CONSTRAINT fk_promoter
-        FOREIGN KEY (promoter_id) 
-        REFERENCES promoters(id)
-        ON DELETE CASCADE
 );
 
 -------------------------------------------------------------------------------------------------------------------------------------------
@@ -68,6 +70,13 @@ CREATE TABLE promoterdetails (
 -- Creating the Projects table
 CREATE TABLE projects (
     id SERIAL PRIMARY KEY,  -- Unique identifier for each project
+
+    -- Adding Foreign Key Constraint
+    CONSTRAINT fk_promoter
+        FOREIGN KEY (promoter_id) 
+        REFERENCES promoters(id)
+        ON DELETE CASCADE,
+
     channel_partner VARCHAR(255),  -- Channel partner associated with the project
     promoter_id INT NOT NULL,  -- Foreign key linking to Promoters table (NOT NULL)
     promoter_name VARCHAR(255),  -- 
@@ -84,13 +93,8 @@ CREATE TABLE projects (
     registration_date DATE,  -- Date when the project was registered
     expiry_date DATE,  -- Expiry date of the project
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Automatically stores creation time in IST
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Automatically stores update time in IST
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')  -- Automatically stores update time in IST
 
-    -- Adding Foreign Key Constraint
-    CONSTRAINT fk_promoter
-        FOREIGN KEY (promoter_id) 
-        REFERENCES promoters(id)
-        ON DELETE CASCADE
 );
 
 -- Creating a trigger function to update the 'updated_at' column on row updates
@@ -158,6 +162,13 @@ CREATE TABLE cas (
 -- Creating the ProjectProfessionalDetails table
 CREATE TABLE project_professional_details (
     id SERIAL PRIMARY KEY,  -- Unique identifier for each record
+
+    -- Foreign key constraint
+    CONSTRAINT fk_project
+        FOREIGN KEY (project_id)
+        REFERENCES projects(id)
+        ON DELETE CASCADE,
+
     project_id INT NOT NULL,  -- Foreign key to Projects table
 
     -- Engineer Details
@@ -170,13 +181,8 @@ CREATE TABLE project_professional_details (
     ca_id INT REFERENCES cas(id),
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
 
-    -- Foreign key constraint
-    CONSTRAINT fk_project
-        FOREIGN KEY (project_id)
-        REFERENCES projects(id)
-        ON DELETE CASCADE
 );
 
 -- Trigger function to update the 'updated_at' column
@@ -200,7 +206,15 @@ EXECUTE FUNCTION update_project_professional_timestamp();
 
 -- Creating the ProjectUnits table
 CREATE TABLE project_units (
+
     id SERIAL PRIMARY KEY,  -- Unique identifier for each unit
+
+    -- Foreign Key Constraint
+    CONSTRAINT fk_project
+        FOREIGN KEY (project_id)
+        REFERENCES projects(id)
+        ON DELETE CASCADE,
+
     project_id INT NOT NULL,  -- Foreign key to Projects table
 
     -- Unit Details
@@ -239,13 +253,8 @@ CREATE TABLE project_units (
     sale_deed_uploaded_url TEXT,
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
 
-    -- Foreign Key Constraint
-    CONSTRAINT fk_project
-        FOREIGN KEY (project_id)
-        REFERENCES projects(id)
-        ON DELETE CASCADE
 );
 
 
@@ -297,6 +306,13 @@ EXECUTE FUNCTION update_project_unit_timestamp();
 -- Creating the ProjectDocuments table
 CREATE TABLE project_documents (
     id SERIAL PRIMARY KEY,  -- Unique identifier for each record
+
+    -- Foreign Key Constraint
+    CONSTRAINT fk_project
+        FOREIGN KEY (project_id)
+        REFERENCES projects(id)
+        ON DELETE CASCADE,
+
     project_id INT NOT NULL,  -- Foreign key to Projects table
 
     -- Document URLs
@@ -310,13 +326,8 @@ CREATE TABLE project_documents (
     promoter_sign_stamp_uploaded_url TEXT,  -- Promoter's Sign & Stamp
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
 
-    -- Foreign Key Constraint
-    CONSTRAINT fk_project
-        FOREIGN KEY (project_id)
-        REFERENCES projects(id)
-        ON DELETE CASCADE
 );
 
 -- Trigger function to auto-update updated_at
@@ -372,6 +383,11 @@ CREATE TABLE site_progress (
     id SERIAL PRIMARY KEY,
     project_id INT NOT NULL,
 
+    CONSTRAINT fk_project_site_progress
+        FOREIGN KEY (project_id)
+        REFERENCES projects(id)
+        ON DELETE CASCADE,
+
     -- project_building_progress 
     excavation NUMERIC(5,2) CHECK (excavation BETWEEN 0 AND 100),   -- 1. Excavation
     basement NUMERIC(5,2) CHECK (basement BETWEEN 0 AND 100),       -- 2. Basements (if any)
@@ -407,12 +423,8 @@ CREATE TABLE site_progress (
     electrical_metering JSONB,      -- 13.	Electrical meter room, sub-station, receiving station
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
 
-    CONSTRAINT fk_project_site_progress
-        FOREIGN KEY (project_id)
-        REFERENCES projects(id)
-        ON DELETE CASCADE
 );
 
 -- Trigger function to auto-update updated_at
