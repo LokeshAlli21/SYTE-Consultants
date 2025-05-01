@@ -1,41 +1,99 @@
 import React, { useRef, useState } from 'react';
+import { FaFilePdf, FaImage } from 'react-icons/fa';
 
 const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete }) => {
   const inputRef = useRef(null);
   const [fullScreenPreview, setFullScreenPreview] = useState(null);
+  const [dragging, setDragging] = useState(false);
+  const [fileName, setFileName] = useState('');
 
+  // Handle drag over to highlight the drop area
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragging(true);
+  };
+
+  // Handle when drag leaves the area
+  const handleDragLeave = () => {
+    setDragging(false);
+  };
+
+  // Handle file drop (set the file and pass it to parent via onChange)
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      setFileName(file.name);
+      // Simulate a real file input change event
+      const mockEvent = {
+        target: {
+          name,
+          files: [file],
+        },
+      };
+      onChange(mockEvent);
+    }
+  };
+  
+
+  // Clear the file input field and notify the parent to delete the preview
   const handleDelete = () => {
     if (inputRef.current) {
       inputRef.current.value = ''; // Clear the input field
+      setFileName('');
     }
     onDelete();
   };
 
+  // Open full-screen preview of the file
   const handlePreviewClick = () => {
-    setFullScreenPreview(filePreview.url); // Set the selected file as the full screen preview
+    setFullScreenPreview(filePreview.url); // Set the selected file as the full-screen preview
   };
 
+  // Close the full-screen preview modal
   const closeFullScreen = () => {
-    setFullScreenPreview(null); // Close the full-screen view
+    setFullScreenPreview(null);
   };
 
   return (
     <div className="flex flex-col gap-2">
-      <label className="font-semibold text-gray-700">{label}</label>
-
-      <input
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      {!filePreview &&
+        <div
+        className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition ${dragging ? 'border-[#5caaab] bg-gray-100' : 'border-gray-300 bg-gray-50'}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={() => inputRef.current.click()}
+      >
+        <div className="flex flex-col items-center justify-start pt-5 pb-6">
+          {fileName ? (
+            <p className="text-sm text-[#5caaab] font-semibold">{fileName}</p>
+          ) : (
+            <>
+              <div className="w-8 h-8 mb-2">
+                <FaFilePdf className="text-[#5caaab]" />
+              </div>
+              <p className="mb-1 text-sm text-[#5caaab] font-semibold">Click or drag to upload</p>
+              <p className="text-xs text-gray-500">Images or PDFs (max 20MB)</p>
+            </>
+          )}
+        </div>
+        <input
           ref={inputRef}
           type="file"
           name={name}
           accept="image/*,application/pdf"
           onChange={onChange}
-          className="file-input w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#5CAAAB] transition bg-white text-gray-600"
+          className="hidden"
         />
+      </div>
+      }
 
-      <div className="relative flex items-center justify-around">
-
+      {/* File Preview */}
       {filePreview && (
-        <div className="mt-3 relative">
+        <div className="relative flex items-center justify-around mt-3">
           {filePreview.type.startsWith('image/') ? (
             <img
               src={filePreview.url}
@@ -45,29 +103,25 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete }) 
             />
           ) : (
             <div className="flex flex-col">
-              <h2 href={filePreview.url}
+              <h2
                 className="text-blue-600 underline text-sm cursor-pointer"
-                onClick={handlePreviewClick}>
+                onClick={handlePreviewClick}
+              >
                 View Uploaded File
               </h2>
             </div>
           )}
-        </div>
-      )}
-
-        {filePreview && (
+          {/* Delete button for file */}
           <button
             type="button"
             onClick={handleDelete}
-            className=" relative py-1 px-2 text-red-600 font-bold text-lg bg-transparent rounded-xl shadow-xl shadow-neutral-50 hover:bg-zinc-100 transition-all"
+            className="relative py-1 px-2 text-red-600 font-bold text-lg bg-transparent rounded-xl shadow-xl shadow-neutral-50 hover:bg-zinc-100 transition-all"
             title="Remove selected file"
           >
             Delete ❌
           </button>
-        )}
-      </div>
-
-      
+        </div>
+      )}
 
       {/* Fullscreen Preview Modal */}
       {fullScreenPreview && (
@@ -89,12 +143,11 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete }) 
 
             <button
               onClick={closeFullScreen}
-              // className="absolute top-[-25px] right-[-25px] text-blue text-xl bg-black p-2 rounded-full hover:bg-gray-500"
               title="Close Preview"
-              className="absolute top-2 right-2 text-white hover:bg-purple-100 duration-300 shadow-md bg-black  bg-opacity-50 p-2 rounded-full"
-              >
-                ❌
-              </button>
+              className="absolute top-2 right-2 text-white hover:bg-purple-100 duration-300 shadow-md bg-black bg-opacity-50 p-2 rounded-full"
+            >
+              ❌
+            </button>
           </div>
         </div>
       )}

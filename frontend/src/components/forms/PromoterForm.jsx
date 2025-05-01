@@ -154,7 +154,7 @@ useEffect(() => {
   
 
 
-  const commonInputClass = "border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] focus:border-[#5CAAAB] focus:outline-none transition ease-in-out duration-150";
+  const commonInputClass = "border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] focus:border-[#5CAAAB] focus:outline-none transition ease-in-out duration-150 " ;
   const renderConditionalFields = () => {
 
   

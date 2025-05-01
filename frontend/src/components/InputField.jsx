@@ -5,7 +5,7 @@ const InputField = ({ label, type = 'text', name, placeholder }) => (
         type={type}
         name={name}
         placeholder={placeholder}
-        className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
+        className="w-full p-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#5caaab]"
       />
     </div>
   );
