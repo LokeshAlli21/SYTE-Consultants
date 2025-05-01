@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa6';
 import { FaFilePdf, FaTimes } from "react-icons/fa";
 import ProjectDetailsForm from '../components/forms/ProjectDetailsForm';
+import databaseService from '../backend-services/database/database'
 
 const tabs = [
   "Project Details",
@@ -42,10 +43,23 @@ const AddProject = () => {
       }
     };
   
-    const handleSubmitProjectDetails= () => {
+    const handleSubmitProjectDetails = async (e) => {
+      e.preventDefault();
       console.log("Form Data Submitted:", projectDetails);
-      // Add API logic here
+      setLoading(true);
+      try {
+        const response = await databaseService.uploadProjectDetails(projectDetails);
+        console.log("✅ Project details uploaded:", response);
+        toast.success("✅ Project details submitted successfully!");
+        navigate("/projects"); // 👈 Navigate to projects page or wherever appropriate
+      } catch (error) {
+        console.error("❌ Error submitting project details:", error);
+        toast.error(`❌ Failed to submit project details: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
     };
+    
   
 
   const commonInputStyles =

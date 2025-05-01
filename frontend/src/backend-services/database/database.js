@@ -131,6 +131,94 @@ class DatabaseService {
     }
   }
   
+  async uploadProjectDetails(formData) {
+    try {
+      console.log('Original project formData:', formData);
+  
+      const fileFormData = new FormData();
+      const fieldsToUpload = [];
+  
+      const projectName = formData.project_name?.replace(/\s+/g, '_') || 'UnknownProject';
+      const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
+  
+      for (const key in formData) {
+        const file = formData[key];
+        if (key.endsWith('_uploaded_url') && file instanceof File) {
+          if (!file) continue;
+  
+          let identifier = "NoIdentifier";
+  
+          if (key === "project_approval_uploaded_url") {
+            identifier = formData.approval_number || "NoApproval";
+          } else if (key === "project_plan_uploaded_url") {
+            identifier = formData.plan_number || "NoPlan";
+          } else if (key === "project_image_uploaded_url") {
+            identifier = "";
+          }
+  
+          const extension = file.name?.split('.').pop() || 'pdf';
+          const renamedFile = new File(
+            [file],
+            `${projectName}_${identifier}_${timestamp}.${extension}`,
+            { type: file.type }
+          );
+  
+          fileFormData.append(key, renamedFile);
+          fieldsToUpload.push(key);
+        }
+      }
+  
+      if (fieldsToUpload.length > 0) {
+        const fileUploadRes = await fetch(`${this.baseUrl}/api/projects/upload-files`, {
+          method: "POST",
+          headers: this.getAuthHeaders(true),
+          body: fileFormData
+        });
+  
+        if (!fileUploadRes.ok) {
+          const errorData = await fileUploadRes.json();
+          throw new Error(errorData.message || "File upload failed.");
+        }
+  
+        const uploadedUrls = await fileUploadRes.json();
+  
+        for (const fieldName of fieldsToUpload) {
+          if (uploadedUrls[fieldName]) {
+            formData[fieldName] = uploadedUrls[fieldName];
+          } else {
+            throw new Error(`Missing URL for ${fieldName} in upload response`);
+          }
+        }
+      }
+  
+      console.log("Final project formData to submit:", formData);
+  
+      const response = await fetch(`${this.baseUrl}/api/projects/add-project`, {
+        method: "POST",
+        headers: {
+          ...this.getAuthHeaders(),
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Project data submission failed.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Project data uploaded successfully!");
+      return data;
+  
+    } catch (error) {
+      console.error("❌ Error uploading project data:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
+  
   async getAllPromoters() {
     try {
       const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {
