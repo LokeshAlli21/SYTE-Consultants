@@ -135,6 +135,90 @@ const AddProject = () => {
       promoter_sign_stamp_uploaded_url: "",
     })
 
+    const [projectBuildingProgress,setProjectBuildingProgress] = useState({
+      project_id: 7,
+    
+      excavation: 0,
+      basement: 0,
+      podium: 0,
+      plinth: 0,
+      stilt: 0,
+      superstructure: 0,
+      interior_finishing: 0,
+      sanitary_fittings: 0,
+      common_infrastructure: 0,
+      external_works: 0,
+      final_installations: 0,
+    })
+
+    const [projectCommonAreasProgress, setProjectCommonAreasProgress] = useState({
+      project_id: 7,
+      internal_roads_footpaths: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      water_supply: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      sewerage: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      storm_water_drains: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      landscaping_tree_planting: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      street_lighting: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      community_buildings: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      sewage_treatment: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      solid_waste_management: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      rain_water_harvesting: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      energy_management: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      fire_safety: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+      electrical_metering: {
+        proposed: false,
+        percentage_of_work: 0,
+        details: '',
+      },
+    })
   
     const handleBack = () => {
       if (activeTabIndex > 0) {
