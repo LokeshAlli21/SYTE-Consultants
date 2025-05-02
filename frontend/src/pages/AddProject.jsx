@@ -38,6 +38,7 @@ const AddProject = () => {
       expiry_date: "",
     });
     const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
+      project_id: 6,
       engineer: {
         name: "",
         contact_number: "",
@@ -102,20 +103,20 @@ const AddProject = () => {
       }
     };
     const handleSubmitProjectProfessionalDetails = async () => {
-      console.log("Form Data Submitted:", projectProfessionalDetails);
+      // console.log("Form Data Submitted:", projectProfessionalDetails);
       // setLoading(true);
-      // try {
-      //   const response = await databaseService.uploadProjectDetails(projectDetails);
-      //   console.log("✅ Project details uploaded:", response);
-      //   toast.success("✅ Project details submitted successfully!");
-      //   navigate("/projects"); // 👈 Navigate to projects page or wherever appropriate
-      // } catch (error) {
-      //   console.error("❌ Error submitting project details:", error);
-      //   toast.error(`❌ Failed to submit project details: ${error.message}`);
-      // } finally {
-      //   // setLoading(false);
-      // }
-    };
+      try {
+        const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
+        console.log("✅ Project professional details uploaded:", response);
+        toast.success("✅ Project professional details submitted successfully!");
+        navigate("/projects"); // 👈 Update the route if needed
+      } catch (error) {
+        console.error("❌ Error submitting project professional details:", error);
+        toast.error(`❌ Failed to submit professional details: ${error.message}`);
+      } finally {
+        // setLoading(false);
+      }
+    };    
     
   
 
@@ -175,7 +176,7 @@ const AddProject = () => {
   };
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen p-8 pt-3">
       <div className="flex items-center justify-between mb-6 pl-6">
         <div className="flex items-center gap-2">
           <FaArrowLeft className="text-[#2F4C92] text-3xl cursor-pointer" onClick={handleBack} />
@@ -192,18 +193,18 @@ const AddProject = () => {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 bg-white rounded-md w-fit border-[#5caaab] mb-6">
+      <div className="flex gap-4 bg-white rounded-md w-fit border-b-2 border-[#5caaab] mb-6">
         {tabs.map((tab, index) => (
           <button
             key={tab}
             onClick={() => setActiveTabIndex(index)}
-            className={`py-2 px-5 rounded-md font-medium transition duration-200 ${
+            className={`py-2 px-5 rounded-t-md font-medium transition duration-200 ${
               activeTabIndex === index
-                ? "text-[#5caaab] border-2 font-bold border-[#5caaab]"
+                ? "text-white border-0 border-b-0  bg-[#5caaab] font-bold border-[#5caaab]"
                 : "text-gray-500 hover:text-[#5caaab]"
             }`}
           >
-            {tab}
+            {tab} 
           </button>
         ))}
       </div>

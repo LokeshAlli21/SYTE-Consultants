@@ -215,6 +215,105 @@ class DatabaseService {
       throw error;
     }
   }
+
+  async uploadProjectProfessionalDetails(formData) {
+  try {
+    console.log('Original professional details formData:', formData);
+
+    const fileFormData = new FormData();
+    const fieldsToUpload = [];
+
+    const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
+
+    // Iterate over each role (engineer, architect, ca)
+    for (const role of ['engineer', 'architect', 'ca']) {
+      const section = formData[role];
+      const roleName = section.name?.replace(/\s+/g, '') || "Unknown";
+    
+      for (const key in section) {
+        const value = section[key];
+    
+        // Handle only uploaded file fields
+        if (key.endsWith('_uploaded_url') && value instanceof File) {
+          if (!value) continue;
+    
+          const fileType = key.replace('_uploaded_url', '');
+          let identifier = '';
+    
+          // Try to match identifier field for this file type
+          switch (fileType) {
+            case 'pan':
+              identifier = section.pan_number || 'unknown';
+              break;
+            case 'licence':
+              identifier = section.licence_number || 'unknown';
+              break;
+            default:
+              identifier = fileType; // fallback if no identifier field
+          }
+    
+          const extension = value.name?.split('.').pop() || 'pdf';
+          const newFileName = `${role}_${roleName}_${fileType}_${identifier}_${timestamp}.${extension}`;
+          const renamedFile = new File([value], newFileName, { type: value.type });
+    
+          const fullFieldName = `${role}.${key}`;
+          fileFormData.append(fullFieldName, renamedFile);
+          fieldsToUpload.push({ role, fileType, identifier, fullFieldName });
+        }
+      }
+    }
+    // Upload files if there are any
+    if (fieldsToUpload.length > 0) {
+      const fileUploadRes = await fetch(`${this.baseUrl}/api/projects/professional-details/upload-files`, {
+        method: "POST",
+        headers: this.getAuthHeaders(true),
+        body: fileFormData
+      });
+
+      if (!fileUploadRes.ok) {
+        const errorData = await fileUploadRes.json();
+        throw new Error(errorData.message || "File upload failed.");
+      }
+
+      const uploadedUrls = await fileUploadRes.json();
+      console.log(uploadedUrls);
+
+      for (const { role, key, fullFieldName } of fieldsToUpload) {
+        if (uploadedUrls[fullFieldName]) {
+          const [roleFromUrl, rawKey] = fullFieldName.split('.');
+          formData[role][rawKey] = uploadedUrls[fullFieldName];
+        } else {
+          throw new Error(`Missing URL for ${fullFieldName} in upload response`);
+        }
+      }
+    }
+    console.log("Final professional details formData to submit:", formData);
+
+    const response = await fetch(`${this.baseUrl}/api/projects/add-project-professionals`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Professional details submission failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Project professional details uploaded successfully!");
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error uploading professional details:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
   
   
   async getAllPromoters() {

@@ -163,13 +163,14 @@ CREATE TABLE cas (
 CREATE TABLE project_professional_details (
     id SERIAL PRIMARY KEY,  -- Unique identifier for each record
 
+
+    project_id INT NOT NULL UNIQUE,  -- Foreign key to Projects table
+
     -- Foreign key constraint
     CONSTRAINT fk_project
         FOREIGN KEY (project_id)
         REFERENCES projects(id)
         ON DELETE CASCADE,
-
-    project_id INT NOT NULL,  -- Foreign key to Projects table
 
     -- Engineer Details
     engineer_id INT REFERENCES engineers(id),
