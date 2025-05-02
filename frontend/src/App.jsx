@@ -25,7 +25,7 @@ function App() {
   return (
     <div className="flex min-h-screen max-w-[1575px] bg-[#F3F4FF]">
       <SideBar />
-      <ToastContainer />
+      <ToastContainer position='bottom-right' />
       <div className=" flex-1">
         <Outlet />
       </div>

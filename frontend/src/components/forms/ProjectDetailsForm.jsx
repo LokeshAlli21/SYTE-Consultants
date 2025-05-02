@@ -53,7 +53,10 @@ function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubm
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        handleSubmitProjectDetails()
+        const confirmed = window.confirm('Are you sure you want to submit?');
+        if (confirmed) {
+          handleSubmitProjectDetails()
+        }
       };
 
     const commonInputStyles =
@@ -64,7 +67,7 @@ function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubm
     onSubmit={handleSubmit}
      className="flex flex-col gap-4 ">
         <div className='flex flex-col gap-4 bg-white p-0 rounded-2xl shadow-md'>
-        <div className='py-2 px-6 relative rounded-t-2xl bg-[#4a9899]'>
+        <div className='py-2 px-6 relative rounded-t-2xl bg-[#5CAAAB]'>
           <h1 className='text-2xl font-bold text-white'>{activeTab}</h1>
         </div>
         <div className='p-6 pt-2 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6'> 

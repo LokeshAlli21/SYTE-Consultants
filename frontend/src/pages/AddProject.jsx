@@ -2,7 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa6';
 import { FaFilePdf, FaTimes } from "react-icons/fa";
-import ProjectDetailsForm from '../components/forms/ProjectDetailsForm';
+import {
+    ProjectDetailsForm,
+    ProjectProfessionalDetailsForm,
+  } from '../components/index.js';
 import databaseService from '../backend-services/database/database'
 import { toast } from 'react-toastify';
 
@@ -34,6 +37,45 @@ const AddProject = () => {
       registration_date: "",
       expiry_date: "",
     });
+    const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
+      engineer: {
+        name: "",
+        contact_number: "",
+        email_id: "",
+        office_address: "",
+        licence_number: "",
+        licence_uploaded_url: "",
+        pan_number: "",
+        pan_uploaded_url: "",
+        letter_head_uploaded_url: "",
+        sign_stamp_uploaded_url: ""
+      },
+      architect: {
+        name: "",
+        contact_number: "",
+        email_id: "",
+        office_address: "",
+        licence_number: "",
+        licence_uploaded_url: "",
+        pan_number: "",
+        pan_uploaded_url: "",
+        letter_head_uploaded_url: "",
+        sign_stamp_uploaded_url: ""
+      },
+      ca: {
+        name: "",
+        contact_number: "",
+        email_id: "",
+        office_address: "",
+        licence_number: "",
+        licence_uploaded_url: "",
+        pan_number: "",
+        pan_uploaded_url: "",
+        letter_head_uploaded_url: "",
+        sign_stamp_uploaded_url: ""
+      }
+    })
+    
   
   
     const handleBack = () => {
@@ -59,6 +101,21 @@ const AddProject = () => {
         // setLoading(false);
       }
     };
+    const handleSubmitProjectProfessionalDetails = async () => {
+      console.log("Form Data Submitted:", projectProfessionalDetails);
+      // setLoading(true);
+      // try {
+      //   const response = await databaseService.uploadProjectDetails(projectDetails);
+      //   console.log("✅ Project details uploaded:", response);
+      //   toast.success("✅ Project details submitted successfully!");
+      //   navigate("/projects"); // 👈 Navigate to projects page or wherever appropriate
+      // } catch (error) {
+      //   console.error("❌ Error submitting project details:", error);
+      //   toast.error(`❌ Failed to submit project details: ${error.message}`);
+      // } finally {
+      //   // setLoading(false);
+      // }
+    };
     
   
 
@@ -80,66 +137,39 @@ const AddProject = () => {
           )}
 
           {activeTab === "Professional Details" && (
-            <>
-              <input
-                type="text"
-                placeholder="Engineer Name"
-                className={commonInputStyles}
-                
-                onChange={(e) => setEngineerName(e.target.value)}
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                className={commonInputStyles}
-                
-                onChange={(e) => setEngineerEmail(e.target.value)}
-              />
-              <button className="bg-[#5caaab] text-white py-2 rounded-xl hover:bg-[#4a9899]">Save</button>
-            </>
+            <ProjectProfessionalDetailsForm
+            formData={projectProfessionalDetails}
+            setFormData={setProjectProfessionalDetails}
+            activeTab={activeTab}
+            handleSubmitProjectProfessionalDetails={handleSubmitProjectProfessionalDetails}
+          />
           )}
 
           {activeTab === "Unit Details" && (
-            <>
-              <input
-                type="number"
-                placeholder="Number of Units"
-                className={commonInputStyles}
-               
-                onChange={(e) => setUnitCount(e.target.value)}
-              />
-              <button className="bg-[#5caaab] text-white py-2 rounded-xl hover:bg-[#4a9899]">Save</button>
-            </>
+            <ProjectDetailsForm
+            formData={projectDetails}
+            setFormData={setProjectDetails}
+            activeTab={activeTab}
+            handleSubmitProjectDetails={handleSubmitProjectDetails}
+          />
           )}
 
           {activeTab === "Documents" && (
-            <>
-              <input
-                type="file"
-                className={commonInputStyles}
-                onChange={(e) => setDocumentFile(e.target.files[0])}
-              />
-              <button className="bg-[#5caaab] text-white py-2 rounded-xl hover:bg-[#4a9899]">Save</button>
-            </>
+             <ProjectDetailsForm
+             formData={projectDetails}
+             setFormData={setProjectDetails}
+             activeTab={activeTab}
+             handleSubmitProjectDetails={handleSubmitProjectDetails}
+           />
           )}
 
           {activeTab === "Project Progress" && (
-            <>
-              <input
-                type="text"
-                placeholder="Status"
-                className={commonInputStyles}
-               
-                onChange={(e) => setProjectStatus(e.target.value)}
-              />
-              <input
-                type="date"
-                className={commonInputStyles}
-               
-                onChange={(e) => setProjectDate(e.target.value)}
-              />
-              <button className="bg-[#5caaab] text-white py-2 rounded-xl hover:bg-[#4a9899]">Save</button>
-            </>
+             <ProjectDetailsForm
+             formData={projectDetails}
+             setFormData={setProjectDetails}
+             activeTab={activeTab}
+             handleSubmitProjectDetails={handleSubmitProjectDetails}
+           />
           )}</>
     );
   };
@@ -149,7 +179,7 @@ const AddProject = () => {
       <div className="flex items-center justify-between mb-6 pl-6">
         <div className="flex items-center gap-2">
           <FaArrowLeft className="text-[#2F4C92] text-3xl cursor-pointer" onClick={handleBack} />
-          <h1 className="text-[24px] font-bold text-[#2F4C92]">Promoters</h1>
+          <h1 className="text-[24px] font-bold text-[#2F4C92]">Add {tabs[activeTabIndex]}</h1>
         </div>
 
         <div className="flex items-center gap-6">
