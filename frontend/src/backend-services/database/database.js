@@ -353,7 +353,7 @@ class DatabaseService {
       }
   
       const data = await response.json();
-      toast.success("✅ Promoters fetched successfully!");
+      toast.success("✅ Projects fetched successfully!");
       return data.projects;
   
     } catch (error) {

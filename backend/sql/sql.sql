@@ -209,6 +209,8 @@ EXECUTE FUNCTION update_project_professional_timestamp();
 CREATE TABLE project_units (
 
     id SERIAL PRIMARY KEY,  -- Unique identifier for each unit
+    
+    project_id INT NOT NULL,  -- Foreign key to Projects table
 
     -- Foreign Key Constraint
     CONSTRAINT fk_project
@@ -216,7 +218,6 @@ CREATE TABLE project_units (
         REFERENCES projects(id)
         ON DELETE CASCADE,
 
-    project_id INT NOT NULL,  -- Foreign key to Projects table
 
     -- Unit Details
     unit_name VARCHAR(255),

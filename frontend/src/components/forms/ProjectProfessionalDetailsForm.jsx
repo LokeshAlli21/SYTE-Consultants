@@ -80,7 +80,7 @@ function ProjectProfessionalDetailsForm({ activeTab = '', formData, setFormData,
   const renderProfessionalSection = (roleLabel, roleKey) => {
     const data = formData[roleKey] || {};
     return (
-      <div className="bg-white p-4 rounded-xl shadow-md">
+      <div className="bg-white p-6 rounded-xl shadow-md">
         <h2 className="text-xl font-bold text-[#4a9899] mb-4">{roleLabel}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 

@@ -10,6 +10,8 @@ import InputField from "./InputField";
 import SideBar from "./SideBar";
 import Button from "./Button";
 import LogoutButton from "./LogoutButton";
+import UnitDetails from "./unit-details/UnitDetails";
+import UnitDetailsForm from "./forms/UnitDetailsForm";
 
 export {
     PromoterForm,
@@ -24,4 +26,6 @@ export {
     SideBar,
     Button,
     LogoutButton,
+    UnitDetails,
+    UnitDetailsForm,
 }

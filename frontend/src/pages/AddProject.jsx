@@ -5,6 +5,7 @@ import { FaFilePdf, FaTimes } from "react-icons/fa";
 import {
     ProjectDetailsForm,
     ProjectProfessionalDetailsForm,
+    UnitDetails,
   } from '../components/index.js';
 import databaseService from '../backend-services/database/database'
 import { toast } from 'react-toastify';
@@ -18,6 +19,9 @@ const tabs = [
 ];
 
 const AddProject = () => {
+
+  const [isUnitDetailsFormActive, setIsUnitDetailsFormActive] = useState(false)
+
     const navigate = useNavigate();
     const [activeTabIndex, setActiveTabIndex] = useState(0);
     const [projectDetails, setProjectDetails] = useState({
@@ -38,7 +42,7 @@ const AddProject = () => {
       expiry_date: "",
     });
     const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
-      project_id: 6,
+      project_id: 7,
       engineer: {
         name: "",
         contact_number: "",
@@ -76,6 +80,47 @@ const AddProject = () => {
         sign_stamp_uploaded_url: ""
       }
     })
+
+    const [projectUnit, setProjectUnit] = useState({
+      id: 1,
+      project_id: 7,
+    
+      // Unit Details
+      unit_name: "",
+      unit_type: "",
+      carpet_area: 0,
+      unit_status: "",
+    
+      // Customer Details
+      customer_name: "",
+      agreement_value: '',
+      agreement_or_sale_deed_date: "",
+    
+      // Financial Year Received Amounts
+      received_fy_2018_19: 0,
+      received_fy_2019_20: 0,
+      received_fy_2020_21: 0,
+      received_fy_2021_22: 0,
+      received_fy_2022_23: 0,
+      received_fy_2023_24: 0,
+      received_fy_2024_25: 0,
+      received_fy_2025_26: 0,
+      received_fy_2026_27: 0,
+      received_fy_2027_28: 0,
+      received_fy_2028_29: 0,
+      received_fy_2029_30: 0,
+    
+      // Aggregated Financials
+      total_received: 0,
+      balance_amount: 0, // Example: agreement_value - total_received
+    
+      // Documents
+      afs_uploaded_url: "",
+      sale_deed_uploaded_url: "",
+    
+})
+    
+    
     
   
   
@@ -116,7 +161,25 @@ const AddProject = () => {
       } finally {
         // setLoading(false);
       }
-    };    
+    };   
+     
+    const handleSubmitProjectUnit = async () => {
+      console.log("Form Data Submitted:", projectUnit);
+      // setLoading(true);
+      // try {
+      //   const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
+      //   console.log("✅ Project professional details uploaded:", response);
+      //   toast.success("✅ Project professional details submitted successfully!");
+      //   navigate("/projects"); // 👈 Update the route if needed
+      // } catch (error) {
+      //   console.error("❌ Error submitting project professional details:", error);
+      //   toast.error(`❌ Failed to submit professional details: ${error.message}`);
+      // } finally {
+      //   // setLoading(false);
+      // }
+      setIsUnitDetailsFormActive(false)
+    };   
+
     
   
 
@@ -147,12 +210,14 @@ const AddProject = () => {
           )}
 
           {activeTab === "Unit Details" && (
-            <ProjectDetailsForm
-            formData={projectDetails}
-            setFormData={setProjectDetails}
+           <UnitDetails 
+           isUnitDetailsFormActive={isUnitDetailsFormActive}
+           setIsUnitDetailsFormActive={setIsUnitDetailsFormActive}
+           formData={projectUnit}
+            setFormData={setProjectUnit}
             activeTab={activeTab}
-            handleSubmitProjectDetails={handleSubmitProjectDetails}
-          />
+            handleSubmitProjectUnit={handleSubmitProjectUnit}
+           />
           )}
 
           {activeTab === "Documents" && (

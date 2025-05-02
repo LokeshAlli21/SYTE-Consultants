@@ -61,7 +61,7 @@ function SideBar() {
     )}
 
       {sidebarOpen && location.pathname !== '/login' && (
-        <div className='max-w-70 flex flex-col items-center bg-white text-black pl-4 pt-8 pr-0 space-y-2 min-h-full left-0 top-0 bottom-0'>
+        <div className='max-w-70 flex shadow-md flex-col items-center bg-white text-black pl-4 pt-8 pr-0 space-y-2 min-h-full left-0 top-0 bottom-0'>
           <div className='flex pr-4 items-center justify-start font-semibold text-[24px] font-inter' onClick={() => {
                   navigate('/');
                 }}>
