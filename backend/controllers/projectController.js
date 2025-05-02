@@ -67,10 +67,14 @@ export const uploadProjectFiles = async (req, res) => {
       const fieldName = file.fieldname;
       const originalName = file.originalname;
 
-      const fileExt = originalName.split('.').pop();
-      const folder = "project-documents";
-      const filePath = `${folder}/${originalName}`;
+      // Choose folder based on field name
+      let folder = "others";
+      if (fieldName.includes("rera_certificate")) folder = "rera_certificate";
 
+      const fileExt = originalName.split('.').pop();
+      const filePath = `project-files/${folder}/${originalName}`;
+
+      // Upload to Supabase Storage
       const { data, error } = await supabase.storage
         .from('uploaded-documents')
         .upload(filePath, file.buffer, {
@@ -93,7 +97,25 @@ export const uploadProjectFiles = async (req, res) => {
     return res.status(200).json(uploadedUrls);
 
   } catch (error) {
-    console.error('❌ Unexpected error in uploadProjectFiles:', error);
-    res.status(500).json({ message: 'Server error while uploading project files.' });
+    console.error('Unexpected error in uploadProjectFiles:', error);
+    return res.status(500).json({ message: 'Server error while uploading project files.' });
+  }
+};
+
+export const getAllProjects = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('id, project_name, promoter_name, rera_number, district, city, registration_date, expiry_date');
+
+    if (error) {
+      console.error('❌ Error fetching projects:', error);
+      return res.status(500).json({ error: 'Failed to fetch projects', details: error });
+    }
+
+    res.status(200).json({ projects: data });
+  } catch (err) {
+    console.error('❌ Unexpected error in getAllProjects:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

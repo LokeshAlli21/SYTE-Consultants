@@ -4,6 +4,7 @@ import { FaArrowLeft } from 'react-icons/fa6';
 import { FaFilePdf, FaTimes } from "react-icons/fa";
 import ProjectDetailsForm from '../components/forms/ProjectDetailsForm';
 import databaseService from '../backend-services/database/database'
+import { toast } from 'react-toastify';
 
 const tabs = [
   "Project Details",
@@ -18,12 +19,12 @@ const AddProject = () => {
     const [activeTabIndex, setActiveTabIndex] = useState(0);
     const [projectDetails, setProjectDetails] = useState({
       channel_partner: "",
-      promoter_id: "",
+      promoter_id: 1,
       promoter_name: "",
       project_name: "",
       project_type: "",
       project_address: "",
-      project_pincode: "",
+      project_pincode: 0,
       login_id: "",
       password: "",
       district: "",
@@ -43,10 +44,9 @@ const AddProject = () => {
       }
     };
   
-    const handleSubmitProjectDetails = async (e) => {
-      e.preventDefault();
+    const handleSubmitProjectDetails = async () => {
       console.log("Form Data Submitted:", projectDetails);
-      setLoading(true);
+      // setLoading(true);
       try {
         const response = await databaseService.uploadProjectDetails(projectDetails);
         console.log("✅ Project details uploaded:", response);
@@ -56,7 +56,7 @@ const AddProject = () => {
         console.error("❌ Error submitting project details:", error);
         toast.error(`❌ Failed to submit project details: ${error.message}`);
       } finally {
-        setLoading(false);
+        // setLoading(false);
       }
     };
     

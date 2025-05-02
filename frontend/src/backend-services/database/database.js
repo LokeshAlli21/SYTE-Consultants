@@ -138,28 +138,26 @@ class DatabaseService {
       const fileFormData = new FormData();
       const fieldsToUpload = [];
   
-      const projectName = formData.project_name?.replace(/\s+/g, '_') || 'UnknownProject';
+      const project_name = formData.project_name?.replace(/\s+/g, '_') || 'UnknownPromoter';
       const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
   
       for (const key in formData) {
         const file = formData[key];
+  
         if (key.endsWith('_uploaded_url') && file instanceof File) {
+          // Skip if file is null or undefined
           if (!file) continue;
   
           let identifier = "NoIdentifier";
   
-          if (key === "project_approval_uploaded_url") {
-            identifier = formData.approval_number || "NoApproval";
-          } else if (key === "project_plan_uploaded_url") {
-            identifier = formData.plan_number || "NoPlan";
-          } else if (key === "project_image_uploaded_url") {
-            identifier = "";
+          if (key === "rera_certificate_uploaded_url") {
+            identifier = formData.rera_number || "NoRERA";
           }
   
           const extension = file.name?.split('.').pop() || 'pdf';
           const renamedFile = new File(
             [file],
-            `${projectName}_${identifier}_${timestamp}.${extension}`,
+            `${project_name}_${identifier}_${timestamp}.${extension}`,
             { type: file.type }
           );
   
@@ -244,27 +242,26 @@ class DatabaseService {
 
 
   async getAllProjects() {
-    // try {
-    //   const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {
-    //     method: "GET",
-    //     headers: this.getAuthHeaders(),
-    //   });
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/get-all`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
   
-    //   if (!response.ok) {
-    //     const errorData = await response.json();
-    //     throw new Error(errorData.message || "Failed to fetch promoters.");
-    //   }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch promoters.");
+      }
   
-    //   const data = await response.json();
-    //   toast.success("✅ Promoters fetched successfully!");
-    //   return data.promoters;
+      const data = await response.json();
+      toast.success("✅ Promoters fetched successfully!");
+      return data.projects;
   
-    // } catch (error) {
-    //   console.error("❌ Error fetching promoters:", error);
-    //   toast.error(`❌ ${error.message}`);
-    //   throw error;
-    // }
-    return []
+    } catch (error) {
+      console.error("❌ Error fetching promoters:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
   }
 
   async deletePromoterById(id) {

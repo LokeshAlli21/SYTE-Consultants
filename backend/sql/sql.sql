@@ -33,7 +33,7 @@ EXECUTE FUNCTION update_promoter_timestamp();
 
 
 -- Creating the PromoteDetails table with foreign key to Promoters
-CREATE TABLE promoterdetails (
+CREATE TABLE promoter_details (
     id SERIAL PRIMARY KEY,  -- Unique identifier for each promoter's details
 
     -- Adding Foreign Key Constraint

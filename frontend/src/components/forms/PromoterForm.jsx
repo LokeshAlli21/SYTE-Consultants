@@ -19,7 +19,7 @@ const PromoterForm = ({id}) => {
     office_address: '',
     promoter_type: '',
     full_name: '',
-    aadhar_number: '',
+    aadhar_number: 0,
     aadhar_uploaded_url: '',
     pan_number: '',
     pan_uploaded_url: '',
@@ -177,7 +177,7 @@ useEffect(() => {
             <div className="flex flex-col">
               <label className="mb-2 font-medium">Aadhar Number</label>
               <input
-                type="text"
+                type='number'
                 name="aadhar_number"
                 value={formData.aadhar_number}
                 onChange={handleChange}

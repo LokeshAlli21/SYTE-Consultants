@@ -63,7 +63,7 @@ if (promoterError) {
 
     // Step 3: Insert promoter details into 'PromoterDetails' table
     const { data: detailsData, error: detailsError } = await supabase
-      .from('promoterdetails')
+      .from('promoter_details')
       .insert([{
         full_name,
         office_address,
@@ -159,7 +159,7 @@ export const getAllPromoters = async (req, res) => {
     const { data, error } = await supabase
       .from('promoters')
       .select('id, promoter_name, contact_number, email_id, district, city')
-      .eq('status','active');
+      .eq('status_for_delete','active');
 
     if (error) {
       console.error('❌ Error fetching promoters:', error);
@@ -179,7 +179,7 @@ export const softDeletePromoterById = async (req, res) => {
   try {
     const { error } = await supabase
       .from('promoters')
-      .update({ status: 'inactive' })
+      .update({ status_for_delete: 'inactive' })
       .eq('id', promoterId);
 
     if (error) {
@@ -208,8 +208,8 @@ export const getPromoterById = async (req, res) => {
         district,
         city,
         promoter_type,
-        status,
-        promoterdetails (
+        status_for_delete,
+        promoter_details (
           full_name,
           office_address,
           aadhar_number,

@@ -146,7 +146,7 @@ function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubm
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Project Pincode</label>
   <input
-    type="text"
+    type='number'
     name="project_pincode"
     value={formData.project_pincode}
     onChange={handleChange}

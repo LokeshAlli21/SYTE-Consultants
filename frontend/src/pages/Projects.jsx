@@ -27,6 +27,8 @@ const ProjectsPage = () => {
     const fetchProjects = async () => {
       try {
         const data = await databaseService.getAllProjects();
+        console.log(data);
+        
         setProjects(data);
       } catch (error) {
         toast.error("❌ Failed to load projects");
