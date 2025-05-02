@@ -6,6 +6,7 @@ import {
     ProjectDetailsForm,
     ProjectProfessionalDetailsForm,
     UnitDetails,
+    ProjectDocumentForm,
   } from '../components/index.js';
 import databaseService from '../backend-services/database/database'
 import { toast } from 'react-toastify';
@@ -84,18 +85,18 @@ const AddProject = () => {
     const [projectUnit, setProjectUnit] = useState({
       id: 1,
       project_id: 7,
-    
+      
       // Unit Details
       unit_name: "",
       unit_type: "",
       carpet_area: 0,
       unit_status: "",
-    
+      
       // Customer Details
       customer_name: "",
       agreement_value: '',
       agreement_or_sale_deed_date: "",
-    
+      
       // Financial Year Received Amounts
       received_fy_2018_19: 0,
       received_fy_2019_20: 0,
@@ -109,20 +110,31 @@ const AddProject = () => {
       received_fy_2027_28: 0,
       received_fy_2028_29: 0,
       received_fy_2029_30: 0,
-    
+      
       // Aggregated Financials
       total_received: 0,
       balance_amount: 0, // Example: agreement_value - total_received
-    
+      
       // Documents
       afs_uploaded_url: "",
       sale_deed_uploaded_url: "",
-    
-})
-    
-    
-    
-  
+      
+    })
+
+    const [projectDocuments,setProjectDocuments] = useState({
+      project_id: 7, // must match a valid project ID
+
+      // Document URLs
+      cc_uploaded_url: "",
+      plan_uploaded_url: "",
+      search_report_uploaded_url: "",
+      da_uploaded_url: "",
+      pa_uploaded_url: "",
+      satbara_uploaded_url: "",
+      promoter_letter_head_uploaded_url: "",
+      promoter_sign_stamp_uploaded_url: "",
+    })
+
   
     const handleBack = () => {
       if (activeTabIndex > 0) {
@@ -179,6 +191,21 @@ const AddProject = () => {
       // }
       setIsUnitDetailsFormActive(false)
     };   
+    const handleSubmitProjectDocuments = async () => {
+      console.log("Form Data Submitted:", projectDocuments);
+      // setLoading(true);
+      // try {
+      //   const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
+      //   console.log("✅ Project professional details uploaded:", response);
+      //   toast.success("✅ Project professional details submitted successfully!");
+      //   navigate("/projects"); // 👈 Update the route if needed
+      // } catch (error) {
+      //   console.error("❌ Error submitting project professional details:", error);
+      //   toast.error(`❌ Failed to submit professional details: ${error.message}`);
+      // } finally {
+      //   // setLoading(false);
+      // }
+    };   
 
     
   
@@ -221,11 +248,11 @@ const AddProject = () => {
           )}
 
           {activeTab === "Documents" && (
-             <ProjectDetailsForm
-             formData={projectDetails}
-             setFormData={setProjectDetails}
+             <ProjectDocumentForm
+             formData={projectDocuments}
+             setFormData={setProjectDocuments}
              activeTab={activeTab}
-             handleSubmitProjectDetails={handleSubmitProjectDetails}
+             handleSubmitProjectDocuments={handleSubmitProjectDocuments}
            />
           )}
 

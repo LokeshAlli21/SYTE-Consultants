@@ -12,6 +12,7 @@ import Button from "./Button";
 import LogoutButton from "./LogoutButton";
 import UnitDetails from "./unit-details/UnitDetails";
 import UnitDetailsForm from "./forms/UnitDetailsForm";
+import ProjectDocumentForm from "./forms/ProjectDocumentForm";
 
 export {
     PromoterForm,
@@ -28,4 +29,5 @@ export {
     LogoutButton,
     UnitDetails,
     UnitDetailsForm,
+    ProjectDocumentForm,
 }

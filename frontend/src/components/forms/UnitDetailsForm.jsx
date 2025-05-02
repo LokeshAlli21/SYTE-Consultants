@@ -65,7 +65,7 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
 
   return (
     <div className="p-0 bg-white rounded-2xl shadow-md relative" >
-      <div className='p-3 bg-[#5CAAAB] rounded-t-2xl  px-6'>
+      <div className='p-2 bg-[#5CAAAB] rounded-t-2xl  px-6'>
         <h1 className="text-2xl  font-bold text-white">Add Unit Details</h1>
       </div>
       <form className=" p-6  space-y-6"  onSubmit={handleSubmit}>
@@ -182,7 +182,7 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-end items-center">
           <button
             type="submit"
             className="px-6 py-3 bg-[#5CAAAB] text-white rounded-lg shadow-md hover:bg-[#489496]"
