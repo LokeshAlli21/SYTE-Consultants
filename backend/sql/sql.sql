@@ -218,6 +218,8 @@ CREATE TABLE project_units (
         REFERENCES projects(id)
         ON DELETE CASCADE,
 
+    CONSTRAINT unique_project_id UNIQUE (project_id),
+
 
     -- Unit Details
     unit_name VARCHAR(255),
@@ -309,13 +311,14 @@ EXECUTE FUNCTION update_project_unit_timestamp();
 CREATE TABLE project_documents (
     id SERIAL PRIMARY KEY,  -- Unique identifier for each record
 
+    project_id INT NOT NULL UNIQUE,  -- Foreign key to Projects table
+
     -- Foreign Key Constraint
     CONSTRAINT fk_project
         FOREIGN KEY (project_id)
         REFERENCES projects(id)
         ON DELETE CASCADE,
 
-    project_id INT NOT NULL,  -- Foreign key to Projects table
 
     -- Document URLs
     cc_uploaded_url TEXT,  -- Completion Certificate
@@ -383,7 +386,7 @@ EXECUTE FUNCTION update_project_documents_timestamp();
 -- Creating the SiteProgress table
 CREATE TABLE site_progress (
     id SERIAL PRIMARY KEY,
-    project_id INT NOT NULL,
+    project_id INT NOT NULL unique,
 
     CONSTRAINT fk_project_site_progress
         FOREIGN KEY (project_id)

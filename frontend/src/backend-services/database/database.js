@@ -412,6 +412,8 @@ async uploadProjectDocuments(formData) {
       }
 
       const urls = await res.json();
+      console.log(uploadedFiles);
+      
       uploadedFiles.forEach((key) => {
         if (urls[key]) {
           formData[key] = urls[key];

@@ -44,7 +44,7 @@ const AddProject = () => {
       expiry_date: "",
     });
     const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
-      project_id: 7,
+      project_id: 8,
       engineer: {
         name: "",
         contact_number: "",
@@ -85,7 +85,7 @@ const AddProject = () => {
 
     const [projectUnit, setProjectUnit] = useState({
       id: 1,
-      project_id: 7,
+      project_id: 8,
       
       // Unit Details
       unit_name: "",
@@ -123,7 +123,7 @@ const AddProject = () => {
     })
 
     const [projectDocuments,setProjectDocuments] = useState({
-      project_id: 7, // must match a valid project ID
+      project_id: 8, // must match a valid project ID
 
       // Document URLs
       cc_uploaded_url: "",
@@ -137,7 +137,7 @@ const AddProject = () => {
     })
 
     const [projectBuildingProgress,setProjectBuildingProgress] = useState({
-      project_id: 7,
+      project_id: 8,
     
       excavation: 0,
       basement: 0,
@@ -153,7 +153,7 @@ const AddProject = () => {
     })
 
     const [projectCommonAreasProgress, setProjectCommonAreasProgress] = useState({
-      project_id: 7,
+      project_id: 8,
       internal_roads_footpaths: {
         proposed: false,
         percentage_of_work: 0,
@@ -236,6 +236,7 @@ const AddProject = () => {
         const response = await databaseService.uploadProjectDetails(projectDetails);
         console.log("✅ Project details uploaded:", response);
         toast.success("✅ Project details submitted successfully!");
+        setProjectDetails(prev => resetObjectData(prev));
         navigate("/projects"); // 👈 Navigate to projects page or wherever appropriate
       } catch (error) {
         console.error("❌ Error submitting project details:", error);
@@ -251,6 +252,7 @@ const AddProject = () => {
         const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
         console.log("✅ Project professional details uploaded:", response);
         toast.success("✅ Project professional details submitted successfully!");
+        setProjectProfessionalDetails(prev => resetObjectData(prev));
         navigate("/projects"); // 👈 Update the route if needed
       } catch (error) {
         console.error("❌ Error submitting project professional details:", error);
@@ -265,6 +267,7 @@ const AddProject = () => {
         const response = await databaseService.uploadProjectUnitDetails(projectUnit);
         console.log("✅ Project unit details uploaded:", response);
         toast.success("✅ Unit details submitted successfully!");
+        setProjectUnit(prev => resetObjectData(prev));
         setIsUnitDetailsFormActive(false); // Optional: disable unit form after submission
       } catch (error) {
         console.error("❌ Error submitting unit details:", error);
@@ -277,6 +280,7 @@ const AddProject = () => {
         const response = await databaseService.uploadProjectDocuments(projectDocuments);
         console.log("✅ Project documents uploaded:", response);
         toast.success("✅ Documents submitted successfully!");
+        setProjectDocuments(prev => resetObjectData(prev));
       } catch (error) {
         console.error("❌ Error submitting documents:", error);
         toast.error(`❌ Failed to submit documents: ${error.message}`);
@@ -288,6 +292,7 @@ const AddProject = () => {
         const response = await databaseService.uploadProjectBuildingProgress(projectBuildingProgress);
         console.log("✅ Building progress uploaded:", response);
         toast.success("✅ Building progress submitted successfully!");
+        setProjectBuildingProgress(prev => resetObjectData(prev));
       } catch (error) {
         console.error("❌ Error submitting building progress:", error);
         toast.error(`❌ Failed to submit building progress: ${error.message}`);
@@ -299,12 +304,38 @@ const AddProject = () => {
         const response = await databaseService.uploadProjectCommonAreasProgress(projectCommonAreasProgress);
         console.log("✅ Common areas progress uploaded:", response);
         toast.success("✅ Common areas progress submitted successfully!");
+        setProjectCommonAreasProgress(prev => resetObjectData(prev));
       } catch (error) {
         console.error("❌ Error submitting common areas progress:", error);
         toast.error(`❌ Failed to submit common areas progress: ${error.message}`);
       }
     };    
 
+    function resetObjectData(obj) {
+      if (Array.isArray(obj)) return [];
+    
+      const clearedObj = {};
+    
+      for (const key in obj) {
+        const value = obj[key];
+    
+        if (typeof value === "string") {
+          clearedObj[key] = "";
+        } else if (typeof value === "number") {
+          clearedObj[key] = 0;
+        } else if (typeof value === "boolean") {
+          clearedObj[key] = false;
+        } else if (Array.isArray(value)) {
+          clearedObj[key] = [];
+        } else if (typeof value === "object" && value !== null) {
+          clearedObj[key] = resetObjectData(value); // recursively clear nested objects
+        } else {
+          clearedObj[key] = value; // keep other types as-is (like null, undefined)
+        }
+      }
+    
+      return clearedObj;
+    }
     
   
 

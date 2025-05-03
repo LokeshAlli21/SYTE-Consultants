@@ -271,7 +271,11 @@ export const uploadUnitFiles = async (req, res) => {
     const uploadedUrls = {};
 
     for (const file of files) {
-      const [field] = file.fieldname.split('.'); // e.g., afs_uploaded_url
+      console.log(file.fieldname); // sale_deed_uploaded_url
+      const field = file.fieldname.replace('_uploaded_url', '');
+      console.log(field); // sale_deed
+      
+      // e.g., afs_uploaded_url
       const filePath = `unit-documents/${field}/${file.originalname}`;
 
       const { error } = await supabase.storage.from('uploaded-documents').upload(filePath, file.buffer, {
@@ -294,30 +298,57 @@ export const uploadUnitFiles = async (req, res) => {
 
 export const uploadProjectUnits = async (req, res) => {
   try {
-    const { project_id, units } = req.body;
+    const unit = req.body;
+    // console.log(unit);
+    
+    if (!unit || !unit.project_id) {
+      return res.status(400).json({ message: 'Missing project_id or unit data' });
+    }
 
-    if (!project_id || !units?.length) return res.status(400).json({ message: 'Missing project_id or units' });
+    // Remove the 'id' field from the unit object (if it exists)
+    delete unit.id;
 
-    const sanitizedUnits = units.map(unit => {
-      const numFields = [
-        "carpet_area", "agreement_value", "received_fy_2018_19", "received_fy_2019_20", "received_fy_2020_21",
-        "received_fy_2021_22", "received_fy_2022_23", "received_fy_2023_24", "received_fy_2024_25", "received_fy_2025_26",
-        "received_fy_2026_27", "received_fy_2027_28", "received_fy_2028_29", "received_fy_2029_30", "total_received", "balance_amount"
-      ];
-      const filtered = { project_id };
-      Object.entries(unit).forEach(([key, value]) => {
-        if (numFields.includes(key) && Number(value) === 0) return;
-        filtered[key] = value;
-      });
-      return filtered;
+    // Sanitize numerical and empty values
+    const numFields = [
+      "carpet_area", "agreement_value",
+      "received_fy_2018_19", "received_fy_2019_20", "received_fy_2020_21", "received_fy_2021_22",
+      "received_fy_2022_23", "received_fy_2023_24", "received_fy_2024_25", "received_fy_2025_26",
+      "received_fy_2026_27", "received_fy_2027_28", "received_fy_2028_29", "received_fy_2029_30",
+      "total_received", "balance_amount"
+    ];
+
+    const stringFields = [
+      "agreement_or_sale_deed_date", "afs_uploaded_url", "sale_deed_uploaded_url"
+    ];
+
+    const sanitizedUnit = {};
+
+    // Loop through the unit and sanitize the values
+    Object.entries(unit).forEach(([key, value]) => {
+      // Skip numerical fields with 0
+      if (numFields.includes(key) && Number(value) === 0) return;
+
+      // Skip empty strings
+      if (stringFields.includes(key) && value === '') return;
+
+      // Always keep required fields
+      sanitizedUnit[key] = value;
     });
 
-    const { error } = await supabase.from('project_units').insert(sanitizedUnits);
-    if (error) return res.status(500).json({ message: 'Failed to insert unit data', error });
+    // Perform the upsert operation where 'project_id' is the conflict target
+    const { error } = await supabase
+      .from('project_units')
+      .upsert([sanitizedUnit], { onConflict: ['project_id'] });
 
-    res.status(201).json({ message: '✅ Project units inserted successfully' });
+    // console.log(error);
+
+    if (error) {
+      return res.status(500).json({ message: '❌ Failed to upsert unit data', error });
+    }
+
+    res.status(201).json({ message: '✅ Project unit upserted successfully' });
   } catch (error) {
-    console.error('❌ Error inserting project units:', error);
+    console.error('❌ Error inserting/updating project unit:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -331,7 +362,7 @@ export const uploadDocumentFiles = async (req, res) => {
     const uploadedUrls = {};
 
     for (const file of files) {
-      const field = file.fieldname;
+      const field = file.fieldname.replace('_uploaded_url', '');
       const filePath = `project-documents/${field}/${file.originalname}`;
 
       const { error } = await supabase.storage.from('uploaded-documents').upload(filePath, file.buffer, {
@@ -341,7 +372,9 @@ export const uploadDocumentFiles = async (req, res) => {
       if (error) return res.status(500).json({ message: `Upload failed for ${file.originalname}` });
 
       const { data: publicUrlData } = supabase.storage.from('uploaded-documents').getPublicUrl(filePath);
-      uploadedUrls[field] = publicUrlData.publicUrl;
+      console.log(publicUrlData);
+      
+      uploadedUrls[file.fieldname] = publicUrlData.publicUrl;
     }
 
     res.status(200).json(uploadedUrls);
@@ -355,6 +388,8 @@ export const uploadDocumentFiles = async (req, res) => {
 export const uploadProjectDocuments = async (req, res) => {
   try {
     const { project_id, ...documentData } = req.body;
+    // console.log(req.body);
+    
     if (!project_id) return res.status(400).json({ message: 'Missing project_id' });
 
     const filtered = {};
@@ -363,7 +398,10 @@ export const uploadProjectDocuments = async (req, res) => {
       filtered[key] = value;
     });
 
-    const { error } = await supabase.from('project_documents').upsert([{ project_id, ...filtered }], { onConflict: 'project_id' });
+    const { data, error } = await supabase.from('project_documents').upsert([{ project_id, ...filtered }], { onConflict: 'project_id' });
+    // console.log('data: ',data);
+    // console.log('error: ',error);
+    
     if (error) return res.status(500).json({ message: 'Failed to insert documents', error });
 
     res.status(201).json({ message: '✅ Project documents uploaded successfully' });
@@ -377,6 +415,8 @@ export const uploadProjectDocuments = async (req, res) => {
 export const addBuildingProgress = async (req, res) => {
   try {
     const { project_id, ...progressData } = req.body;
+    // console.log(req.body);
+    
     if (!project_id) return res.status(400).json({ message: 'Missing project_id' });
 
     const filtered = {};
@@ -386,6 +426,8 @@ export const addBuildingProgress = async (req, res) => {
     });
 
     const { error } = await supabase.from('site_progress').upsert([{ project_id, ...filtered }], { onConflict: 'project_id' });
+    // console.log(error);
+    
     if (error) return res.status(500).json({ message: 'Failed to insert progress data', error });
 
     res.status(201).json({ message: '✅ Building progress uploaded successfully' });
