@@ -71,24 +71,60 @@ const inputRefs = useRef({});
   const inputStyles = "w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab]";
   const sectionBox = "bg-white p-6 rounded-xl shadow-md";
 
-  const ProgressBar = () => (
-    <div className="flex justify-center gap-10 mb-6">
-      <div className={`flex flex-col items-center ${step >= 1 ? 'text-[#5caaab]' : 'text-gray-400'}`}
-        onClick={() => {setStep(1)}} >
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 ${step >= 1 ? 'border-[#5caaab]' : 'border-gray-300'}`}>
-          1
-        </div>
-        <span className="mt-2 text-sm font-medium">Building Progress</span>
+  const ProgressBar = () => {
+    // Define the steps
+    const steps = [
+      { id: 1, title: "Building Progress" },
+      { id: 2, title: "Common Areas" }
+    ];
+  
+    return (
+      <div className="relative flex items-center justify-center w-full  mx-auto px-4 mb-4">
+        {/* Progress Bar Background */}
+        <div className="absolute top-5 left-0 w-full h-2 bg-gray-200 rounded-full z-0" />
+  
+        {/* Animated Progress Bar */}
+        <div
+          className="absolute top-5 left-0 h-2 bg-[#5caaab] rounded-full z-0 transition-all duration-300"
+          style={{
+            // Fill 50% for step 1 and 100% for step 2
+            width: `${step === 1 ? 50 : step === 2 ? 100 : 0}%`,
+          }}
+        />
+  
+        {/* Steps */}
+        {steps.map((item, idx) => {
+          const isActive = step >= item.id;
+  
+          return (
+            <div
+              key={item.id}
+              className="relative z-10 flex flex-col items-center flex-1 cursor-pointer group"
+              onClick={() => setStep(item.id)}
+            >
+              <div
+                className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white transition duration-300
+                  ${isActive ? "bg-[#5caaab] shadow-lg" : "bg-gray-300 group-hover:bg-[#5caaab]"}
+                `}
+              >
+                {item.id}
+              </div>
+              <span
+                className={`mt-3 text-sm text-center font-medium transition-colors duration-300
+                  ${isActive ? "text-[#5caaab]" : "text-gray-500 group-hover:text-[#5caaab]"}
+                `}
+              >
+                {item.title}
+              </span>
+            </div>
+          );
+        })}
       </div>
-      <div className={`flex flex-col items-center ${step >= 2 ? 'text-[#5caaab]' : 'text-gray-400'}`}
-        onClick={() => {setStep(2)}} >
-        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold border-4 ${step >= 2 ? 'border-[#5caaab]' : 'border-gray-300'}`}>
-          2
-        </div>
-        <span className="mt-2 text-sm font-medium">Common Areas</span>
-      </div>
-    </div>
-  );
+    );
+  };
+  
+  
+  
 
   const BuildingForm = () => (
     <form onSubmit={handleSubmitBuilding} className="flex flex-col gap-6">
