@@ -261,66 +261,49 @@ const AddProject = () => {
     };   
      
     const handleSubmitProjectUnit = async () => {
-      console.log("Form Data Submitted:", projectUnit);
-      // setLoading(true);
-      // try {
-      //   const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
-      //   console.log("✅ Project professional details uploaded:", response);
-      //   toast.success("✅ Project professional details submitted successfully!");
-      //   navigate("/projects"); // 👈 Update the route if needed
-      // } catch (error) {
-      //   console.error("❌ Error submitting project professional details:", error);
-      //   toast.error(`❌ Failed to submit professional details: ${error.message}`);
-      // } finally {
-      //   // setLoading(false);
-      // }
-      setIsUnitDetailsFormActive(false)
-    };   
+      try {
+        const response = await databaseService.uploadProjectUnitDetails(projectUnit);
+        console.log("✅ Project unit details uploaded:", response);
+        toast.success("✅ Unit details submitted successfully!");
+        setIsUnitDetailsFormActive(false); // Optional: disable unit form after submission
+      } catch (error) {
+        console.error("❌ Error submitting unit details:", error);
+        toast.error(`❌ Failed to submit unit details: ${error.message}`);
+      }
+    };
+    
     const handleSubmitProjectDocuments = async () => {
-      console.log("Form Data Submitted:", projectDocuments);
-      // setLoading(true);
-      // try {
-      //   const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
-      //   console.log("✅ Project professional details uploaded:", response);
-      //   toast.success("✅ Project professional details submitted successfully!");
-      //   navigate("/projects"); // 👈 Update the route if needed
-      // } catch (error) {
-      //   console.error("❌ Error submitting project professional details:", error);
-      //   toast.error(`❌ Failed to submit professional details: ${error.message}`);
-      // } finally {
-      //   // setLoading(false);
-      // }
-    };   
+      try {
+        const response = await databaseService.uploadProjectDocuments(projectDocuments);
+        console.log("✅ Project documents uploaded:", response);
+        toast.success("✅ Documents submitted successfully!");
+      } catch (error) {
+        console.error("❌ Error submitting documents:", error);
+        toast.error(`❌ Failed to submit documents: ${error.message}`);
+      }
+    };
+    
     const handleSubmitProjectBuildingProgress = async () => {
-      console.log("Form Data Submitted:", projectBuildingProgress);
-      // setLoading(true);
-      // try {
-      //   const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
-      //   console.log("✅ Project professional details uploaded:", response);
-      //   toast.success("✅ Project professional details submitted successfully!");
-      //   navigate("/projects"); // 👈 Update the route if needed
-      // } catch (error) {
-      //   console.error("❌ Error submitting project professional details:", error);
-      //   toast.error(`❌ Failed to submit professional details: ${error.message}`);
-      // } finally {
-      //   // setLoading(false);
-      // }
-    };   
+      try {
+        const response = await databaseService.uploadProjectBuildingProgress(projectBuildingProgress);
+        console.log("✅ Building progress uploaded:", response);
+        toast.success("✅ Building progress submitted successfully!");
+      } catch (error) {
+        console.error("❌ Error submitting building progress:", error);
+        toast.error(`❌ Failed to submit building progress: ${error.message}`);
+      }
+    };
+    
     const handleSubmitProjectCommonAreasProgresss = async () => {
-      console.log("Form Data Submitted:", projectCommonAreasProgress);
-      // setLoading(true);
-      // try {
-      //   const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
-      //   console.log("✅ Project professional details uploaded:", response);
-      //   toast.success("✅ Project professional details submitted successfully!");
-      //   navigate("/projects"); // 👈 Update the route if needed
-      // } catch (error) {
-      //   console.error("❌ Error submitting project professional details:", error);
-      //   toast.error(`❌ Failed to submit professional details: ${error.message}`);
-      // } finally {
-      //   // setLoading(false);
-      // }
-    };   
+      try {
+        const response = await databaseService.uploadProjectCommonAreasProgress(projectCommonAreasProgress);
+        console.log("✅ Common areas progress uploaded:", response);
+        toast.success("✅ Common areas progress submitted successfully!");
+      } catch (error) {
+        console.error("❌ Error submitting common areas progress:", error);
+        toast.error(`❌ Failed to submit common areas progress: ${error.message}`);
+      }
+    };    
 
     
   

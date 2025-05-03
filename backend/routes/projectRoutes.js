@@ -5,6 +5,12 @@ import { uploadProjectFiles,
     getAllProjects,
     uploadProjectProfessionalData,
     uploadProjectProfessionalFiles,
+    uploadUnitFiles,
+    uploadProjectUnits,
+    uploadDocumentFiles,
+    uploadProjectDocuments,
+    addBuildingProgress,
+    addCommonAreasProgress,
 } from '../controllers/projectController.js';
 import {upload} from '../supabase/supabaseClient.js'
 
@@ -18,8 +24,11 @@ router.get('/get-all', protect, getAllProjects);
 router.post('/add-project-professionals', protect, uploadProjectProfessionalData);
 router.post('/professional-details/upload-files', protect, upload.any(), uploadProjectProfessionalFiles);
 
-// router.get('/get/:id', protect, getPromoterById);
-
-// router.delete('/delete/:id', protect, softDeletePromoterById);
+router.post('/unit-details/upload-files', protect, upload.any(), uploadUnitFiles);
+router.post('/add-project-units', protect, uploadProjectUnits);
+router.post('/documents/upload-files', protect, upload.any(), uploadDocumentFiles);
+router.post('/add-project-documents', protect, uploadProjectDocuments);
+router.post('/add-building-progress', protect, addBuildingProgress);
+router.post('/add-common-areas-progress', protect, addCommonAreasProgress);
 
 export default router;

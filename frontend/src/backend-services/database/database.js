@@ -314,6 +314,193 @@ class DatabaseService {
   }
 }
 
+async uploadProjectUnitDetails(formData) {
+  try {
+    const fileFormData = new FormData();
+    const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
+    const fileFields = ['afs_uploaded_url', 'sale_deed_uploaded_url'];
+    const uploadedFiles = [];
+
+    for (const key of fileFields) {
+      const file = formData[key];
+      if (file instanceof File) {
+        const extension = file.name?.split('.').pop() || 'pdf';
+        const newFileName = `unit_${key}_${formData.unit_name}_${timestamp}.${extension}`;
+        const renamedFile = new File([file], newFileName, { type: file.type });
+        fileFormData.append(key, renamedFile);
+        uploadedFiles.push(key);
+      }
+    }
+
+    // Upload files
+    if (uploadedFiles.length > 0) {
+      const res = await fetch(`${this.baseUrl}/api/projects/unit-details/upload-files`, {
+        method: "POST",
+        headers: this.getAuthHeaders(true),
+        body: fileFormData
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "File upload failed.");
+      }
+
+      const urls = await res.json();
+      uploadedFiles.forEach((key) => {
+        if (urls[key]) {
+          formData[key] = urls[key];
+        } else {
+          throw new Error(`Missing uploaded URL for ${key}`);
+        }
+      });
+    }
+
+    // Submit final form
+    const response = await fetch(`${this.baseUrl}/api/projects/add-project-units`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Unit details submission failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Project unit details uploaded successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error uploading unit details:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
+
+async uploadProjectDocuments(formData) {
+  try {
+    const fileFormData = new FormData();
+    const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
+    const uploadedFiles = [];
+
+    for (const key in formData) {
+      const value = formData[key];
+      if (key.endsWith('_uploaded_url') && value instanceof File) {
+        const extension = value.name?.split('.').pop() || 'pdf';
+        const newFileName = `doc_${key}_${timestamp}.${extension}`;
+        const renamedFile = new File([value], newFileName, { type: value.type });
+        fileFormData.append(key, renamedFile);
+        uploadedFiles.push(key);
+      }
+    }
+
+    // Upload files
+    if (uploadedFiles.length > 0) {
+      const res = await fetch(`${this.baseUrl}/api/projects/documents/upload-files`, {
+        method: "POST",
+        headers: this.getAuthHeaders(true),
+        body: fileFormData
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "File upload failed.");
+      }
+
+      const urls = await res.json();
+      uploadedFiles.forEach((key) => {
+        if (urls[key]) {
+          formData[key] = urls[key];
+        } else {
+          throw new Error(`Missing uploaded URL for ${key}`);
+        }
+      });
+    }
+
+    const response = await fetch(`${this.baseUrl}/api/projects/add-project-documents`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Documents submission failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Project documents uploaded successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error uploading documents:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
+
+async uploadProjectBuildingProgress(formData) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/add-building-progress`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Building progress submission failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Project building progress uploaded successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error uploading building progress:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
+
+
+async uploadProjectCommonAreasProgress(formData) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/add-common-areas-progress`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Common areas progress submission failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Project common areas progress uploaded successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error uploading common areas progress:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
+
   
   
   async getAllPromoters() {

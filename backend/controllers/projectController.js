@@ -262,3 +262,159 @@ export const uploadProjectProfessionalData = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const uploadUnitFiles = async (req, res) => {
+  try {
+    const files = req.files;
+    if (!files || files.length === 0) return res.status(400).json({ message: 'No files uploaded.' });
+
+    const uploadedUrls = {};
+
+    for (const file of files) {
+      const [field] = file.fieldname.split('.'); // e.g., afs_uploaded_url
+      const filePath = `unit-documents/${field}/${file.originalname}`;
+
+      const { error } = await supabase.storage.from('uploaded-documents').upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      });
+      if (error) return res.status(500).json({ message: `Upload failed for ${file.originalname}` });
+
+      const { data: publicUrlData } = supabase.storage.from('uploaded-documents').getPublicUrl(filePath);
+      uploadedUrls[file.fieldname] = publicUrlData.publicUrl;
+    }
+
+    return res.status(200).json(uploadedUrls);
+  } catch (error) {
+    console.error('❌ Unit file upload error:', error);
+    res.status(500).json({ message: 'Error uploading unit files.' });
+  }
+};
+
+
+export const uploadProjectUnits = async (req, res) => {
+  try {
+    const { project_id, units } = req.body;
+
+    if (!project_id || !units?.length) return res.status(400).json({ message: 'Missing project_id or units' });
+
+    const sanitizedUnits = units.map(unit => {
+      const numFields = [
+        "carpet_area", "agreement_value", "received_fy_2018_19", "received_fy_2019_20", "received_fy_2020_21",
+        "received_fy_2021_22", "received_fy_2022_23", "received_fy_2023_24", "received_fy_2024_25", "received_fy_2025_26",
+        "received_fy_2026_27", "received_fy_2027_28", "received_fy_2028_29", "received_fy_2029_30", "total_received", "balance_amount"
+      ];
+      const filtered = { project_id };
+      Object.entries(unit).forEach(([key, value]) => {
+        if (numFields.includes(key) && Number(value) === 0) return;
+        filtered[key] = value;
+      });
+      return filtered;
+    });
+
+    const { error } = await supabase.from('project_units').insert(sanitizedUnits);
+    if (error) return res.status(500).json({ message: 'Failed to insert unit data', error });
+
+    res.status(201).json({ message: '✅ Project units inserted successfully' });
+  } catch (error) {
+    console.error('❌ Error inserting project units:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+export const uploadDocumentFiles = async (req, res) => {
+  try {
+    const files = req.files;
+    if (!files?.length) return res.status(400).json({ message: 'No files uploaded.' });
+
+    const uploadedUrls = {};
+
+    for (const file of files) {
+      const field = file.fieldname;
+      const filePath = `project-documents/${field}/${file.originalname}`;
+
+      const { error } = await supabase.storage.from('uploaded-documents').upload(filePath, file.buffer, {
+        contentType: file.mimetype,
+        upsert: true,
+      });
+      if (error) return res.status(500).json({ message: `Upload failed for ${file.originalname}` });
+
+      const { data: publicUrlData } = supabase.storage.from('uploaded-documents').getPublicUrl(filePath);
+      uploadedUrls[field] = publicUrlData.publicUrl;
+    }
+
+    res.status(200).json(uploadedUrls);
+  } catch (error) {
+    console.error('❌ Project document upload error:', error);
+    res.status(500).json({ message: 'Error uploading project documents.' });
+  }
+};
+
+
+export const uploadProjectDocuments = async (req, res) => {
+  try {
+    const { project_id, ...documentData } = req.body;
+    if (!project_id) return res.status(400).json({ message: 'Missing project_id' });
+
+    const filtered = {};
+    Object.entries(documentData).forEach(([key, value]) => {
+      if (!value || value === 'null' || value === 'undefined') return;
+      filtered[key] = value;
+    });
+
+    const { error } = await supabase.from('project_documents').upsert([{ project_id, ...filtered }], { onConflict: 'project_id' });
+    if (error) return res.status(500).json({ message: 'Failed to insert documents', error });
+
+    res.status(201).json({ message: '✅ Project documents uploaded successfully' });
+  } catch (error) {
+    console.error('❌ Error inserting project documents:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+export const addBuildingProgress = async (req, res) => {
+  try {
+    const { project_id, ...progressData } = req.body;
+    if (!project_id) return res.status(400).json({ message: 'Missing project_id' });
+
+    const filtered = {};
+    Object.entries(progressData).forEach(([key, value]) => {
+      if (typeof value === 'number' && value === 0) return;
+      filtered[key] = value;
+    });
+
+    const { error } = await supabase.from('site_progress').upsert([{ project_id, ...filtered }], { onConflict: 'project_id' });
+    if (error) return res.status(500).json({ message: 'Failed to insert progress data', error });
+
+    res.status(201).json({ message: '✅ Building progress uploaded successfully' });
+  } catch (error) {
+    console.error('❌ Error inserting building progress:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+
+export const addCommonAreasProgress = async (req, res) => {
+  try {
+    const { project_id, ...commonData } = req.body;
+    if (!project_id) return res.status(400).json({ message: 'Missing project_id' });
+
+    const filtered = {};
+    Object.entries(commonData).forEach(([key, value]) => {
+      if (!value || (typeof value === 'object' && Object.keys(value).length === 0)) return;
+      filtered[key] = value;
+    });
+
+    const { error } = await supabase.from('site_progress').upsert([{ project_id, ...filtered }], { onConflict: 'project_id' });
+    if (error) return res.status(500).json({ message: 'Failed to insert common areas progress', error });
+
+    res.status(201).json({ message: '✅ Common areas progress uploaded successfully' });
+  } catch (error) {
+    console.error('❌ Error inserting common area progress:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+

@@ -173,13 +173,13 @@ const inputRefs = useRef({});
   <div className={sectionBox}>
     <h2 className="text-xl font-bold text-[#4a9899] mb-4">Common Areas Progress</h2>
     <div className="overflow-x-auto">
-      <table className="min-w-full border border-gray-300 text-sm">
-        <thead className="bg-gray-100 text-[#5caaab] font-semibold">
+      <table className="min-w-full border border-gray-300 text-md">
+        <thead className="bg-gray-100 border-gray-300 text-[#5caaab] font-semibold">
           <tr>
-            <th className="border p-2 text-left">Area</th>
-            <th className="border p-2 text-left">Proposed</th>
-            <th className="border p-2 text-left">Percentage of Work</th>
-            <th className="border p-2 text-left">Details</th>
+            <th className="border border-gray-300 p-2 text-left">Area</th>
+            <th className="border border-gray-300 p-2 text-left">Proposed</th>
+            <th className="border border-gray-300 p-2 text-left">Percentage of Work</th>
+            <th className="border border-gray-300 p-2 text-left">Details</th>
           </tr>
         </thead>
         <tbody>
@@ -187,8 +187,8 @@ const inputRefs = useRef({});
   .filter(([key]) => key !== 'project_id')
   .map(([key, fields]) => (
     <tr key={key} className="even:bg-gray-50">
-      <td className="border p-2 capitalize">{key.replace(/_/g, ' ')}</td>
-      <td className="border p-2">
+      <td className="border border-gray-300 border-gray-300 p-2 capitalize">{key.replace(/_/g, ' ')}</td>
+      <td className="border border-gray-300 p-2">
         <input
           type="checkbox"
           name="proposed"
@@ -197,7 +197,7 @@ const inputRefs = useRef({});
           ref={el => inputRefs.current[`${key}-proposed`] = el}
         />
       </td>
-      <td className="border p-2">
+      <td className="border border-gray-300 p-2">
         <input
           type="number"
           name="percentage_of_work"
@@ -210,7 +210,7 @@ const inputRefs = useRef({});
           ref={el => inputRefs.current[`${key}-percentage_of_work`] = el}
         />
       </td>
-      <td className="border p-2">
+      <td className="border border-gray-300 p-2">
         <input
           type="text"
           name="details"
