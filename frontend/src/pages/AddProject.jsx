@@ -7,6 +7,7 @@ import {
     ProjectProfessionalDetailsForm,
     UnitDetails,
     ProjectDocumentForm,
+    ProjectProgresssForm,
   } from '../components/index.js';
 import databaseService from '../backend-services/database/database'
 import { toast } from 'react-toastify';
@@ -290,6 +291,36 @@ const AddProject = () => {
       //   // setLoading(false);
       // }
     };   
+    const handleSubmitProjectBuildingProgress = async () => {
+      console.log("Form Data Submitted:", projectBuildingProgress);
+      // setLoading(true);
+      // try {
+      //   const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
+      //   console.log("✅ Project professional details uploaded:", response);
+      //   toast.success("✅ Project professional details submitted successfully!");
+      //   navigate("/projects"); // 👈 Update the route if needed
+      // } catch (error) {
+      //   console.error("❌ Error submitting project professional details:", error);
+      //   toast.error(`❌ Failed to submit professional details: ${error.message}`);
+      // } finally {
+      //   // setLoading(false);
+      // }
+    };   
+    const handleSubmitProjectCommonAreasProgresss = async () => {
+      console.log("Form Data Submitted:", projectCommonAreasProgress);
+      // setLoading(true);
+      // try {
+      //   const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
+      //   console.log("✅ Project professional details uploaded:", response);
+      //   toast.success("✅ Project professional details submitted successfully!");
+      //   navigate("/projects"); // 👈 Update the route if needed
+      // } catch (error) {
+      //   console.error("❌ Error submitting project professional details:", error);
+      //   toast.error(`❌ Failed to submit professional details: ${error.message}`);
+      // } finally {
+      //   // setLoading(false);
+      // }
+    };   
 
     
   
@@ -341,11 +372,14 @@ const AddProject = () => {
           )}
 
           {activeTab === "Project Progress" && (
-             <ProjectDetailsForm
-             formData={projectDetails}
-             setFormData={setProjectDetails}
+             <ProjectProgresssForm
+             projectBuildingProgress={projectBuildingProgress}
+             projectCommonAreasProgress={projectCommonAreasProgress}
+             setProjectBuildingProgress={setProjectBuildingProgress}
+             setProjectCommonAreasProgress={setProjectCommonAreasProgress}
              activeTab={activeTab}
-             handleSubmitProjectDetails={handleSubmitProjectDetails}
+             handleSubmitProjectBuildingProgress={handleSubmitProjectBuildingProgress}
+             handleSubmitProjectCommonAreasProgresss={handleSubmitProjectCommonAreasProgresss}
            />
           )}</>
     );
