@@ -9,6 +9,7 @@ import Login from "./Login";
 import AddPromoter from "./AddPromoter";
 import PromotersPage from './PromotersPage'
 import AddProject from './AddProject'
+import AddAssignment from "./AddAssignment";
 
 export {
     Dashboard,
@@ -22,4 +23,5 @@ export {
     AddPromoter,
     PromotersPage,
     AddProject,
+    AddAssignment,
 }

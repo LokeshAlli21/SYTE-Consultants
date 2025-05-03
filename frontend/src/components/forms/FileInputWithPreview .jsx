@@ -76,7 +76,9 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete }) 
                 <FaFilePdf className="text-[#5caaab]" />
               </div>
               <p className="mb-1 text-sm text-[#5caaab] font-semibold">Click or drag to upload</p>
-              <p className="text-xs text-gray-500">Images or PDFs (max 20MB)</p>
+              <p className="text-xs text-gray-500">Images or PDF
+                {/* (max 20MB) */}
+                </p>
             </>
           )}
         </div>

@@ -14,6 +14,7 @@ import UnitDetails from "./unit-details/UnitDetails";
 import UnitDetailsForm from "./forms/UnitDetailsForm";
 import ProjectDocumentForm from "./forms/ProjectDocumentForm";
 import ProjectProgresssForm from  './forms/ProjectProgresssForm'
+import AssignmentForm from "./forms/AssignmentForm";
 
 export {
     PromoterForm,
@@ -32,4 +33,5 @@ export {
     UnitDetailsForm,
     ProjectDocumentForm,
     ProjectProgresssForm,
+    AssignmentForm,
 }

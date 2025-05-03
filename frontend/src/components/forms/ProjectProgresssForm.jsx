@@ -187,7 +187,7 @@ const inputRefs = useRef({});
   .filter(([key]) => key !== 'project_id')
   .map(([key, fields]) => (
     <tr key={key} className="even:bg-gray-50">
-      <td className="border border-gray-300 border-gray-300 p-2 capitalize">{key.replace(/_/g, ' ')}</td>
+      <td className="border border-gray-300 p-2 capitalize">{key.replace(/_/g, ' ')}</td>
       <td className="border border-gray-300 p-2">
         <input
           type="checkbox"

@@ -22,6 +22,7 @@ import {
   AddPromoter,
   PromotersPage,
   AddProject,
+  AddAssignment,
 } from './pages/index.js'
 
 const router = createBrowserRouter([
@@ -84,6 +85,13 @@ const router = createBrowserRouter([
         element: 
         <AuthLayout authentication>
           <Assignments />
+         </AuthLayout>,
+      },
+      {
+        path: "/assignments/add",
+        element: 
+        <AuthLayout authentication>
+          <AddAssignment />
          </AuthLayout>,
       },
       {

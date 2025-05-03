@@ -222,11 +222,7 @@ const AddProject = () => {
     })
   
     const handleBack = () => {
-      if (activeTabIndex > 0) {
-        setActiveTabIndex((prev) => prev - 1);
-      } else {
         navigate(-1);
-      }
     };
   
     const handleSubmitProjectDetails = async () => {

@@ -447,3 +447,85 @@ BEFORE UPDATE ON site_progress
 FOR EACH ROW
 EXECUTE FUNCTION update_site_progress_timestamp();
 
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------TABLE assignments-------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE assignments (
+    id SERIAL PRIMARY KEY,
+
+    -- Foreign key reference to the projects table
+    project_id INT NOT NULL,
+    CONSTRAINT fk_project
+        FOREIGN KEY (project_id)
+        REFERENCES projects(id)
+        ON DELETE CASCADE,
+
+    assignment_type VARCHAR(100),  -- Type of Assignment (e.g., Registration, Compliance, etc.)
+    payment_date DATE,
+    application_number VARCHAR(100),
+
+    consultation_charges NUMERIC(12, 2),
+    govt_fees NUMERIC(12, 2),  -- Government Fees (paid by us)
+    ca_fees NUMERIC(12, 2),    -- CA (paid by us)
+    engineer_fees NUMERIC(12, 2),  -- Engineer Fees (paid by us)
+    arch_fees NUMERIC(12, 2),      -- Architect (paid by us)
+    liasioning_fees NUMERIC(12, 2), -- Liasioning (paid by us)
+
+    remarks TEXT,
+
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+);
+
+-- Function to update the `updated_at` timestamp on row update
+CREATE OR REPLACE FUNCTION update_assignments_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to auto-update 'updated_at' on updates to the assignments table
+CREATE TRIGGER update_assignments_updated_at
+BEFORE UPDATE ON assignments
+FOR EACH ROW
+EXECUTE FUNCTION update_assignments_timestamp();
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------TABLE channel_partners-------------------------------------------------------------------------
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE TABLE channel_partners (
+    id SERIAL PRIMARY KEY,
+    
+    full_name VARCHAR(255) NOT NULL,
+    contact_number VARCHAR(20) NOT NULL,
+    alternate_contact_number VARCHAR(20),
+    email_id VARCHAR(255),
+    district VARCHAR(100),
+    city VARCHAR(100),
+
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+);
+
+CREATE OR REPLACE FUNCTION update_channel_partners_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION update_channel_partners_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
