@@ -7,11 +7,7 @@ import { errorMiddleware } from './middlewares/errorMiddleware.js';
 import authRoutes from './routes/authRoutes.js';
 import promoterRoutes from './routes/promoterRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
-// import testWithAuth from './routes/routes.js';
-// import profileRoute from './routes/profileRoute.js';
-// import blockRoutes from './routes/blockRoutes.js';
-// import superAdminRoutes from './routes/superAdminRoutes.js';
-
+import channelPartnerRoutes from './routes/channelPartnerRoutes.js'
 dotenv.config();
 
 const app = express();
@@ -31,10 +27,7 @@ app.get('/api/test', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/promoters', promoterRoutes);
 app.use('/api/projects', projectRoutes);
-// app.use('/api/test-with-auth', testWithAuth);
-// app.use('/api/no-auth', noAuthRoutes);
-// app.use('/api/profiles', profileRoute);
-// app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/channel-partners',channelPartnerRoutes );
 
 // Main route
 app.get('/', (req, res) => {

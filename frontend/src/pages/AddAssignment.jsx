@@ -42,11 +42,7 @@ function AddAssignment() {
       };
 
       const handleBack = () => {
-        if (activeTabIndex > 0) {
-          setActiveTabIndex((prev) => prev - 1);
-        } else {
           navigate(-1);
-        }
       };
       
   return (

@@ -23,6 +23,7 @@ import {
   PromotersPage,
   AddProject,
   AddAssignment,
+  AddChannelPartner,
 } from './pages/index.js'
 
 const router = createBrowserRouter([
@@ -99,6 +100,13 @@ const router = createBrowserRouter([
         element: 
         <AuthLayout authentication>
           <ChannelPartners />
+         </AuthLayout>,
+      },
+      {
+        path: "/channel-partners/add",
+        element: 
+        <AuthLayout authentication>
+          <AddChannelPartner />
          </AuthLayout>,
       },
       {

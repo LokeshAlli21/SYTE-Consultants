@@ -10,6 +10,7 @@ import AddPromoter from "./AddPromoter";
 import PromotersPage from './PromotersPage'
 import AddProject from './AddProject'
 import AddAssignment from "./AddAssignment";
+import AddChannelPartner from "./AddChannelPartner";
 
 export {
     Dashboard,
@@ -24,4 +25,5 @@ export {
     PromotersPage,
     AddProject,
     AddAssignment,
+    AddChannelPartner,
 }

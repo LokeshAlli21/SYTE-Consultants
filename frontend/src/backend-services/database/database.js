@@ -503,6 +503,33 @@ async uploadProjectCommonAreasProgress(formData) {
 }
 
 
+async createChannelPartner(formData) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/channel-partners/add`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Channel Partner creation failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Channel Partner created successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error creating Channel Partner:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
+
   
   
   async getAllPromoters() {
