@@ -29,8 +29,10 @@ const Assignments = () => {
   };
 
   const filteredAssignments = assignments.filter(a =>
-    // a.assignment_type.toLowerCase().includes(searchQuery.toLowerCase()) 
-    a
+    a.assignment_type?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a.application_number?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    a.login_id?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleEdit = (id) => {
@@ -64,7 +66,7 @@ const Assignments = () => {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search by Assignment Type..."
+            placeholder="Search by Type, Project, or Login ID..."
             value={searchQuery}
             onChange={handleSearchChange}
             className="bg-white rounded-full outline-0 px-4 py-2 w-64 pl-10 shadow-sm border border-[#5CAAAB]"

@@ -15,8 +15,6 @@ const ChannelPartners = () => {
     const fetchPartners = async () => {
       try {
         const data = await databaseService.getAllChannelPartners();
-        // console.log(data);
-        
         setPartners(data);
       } catch (error) {
         toast.error("❌ Failed to load channel partners");
@@ -31,11 +29,24 @@ const ChannelPartners = () => {
   const handleFilterChange = (e) =>
     setFilters({ ...filters, [e.target.name]: e.target.value });
 
-  const filteredPartners = partners.filter(p => p
-    // p.name?.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    // p.district?.toLowerCase().includes(filters.district.toLowerCase()) &&
-    // p.city?.toLowerCase().includes(filters.city.toLowerCase())
-  );
+  const filteredPartners = partners.filter(p => {
+    const query = searchQuery.toLowerCase();
+  
+    const matchesSearch =
+      p.name?.toLowerCase().includes(query) ||
+      p.contact_number?.toLowerCase().includes(query) ||
+      p.alternate_number?.toLowerCase().includes(query) ||
+      p.email?.toLowerCase().includes(query) ||
+      p.district?.toLowerCase().includes(query) ||
+      p.city?.toLowerCase().includes(query) ||
+      query === '';
+  
+    const matchesDistrict = filters.district === '' || p.district?.toLowerCase() === filters.district.toLowerCase();
+    const matchesCity = filters.city === '' || p.city?.toLowerCase() === filters.city.toLowerCase();
+  
+    return matchesSearch && matchesDistrict && matchesCity;
+  });
+  
 
   const handleAdd = () => navigate('/channel-partners/add');
   const handleView = (id) => console.log("View", id);
@@ -67,7 +78,7 @@ const ChannelPartners = () => {
         <div className="relative">
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search by name..."
             value={searchQuery}
             onChange={handleSearchChange}
             className="bg-white pl-10 pr-4 py-2 rounded-full shadow border border-[#5CAAAB]"

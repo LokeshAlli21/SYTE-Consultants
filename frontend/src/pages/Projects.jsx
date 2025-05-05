@@ -21,7 +21,6 @@ const ProjectsPage = () => {
 
   const indexOfLastProject = currentPage * projectsPerPage;
   const indexOfFirstProject = indexOfLastProject - projectsPerPage;
-  const currentProjects = projects.slice(indexOfFirstProject, indexOfLastProject);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -61,11 +60,25 @@ const ProjectsPage = () => {
     setCurrentPage(1);
   };
 
-  const filteredProjects = currentProjects.filter(p => p
-    // p.project_name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    // p.district.toLowerCase().includes(filters.district.toLowerCase()) &&
-    // p.city.toLowerCase().includes(filters.city.toLowerCase())
-  );
+  const filteredProjects = projects
+  .filter(p => {
+    const matchesSearch =
+      p.project_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.promoter_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      p.rera_number?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    const matchesDistrict = filters.district
+      ? p.district?.toLowerCase() === filters.district.toLowerCase()
+      : true;
+
+    const matchesCity = filters.city
+      ? p.city?.toLowerCase() === filters.city.toLowerCase()
+      : true;
+
+    return matchesSearch && matchesDistrict && matchesCity;
+  });
+
+  const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
