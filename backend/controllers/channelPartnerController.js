@@ -35,3 +35,25 @@ export const createChannelPartner = async (req, res) => {
     }
   };
   
+
+  export const getAllChannelPartners = async (req, res) => {
+    try {
+      const { data, error } = await supabase
+        .from('channel_partners')
+        .select(`id, full_name, contact_number, alternate_contact_number, email_id, district, city, created_at, updated_at`);
+  
+      if (error) {
+        console.error('❌ Error fetching channel partners:', error);
+        return res.status(500).json({ error: 'Failed to fetch channel partners', details: error });
+      }
+
+      // console.log(data);
+      
+  
+      res.status(200).json({ channelPartners: data });
+    } catch (err) {
+      console.error('❌ Unexpected error in getAllChannelPartners:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+  

@@ -2,13 +2,15 @@ import React, { useState } from 'react'
 import { FaArrowLeft } from 'react-icons/fa6';
 import {AssignmentForm} from '../components/index.js'
 import { useNavigate } from 'react-router-dom';
+import databaseService from '../backend-services/database/database.js';
+import { toast } from 'react-toastify';
 
 function AddAssignment() {
     const navigate = useNavigate()
     const [assignment, setAssignment ] = useState({
-        id: null, // Auto-incremented by DB
+      id : null,
       
-        project_id: null, // Foreign key to projects table
+        project_id: 8, // Foreign key to projects table
       
         assignment_type: "", // e.g., "Registration", "Compliance"
         payment_date: "", // Format: "YYYY-MM-DD"
@@ -27,18 +29,17 @@ function AddAssignment() {
       const handleSubmitAssignment = async () => {
         console.log("Form Data Submitted:", assignment);
         // setLoading(true);
-        // try {
-        //   const response = await databaseService.uploadProjectDetails(projectDetails);
-        //   console.log("✅ Project details uploaded:", response);
-        //   toast.success("✅ Project details submitted successfully!");
-        //   setProjectDetails(prev => resetObjectData(prev));
-        //   navigate("/projects"); // 👈 Navigate to projects page or wherever appropriate
-        // } catch (error) {
-        //   console.error("❌ Error submitting project details:", error);
-        //   toast.error(`❌ Failed to submit project details: ${error.message}`);
-        // } finally {
-        //   // setLoading(false);
-        // }
+        try {
+          const response = await databaseService.createNewAssignment(assignment);
+          console.log("✅ New assignement is created:", response);
+          toast.success("✅ New assignement is created successfully!");
+          navigate("/assignments"); // 👈 Navigate to projects page or wherever appropriate
+        } catch (error) {
+          console.error("❌ Error creating New assignement:", error);
+          toast.error(`❌ Failed to create New assignement: ${error.message}`);
+        } finally {
+          // setLoading(false);
+        }
       };
 
       const handleBack = () => {

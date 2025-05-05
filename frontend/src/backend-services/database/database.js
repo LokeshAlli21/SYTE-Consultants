@@ -529,7 +529,31 @@ async createChannelPartner(formData) {
   }
 }
 
+async createNewAssignment(formData) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/add`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
 
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Assignment creation failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Assignment created successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error creating assignment:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
   
   
   async getAllPromoters() {
@@ -578,6 +602,79 @@ async createChannelPartner(formData) {
       throw error;
     }
   }
+
+  async getAllUnits() {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/units/get-all`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch units.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Units fetched successfully!");
+      return data.units;
+  
+    } catch (error) {
+      console.error("❌ Error fetching units:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
+
+async getAllAssignments() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/get-all`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch assignments.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Assignments fetched successfully!");
+    return data.assignments;
+
+  } catch (error) {
+    console.error("❌ Error fetching assignments:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async getAllChannelPartners() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/channel-partners/get-all`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch channel partners.");
+    }
+
+    // console.log(response);
+    
+    const data = await response.json();
+    toast.success("✅ Channel partners fetched successfully!");
+    return data.channelPartners;
+
+  } catch (error) {
+    console.error("❌ Error fetching channel partners:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
 
   async deletePromoterById(id) {
     try {

@@ -14,7 +14,9 @@ const ChannelPartners = () => {
   useEffect(() => {
     const fetchPartners = async () => {
       try {
-        const data = await databaseService.getAllPromoters();
+        const data = await databaseService.getAllChannelPartners();
+        // console.log(data);
+        
         setPartners(data);
       } catch (error) {
         toast.error("❌ Failed to load channel partners");

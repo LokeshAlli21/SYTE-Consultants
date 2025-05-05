@@ -11,6 +11,7 @@ import { uploadProjectFiles,
     uploadProjectDocuments,
     addBuildingProgress,
     addCommonAreasProgress,
+    getAllUnits,
 } from '../controllers/projectController.js';
 import {upload} from '../supabase/supabaseClient.js'
 
@@ -20,6 +21,8 @@ router.post('/add-project', protect, uploadProjectData);
 router.post('/upload-files', protect, upload.any(), uploadProjectFiles);
 
 router.get('/get-all', protect, getAllProjects);
+
+router.get('/units/get-all', protect, getAllUnits);
 
 router.post('/add-project-professionals', protect, uploadProjectProfessionalData);
 router.post('/professional-details/upload-files', protect, upload.any(), uploadProjectProfessionalFiles);

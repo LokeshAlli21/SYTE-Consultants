@@ -20,7 +20,7 @@ function UnitDetails({setIsUnitDetailsFormActive, isUnitDetailsFormActive,formDa
   useEffect(() => {
     const fetchUnits = async () => {
       try {
-        const data = await databaseService.getAllProjects();
+        const data = await databaseService.getAllUnits();
         console.log(data);
         
         setUnits(data);

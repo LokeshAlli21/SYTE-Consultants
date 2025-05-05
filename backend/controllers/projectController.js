@@ -120,6 +120,28 @@ export const getAllProjects = async (req, res) => {
   }
 };
 
+export const getAllUnits = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('project_units')
+      .select(
+        `id, project_id, unit_name, unit_type, carpet_area, unit_status, customer_name,
+         agreement_value, total_received, balance_amount, created_at, updated_at`
+      );
+
+    if (error) {
+      console.error('❌ Error fetching units:', error);
+      return res.status(500).json({ error: 'Failed to fetch units', details: error });
+    }
+
+    res.status(200).json({ units: data });
+  } catch (err) {
+    console.error('❌ Unexpected error in getAllUnits:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
 export const uploadProjectProfessionalFiles = async (req, res) => {
   try {
     const files = req.files;

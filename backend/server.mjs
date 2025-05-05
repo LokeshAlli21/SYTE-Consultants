@@ -8,6 +8,7 @@ import authRoutes from './routes/authRoutes.js';
 import promoterRoutes from './routes/promoterRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import channelPartnerRoutes from './routes/channelPartnerRoutes.js'
+import assignmentRoutes from './routes/assignmentRoutes.js'
 dotenv.config();
 
 const app = express();
@@ -27,6 +28,7 @@ app.get('/api/test', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/promoters', promoterRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/assignments', assignmentRoutes);
 app.use('/api/channel-partners',channelPartnerRoutes );
 
 // Main route
