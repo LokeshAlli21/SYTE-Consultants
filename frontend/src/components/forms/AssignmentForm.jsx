@@ -1,4 +1,12 @@
 import React from 'react';
+import Select from 'react-select';
+
+const assignmentOptions = [
+  { value: 'registration', label: 'Registration' },
+  { value: 'extension', label: 'Extension' },
+  { value: 'bank_account_change', label: 'Bank Account Change' },
+  { value: 'correction', label: 'Correction' },
+];
 
 function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeTab = "Assignment Details" }) {
 
@@ -36,6 +44,17 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
     }
   };
 
+  const handleAssignmentChange = (selectedOption) => {
+    setFormData((prev) => ({
+      ...prev,
+      assignment_type: selectedOption ? selectedOption.value : '',
+    }));
+  };
+
+  const selectedOption = assignmentOptions.find(
+    (option) => option.value === formData.assignment_type
+  );
+
   const commonInputStyles =
     "w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab]";
 
@@ -48,18 +67,44 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
 
       <div className=" p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 
-        <div className="flex flex-col">
-          <label className="mb-2 font-medium">Assignment Type</label>
-          <input
-            type="text"
-            name="assignment_type"
-            value={formData.assignment_type}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            className={commonInputStyles}
-            placeholder="e.g., Registration, Compliance"
-          />
-        </div>
+      <div className="flex flex-col w-full">
+      <label className="mb-2 font-medium text-gray-700">Assignment Type</label>
+      <Select
+        options={assignmentOptions}
+        value={selectedOption}
+        onChange={handleAssignmentChange}
+        isSearchable={true}
+        placeholder="Select assignment type"
+        styles={{
+          control: (base, state) => ({
+            ...base,
+            padding: "2px",
+            borderRadius: "0.5rem", // rounded-lg
+            borderColor: state.isFocused ? "#5caaab" : "#d1d5db", // focus:border-[#5caaab] or border-gray-300
+            boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none", // focus:ring
+            "&:hover": {
+              borderColor: "#5caaab",
+            },
+          }),
+          menu: (base) => ({
+            ...base,
+            borderRadius: "0.5rem",
+            zIndex: 20,
+          }),
+          option: (base, state) => ({
+            ...base,
+            backgroundColor: state.isSelected
+              ? "#5caaab"
+              : state.isFocused
+              ? "#5caaab22"
+              : "white",
+            color: state.isSelected ? "white" : "black",
+            padding: "10px 12px",
+            cursor: "pointer",
+          }),
+        }}
+      />
+    </div>
 
         <div className="flex flex-col">
           <label className="mb-2 font-medium">Payment Date</label>
