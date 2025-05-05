@@ -706,6 +706,87 @@ async getAllChannelPartners() {
   }
 }
 
+async getAllCitiesAndDistricts ()  {
+  const cityOptions = [
+    { value: 'Mumbai', label: 'Mumbai' },
+    { value: 'Pune', label: 'Pune' },
+    { value: 'Nagpur', label: 'Nagpur' },
+    { value: 'Thane', label: 'Thane' },
+    { value: 'Navi Mumbai', label: 'Navi Mumbai' },
+    { value: 'Kalyan-Dombivli', label: 'Kalyan-Dombivli' },
+    { value: 'Vasai-Virar', label: 'Vasai-Virar' },
+    { value: 'Aurangabad', label: 'Aurangabad' },
+    { value: 'Solapur', label: 'Solapur' },
+    { value: 'Nashik', label: 'Nashik' },
+    { value: 'Amravati', label: 'Amravati' },
+    { value: 'Kolhapur', label: 'Kolhapur' },
+    { value: 'Jalgaon', label: 'Jalgaon' },
+    { value: 'Malegaon', label: 'Malegaon' },
+    { value: 'Sangli', label: 'Sangli' },
+    { value: 'Ulhasnagar', label: 'Ulhasnagar' },
+    { value: 'Ichalkaranji', label: 'Ichalkaranji' },
+    { value: 'Akola', label: 'Akola' },
+    { value: 'Latur', label: 'Latur' },
+    { value: 'Dhule', label: 'Dhule' },
+    { value: 'Beed', label: 'Beed' },
+    { value: 'Chandrapur', label: 'Chandrapur' },
+    { value: 'Parbhani', label: 'Parbhani' },
+    { value: 'Jalna', label: 'Jalna' },
+    { value: 'Ambarnath', label: 'Ambarnath' },
+    { value: 'Bhiwandi', label: 'Bhiwandi' },
+    { value: 'Mira-Bhayandar', label: 'Mira-Bhayandar' },
+    { value: 'Badlapur', label: 'Badlapur' },
+    { value: 'Barshi', label: 'Barshi' },
+    { value: 'Yavatmal', label: 'Yavatmal' },
+    { value: 'Achalpur', label: 'Achalpur' },
+    { value: 'Osmanabad', label: 'Osmanabad' },
+    { value: 'Nandurbar', label: 'Nandurbar' },
+    { value: 'Wardha', label: 'Wardha' },
+    { value: 'Udgir', label: 'Udgir' },
+    { value: 'Hinganghat', label: 'Hinganghat' }
+  ];
+
+  const districtOptions = [
+    { value: 'Ahmednagar', label: 'Ahmednagar' },
+    { value: 'Akola', label: 'Akola' },
+    { value: 'Amravati', label: 'Amravati' },
+    { value: 'Aurangabad', label: 'Aurangabad' },
+    { value: 'Beed', label: 'Beed' },
+    { value: 'Bhandara', label: 'Bhandara' },
+    { value: 'Buldhana', label: 'Buldhana' },
+    { value: 'Chandrapur', label: 'Chandrapur' },
+    { value: 'Dhule', label: 'Dhule' },
+    { value: 'Gadchiroli', label: 'Gadchiroli' },
+    { value: 'Gondia', label: 'Gondia' },
+    { value: 'Hingoli', label: 'Hingoli' },
+    { value: 'Jalgaon', label: 'Jalgaon' },
+    { value: 'Jalna', label: 'Jalna' },
+    { value: 'Kolhapur', label: 'Kolhapur' },
+    { value: 'Latur', label: 'Latur' },
+    { value: 'Mumbai City', label: 'Mumbai City' },
+    { value: 'Mumbai Suburban', label: 'Mumbai Suburban' },
+    { value: 'Nandurbar', label: 'Nandurbar' },
+    { value: 'Nanded', label: 'Nanded' },
+    { value: 'Nashik', label: 'Nashik' },
+    { value: 'Osmanabad', label: 'Osmanabad' },
+    { value: 'Palghar', label: 'Palghar' },
+    { value: 'Parbhani', label: 'Parbhani' },
+    { value: 'Pune', label: 'Pune' },
+    { value: 'Raigad', label: 'Raigad' },
+    { value: 'Ratnagiri', label: 'Ratnagiri' },
+    { value: 'Sangli', label: 'Sangli' },
+    { value: 'Satara', label: 'Satara' },
+    { value: 'Sindhudurg', label: 'Sindhudurg' },
+    { value: 'Solapur', label: 'Solapur' },
+    { value: 'Thane', label: 'Thane' },
+    { value: 'Wardha', label: 'Wardha' },
+    { value: 'Washim', label: 'Washim' },
+    { value: 'Yavatmal', label: 'Yavatmal' },
+    { value: 'Nagpur', label: 'Nagpur' }
+  ];
+
+  return { cityOptions, districtOptions };
+};
 
   async deletePromoterById(id) {
     try {

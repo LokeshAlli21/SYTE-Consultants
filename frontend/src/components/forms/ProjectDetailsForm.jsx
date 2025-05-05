@@ -1,9 +1,30 @@
-import React, { useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
+import Select from 'react-select';
 import FileInputWithPreview from './FileInputWithPreview ';
+import databaseService from '../../backend-services/database/database';
 
 function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubmitProjectDetails}) {
+    const selectRef = useRef(null);
 
     const [filePreviews, setFilePreviews] = useState({});
+
+      const [cityOptions, setCityOptions] = useState([]);
+      const [districtOptions, setDistrictOptions] = useState([]);
+    
+      // Fetch cities and districts on component mount
+      useEffect(() => {
+        async function fetchCitiesAndDistricts() {
+          try {
+            const { cityOptions, districtOptions } = await databaseService.getAllCitiesAndDistricts(); // Make sure this returns data
+            setCityOptions(cityOptions);
+            setDistrictOptions(districtOptions);
+          } catch (error) {
+            console.error("Error fetching cities and districts:", error);
+          }
+        }
+    
+        fetchCitiesAndDistricts();
+      }, []);
     
 
     
@@ -15,14 +36,21 @@ function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubm
     }));
   };
 
-    const handleKeyDown = (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          const form = e.target.form;
-          const index = Array.prototype.indexOf.call(form, e.target);
-          form.elements[index + 1]?.focus();
-        }
-      };
+  const handleKeyDown = (e) => {
+    e.preventDefault();
+    if (e.key === 'Enter') {
+      // If the currently focused element is react-select and menu is not open
+      if (document.activeElement === selectRef.current?.inputRef && !selectRef.current?.state?.menuIsOpen) {
+        e.preventDefault(); // prevent accidental form submit
+        return;
+      }
+  
+      e.preventDefault();
+      const form = e.target.form;
+      const index = Array.prototype.indexOf.call(form, e.target);
+      form.elements[index + 1]?.focus();
+    }
+  };
 
       const handleFileChange = (e) => {
         const { name, files } = e.target;
@@ -182,28 +210,94 @@ function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubm
 />
 </div>
 
-<div className="flex flex-col">
-  <label className="mb-2 font-medium">District</label>
-  <input
-    type="text"
-    name="district"
-    value={formData.district}
-    onChange={handleChange}
-    onKeyDown={handleKeyDown}
-    className={commonInputStyles}
-/>
+          <div className="flex flex-col w-full">
+  <label className="mb-2 font-medium text-gray-700">Select District</label>
+  <Select
+    options={districtOptions} // This should be the array of districts
+    value={districtOptions.find(opt => opt.value === formData.district)}
+    onChange={(selectedOption) => {
+      setFormData((prev) => ({
+        ...prev,
+        district: selectedOption ? selectedOption.value : '',
+      }));
+    }}
+    isSearchable={true}
+    ref={selectRef}
+    placeholder="Select a district"
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        padding: "6px",
+        borderRadius: "0.5rem",
+        borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+        boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none",
+        "&:hover": {
+          borderColor: "#5caaab",
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        borderRadius: "0.5rem",
+        zIndex: 20,
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? "#5caaab"
+          : state.isFocused
+          ? "#5caaab22"
+          : "white",
+        color: state.isSelected ? "white" : "black",
+        padding: "10px 12px",
+        cursor: "pointer",
+      }),
+    }}
+  />
 </div>
 
-<div className="flex flex-col">
-  <label className="mb-2 font-medium">City</label>
-  <input
-    type="text"
-    name="city"
-    value={formData.city}
-    onChange={handleChange}
-    onKeyDown={handleKeyDown}
-    className={commonInputStyles}
-/>
+<div className="flex flex-col w-full">
+  <label className="mb-2 font-medium text-gray-700">Select City</label>
+  <Select
+    options={cityOptions} // This should be the array of cities
+    value={cityOptions.find(opt => opt.value === formData.city)}
+    onChange={(selectedOption) => {
+      setFormData((prev) => ({
+        ...prev,
+        city: selectedOption ? selectedOption.value : '',
+      }));
+    }}
+    isSearchable={true}
+    ref={selectRef}
+    placeholder="Select a city"
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        padding: "6px",
+        borderRadius: "0.5rem",
+        borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+        boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none",
+        "&:hover": {
+          borderColor: "#5caaab",
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        borderRadius: "0.5rem",
+        zIndex: 20,
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? "#5caaab"
+          : state.isFocused
+          ? "#5caaab22"
+          : "white",
+        color: state.isSelected ? "white" : "black",
+        padding: "10px 12px",
+        cursor: "pointer",
+      }),
+    }}
+  />
 </div>
 
 <div className="flex flex-col">
