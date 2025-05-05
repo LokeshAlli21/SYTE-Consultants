@@ -218,9 +218,6 @@ CREATE TABLE project_units (
         REFERENCES projects(id)
         ON DELETE CASCADE,
 
-    CONSTRAINT unique_project_id UNIQUE (project_id),
-
-
     -- Unit Details
     unit_name VARCHAR(255),
     unit_type VARCHAR(100),

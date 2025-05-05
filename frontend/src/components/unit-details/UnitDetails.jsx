@@ -31,7 +31,7 @@ function UnitDetails({setIsUnitDetailsFormActive, isUnitDetailsFormActive,formDa
       }
     };
     fetchUnits();
-  }, []);
+  }, [isUnitDetailsFormActive]);
 
   const toggleSelectAll = () => {
     setSelectedIds((prev) =>

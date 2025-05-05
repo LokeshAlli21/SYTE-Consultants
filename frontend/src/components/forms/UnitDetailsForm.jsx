@@ -1,5 +1,24 @@
 import React, { useState } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
+import Select from 'react-select';
+
+const unitTypeOptions = [
+  { value: '1 BHK', label: '1 BHK' },
+  { value: '2 BHK', label: '2 BHK' },
+  { value: '3 BHK', label: '3 BHK' },
+  { value: '4 BHK', label: '4 BHK' },
+  { value: '5 BHK', label: '5 BHK' },
+  { value: 'shop', label: 'Shop' },
+  { value: 'office', label: 'Office' },
+  { value: 'plot', label: 'Plot' },
+];
+
+const unitStatusOptions = [
+  { value: 'booked', label: 'Booked' },
+  { value: 'sold', label: 'Sold' },
+  { value: 'unsold', label: 'Unsold' },
+];
+
 
 function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,handleSubmitProjectUnit }) {
 
@@ -82,15 +101,52 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
               className={commonInputStyles}
             />
           </div>
-          <div className='flex flex-col'>
-          <label className="mb-2 font-medium">Unit Type</label>
-          <input
-            type="text"
-            name="unit_type"
-            value={formData.unit_type}
-            onChange={handleChange}
-            className={commonInputStyles}
-          /></div>
+          <div className="flex flex-col">
+  <label className="mb-2 font-medium">Unit Type</label>
+  <Select
+    options={unitTypeOptions}
+    value={unitTypeOptions.find(opt => opt.value === formData.unit_type)}
+    onChange={(selectedOption) =>
+      setFormData((prev) => ({
+        ...prev,
+        unit_type: selectedOption ? selectedOption.value : '',
+      }))
+    }
+    isSearchable={true}
+    placeholder="Select Unit Type"
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        padding: '6px',
+        borderRadius: '0.5rem',
+        borderColor: state.isFocused ? '#5caaab' : '#d1d5db',
+        boxShadow: state.isFocused ? '0 0 0 2px #5caaab66' : 'none',
+        '&:hover': {
+          borderColor: '#5caaab',
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        borderRadius: '0.5rem',
+        zIndex: 20,
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? '#5caaab'
+          : state.isFocused
+          ? '#5caaab22'
+          : 'white',
+        color: state.isSelected ? 'white' : 'black',
+        padding: '10px 12px',
+        cursor: 'pointer',
+      }),
+    }}
+  />
+</div>
+
+
+
 
 <div className='flex flex-col'>
           <label className="mb-2 font-medium">Carpet Area</label>
@@ -102,15 +158,49 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
             className={commonInputStyles}
           /></div>
 
-<div className='flex flex-col'>
-          <label className="mb-2 font-medium">Unit Status</label>
-          <input
-            type="text"
-            name="unit_status"
-            value={formData.unit_status}
-            onChange={handleChange}
-            className={commonInputStyles}
-          /></div>
+<div className="flex flex-col">
+  <label className="mb-2 font-medium">Unit Status</label>
+  <Select
+    options={unitStatusOptions}
+    value={unitStatusOptions.find(opt => opt.value === formData.unit_status)}
+    onChange={(selectedOption) =>
+      setFormData((prev) => ({
+        ...prev,
+        unit_status: selectedOption ? selectedOption.value : '',
+      }))
+    }
+    isSearchable={false}
+    placeholder="Select Unit Status"
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        padding: '6px',
+        borderRadius: '0.5rem',
+        borderColor: state.isFocused ? '#5caaab' : '#d1d5db',
+        boxShadow: state.isFocused ? '0 0 0 2px #5caaab66' : 'none',
+        '&:hover': {
+          borderColor: '#5caaab',
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        borderRadius: '0.5rem',
+        zIndex: 20,
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? '#5caaab'
+          : state.isFocused
+          ? '#5caaab22'
+          : 'white',
+        color: state.isSelected ? 'white' : 'black',
+        padding: '10px 12px',
+        cursor: 'pointer',
+      }),
+    }}
+  />
+</div>
         </div>
 
         {/* Customer Details */}

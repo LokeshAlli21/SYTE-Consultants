@@ -10,7 +10,7 @@ function AddAssignment() {
     const [assignment, setAssignment ] = useState({
       id : null,
       
-        project_id: 8, // Foreign key to projects table
+        project_id: null, // Foreign key to projects table
       
         assignment_type: "", // e.g., "Registration", "Compliance"
         payment_date: "", // Format: "YYYY-MM-DD"
@@ -27,6 +27,10 @@ function AddAssignment() {
       })
 
       const handleSubmitAssignment = async () => {
+        if(!assignment.project_id) {
+          toast('please select project')
+          return
+        }
         console.log("Form Data Submitted:", assignment);
         // setLoading(true);
         try {

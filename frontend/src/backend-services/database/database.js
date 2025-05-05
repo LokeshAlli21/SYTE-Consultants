@@ -603,6 +603,37 @@ async createNewAssignment(formData) {
     }
   }
 
+  async getAllProjectsForDropdown() {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/get-all`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch projects.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Projects fetched successfully!");
+  
+      // Map to label/value format for react-select
+      const dropdownOptions = data.projects.map((project) => ({
+        label: project.project_name,
+        value: project.id,
+      }));
+  
+      return dropdownOptions;
+  
+    } catch (error) {
+      console.error("❌ Error fetching projects:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
+
   async getAllUnits() {
     try {
       const response = await fetch(`${this.baseUrl}/api/projects/units/get-all`, {

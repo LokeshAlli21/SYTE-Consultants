@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Select from 'react-select';
+import databaseService from "../../backend-services/database/database";
 
 const assignmentOptions = [
   { value: 'registration', label: 'Registration' },
@@ -9,6 +10,25 @@ const assignmentOptions = [
 ];
 
 function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeTab = "Assignment Details" }) {
+
+  const selectRef = useRef(null);
+
+  const [projectsForDropdown, setProjectsForDropdown] = useState([])
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const data = await databaseService.getAllProjectsForDropdown();
+        console.log(data);
+        setProjectsForDropdown(data);
+      } catch (error) {
+        toast.error("❌ Failed to load projects");
+      } finally {
+        // setLoading(false);
+      }
+    };
+    fetchProjects();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,12 +49,19 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
+      // If the currently focused element is react-select and menu is not open
+      if (document.activeElement === selectRef.current?.inputRef && !selectRef.current?.state?.menuIsOpen) {
+        e.preventDefault(); // prevent accidental form submit
+        return;
+      }
+  
       e.preventDefault();
       const form = e.target.form;
       const index = Array.prototype.indexOf.call(form, e.target);
       form.elements[index + 1]?.focus();
     }
   };
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -44,12 +71,25 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
     }
   };
 
-  const handleAssignmentChange = (selectedOption) => {
+  const handleAssignmentChange = (selectedOption, { action }) => {
     setFormData((prev) => ({
       ...prev,
       assignment_type: selectedOption ? selectedOption.value : '',
     }));
+  
+    // After selecting, move to the next focusable element (if not creating a new option)
+    if (action === 'select-option') {
+      setTimeout(() => {
+        const activeElement = document.activeElement;
+        const form = activeElement?.form;
+        if (form) {
+          const index = Array.prototype.indexOf.call(form, activeElement);
+          form.elements[index + 1]?.focus();
+        }
+      }, 0);
+    }
   };
+  
 
   const selectedOption = assignmentOptions.find(
     (option) => option.value === formData.assignment_type
@@ -68,43 +108,91 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
       <div className=" p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 
       <div className="flex flex-col w-full">
-      <label className="mb-2 font-medium text-gray-700">Assignment Type</label>
-      <Select
-        options={assignmentOptions}
-        value={selectedOption}
-        onChange={handleAssignmentChange}
-        isSearchable={true}
-        placeholder="Select assignment type"
-        styles={{
-          control: (base, state) => ({
-            ...base,
-            padding: "2px",
-            borderRadius: "0.5rem", // rounded-lg
-            borderColor: state.isFocused ? "#5caaab" : "#d1d5db", // focus:border-[#5caaab] or border-gray-300
-            boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none", // focus:ring
-            "&:hover": {
-              borderColor: "#5caaab",
-            },
-          }),
-          menu: (base) => ({
-            ...base,
-            borderRadius: "0.5rem",
-            zIndex: 20,
-          }),
-          option: (base, state) => ({
-            ...base,
-            backgroundColor: state.isSelected
-              ? "#5caaab"
-              : state.isFocused
-              ? "#5caaab22"
-              : "white",
-            color: state.isSelected ? "white" : "black",
-            padding: "10px 12px",
-            cursor: "pointer",
-          }),
-        }}
-      />
-    </div>
+  <label className="mb-2 font-medium text-gray-700">Select Project *</label>
+  <Select
+    options={projectsForDropdown}
+    value={projectsForDropdown.find(opt => opt.value === formData.project_id)}
+    required={true}
+    onChange={(selectedOption) => {
+      setFormData((prev) => ({
+        ...prev,
+        project_id: selectedOption ? selectedOption.value : '',
+      }));
+    }}
+    isSearchable={true}
+    ref={selectRef}
+    placeholder="Select a project"
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        padding: "6px",
+        borderRadius: "0.5rem",
+        borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+        boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none",
+        "&:hover": {
+          borderColor: "#5caaab",
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        borderRadius: "0.5rem",
+        zIndex: 20,
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? "#5caaab"
+          : state.isFocused
+          ? "#5caaab22"
+          : "white",
+        color: state.isSelected ? "white" : "black",
+        padding: "10px 12px",
+        cursor: "pointer",
+      }),
+    }}
+  />
+</div>
+
+
+      <div className="flex flex-col w-full">
+        <label className="mb-2 font-medium text-gray-700">Assignment Type</label>
+        <Select
+          options={assignmentOptions}
+          value={selectedOption}
+          onChange={handleAssignmentChange}
+          isSearchable={true}
+          ref={selectRef}
+          placeholder="Select assignment type"
+          styles={{
+            control: (base, state) => ({
+              ...base,
+              padding: "6px",
+              borderRadius: "0.5rem", // rounded-lg
+              borderColor: state.isFocused ? "#5caaab" : "#d1d5db", // focus:border-[#5caaab] or border-gray-300
+              boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none", // focus:ring
+              "&:hover": {
+                borderColor: "#5caaab",
+              },
+            }),
+            menu: (base) => ({
+              ...base,
+              borderRadius: "0.5rem",
+              zIndex: 20,
+            }),
+            option: (base, state) => ({
+              ...base,
+              backgroundColor: state.isSelected
+                ? "#5caaab"
+                : state.isFocused
+                ? "#5caaab22"
+                : "white",
+              color: state.isSelected ? "white" : "black",
+              padding: "10px 12px",
+              cursor: "pointer",
+            }),
+          }}
+        />
+      </div>
 
         <div className="flex flex-col">
           <label className="mb-2 font-medium">Payment Date</label>

@@ -259,6 +259,8 @@ const AddProject = () => {
     };   
      
     const handleSubmitProjectUnit = async () => {
+      console.log(projectUnit);
+      
       try {
         const response = await databaseService.uploadProjectUnitDetails(projectUnit);
         console.log("✅ Project unit details uploaded:", response);
@@ -315,6 +317,12 @@ const AddProject = () => {
       for (const key in obj) {
         const value = obj[key];
     
+        // Skip resetting 'project_id'
+        if (key === 'project_id') {
+          clearedObj[key] = value;
+          continue;
+        }
+    
         if (typeof value === "string") {
           clearedObj[key] = "";
         } else if (typeof value === "number") {
@@ -332,6 +340,7 @@ const AddProject = () => {
     
       return clearedObj;
     }
+    
     
   
 

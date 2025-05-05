@@ -321,7 +321,6 @@ export const uploadUnitFiles = async (req, res) => {
 export const uploadProjectUnits = async (req, res) => {
   try {
     const unit = req.body;
-    // console.log(unit);
     
     if (!unit || !unit.project_id) {
       return res.status(400).json({ message: 'Missing project_id or unit data' });
@@ -357,23 +356,22 @@ export const uploadProjectUnits = async (req, res) => {
       sanitizedUnit[key] = value;
     });
 
-    // Perform the upsert operation where 'project_id' is the conflict target
+    // Perform the insert operation (not upsert)
     const { error } = await supabase
       .from('project_units')
-      .upsert([sanitizedUnit], { onConflict: ['project_id'] });
-
-    // console.log(error);
+      .insert([sanitizedUnit]);
 
     if (error) {
-      return res.status(500).json({ message: '❌ Failed to upsert unit data', error });
+      return res.status(500).json({ message: '❌ Failed to insert unit data', error });
     }
 
-    res.status(201).json({ message: '✅ Project unit upserted successfully' });
+    res.status(201).json({ message: '✅ Project unit inserted successfully' });
   } catch (error) {
-    console.error('❌ Error inserting/updating project unit:', error);
+    console.error('❌ Error inserting project unit:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
+
 
 
 export const uploadDocumentFiles = async (req, res) => {
