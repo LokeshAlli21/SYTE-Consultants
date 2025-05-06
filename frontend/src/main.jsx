@@ -61,10 +61,17 @@ const router = createBrowserRouter([
          </AuthLayout>,
       },
       {
+        path: "/promoters/view/:id",
+        element: 
+        <AuthLayout authentication>
+          <AddPromoter  viewOnly={true}  />
+         </AuthLayout>,
+      },
+      {
         path: "/promoters/edit/:id",
         element: 
         <AuthLayout authentication>
-          <AddPromoter />
+          <AddPromoter  viewOnly={false}  />
          </AuthLayout>,
       },
       {
@@ -93,6 +100,20 @@ const router = createBrowserRouter([
         element: 
         <AuthLayout authentication>
           <AddAssignment />
+         </AuthLayout>,
+      },
+      {
+        path: "/assignments/view/:id",
+        element: 
+        <AuthLayout authentication>
+          <AddAssignment  viewOnly={true}  />
+         </AuthLayout>,
+      },
+      {
+        path: "/assignments/edit/:id",
+        element: 
+        <AuthLayout authentication>
+          <AddAssignment  viewOnly={false}  />
          </AuthLayout>,
       },
       {

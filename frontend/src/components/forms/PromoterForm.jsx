@@ -6,7 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
 import Select from 'react-select';
 
-const PromoterForm = ({id}) => { 
+const PromoterForm = ({id , disabled }) => { 
 
     const selectRef = useRef(null);
 
@@ -130,57 +130,47 @@ const [filePreviews, setFilePreviews] = useState({});
 };
 
 useEffect(() => {
-  const fetchPromoterData = async (id) => {
+  const fetchPromoterData = async () => {
+    if (!id) return;
+
     try {
-      const result = await databaseService.getPromoterDetailsById(id);
+      const response = await databaseService.getPromoterDetailsById(id);
+      console.log("✅ Promoter Response:", response);
+      setFormData(response);
 
-      // Extract data, exclude URLs, and update formData
-      const { promoter_name, contact_number, email_id, district, city, promoter_type } = result;
-      const {
-        full_name,
-        aadhar_number,
-        office_address,
-        pan_number,
-        dob,
-        contact_person_name,
-        partnership_pan_number,
-        company_pan_number,
-        company_incorporation_number
-      } = result.promoterdetails[0]; // Accessing the first (and only) item in the array
+      const uploadedUrls = {};
 
-      setFormData({
-        promoter_name,
-        contact_number,
-        email_id,
-        district,
-        city,
-        office_address,
-        promoter_type,
-        full_name,
-        aadhar_number,
-        aadhar_uploaded_url: '',  // Leave empty or do not set
-        pan_number,
-        pan_uploaded_url: '',  // Leave empty or do not set
-        dob,
-        contact_person_name,
-        partnership_pan_number,
-        partnership_pan_uploaded_url: '',  // Leave empty or do not set
-        company_pan_number,
-        company_pan_uploaded_url: '',  // Leave empty or do not set
-        company_incorporation_number,
-        company_incorporation_uploaded_url: '',  // Leave empty or do not set
-        promoter_photo_uploaded_url: '',
-      });
+      if (Array.isArray(response?.promoter_details)) {
+        response.promoter_details.forEach((detail) => {
+          Object.entries(detail || {}).forEach(([key, value]) => {
+            if (
+              typeof key === "string" &&
+              key.endsWith("_uploaded_url") &&
+              typeof value === "string" &&
+              value.startsWith("http")
+            ) {
+              uploadedUrls[key] = value;
+            }
+          });
+        });
+      }
+
+      console.log("✅ Uploaded URLs:", uploadedUrls);
+
+      if (Object.keys(uploadedUrls).length > 0) {
+        setFilePreviews(uploadedUrls);
+      }
+
+      toast.success("✅ Promoter details loaded successfully!");
     } catch (error) {
-      console.error("Error fetching promoter details:", error);
-      toast.error("Failed to fetch promoter details.");
+      console.error("❌ Error fetching promoter data:", error);
+      toast.error(`❌ Failed to load promoter data: ${error.message}`);
     }
   };
 
-  if (id !== null) {
-    fetchPromoterData(id);
-  }
+  fetchPromoterData();
 }, [id]);
+
 
   
 
@@ -200,6 +190,7 @@ useEffect(() => {
                 name="full_name"
                 value={formData.full_name}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -212,6 +203,7 @@ useEffect(() => {
                 name="aadhar_number"
                 value={formData.aadhar_number}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -221,6 +213,7 @@ useEffect(() => {
               label="Upload Aadhar Document"
               name="aadhar_uploaded_url"
               onChange={handleFileChange}
+disabled={disabled}
               filePreview={filePreviews.aadhar_uploaded_url}
               onDelete={() => handleFileDelete("aadhar_uploaded_url")}
             />
@@ -232,6 +225,7 @@ useEffect(() => {
                 name="pan_number"
                 value={formData.pan_number}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -241,6 +235,7 @@ useEffect(() => {
               label="Upload PAN Document"
               name="pan_uploaded_url"
               onChange={handleFileChange}
+disabled={disabled}
               filePreview={filePreviews.pan_uploaded_url}
               onDelete={() => handleFileDelete("pan_uploaded_url")}
             />
@@ -252,6 +247,7 @@ useEffect(() => {
                 name="dob"
                 value={formData.dob}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -264,6 +260,7 @@ useEffect(() => {
                 name="contact_number"
                 value={formData.contact_number}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -276,6 +273,7 @@ useEffect(() => {
                 name="email_id"
                 value={formData.email_id}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -293,6 +291,7 @@ useEffect(() => {
                 name="contact_person_name"
                 value={formData.contact_person_name}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -305,6 +304,7 @@ useEffect(() => {
                 name="partnership_pan_number"
                 value={formData.partnership_pan_number}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -314,6 +314,7 @@ useEffect(() => {
               label="Upload Partnership PAN Document"
               name="partnership_pan_uploaded_url"
               onChange={handleFileChange}
+disabled={disabled}
               filePreview={filePreviews.partnership_pan_uploaded_url}
               onDelete={() => handleFileDelete("partnership_pan_uploaded_url")}
             />
@@ -325,6 +326,7 @@ useEffect(() => {
                 name="contact_number"
                 value={formData.contact_number}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -337,6 +339,7 @@ useEffect(() => {
                 name="email_id"
                 value={formData.email_id}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -354,6 +357,7 @@ useEffect(() => {
                 name="contact_person_name"
                 value={formData.contact_person_name}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -366,6 +370,7 @@ useEffect(() => {
                 name="company_pan_number"
                 value={formData.company_pan_number}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -375,6 +380,7 @@ useEffect(() => {
               label="Upload Company PAN Document"
               name="company_pan_uploaded_url"
               onChange={handleFileChange}
+disabled={disabled}
               filePreview={filePreviews.company_pan_uploaded_url}
               onDelete={() => handleFileDelete("company_pan_uploaded_url")}
             />
@@ -386,6 +392,7 @@ useEffect(() => {
                 name="company_incorporation_number"
                 value={formData.company_incorporation_number}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -395,6 +402,7 @@ useEffect(() => {
               label="Upload Company Incorporation Document"
               name="company_incorporation_uploaded_url"
               onChange={handleFileChange}
+disabled={disabled}
               filePreview={filePreviews.company_incorporation_uploaded_url}
               onDelete={() => handleFileDelete("company_incorporation_uploaded_url")}
             />
@@ -406,6 +414,7 @@ useEffect(() => {
                 name="contact_number"
                 value={formData.contact_number}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -418,6 +427,7 @@ useEffect(() => {
                 name="email_id"
                 value={formData.email_id}
                 onChange={handleChange}
+disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
@@ -460,6 +470,7 @@ useEffect(() => {
             name="promoter_name"
             value={formData.promoter_name}
             onChange={handleChange}
+disabled={disabled}
             placeholder='Enter Name'
             onKeyDown={handleKeyDown}
             required
@@ -482,6 +493,7 @@ useEffect(() => {
       value: formData.promoter_type
     }}
     required={true}
+    isDisabled={disabled}
     onChange={(selectedOption) => {
       setFormData((prev) => ({
         ...prev,
@@ -528,6 +540,7 @@ useEffect(() => {
     options={districtOptions} // This should be the array of districts
     value={districtOptions.find(opt => opt.value === formData.district)}
     required={true}
+    isDisabled={disabled}
     onChange={(selectedOption) => {
       setFormData((prev) => ({
         ...prev,
@@ -572,6 +585,7 @@ useEffect(() => {
               label="Upload Photo"
               name="promoter_photo_uploaded_url"
               onChange={handleFileChange}
+disabled={disabled}
               filePreview={filePreviews.promoter_photo_uploaded_url}
               onDelete={() => handleFileDelete("promoter_photo_uploaded_url")}
             />
@@ -590,6 +604,7 @@ useEffect(() => {
     }}
     isSearchable={true}
     ref={selectRef}
+    isDisabled={disabled}
     placeholder="Select a city"
     styles={{
       control: (base, state) => ({
@@ -629,8 +644,9 @@ useEffect(() => {
           <input
             type="text"
             name="office_address"
-            value={formData.office_address}
+            value={formData.office_address || ''}
             onChange={handleChange}
+disabled={disabled}
             onKeyDown={handleKeyDown}
             className={commonInputClass}
           />
@@ -639,13 +655,14 @@ useEffect(() => {
         {/* Conditional Fields */}
         {renderConditionalFields()}
       </div>
-  
+  {!disabled && 
       <button
         type="submit"
         className="w-full bg-[#5CAAAB] hover:bg-[#489496] text-white py-3 rounded-md font-semibold transition"
       >
         Submit
       </button>
+}
       </>)}
     </form>
   );

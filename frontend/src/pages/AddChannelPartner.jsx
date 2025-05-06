@@ -8,7 +8,7 @@ import { toast } from 'react-toastify';
 function AddChannelPartner({viewOnly}) {
 
   const {id} = useParams()
-  console.log(id);
+  // console.log(id);
   
 
       const navigate = useNavigate()

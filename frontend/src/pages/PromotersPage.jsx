@@ -71,7 +71,7 @@ const PromotersPage = () => {
   };
 
   const handleEdit = (id) => navigate(`/promoters/edit/${id}`);
-  const handleView = (id) => console.log(`handleView: ${id}`);
+  const handleView = (id) => navigate(`/promoters/view/${id}`);
   const handleMail = (id) => console.log(`handleMail: ${id}`);
   const handleWhatsapp = (id) => console.log(`handleWhatsapp: ${id}`);
 

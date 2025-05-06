@@ -4,7 +4,7 @@ import databaseService from '../../backend-services/database/database';
 
 function ChannelPartnerForm({disabled, formData, setFormData, handleSubmitChannelPartner, activeTab = "Channel Partner Details" }) {
 
-  console.log('disabled :',disabled);
+  // console.log('disabled :',disabled);
   
 
   const selectRef = useRef(null);

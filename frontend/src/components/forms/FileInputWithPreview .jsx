@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { FaFilePdf, FaImage } from 'react-icons/fa';
 
-const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete }) => {
+const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, disabled=false }) => {
   const inputRef = useRef(null);
   const [fullScreenPreview, setFullScreenPreview] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -48,7 +48,7 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete }) 
 
   // Open full-screen preview of the file
   const handlePreviewClick = () => {
-    setFullScreenPreview(filePreview.url); // Set the selected file as the full-screen preview
+    setFullScreenPreview(typeof filePreview === 'object' ? filePreview.url : filePreview); // Set the selected file as the full-screen preview
   };
 
   // Close the full-screen preview modal
@@ -86,6 +86,7 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete }) 
           ref={inputRef}
           type="file"
           name={name}
+          disabled={disabled}
           accept="image/*,application/pdf"
           onChange={onChange}
           className="hidden"
@@ -93,66 +94,71 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete }) 
       </div>
       }
 
-      {/* File Preview */}
-      {filePreview && (
-        <div className="relative flex items-center justify-around mt-3">
-          {filePreview.type.startsWith('image/') ? (
-            <img
-              src={filePreview.url}
-              alt="Preview"
-              className="h-32 w-auto rounded-md object-cover border shadow-sm cursor-pointer"
-              onClick={handlePreviewClick}
-            />
-          ) : (
-            <div className="flex flex-col">
-              <h2
-                className="text-blue-600 underline text-sm cursor-pointer"
-                onClick={handlePreviewClick}
-              >
-                View Uploaded File
-              </h2>
-            </div>
-          )}
-          {/* Delete button for file */}
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="relative py-1 px-2 text-red-600 font-bold text-lg bg-transparent rounded-xl shadow-xl shadow-neutral-50 hover:bg-zinc-100 transition-all"
-            title="Remove selected file"
-          >
-            Delete ❌
-          </button>
-        </div>
+{/* File Preview */}
+{filePreview && (
+  <div className="relative flex items-center justify-around mt-3">
+    {(typeof filePreview === 'object' && filePreview?.type?.startsWith('image/')) ||
+    (typeof filePreview === 'string' &&
+      filePreview.match(/\.(jpeg|jpg|png|gif|webp|png)$/i)) ? (
+      <img
+        src={typeof filePreview === 'object' ? filePreview.url : filePreview}
+        alt="Preview"
+        className="h-32 w-auto rounded-md object-cover border shadow-sm cursor-pointer"
+        onClick={handlePreviewClick}
+      />
+    ) : (
+      <div className="flex flex-col">
+        <h2
+          className="text-blue-600 underline text-sm cursor-pointer"
+          onClick={handlePreviewClick}
+        >
+          View Uploaded File
+        </h2>
+      </div>
+    )}
+    {/* Delete button for file */}
+    {!disabled  &&
+    <button
+      type="button"
+      onClick={handleDelete}
+      className="relative py-1 px-2 text-red-600 font-bold text-lg bg-transparent rounded-xl shadow-xl shadow-neutral-50 hover:bg-zinc-100 transition-all"
+      title="Remove selected file"
+    >
+      Delete ❌
+    </button>
+    }
+  </div>
+)}
+
+{/* Fullscreen Preview Modal */}
+{fullScreenPreview && (
+  <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex items-center justify-center z-50">
+    <div className="relative max-w-full max-h-full">
+      {fullScreenPreview.match(/\.(jpeg|jpg|png|gif|webp|png)$/i) ? (
+        <img
+          src={fullScreenPreview}
+          alt="Full Screen Preview"
+          className="max-w-full max-h-full min-w-[50vw] min-h-[50vh] object-contain"
+        />
+      ) : (
+        <iframe
+          src={fullScreenPreview}
+          title="PDF Preview"
+          className="w-full min-w-[80vw] min-h-[80vh] h-full border-none"
+        ></iframe>
       )}
 
-      {/* Fullscreen Preview Modal */}
-      {fullScreenPreview && (
-        <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="relative max-w-full max-h-full">
-            {filePreview.type.startsWith('image/') ? (
-              <img
-                src={fullScreenPreview}
-                alt="Full Screen Preview"
-                className="max-w-full max-h-full min-w-[50vw] min-h-[50vh] object-contain"
-              />
-            ) : (
-              <iframe
-                src={fullScreenPreview}
-                title="PDF Preview"
-                className="w-full min-w-[80vw] min-h-[80vh] h-full border-none"
-              ></iframe>
-            )}
+      <button
+        onClick={closeFullScreen}
+        title="Close Preview"
+        className="absolute top-2 right-2 text-white hover:bg-purple-100 duration-300 shadow-md bg-black bg-opacity-50 p-2 rounded-full"
+      >
+        ❌
+      </button>
+    </div>
+  </div>
+)}
 
-            <button
-              onClick={closeFullScreen}
-              title="Close Preview"
-              className="absolute top-2 right-2 text-white hover:bg-purple-100 duration-300 shadow-md bg-black bg-opacity-50 p-2 rounded-full"
-            >
-              ❌
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

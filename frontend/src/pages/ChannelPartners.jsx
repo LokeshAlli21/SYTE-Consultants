@@ -65,9 +65,9 @@ const ChannelPartners = () => {
   };
 
   return (
-    <div className="p-6">
+    <div className="p-6 pt-2">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-[#2F4C92]">Channel Partners</h1>
+        <h1 className="text-2xl font-bold text-[#2F4C92] ml-6 ">Channel Partners</h1>
         <button
           onClick={handleAdd}
           className="flex items-center gap-2 bg-[#5CAAAB] text-white px-4 py-2 rounded-full shadow hover:bg-[#489090]"

@@ -9,7 +9,7 @@ const assignmentOptions = [
   { value: 'correction', label: 'Correction' },
 ];
 
-function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeTab = "Assignment Details" }) {
+function AssignmentForm({disabled, formData, setFormData, handleSubmitAssignment, activeTab = "Assignment Details" }) {
 
   const selectRef = useRef(null);
 
@@ -111,6 +111,7 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
   <label className="mb-2 font-medium text-gray-700">Select Project *</label>
   <Select
     options={projectsForDropdown}
+    isDisabled={disabled} 
     value={projectsForDropdown.find(opt => opt.value === formData.project_id)}
     required={true}
     onChange={(selectedOption) => {
@@ -158,6 +159,7 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
         <label className="mb-2 font-medium text-gray-700">Assignment Type</label>
         <Select
           options={assignmentOptions}
+          isDisabled={disabled} 
           value={selectedOption}
           onChange={handleAssignmentChange}
           isSearchable={true}
@@ -198,8 +200,9 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
           <label className="mb-2 font-medium">Payment Date</label>
           <input
             type="date"
+            disabled={disabled} 
             name="payment_date"
-            value={formData.payment_date}
+            value={formData?.payment_date || ''}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             className={commonInputStyles}
@@ -210,8 +213,9 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
           <label className="mb-2 font-medium">Application Number</label>
           <input
             type="text"
+            disabled={disabled} 
             name="application_number"
-            value={formData.application_number}
+            value={formData.application_number || ''}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             className={commonInputStyles}
@@ -232,7 +236,8 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
               type="number"
               step="0.01"
               name={field}
-              value={formData[field]}
+              disabled={disabled} 
+              value={formData[field] || ''}
               onChange={handleNumberChange}
               onKeyDown={handleKeyDown}
               className={commonInputStyles}
@@ -245,20 +250,23 @@ function AssignmentForm({ formData, setFormData, handleSubmitAssignment, activeT
           <textarea
             name="remarks"
             rows={4}
-            value={formData.remarks}
+            value={formData.remarks || ''}
             onChange={handleChange}
+            disabled={disabled} 
             onKeyDown={handleKeyDown}
             className={commonInputStyles}
           ></textarea>
         </div>
       </div>
 </div>
+{!disabled &&
       <button
         type="submit"
         className="w-fit self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-lg text-white rounded-xl font-semibold shadow-xl transition"
       >
         Submit
       </button>
+}
     </form>
   );
 }

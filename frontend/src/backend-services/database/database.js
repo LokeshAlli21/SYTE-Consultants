@@ -581,6 +581,57 @@ async createNewAssignment(formData) {
   }
 }
   
+async getAssignmentById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/get/${id}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch assignment details.");
+    }
+
+    const data = await response.json();
+    // console.log(data);
+    
+    toast.success("✅ Assignment details fetched successfully!");
+    return data.assignment; // assuming your API returns { assignment: {...} }
+
+  } catch (error) {
+    console.error("❌ Error fetching assignment details:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async updateAssignment(id, formData) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/update/${id}`, {
+      method: "PUT",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Assignment update failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Assignment updated successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error updating Assignment:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
   
   async getAllPromoters() {
     try {

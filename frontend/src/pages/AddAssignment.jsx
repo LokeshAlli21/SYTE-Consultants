@@ -1,11 +1,15 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FaArrowLeft } from 'react-icons/fa6';
 import {AssignmentForm} from '../components/index.js'
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import databaseService from '../backend-services/database/database.js';
 import { toast } from 'react-toastify';
 
-function AddAssignment() {
+function AddAssignment({viewOnly}) {
+
+  const {id} = useParams()
+  console.log(id);
+  
     const navigate = useNavigate()
     const [assignment, setAssignment ] = useState({
       id : null,
@@ -26,25 +30,60 @@ function AddAssignment() {
         remarks: "",
       })
 
+      useEffect(() => {
+        const fetchAssignment = async () => {
+          if (id) {
+            try {
+              const response = await databaseService.getAssignmentById(id); // Use the appropriate service method
+              console.log("✅ Assignment Response:", response);
+              setAssignment(response); // Make sure you pass the fetched data
+              toast.success("✅ Assignment details loaded successfully!");
+            } catch (error) {
+              console.error("❌ Error fetching assignment:", error);
+              toast.error(`❌ Failed to load assignment: ${error.message}`);
+            }
+          }
+        };
+      
+        fetchAssignment();
+      }, [id]); // Re-run the effect whenever the `id` changes      
+
       const handleSubmitAssignment = async () => {
-        if(!assignment.project_id) {
-          toast('please select project')
-          return
-        }
         console.log("Form Data Submitted:", assignment);
-        // setLoading(true);
+      
+        // Ensure project_id is selected
+        if (!assignment.project_id) {
+          toast('❌ Please select a project');
+          return;
+        }
+      
+        // Check if we are updating an existing assignment (by checking the `id`)
+        if (id) {
+          try {
+            const response = await databaseService.updateAssignment(id, assignment); // Assuming you have an updateAssignment method
+            console.log("✅ Assignment updated:", response);
+            toast.success("✅ Assignment updated successfully!");
+            navigate("/assignments"); // Navigate to assignments page or wherever appropriate
+            return; // Prevent further execution
+          } catch (error) {
+            console.error("❌ Error updating Assignment:", error);
+            toast.error(`❌ Failed to update Assignment: ${error.message}`);
+            return;
+          }
+        }
+      
+        // Create a new assignment if no ID is found (new assignment)
         try {
           const response = await databaseService.createNewAssignment(assignment);
-          console.log("✅ New assignement is created:", response);
-          toast.success("✅ New assignement is created successfully!");
-          navigate("/assignments"); // 👈 Navigate to projects page or wherever appropriate
+          console.log("✅ New assignment created:", response);
+          toast.success("✅ New assignment created successfully!");
+          navigate("/assignments"); // Navigate to assignments page or wherever appropriate
         } catch (error) {
-          console.error("❌ Error creating New assignement:", error);
-          toast.error(`❌ Failed to create New assignement: ${error.message}`);
-        } finally {
-          // setLoading(false);
+          console.error("❌ Error creating new Assignment:", error);
+          toast.error(`❌ Failed to create new Assignment: ${error.message}`);
         }
       };
+      
 
       const handleBack = () => {
           navigate(-1);
@@ -71,6 +110,7 @@ function AddAssignment() {
     formData={assignment}
       setFormData={setAssignment}
       handleSubmitAssignment={handleSubmitAssignment}
+      disabled={viewOnly? true : false}
     />
     </div>
     </>

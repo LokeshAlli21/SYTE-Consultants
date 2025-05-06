@@ -7,13 +7,13 @@ import {
 import { useParams } from 'react-router-dom'
 
   
-function AddPromoter() {
+function AddPromoter({viewOnly}) {
   const { id } = useParams()
   // alert(id? id: null)
   return (
     <div className="p-8 pt-3">
       <Header />
-      <PromoterForm id={id? id: null} />
+      <PromoterForm id={id? id: null} disabled={viewOnly}/>
       {/* <Button onClick={() => console.log("Clicked!")}>Save</Button> */}
     </div>
   )
