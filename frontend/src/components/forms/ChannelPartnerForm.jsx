@@ -2,7 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import Select from 'react-select';
 import databaseService from '../../backend-services/database/database';
 
-function ChannelPartnerForm({ formData, setFormData, handleSubmitChannelPartner, activeTab = "Channel Partner Details" }) {
+function ChannelPartnerForm({disabled, formData, setFormData, handleSubmitChannelPartner, activeTab = "Channel Partner Details" }) {
+
+  console.log('disabled :',disabled);
+  
+
   const selectRef = useRef(null);
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -79,6 +83,7 @@ function ChannelPartnerForm({ formData, setFormData, handleSubmitChannelPartner,
               name="full_name"
               value={formData.full_name}
               onChange={handleChange}
+              disabled={disabled} 
               onKeyDown={handleKeyDown}
               className={commonInputStyles}
               placeholder="Enter full name"
@@ -94,6 +99,7 @@ function ChannelPartnerForm({ formData, setFormData, handleSubmitChannelPartner,
               value={formData.contact_number}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
+              disabled={disabled} 
               className={commonInputStyles}
               placeholder="Primary contact number"
             />
@@ -107,6 +113,7 @@ function ChannelPartnerForm({ formData, setFormData, handleSubmitChannelPartner,
               value={formData.alternate_contact_number}
               onChange={handleChange}
               onKeyDown={handleKeyDown}
+              disabled={disabled} 
               className={commonInputStyles}
               placeholder="Secondary contact number"
             />
@@ -119,6 +126,7 @@ function ChannelPartnerForm({ formData, setFormData, handleSubmitChannelPartner,
               name="email_id"
               value={formData.email_id}
               onChange={handleChange}
+              disabled={disabled} 
               onKeyDown={handleKeyDown}
               className={commonInputStyles}
               placeholder="e.g. abc@xyz.com"
@@ -131,6 +139,7 @@ function ChannelPartnerForm({ formData, setFormData, handleSubmitChannelPartner,
     options={districtOptions} // This should be the array of districts
     value={districtOptions.find(opt => opt.value === formData.district)}
     required={true}
+    isDisabled={disabled}
     onChange={(selectedOption) => {
       setFormData((prev) => ({
         ...prev,
@@ -177,6 +186,7 @@ function ChannelPartnerForm({ formData, setFormData, handleSubmitChannelPartner,
     options={cityOptions} // This should be the array of cities
     value={cityOptions.find(opt => opt.value === formData.city)}
     required={true}
+    isDisabled={disabled}
     onChange={(selectedOption) => {
       setFormData((prev) => ({
         ...prev,
@@ -219,13 +229,16 @@ function ChannelPartnerForm({ formData, setFormData, handleSubmitChannelPartner,
 
         </div>
       </div>
+{!disabled &&
 
-      <button
+<button
         type="submit"
         className="w-fit self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-lg text-white rounded-xl font-semibold shadow-xl transition"
       >
         Submit
       </button>
+}
+      
     </form>
   );
 }

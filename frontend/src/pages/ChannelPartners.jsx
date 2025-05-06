@@ -51,7 +51,7 @@ const ChannelPartners = () => {
   
 
   const handleAdd = () => navigate('/channel-partners/add');
-  const handleView = (id) => console.log("View", id);
+  const handleView = (id) =>  navigate(`/channel-partners/view/${id}`);
   const handleEdit = (id) => navigate(`/channel-partners/edit/${id}`);
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure?")) return;
@@ -124,8 +124,8 @@ const ChannelPartners = () => {
                   <td className="p-3">{idx + 1}</td>
                   <td className="p-3">{p.full_name}</td>
                   <td className="p-3">{p.contact_number}</td>
-                  <td className="p-3">{p.alternate_number}</td>
-                  <td className="p-3">{p.email}</td>
+                  <td className="p-3">{p.alternate_contact_number}</td>
+                  <td className="p-3">{p.email_id}</td>
                   <td className="p-3">{p.district}</td>
                   <td className="p-3">{p.city}</td>
                   <td className="p-3">

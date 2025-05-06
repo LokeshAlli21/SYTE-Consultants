@@ -110,6 +110,20 @@ const router = createBrowserRouter([
          </AuthLayout>,
       },
       {
+        path: "/channel-partners/view/:id",
+        element: 
+        <AuthLayout authentication>
+          <AddChannelPartner viewOnly={true} />
+         </AuthLayout>,
+      },
+      {
+        path: "/channel-partners/edit/:id",
+        element: 
+        <AuthLayout authentication>
+          <AddChannelPartner viewOnly={false} />
+         </AuthLayout>,
+      },
+      {
         path: "/qpr",
         element: 
         <AuthLayout authentication>

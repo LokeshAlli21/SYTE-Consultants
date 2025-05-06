@@ -528,6 +528,32 @@ async createChannelPartner(formData) {
     throw err;
   }
 }
+async updateChannelPartner( id, formData) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/channel-partners/update/${id}`, {
+      method: "PUT",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Channel Partner update failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Channel Partner updated successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error updating Channel Partner:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
 
 async createNewAssignment(formData) {
   try {
@@ -735,6 +761,32 @@ async getAllChannelPartners() {
     throw error;
   }
 }
+
+async getChannelPartnerById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/channel-partners/get/${id}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch channel partner details.");
+    }
+    
+    
+    const data = await response.json();
+    // console.log(data);
+    toast.success("✅ Channel Partner details fetched successfully!");
+    return data.channelPartner; // assuming your API returns { channel_partner: {...} }
+
+  } catch (error) {
+    console.error("❌ Error fetching channel partner details:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
 
 async getAllChannelPartnersForDropdown() {
   try {
