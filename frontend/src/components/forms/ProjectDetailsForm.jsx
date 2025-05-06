@@ -3,6 +3,14 @@ import Select from 'react-select';
 import FileInputWithPreview from './FileInputWithPreview ';
 import databaseService from '../../backend-services/database/database';
 
+const projectTypeOptions = [
+  { label: "Residential / Group Housing", value: "Residential / Group Housing" },
+  { label: "Commercial", value: "Commercial" },
+  { label: "Mixed", value: "Mixed" },
+  { label: "Plotted", value: "Plotted" },
+];
+
+
 function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubmitProjectDetails}) {
 
   const [promotersForDropdown, setPromotersForDropdown] = useState([]);
@@ -131,14 +139,14 @@ useEffect(() => {
 
 
         <div className="flex flex-col w-full">
-  <label className="mb-2 font-medium text-gray-700">Select Promoter *</label>
+  <label className="mb-2 font-medium text-gray-700">Select Channel Partner *</label>
   <Select
     options={channelPartnersForDropdown}
     value={channelPartnersForDropdown.find(opt => opt.value === formData.channel_partner_id)}
     onChange={(selectedOption) => {
       setFormData((prev) => ({
         ...prev,
-        promoter_id: selectedOption ? selectedOption.value : '',
+        channel_partner_id: selectedOption ? selectedOption.value : '',
       }));
     }}
     isSearchable={true}
@@ -238,28 +246,64 @@ useEffect(() => {
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Project Name *</label>
   <input
-    type="text"
+    type=""
     name="project_name"
     required
     value={formData.project_name}
-    placeholder=''
+    placeholder='Enter Project name'
     onChange={handleChange}
     onKeyDown={handleKeyDown}
     className={commonInputStyles}
   />
 </div>
 
-<div className="flex flex-col">
-  <label className="mb-2 font-medium">Project Type</label>
-  <input
-    type="text"
-    name="project_type"
-    value={formData.project_type}
-    onChange={handleChange}
-    onKeyDown={handleKeyDown}
-    className={commonInputStyles}
+
+<div className="flex flex-col w-full">
+  <label className="mb-2 font-medium text-gray-700">Select Project Type *</label>
+  <Select
+    options={projectTypeOptions}
+    value={projectTypeOptions.find(opt => opt.value === formData.project_type)}
+    onChange={(selectedOption) => {
+      setFormData((prev) => ({
+        ...prev,
+        project_type: selectedOption ? selectedOption.value : '',
+      }));
+    }}
+    isSearchable={true}
+    required={true}
+    placeholder="Select Project Type"
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        padding: "6px",
+        borderRadius: "0.5rem",
+        borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+        boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none",
+        "&:hover": {
+          borderColor: "#5caaab",
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        borderRadius: "0.5rem",
+        zIndex: 20,
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? "#5caaab"
+          : state.isFocused
+          ? "#5caaab22"
+          : "white",
+        color: state.isSelected ? "white" : "black",
+        padding: "10px 12px",
+        cursor: "pointer",
+      }),
+    }}
   />
 </div>
+``
+
 
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Project Address</label>

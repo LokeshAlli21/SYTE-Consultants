@@ -15,6 +15,8 @@ const ChannelPartners = () => {
     const fetchPartners = async () => {
       try {
         const data = await databaseService.getAllChannelPartners();
+        console.log(data);
+        
         setPartners(data);
       } catch (error) {
         toast.error("❌ Failed to load channel partners");
@@ -120,7 +122,7 @@ const ChannelPartners = () => {
               filteredPartners.map((p, idx) => (
                 <tr key={p.id} className="border-b hover:bg-gray-50">
                   <td className="p-3">{idx + 1}</td>
-                  <td className="p-3">{p.name}</td>
+                  <td className="p-3">{p.full_name}</td>
                   <td className="p-3">{p.contact_number}</td>
                   <td className="p-3">{p.alternate_number}</td>
                   <td className="p-3">{p.email}</td>
