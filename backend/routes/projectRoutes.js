@@ -12,6 +12,8 @@ import { uploadProjectFiles,
     addBuildingProgress,
     addCommonAreasProgress,
     getAllUnits,
+    softDeleteProjectById,
+    softDeleteProjectUnitById,
 } from '../controllers/projectController.js';
 import {upload} from '../supabase/supabaseClient.js'
 
@@ -24,6 +26,8 @@ router.get('/get-all', protect, getAllProjects);
 
 router.get('/units/get-all', protect, getAllUnits);
 
+router.delete('/units/delete/:id', protect, softDeleteProjectUnitById);
+
 router.post('/add-project-professionals', protect, uploadProjectProfessionalData);
 router.post('/professional-details/upload-files', protect, upload.any(), uploadProjectProfessionalFiles);
 
@@ -33,5 +37,7 @@ router.post('/documents/upload-files', protect, upload.any(), uploadDocumentFile
 router.post('/add-project-documents', protect, uploadProjectDocuments);
 router.post('/add-building-progress', protect, addBuildingProgress);
 router.post('/add-common-areas-progress', protect, addCommonAreasProgress);
+
+router.delete('/delete/:id', protect, softDeleteProjectById);
 
 export default router;

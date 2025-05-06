@@ -63,15 +63,15 @@ function UnitDetails({setIsUnitDetailsFormActive, isUnitDetailsFormActive,formDa
   const handleDelete = async (id, name) => {
     const confirmDelete = window.confirm(`Are you sure you want to delete unit "${name}"?`);
     if (!confirmDelete) return;
-
-    // try {
-    //   await databaseService.deleteProjectUnitById(id);
-    //   setUnits(prev => prev.filter(unit => unit.id !== id));
-    //   toast.success(`✅ Unit "${name}" deleted successfully.`);
-    // } catch (error) {
-    //   toast.error("❌ Failed to delete unit.");
-    // }
-  };
+  
+    try {
+      await databaseService.deleteProjectUnitById(id);
+      setUnits(prev => prev.filter(unit => unit.id !== id));
+      toast.success(`✅ Unit "${name}" deleted successfully.`);
+    } catch (error) {
+      toast.error("❌ Failed to delete unit.");
+    }
+  };  
 
   const handleEdit = (id) => {
     (`/projects/units/edit/${id}`);

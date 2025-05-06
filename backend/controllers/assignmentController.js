@@ -77,7 +77,8 @@ export const createNewAssignment = async (req, res) => {
           remarks,
           created_at,
           updated_at
-        `);
+        `)
+        .eq('status_for_delete','active');
   
       if (error) {
         console.error('❌ Error fetching assignments:', error);
@@ -87,6 +88,27 @@ export const createNewAssignment = async (req, res) => {
       res.status(200).json({ assignments: data });
     } catch (err) {
       console.error('❌ Unexpected error in getAllAssignments:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+  
+  export const softDeleteAssignmentById = async (req, res) => {
+    const assignmentId = req.params.id;
+  
+    try {
+      const { error } = await supabase
+        .from('assignments')
+        .update({ status_for_delete: 'inactive' })
+        .eq('id', assignmentId);
+  
+      if (error) {
+        console.error('❌ Error soft deleting assignment:', error);
+        return res.status(500).json({ error: 'Failed to delete assignment', details: error });
+      }
+  
+      res.status(200).json({ message: '✅ Assignment marked as inactive' });
+    } catch (err) {
+      console.error('❌ Unexpected error in softDeleteAssignmentById:', err);
       res.status(500).json({ error: 'Internal server error' });
     }
   };

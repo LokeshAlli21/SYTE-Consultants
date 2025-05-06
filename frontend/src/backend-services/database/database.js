@@ -871,6 +871,95 @@ async getAllCitiesAndDistricts ()  {
     }
   }
   
+  async deleteProjectById(id) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/delete/${id}`, {
+        method: "DELETE",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete project.");
+      }
+  
+      toast.success("✅ Project deleted successfully!");
+      return true;
+  
+    } catch (error) {
+      console.error("❌ Error deleting project:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
+  async deleteProjectUnitById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/units/delete/${id}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to delete unit.");
+    }
+
+    toast.success("✅ Unit deleted successfully!");
+    return true;
+
+  } catch (error) {
+    console.error("❌ Error deleting unit:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async deleteChannelPartnerById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/channel-partners/delete/${id}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to delete channel partner.");
+    }
+
+    toast.success("✅ Channel Partner deleted successfully!");
+    return true;
+
+  } catch (error) {
+    console.error("❌ Error deleting channel partner:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async deleteAssignmentById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/delete/${id}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to delete assignment.");
+    }
+
+    toast.success("✅ Assignment deleted successfully!");
+    return true;
+
+  } catch (error) {
+    console.error("❌ Error deleting assignment:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+
   async getPromoterDetailsById(id) {
     try {
       const response = await fetch(`${this.baseUrl}/api/promoters/get/${id}`, {

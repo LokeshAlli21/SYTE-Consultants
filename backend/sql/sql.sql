@@ -83,6 +83,8 @@ CREATE TABLE projects (
         FOREIGN KEY (channel_partner_id)
         REFERENCES channel_partners(id)
         ON DELETE SET NULL,
+
+    status_for_delete VARCHAR(20) DEFAULT 'active',
         
     promoter_id INT NOT NULL,  -- Foreign key linking to Promoters table (NOT NULL)
     promoter_name VARCHAR(255),  -- 
@@ -223,6 +225,8 @@ CREATE TABLE project_units (
         FOREIGN KEY (project_id)
         REFERENCES projects(id)
         ON DELETE CASCADE,
+
+    status_for_delete VARCHAR(20) DEFAULT 'active',
 
     -- Unit Details
     unit_name VARCHAR(255),
@@ -465,6 +469,8 @@ CREATE TABLE assignments (
         REFERENCES projects(id)
         ON DELETE CASCADE,
 
+    status_for_delete VARCHAR(20) DEFAULT 'active',
+
     assignment_type VARCHAR(100),  -- Type of Assignment (e.g., Registration, Compliance, etc.)
     payment_date DATE,
     application_number VARCHAR(100),
@@ -511,6 +517,8 @@ CREATE TABLE channel_partners (
     email_id VARCHAR(255),
     district VARCHAR(100),
     city VARCHAR(100),
+
+    status_for_delete VARCHAR(20) DEFAULT 'active',
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')

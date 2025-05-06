@@ -40,7 +40,8 @@ export const createChannelPartner = async (req, res) => {
     try {
       const { data, error } = await supabase
         .from('channel_partners')
-        .select(`id, full_name, contact_number, alternate_contact_number, email_id, district, city, created_at, updated_at`);
+        .select(`id, full_name, contact_number, alternate_contact_number, email_id, district, city, created_at, updated_at`)
+        .eq('status_for_delete','active');
   
       if (error) {
         console.error('❌ Error fetching channel partners:', error);
@@ -53,6 +54,27 @@ export const createChannelPartner = async (req, res) => {
       res.status(200).json({ channelPartners: data });
     } catch (err) {
       console.error('❌ Unexpected error in getAllChannelPartners:', err);
+      res.status(500).json({ error: 'Internal server error' });
+    }
+  };
+  
+  export const softDeleteChannelPartnerById = async (req, res) => {
+    const partnerId = req.params.id;
+  
+    try {
+      const { error } = await supabase
+        .from('channel_partners')
+        .update({ status_for_delete: 'inactive' })
+        .eq('id', partnerId);
+  
+      if (error) {
+        console.error('❌ Error soft deleting channel partner:', error);
+        return res.status(500).json({ error: 'Failed to delete channel partner', details: error });
+      }
+  
+      res.status(200).json({ message: '✅ Channel Partner marked as inactive' });
+    } catch (err) {
+      console.error('❌ Unexpected error in softDeleteChannelPartnerById:', err);
       res.status(500).json({ error: 'Internal server error' });
     }
   };

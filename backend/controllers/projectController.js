@@ -106,7 +106,8 @@ export const getAllProjects = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('projects')
-      .select('id, project_name, promoter_name, rera_number, district, city, registration_date, expiry_date');
+      .select('id, project_name, promoter_name, rera_number, district, city, registration_date, expiry_date')
+      .eq('status_for_delete','active');
 
     if (error) {
       console.error('❌ Error fetching projects:', error);
@@ -127,7 +128,8 @@ export const getAllUnits = async (req, res) => {
       .select(
         `id, project_id, unit_name, unit_type, carpet_area, unit_status, customer_name,
          agreement_value, total_received, balance_amount, created_at, updated_at`
-      );
+      )
+      .eq('status_for_delete','active');
 
     if (error) {
       console.error('❌ Error fetching units:', error);
@@ -480,3 +482,45 @@ export const addCommonAreasProgress = async (req, res) => {
 };
 
 
+
+export const softDeleteProjectById = async (req, res) => {
+  const projectId = req.params.id;
+
+  try {
+    const { error } = await supabase
+      .from('projects')
+      .update({ status_for_delete: 'inactive' })
+      .eq('id', projectId);
+
+    if (error) {
+      console.error('❌ Error soft deleting project:', error);
+      return res.status(500).json({ error: 'Failed to delete project', details: error });
+    }
+
+    res.status(200).json({ message: '✅ Project marked as inactive' });
+  } catch (err) {
+    console.error('❌ Unexpected error in softDeleteProjectById:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const softDeleteProjectUnitById = async (req, res) => {
+  const unitId = req.params.id;
+
+  try {
+    const { error } = await supabase
+      .from('project_units')
+      .update({ status_for_delete: 'inactive' })
+      .eq('id', unitId);
+
+    if (error) {
+      console.error('❌ Error soft deleting project unit:', error);
+      return res.status(500).json({ error: 'Failed to delete unit', details: error });
+    }
+
+    res.status(200).json({ message: '✅ Unit marked as inactive' });
+  } catch (err) {
+    console.error('❌ Unexpected error in softDeleteProjectUnitById:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
