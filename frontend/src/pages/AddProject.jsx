@@ -27,7 +27,7 @@ const AddProject = () => {
     const navigate = useNavigate();
     const [activeTabIndex, setActiveTabIndex] = useState(0);
     const [projectDetails, setProjectDetails] = useState({
-      channel_partner: "",
+      channel_partner_id: null,
       promoter_id: 1,
       promoter_name: "",
       project_name: "",

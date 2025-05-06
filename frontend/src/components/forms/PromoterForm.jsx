@@ -68,6 +68,10 @@ const [filePreviews, setFilePreviews] = useState({});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if(!formData.promoter_type) {
+      alert('please select promoter type')
+      return
+    }
     console.log('Form Data:', formData);
     setLoading(true);
     try {
@@ -456,6 +460,7 @@ useEffect(() => {
             name="promoter_name"
             value={formData.promoter_name}
             onChange={handleChange}
+            placeholder='Enter Name'
             onKeyDown={handleKeyDown}
             required
             className={commonInputClass}
@@ -473,7 +478,7 @@ useEffect(() => {
     value={{
       label: formData.promoter_type === 'individual' ? 'Individual' :
              formData.promoter_type === 'partnership_firm' ? 'Partnership Firm' :
-             formData.promoter_type === 'pvt_ltd' ? 'PVT LTD' : '',
+             formData.promoter_type === 'pvt_ltd' ? 'PVT LTD' : "",
       value: formData.promoter_type
     }}
     required={true}

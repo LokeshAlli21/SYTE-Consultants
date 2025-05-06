@@ -4,6 +4,34 @@ import FileInputWithPreview from './FileInputWithPreview ';
 import databaseService from '../../backend-services/database/database';
 
 function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubmitProjectDetails}) {
+
+  const [promotersForDropdown, setPromotersForDropdown] = useState([]);
+  const [channelPartnersForDropdown, setChannelPartnersForDropdown] = useState([]);
+
+useEffect(() => {
+  const fetchPromoters = async () => {
+    try {
+      const data = await databaseService.getAllPromotersForDropdown();
+      console.log("Promoters:", data);
+      setPromotersForDropdown(data);
+    } catch (error) {
+      toast.error("❌ Failed to load promoters");
+    }
+  };
+  const fetchChannelPartners = async () => {
+    try {
+      const data = await databaseService.getAllChannelPartnersForDropdown();
+      console.log("ChannelPartners:", data);
+      setChannelPartnersForDropdown(data);
+    } catch (error) {
+      toast.error("❌ Failed to load Channel Partners");
+    }
+  };
+
+  fetchPromoters();
+  fetchChannelPartners()
+}, []);
+
     const selectRef = useRef(null);
 
     const [filePreviews, setFilePreviews] = useState({});
@@ -102,15 +130,49 @@ function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubm
 
 
 
-<div className="flex flex-col">
-  <label className="mb-2 font-medium">Channel Partner</label>
-  <input
-    type="text"
-    name="channel_partner"
-    value={formData.channel_partner}
-    onChange={handleChange}
-    onKeyDown={handleKeyDown}
-    className={commonInputStyles}
+        <div className="flex flex-col w-full">
+  <label className="mb-2 font-medium text-gray-700">Select Promoter *</label>
+  <Select
+    options={channelPartnersForDropdown}
+    value={channelPartnersForDropdown.find(opt => opt.value === formData.channel_partner_id)}
+    onChange={(selectedOption) => {
+      setFormData((prev) => ({
+        ...prev,
+        promoter_id: selectedOption ? selectedOption.value : '',
+      }));
+    }}
+    isSearchable={true}
+    required={true}
+    placeholder="Select a Channel Partner"
+    ref={selectRef} // optional, only if you use it elsewhere
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        padding: "6px",
+        borderRadius: "0.5rem",
+        borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+        boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none",
+        "&:hover": {
+          borderColor: "#5caaab",
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        borderRadius: "0.5rem",
+        zIndex: 20,
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? "#5caaab"
+          : state.isFocused
+          ? "#5caaab22"
+          : "white",
+        color: state.isSelected ? "white" : "black",
+        padding: "10px 12px",
+        cursor: "pointer",
+      }),
+    }}
   />
 </div>
 
@@ -126,17 +188,52 @@ function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubm
   />
 </div> */}
 
-<div className="flex flex-col">
-  <label className="mb-2 font-medium">Select Promoter</label>
-  <input
-    type="text"
-    name="promoter_name"
-    value={formData.promoter_name}
-    onChange={handleChange}
-    onKeyDown={handleKeyDown}
-    className={commonInputStyles}
+<div className="flex flex-col w-full">
+  <label className="mb-2 font-medium text-gray-700">Select Promoter *</label>
+  <Select
+    options={promotersForDropdown}
+    value={promotersForDropdown.find(opt => opt.value === formData.promoter_id)}
+    onChange={(selectedOption) => {
+      setFormData((prev) => ({
+        ...prev,
+        promoter_id: selectedOption ? selectedOption.value : '',
+      }));
+    }}
+    isSearchable={true}
+    required={true}
+    placeholder="Select a promoter"
+    ref={selectRef} // optional, only if you use it elsewhere
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        padding: "6px",
+        borderRadius: "0.5rem",
+        borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+        boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none",
+        "&:hover": {
+          borderColor: "#5caaab",
+        },
+      }),
+      menu: (base) => ({
+        ...base,
+        borderRadius: "0.5rem",
+        zIndex: 20,
+      }),
+      option: (base, state) => ({
+        ...base,
+        backgroundColor: state.isSelected
+          ? "#5caaab"
+          : state.isFocused
+          ? "#5caaab22"
+          : "white",
+        color: state.isSelected ? "white" : "black",
+        padding: "10px 12px",
+        cursor: "pointer",
+      }),
+    }}
   />
 </div>
+
 
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Project Name *</label>
@@ -145,6 +242,7 @@ function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubm
     name="project_name"
     required
     value={formData.project_name}
+    placeholder=''
     onChange={handleChange}
     onKeyDown={handleKeyDown}
     className={commonInputStyles}

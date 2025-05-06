@@ -77,7 +77,13 @@ CREATE TABLE projects (
         REFERENCES promoters(id)
         ON DELETE CASCADE,
 
-    channel_partner VARCHAR(255),  -- Channel partner associated with the project
+     -- Foreign key linking to channel_partners table
+    channel_partner_id INT,
+    CONSTRAINT fk_channel_partner
+        FOREIGN KEY (channel_partner_id)
+        REFERENCES channel_partners(id)
+        ON DELETE SET NULL,
+        
     promoter_id INT NOT NULL,  -- Foreign key linking to Promoters table (NOT NULL)
     promoter_name VARCHAR(255),  -- 
     project_name VARCHAR(255) NOT NULL,  -- Project name (NOT NULL)

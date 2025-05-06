@@ -3,7 +3,7 @@ import { supabase } from '../supabase/supabaseClient.js';
 export const uploadProjectData = async (req, res) => {
   try {
     const {
-      channel_partner,
+      channel_partner_id,
       promoter_id,
       promoter_name,
       project_name,
@@ -23,7 +23,7 @@ export const uploadProjectData = async (req, res) => {
     const { data, error } = await supabase
       .from('projects')
       .insert([{
-        channel_partner,
+        channel_partner_id,
         promoter_id,
         promoter_name,
         project_name,

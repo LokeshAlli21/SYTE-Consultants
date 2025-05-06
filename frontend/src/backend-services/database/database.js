@@ -578,6 +578,36 @@ async createNewAssignment(formData) {
       throw error;
     }
   }
+  async getAllPromotersForDropdown() {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch promoters.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Promoters fetched successfully!");
+  
+      // Map to label/value format for react-select or dropdowns
+      const dropdownOptions = data.promoters.map((promoter) => ({
+        label: promoter.promoter_name,
+        value: promoter.id,
+      }));
+  
+      return dropdownOptions;
+  
+    } catch (error) {
+      console.error("❌ Error fetching promoters:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
 
 
   async getAllProjects() {
@@ -705,6 +735,37 @@ async getAllChannelPartners() {
     throw error;
   }
 }
+
+async getAllChannelPartnersForDropdown() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/channel-partners/get-all`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch channel partners.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Channel partners fetched successfully!");
+
+    // Map to label/value format for react-select
+    const dropdownOptions = data.channelPartners.map((partner) => ({
+      label: partner.full_name,
+      value: partner.id,
+    }));
+
+    return dropdownOptions;
+
+  } catch (error) {
+    console.error("❌ Error fetching channel partners:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
 
 async getAllCitiesAndDistricts ()  {
   const cityOptions = [

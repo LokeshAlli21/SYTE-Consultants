@@ -10,7 +10,7 @@ function AddChannelPartner() {
       const navigate = useNavigate()
 
   const [channelPartner,setChannelPartner] = useState({
-    full_name: " ",
+    full_name: "",
     contact_number: "",
     alternate_contact_number: "",
     email_id: "",
@@ -46,7 +46,7 @@ function AddChannelPartner() {
           <div className="flex items-center justify-between mb-6 pl-6">
             <div className="flex items-center gap-2">
               <FaArrowLeft className="text-[#2F4C92] text-3xl cursor-pointer" onClick={handleBack} />
-              <h1 className="text-[24px] font-bold text-[#2F4C92]">Add New Assignment</h1>
+              <h1 className="text-[24px] font-bold text-[#2F4C92]">Add Channel Partner</h1>
             </div>
     
             <div className="flex items-center gap-6">
