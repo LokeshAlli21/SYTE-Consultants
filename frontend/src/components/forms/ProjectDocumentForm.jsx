@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
 
 function ProjectDocumentForm({
+  disabled,
   projectId,
   activeTab = '',
   formData,
@@ -78,6 +79,7 @@ function ProjectDocumentForm({
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
           {documentFields.map(({ name, label }) => (
             <FileInputWithPreview
+disabled={disabled}
               key={name}
               label={label}
               name={name}
@@ -89,12 +91,14 @@ function ProjectDocumentForm({
         </div>
 
         <div className="flex justify-end mt-6">
+        {!disabled &&
           <button
             type="submit"
             className="px-6 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-white text-lg font-semibold rounded-xl shadow-lg transition"
           >
             Submit
           </button>
+}
         </div>
 </div>
       </div>

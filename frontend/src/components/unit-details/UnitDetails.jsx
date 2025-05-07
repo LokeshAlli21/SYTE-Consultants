@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import databaseService from '../../backend-services/database/database';
 import {UnitDetailsForm} from '../index.js';
 
-function UnitDetails({ projectId , setIsUnitDetailsFormActive, isUnitDetailsFormActive,formData,setFormData,activeTab,handleSubmitProjectUnit}) {
+function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDetailsFormActive,formData,setFormData,activeTab,handleSubmitProjectUnit}) {
 
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -99,6 +99,7 @@ function UnitDetails({ projectId , setIsUnitDetailsFormActive, isUnitDetailsForm
       <div className="flex flex-wrap gap-4 mb-6 items-center">
         <div className="relative">
           <input
+disabled={disabled}
             type="text"
             placeholder="Search by name, type, customer..."
             value={searchQuery}
@@ -137,6 +138,7 @@ function UnitDetails({ projectId , setIsUnitDetailsFormActive, isUnitDetailsForm
               <tr className="text-left text-gray-600 font-semibold">
                 <th className="p-3 w-12">
                   <input
+disabled={disabled}
                     type="checkbox"
                     onChange={toggleSelectAll}
                     checked={selectedIds.length === filteredUnits.length}
@@ -165,6 +167,7 @@ function UnitDetails({ projectId , setIsUnitDetailsFormActive, isUnitDetailsForm
                   >
                     <td className="p-3">
                       <input
+disabled={disabled}
                         type="checkbox"
                         checked={selected}
                         onChange={() => toggleSelect(u.id)}

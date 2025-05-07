@@ -1179,6 +1179,180 @@ async deleteAssignmentById(id) {
     }
   }
   
+  async getAllEngineers() {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/engineers/get-all`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch engineers.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Engineers fetched successfully!");
+      return data.engineers;
+  
+    } catch (error) {
+      console.error("❌ Error fetching engineers:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getAllArchitects() {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/architects/get-all`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch architects.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Architects fetched successfully!");
+      return data.architects;
+  
+    } catch (error) {
+      console.error("❌ Error fetching architects:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getAllCAs() {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/cas/get-all`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch CAs.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ CAs fetched successfully!");
+      return data.cas;
+  
+    } catch (error) {
+      console.error("❌ Error fetching CAs:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getProjectProfessionalData(projectId) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/get-project-professionals/${projectId}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch project professional data.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Project professional data fetched successfully!");
+      return data.professionalData;
+  
+    } catch (error) {
+      console.error("❌ Error fetching project professional data:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
+  async getProjectById(id) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/get-project/${id}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch project details.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Project details fetched successfully!");
+      return data.project;
+    } catch (error) {
+      console.error("❌ Error fetching project details:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getProjectDocuments(projectId) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/get-documents/${projectId}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        
+        // Handle specific error messages returned from the backend
+        if (errorData.error === "No documents found for this project.") {
+          throw new Error("No documents found for this project.");
+        }
+        
+        throw new Error(errorData.message || "Failed to fetch project documents.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Project documents fetched successfully!");
+      return data.documents;
+  
+    } catch (error) {
+      console.error("❌ Error fetching project documents:", error);
+  
+      // Show user-friendly error message
+      if (error.message === "No documents found for this project.") {
+        toast.error("❌ No documents found for this project.");
+      } else {
+        toast.error(`❌ ${error.message}`);
+      }
+  
+      throw error; // Re-throw error for further handling
+    }
+  }
+  
+
+  async getProjectSiteProgress(projectId) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/get-site-progress/${projectId}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch site progress.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Project site progress fetched successfully!");
+      return data.siteProgress;
+    } catch (error) {
+      console.error("❌ Error fetching site progress:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
+  
   
 }
 

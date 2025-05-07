@@ -11,7 +11,7 @@ const projectTypeOptions = [
 ];
 
 
-function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubmitProjectDetails, projectId}) {
+function ProjectDetailsForm({disabled, activeTab = '', formData, setFormData , handleSubmitProjectDetails, projectId}) {
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -143,6 +143,7 @@ useEffect(() => {
         <div className="flex flex-col w-full">
   <label className="mb-2 font-medium text-gray-700">Select Channel Partner *</label>
   <Select
+isDisabled={disabled}
     options={channelPartnersForDropdown}
     value={channelPartnersForDropdown.find(opt => opt.value === formData.channel_partner_id)}
     onChange={(selectedOption) => {
@@ -189,6 +190,7 @@ useEffect(() => {
 {/* <div className="flex flex-col">
   <label className="mb-2 font-medium">Promoter ID</label>
   <input
+disabled={disabled}
     type="number"
     name="promoter_id"
     value={formData.promoter_id}
@@ -201,6 +203,7 @@ useEffect(() => {
 <div className="flex flex-col w-full">
   <label className="mb-2 font-medium text-gray-700">Select Promoter *</label>
   <Select
+isDisabled={disabled}
     options={promotersForDropdown}
     value={promotersForDropdown.find(opt => opt.value === formData.promoter_id)}
     onChange={(selectedOption) => {
@@ -248,6 +251,7 @@ useEffect(() => {
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Project Name *</label>
   <input
+disabled={disabled}
     type="text"
     name="project_name"
     required
@@ -263,6 +267,7 @@ useEffect(() => {
 <div className="flex flex-col w-full">
   <label className="mb-2 font-medium text-gray-700">Select Project Type *</label>
   <Select
+isDisabled={disabled}
     options={projectTypeOptions}
     value={projectTypeOptions.find(opt => opt.value === formData.project_type)}
     onChange={(selectedOption) => {
@@ -309,6 +314,7 @@ useEffect(() => {
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Project Address</label>
   <textarea
+  disabled={disabled}
     name="project_address"
     value={formData.project_address}
     onChange={handleChange}
@@ -320,9 +326,10 @@ useEffect(() => {
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Project Pincode</label>
   <input
+disabled={disabled}
     type='number'
     name="project_pincode"
-    value={formData.project_pincode}
+    value={formData.project_pincode || ''}
     onChange={handleChange}
     onKeyDown={handleKeyDown}
     className={commonInputStyles}
@@ -332,6 +339,7 @@ useEffect(() => {
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Login ID</label>
   <input
+disabled={disabled}
     type="text"
     name="login_id"
     value={formData.login_id}
@@ -344,6 +352,7 @@ useEffect(() => {
 <div className="flex flex-col relative">
       <label className="mb-2 font-medium">Password</label>
       <input
+disabled={disabled}
         type={showPassword ? "text" : "password"}
         name="password"
         value={formData.password}
@@ -364,6 +373,7 @@ useEffect(() => {
           <div className="flex flex-col w-full">
   <label className="mb-2 font-medium text-gray-700">Select District</label>
   <Select
+isDisabled={disabled}
     options={districtOptions} // This should be the array of districts
     value={districtOptions.find(opt => opt.value === formData.district)}
     onChange={(selectedOption) => {
@@ -409,6 +419,7 @@ useEffect(() => {
 <div className="flex flex-col w-full">
   <label className="mb-2 font-medium text-gray-700">Select City</label>
   <Select
+isDisabled={disabled}
     options={cityOptions} // This should be the array of cities
     value={cityOptions.find(opt => opt.value === formData.city)}
     onChange={(selectedOption) => {
@@ -454,6 +465,7 @@ useEffect(() => {
 <div className="flex flex-col">
   <label className="mb-2 font-medium">RERA Number</label>
   <input
+disabled={disabled}
     type="text"
     name="rera_number"
     value={formData.rera_number}
@@ -464,6 +476,7 @@ useEffect(() => {
 </div>
 
 <FileInputWithPreview
+disabled={disabled}
   label="RERA Certificate"
   name="rera_certificate_uploaded_url"
   onChange={handleFileChange}
@@ -475,9 +488,10 @@ useEffect(() => {
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Registration Date</label>
   <input
+disabled={disabled}
     type="date"
     name="registration_date"
-    value={formData.registration_date}
+    value={formData.registration_date || ''}
     onChange={handleChange}
     onKeyDown={handleKeyDown}
     className={commonInputStyles}
@@ -487,9 +501,10 @@ useEffect(() => {
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Expiry Date</label>
   <input
+disabled={disabled}
     type="date"
     name="expiry_date"
-    value={formData.expiry_date}
+    value={formData.expiry_date || ''}
     onChange={handleChange}
     onKeyDown={handleKeyDown}
     className={commonInputStyles}
@@ -502,12 +517,14 @@ useEffect(() => {
 
         </div>
         </div>
+        {!disabled &&
         <button
         type="submit"
         className="w-fit px-5 m-0 bg-[#5CAAAB] hover:bg-[#489496] text-lg shadow-xl text-white py-3 rounded-xl self-end font-semibold transition"
       >
         Submit
       </button>
+      }
         </form>
   )
 }

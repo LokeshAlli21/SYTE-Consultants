@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa6';
 import { FaFilePdf, FaTimes } from "react-icons/fa";
@@ -20,7 +20,7 @@ const tabs = [
   "Project Progress",
 ];
 
-const AddProject = () => {
+const AddProject = ({viewOnly=false}) => {
 
   const {id} = useParams()
 
@@ -224,23 +224,138 @@ const AddProject = () => {
         details: '',
       },
     })
-    // useEffect(() => {  // TODO ////////////////////////////////////////////////////////////////////
-    //   const fetchProject = async () => {
-    //     if (id) {
-    //       try {
-    //         const response = await databaseService.getProjectById(id);
-    //         console.log("✅ Project Response:", response);
-    //         setProjectDetails(response); // Set the fetched project data to state
-    //         toast.success("✅ Project details loaded successfully!");
-    //       } catch (error) {
-    //         console.error("❌ Error fetching project:", error);
-    //         toast.error(`❌ Failed to load project: ${error.message}`);
-    //       }
-    //     }
-    //   };
+
+    useEffect(() => {
+      const fetchAllProjectData = async () => {
+        if (!id) return;
     
-    //   fetchProject();
-    // }, [id]);
+        // 1. Project Details
+        try {
+          const project = await databaseService.getProjectById(id);
+          console.log("✅ Project Response:", project);
+          setProjectDetails(project);
+          toast.success("✅ Project details loaded!");
+        } catch (error) {
+          console.error("❌ Error loading project details:", error);
+          toast.error(`❌ Failed to load project details: ${error.message}`);
+        }
+    
+        // 2. Project Professionals
+        try {
+          const professionals = await databaseService.getProjectProfessionalData(id);
+          console.log("✅ Professional Data Response:", professionals);
+          setProjectProfessionalDetails({
+            project_id: professionals.project_id,
+            engineer: {
+              name: professionals.engineers.name,
+              contact_number: professionals.engineers.contact_number,
+              email_id: professionals.engineers.email_id,
+              office_address: professionals.engineers.office_address,
+              licence_number: professionals.engineers.licence_number,
+              licence_uploaded_url: professionals.engineers.licence_uploaded_url,
+              pan_number: professionals.engineers.pan_number,
+              pan_uploaded_url: professionals.engineers.pan_uploaded_url,
+              letter_head_uploaded_url: professionals.engineers.letter_head_uploaded_url,
+              sign_stamp_uploaded_url: professionals.engineers.sign_stamp_uploaded_url
+            },
+            architect: {
+              name: professionals.architects.name,
+              contact_number: professionals.architects.contact_number,
+              email_id: professionals.architects.email_id,
+              office_address: professionals.architects.office_address,
+              licence_number: professionals.architects.licence_number,
+              licence_uploaded_url: professionals.architects.licence_uploaded_url,
+              pan_number: professionals.architects.pan_number,
+              pan_uploaded_url: professionals.architects.pan_uploaded_url,
+              letter_head_uploaded_url: professionals.architects.letter_head_uploaded_url,
+              sign_stamp_uploaded_url: professionals.architects.sign_stamp_uploaded_url
+            },
+            ca: {
+              name: professionals.cas.name,
+              contact_number: professionals.cas.contact_number,
+              email_id: professionals.cas.email_id,
+              office_address: professionals.cas.office_address,
+              licence_number: professionals.cas.licence_number,
+              licence_uploaded_url: professionals.cas.licence_uploaded_url,
+              pan_number: professionals.cas.pan_number,
+              pan_uploaded_url: professionals.cas.pan_uploaded_url,
+              letter_head_uploaded_url: professionals.cas.letter_head_uploaded_url,
+              sign_stamp_uploaded_url: professionals.cas.sign_stamp_uploaded_url
+            }
+          });
+          toast.success("✅ Project professionals loaded!");
+        } catch (error) {
+          console.error("❌ Error loading project professionals:", error);
+          toast.error(`❌ Failed to load project professionals: ${error.message}`);
+        }
+    
+        // 3. Project Documents
+        try {
+          const documents = await databaseService.getProjectDocuments(id);
+          console.log("✅ Documents Response:", documents);
+          setProjectDocuments({
+            project_id: documents.project_id, // Set project_id from the fetched data
+            cc_uploaded_url: documents.cc_uploaded_url,
+            plan_uploaded_url: documents.plan_uploaded_url,
+            search_report_uploaded_url: documents.search_report_uploaded_url,
+            da_uploaded_url: documents.da_uploaded_url,
+            pa_uploaded_url: documents.pa_uploaded_url,
+            satbara_uploaded_url: documents.satbara_uploaded_url,
+            promoter_letter_head_uploaded_url: documents.promoter_letter_head_uploaded_url,
+            promoter_sign_stamp_uploaded_url: documents.promoter_sign_stamp_uploaded_url,
+          });
+          toast.success("✅ Project documents loaded!");
+        } catch (error) {
+          console.error("❌ Error loading project documents:", error);
+          toast.error(`❌ Failed to load project documents: ${error.message}`);
+        }
+    
+        // 4. Site Progress
+        try {
+          const progress = await databaseService.getProjectSiteProgress(id);
+          console.log("✅ Site Progress Response:", progress);
+              // Set building progress
+              setProjectBuildingProgress((prevState) => {
+                const updatedProgress = Object.keys(prevState).reduce((acc, key) => {
+                  if (key === 'project_id') {
+                    acc[key] = prevState[key]; // retain the existing project_id
+                  } else {
+                    acc[key] = progress[key] ?? prevState[key];
+                  }
+                  return acc;
+                }, {});
+                return updatedProgress;
+              });
+              
+
+          // Set common area progress
+          setProjectCommonAreasProgress((prevState) => {
+            const updatedProgress = { project_id: prevState.project_id }; // Keep the same project ID
+          
+            Object.keys(prevState).forEach((key) => {
+              if (key !== 'project_id') {
+                const value = progress[key];
+                updatedProgress[key] = {
+                  proposed: !!value, // Convert null/undefined to false, numbers to true
+                  percentage_of_work: value ? 100 : 0, // 100 if present, 0 otherwise
+                  details: '',
+                };
+              }
+            });
+          
+            return updatedProgress;
+          });          
+          toast.success("✅ Site progress loaded!");
+        } catch (error) {
+          console.error("❌ Error loading site progress:", error);
+          toast.error(`❌ Failed to load site progress: ${error.message}`);
+        }
+      };
+    
+      fetchAllProjectData();
+    }, [id]);
+    
+    
     
   
     const handleBack = () => {
@@ -276,7 +391,7 @@ const AddProject = () => {
       // console.log("Form Data Submitted:", projectProfessionalDetails);
       // setLoading(true);
       try {
-        const response = await databaseService.uploadProjectProfessionalDetails(projectProfessionalDetails);
+        const response = await databaseService.uploadProjectProfessionalDetails({...projectProfessionalDetails, project_id: projectId});
         console.log("✅ Project professional details uploaded:", response);
         toast.success("✅ Project professional details submitted successfully!");
         setProjectProfessionalDetails(prev => resetObjectData(prev));
@@ -357,7 +472,7 @@ const AddProject = () => {
         if (typeof value === "string") {
           clearedObj[key] = "";
         } else if (typeof value === "number") {
-          clearedObj[key] = 0;
+          clearedObj[key] = '';
         } else if (typeof value === "boolean") {
           clearedObj[key] = false;
         } else if (Array.isArray(value)) {
@@ -389,6 +504,7 @@ const AddProject = () => {
           setFormData={setProjectDetails}
           activeTab={activeTab}
           projectId={projectId}
+          disabled={viewOnly}
           handleSubmitProjectDetails={handleSubmitProjectDetails}
         />
           )}
@@ -399,6 +515,7 @@ const AddProject = () => {
             setFormData={setProjectProfessionalDetails}
             activeTab={activeTab}
             projectId={projectId}
+            disabled={viewOnly}
             handleSubmitProjectProfessionalDetails={handleSubmitProjectProfessionalDetails}
           />
           )}
@@ -411,6 +528,7 @@ const AddProject = () => {
             setFormData={setProjectUnit}
             activeTab={activeTab}
             projectId={projectId}
+            disabled={viewOnly}
             handleSubmitProjectUnit={handleSubmitProjectUnit}
            />
           )}
@@ -421,6 +539,7 @@ const AddProject = () => {
              setFormData={setProjectDocuments}
              activeTab={activeTab}
              projectId={projectId}
+             disabled={viewOnly}
              handleSubmitProjectDocuments={handleSubmitProjectDocuments}
            />
           )}
@@ -433,6 +552,7 @@ const AddProject = () => {
              setProjectCommonAreasProgress={setProjectCommonAreasProgress}
              activeTab={activeTab}
              projectId={projectId}
+             disabled={viewOnly}
              handleSubmitProjectBuildingProgress={handleSubmitProjectBuildingProgress}
              handleSubmitProjectCommonAreasProgresss={handleSubmitProjectCommonAreasProgresss}
            />

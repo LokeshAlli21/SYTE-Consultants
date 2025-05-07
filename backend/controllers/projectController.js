@@ -151,6 +151,212 @@ export const getAllUnits = async (req, res) => {
   }
 };
 
+export const getAllEngineers = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('engineers')
+      .select(`
+        id, name, contact_number, email_id, office_address,
+        licence_number, licence_uploaded_url,
+        pan_number, pan_uploaded_url,
+        letter_head_uploaded_url, sign_stamp_uploaded_url
+      `);
+
+    if (error) {
+      console.error('❌ Error fetching engineers:', error);
+      return res.status(500).json({ error: 'Failed to fetch engineers', details: error });
+    }
+
+    res.status(200).json({ engineers: data });
+  } catch (err) {
+    console.error('❌ Unexpected error in getAllEngineers:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAllArchitects = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('architects')
+      .select(`
+        id, name, contact_number, email_id, office_address,
+        licence_number, licence_uploaded_url,
+        pan_number, pan_uploaded_url,
+        letter_head_uploaded_url, sign_stamp_uploaded_url
+      `);
+
+    if (error) {
+      console.error('❌ Error fetching architects:', error);
+      return res.status(500).json({ error: 'Failed to fetch architects', details: error });
+    }
+
+    res.status(200).json({ architects: data });
+  } catch (err) {
+    console.error('❌ Unexpected error in getAllArchitects:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAllCAs = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('cas')
+      .select(`
+        id, name, contact_number, email_id, office_address,
+        licence_number, licence_uploaded_url,
+        pan_number, pan_uploaded_url,
+        letter_head_uploaded_url, sign_stamp_uploaded_url
+      `);
+
+    if (error) {
+      console.error('❌ Error fetching CAs:', error);
+      return res.status(500).json({ error: 'Failed to fetch CAs', details: error });
+    }
+
+    res.status(200).json({ cas: data });
+  } catch (err) {
+    console.error('❌ Unexpected error in getAllCAs:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getProjectProfessionalData = async (req, res) => {
+  try {
+    const { id:project_id } = req.params;
+
+    const { data, error } = await supabase
+      .from('project_professional_details')
+      .select(`
+        id,
+        project_id,
+        engineer_id,
+        architect_id,
+        ca_id,
+        created_at,
+        updated_at,
+        engineers (
+          id, name, contact_number, email_id, office_address,
+          licence_number, licence_uploaded_url,
+          pan_number, pan_uploaded_url,
+          letter_head_uploaded_url, sign_stamp_uploaded_url
+        ),
+        architects (
+          id, name, contact_number, email_id, office_address,
+          licence_number, licence_uploaded_url,
+          pan_number, pan_uploaded_url,
+          letter_head_uploaded_url, sign_stamp_uploaded_url
+        ),
+        cas (
+          id, name, contact_number, email_id, office_address,
+          licence_number, licence_uploaded_url,
+          pan_number, pan_uploaded_url,
+          letter_head_uploaded_url, sign_stamp_uploaded_url
+        )
+      `)
+      .eq('project_id', project_id)
+      .maybeSingle(); // Since project_id is UNIQUE
+
+    if (error) {
+      console.error("❌ Error fetching project professional data:", error);
+      return res.status(500).json({ error: "Failed to fetch project professional data", details: error });
+    }
+
+    res.status(200).json({ professionalData: data });
+  } catch (err) {
+    console.error("❌ Unexpected error in getProjectProfessionalData:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const getSiteProgress = async (req, res) => {
+  try {
+    const { id: project_id } = req.params;
+
+    const { data, error } = await supabase
+      .from('site_progress')
+      .select('*')
+      .eq('project_id', project_id);
+
+    if (error) {
+      console.error("❌ Supabase error fetching site progress:", error.message);
+      return res.status(500).json({ error: "Failed to fetch site progress." });
+    }
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: "No site progress found for this project." });
+    }
+
+    res.status(200).json({ siteProgress: data[0] });
+  } catch (error) {
+    console.error("❌ Unexpected error fetching site progress:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
+export const getDocuments = async (req, res) => {
+  try {
+    const { id: project_id } = req.params;
+
+    // Querying the project_documents table in Supabase
+    const { data, error } = await supabase
+      .from('project_documents')
+      .select('*')
+      .eq('project_id', project_id);
+
+    if (error) {
+      console.error("❌ Supabase error fetching documents:", error.message);
+      return res.status(500).json({
+        error: "Failed to fetch documents from the database.",
+        details: error.message || "Something went wrong while fetching the documents.",
+      });
+    }
+
+    if (!data || data.length === 0) {
+      console.log("⚠️ No documents found for project ID:", project_id);
+      return res.status(404).json({
+        error: "No documents found for this project.",
+      });
+    }
+
+    // Return the fetched documents (first document in case of multiple)
+    res.status(200).json({ documents: data[0] });
+  } catch (error) {
+    console.error("❌ Unexpected error fetching documents:", error);
+    res.status(500).json({
+      error: "Internal server error",
+      details: error.message || "An unexpected error occurred.",
+    });
+  }
+};
+
+
+
+export const getProject = async (req, res) => {
+  try {
+    const { id: project_id } = req.params;
+
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('id', project_id)
+
+    if (error) {
+      console.error("❌ Supabase error fetching project:", error.message);
+      return res.status(500).json({ error: "Failed to fetch project." });
+    }
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: "Project not found." });
+    }
+
+    res.status(200).json({ project: data[0] });
+  } catch (error) {
+    console.error("❌ Unexpected error fetching project:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+
 
 export const uploadProjectProfessionalFiles = async (req, res) => {
   try {

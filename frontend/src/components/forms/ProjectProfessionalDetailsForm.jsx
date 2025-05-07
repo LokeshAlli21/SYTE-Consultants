@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
 
-function ProjectProfessionalDetailsForm({projectId, activeTab = '', formData, setFormData, handleSubmitProjectProfessionalDetails }) {
+function ProjectProfessionalDetailsForm({disabled, projectId, activeTab = '', formData, setFormData, handleSubmitProjectProfessionalDetails }) {
   const [filePreviews, setFilePreviews] = useState({});
 
-  // formData new added project_id: 123,
 
   const handleChange = (e, role) => {
     const { name, value } = e.target;
@@ -84,10 +83,58 @@ function ProjectProfessionalDetailsForm({projectId, activeTab = '', formData, se
         <h2 className="text-xl font-bold text-[#4a9899] mb-4">{roleLabel}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
+          {/* <div className="flex flex-col w-full">
+            <label className="mb-2 font-medium text-gray-700">Select Promoter *</label>
+            <Select
+          isDisabled={disabled}
+              options={promotersForDropdown}
+              value={promotersForDropdown.find(opt => opt.value === formData.promoter_id)}
+              onChange={(selectedOption) => {
+                setFormData((prev) => ({
+                  ...prev,
+                  promoter_id: selectedOption ? selectedOption.value : '',
+                }));
+              }}
+              isSearchable={true}
+              required={true}
+              placeholder="Select a promoter"
+              ref={selectRef} // optional, only if you use it elsewhere
+              styles={{
+                control: (base, state) => ({
+                  ...base,
+                  padding: "6px",
+                  borderRadius: "0.5rem",
+                  borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+                  boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none",
+                  "&:hover": {
+                    borderColor: "#5caaab",
+                  },
+                }),
+                menu: (base) => ({
+                  ...base,
+                  borderRadius: "0.5rem",
+                  zIndex: 20,
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isSelected
+                    ? "#5caaab"
+                    : state.isFocused
+                    ? "#5caaab22"
+                    : "white",
+                  color: state.isSelected ? "white" : "black",
+                  padding: "10px 12px",
+                  cursor: "pointer",
+                }),
+              }}
+            />
+          </div> */}
+
           {['name', 'contact_number', 'email_id', 'office_address', 'licence_number', 'pan_number'].map(field => (
             <div className="flex flex-col" key={field}>
               <label className="mb-2 font-medium capitalize">{field.replace(/_/g, ' ')}</label>
               <input
+disabled={disabled}
                 type="text"
                 name={field}
                 value={data[field] || ''}
@@ -105,6 +152,7 @@ function ProjectProfessionalDetailsForm({projectId, activeTab = '', formData, se
             { name: 'sign_stamp_uploaded_url', label: 'Sign/Stamp' }
           ].map(({ name, label }) => (
             <FileInputWithPreview
+disabled={disabled}
               key={name}
               label={label}
               name={name}
@@ -133,12 +181,14 @@ function ProjectProfessionalDetailsForm({projectId, activeTab = '', formData, se
       {renderProfessionalSection("Architect", "architect")}
       {renderProfessionalSection("Chartered Accountant", "ca")}
 
+      {!disabled &&
       <button
         type="submit"
         className="w-fit self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-lg text-white rounded-xl font-semibold shadow-xl transition"
       >
         Submit
       </button>
+}
     </form>
   );
 }

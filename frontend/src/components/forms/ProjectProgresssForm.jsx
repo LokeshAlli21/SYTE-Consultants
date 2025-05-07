@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 function ProjectProgressForm({
+  disabled,
   projectId,
   projectBuildingProgress,
   projectCommonAreasProgress,
@@ -140,6 +141,7 @@ const inputRefs = useRef({});
         {key.replace(/_/g, ' ')}
       </label>
       <input
+disabled={disabled}
         type="number"
         name={key}
         value={value}
@@ -160,12 +162,14 @@ const inputRefs = useRef({});
 
         </div>
       </div>
+      {!disabled &&
       <button
         type="submit"
         className="self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-white text-lg rounded-xl font-semibold shadow-lg transition"
       >
         Submit Building Progress
       </button>
+}
     </form>
   );
 
@@ -191,6 +195,7 @@ const inputRefs = useRef({});
       <td className="border border-gray-300 p-2 capitalize">{key.replace(/_/g, ' ')}</td>
       <td className="border border-gray-300 p-2">
         <input
+disabled={disabled}
           type="checkbox"
           name="proposed"
           checked={fields.proposed}
@@ -200,6 +205,7 @@ const inputRefs = useRef({});
       </td>
       <td className="border border-gray-300 p-2">
         <input
+disabled={disabled}
           type="number"
           name="percentage_of_work"
           value={fields.percentage_of_work}
@@ -213,6 +219,7 @@ const inputRefs = useRef({});
       </td>
       <td className="border border-gray-300 p-2">
         <input
+disabled={disabled}
           type="text"
           name="details"
           value={fields.details}
@@ -230,12 +237,14 @@ const inputRefs = useRef({});
     </div>
   </div>
 
+  {!disabled &&
   <button
     type="submit"
     className="self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-white text-lg rounded-xl font-semibold shadow-lg transition"
   >
     Submit Common Area Progress
   </button>
+}
 </form>
 
   );
