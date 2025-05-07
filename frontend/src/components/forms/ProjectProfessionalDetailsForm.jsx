@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
 
 function ProjectProfessionalDetailsForm({disabled, projectId, activeTab = '', formData, setFormData, handleSubmitProjectProfessionalDetails }) {
@@ -72,6 +72,42 @@ function ProjectProfessionalDetailsForm({disabled, projectId, activeTab = '', fo
       handleSubmitProjectProfessionalDetails();
     }
   };  
+
+    useEffect(() => {
+      const uploadedUrls = {};
+
+
+      Object.entries(formData || {}).forEach((detail) => {
+          Object.entries(detail || {}).forEach(([key, value]) => {
+            if (
+              typeof key === "string" &&
+              key.endsWith("_uploaded_url") &&
+              typeof value === "string" &&
+              value.startsWith("http")
+            ) {
+              uploadedUrls[key] = value;
+            }
+          });
+        });
+
+  
+      // Object.entries(formData || {}).forEach(([key, value]) => {
+      //   if (
+      //     typeof key === "string" &&
+      //     key.endsWith("_uploaded_url") &&
+      //     typeof value === "string" &&
+      //     value.startsWith("http")
+      //   ) {
+      //     uploadedUrls[key] = value;
+      //   }
+      // });
+  
+      console.log("✅ Uploaded URLs:", uploadedUrls);
+  
+      if (Object.keys(uploadedUrls).length > 0) {
+        setFilePreviews(uploadedUrls);
+      }
+    },[formData])
 
   const commonInputStyles =
     "w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab]";

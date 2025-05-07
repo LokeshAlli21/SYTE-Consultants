@@ -65,7 +65,7 @@ function SideBar() {
           <div className='flex pr-4 items-center justify-start font-semibold text-[24px] font-inter' onClick={() => {
                   navigate('/');
                 }}>
-            <img className='max-w-[77px]' src='../logo.png' alt='Logo' />
+            <img className='max-w-[77px]' src='/logo.png' alt='Logo' />
             <h2 className='ml-[-18px]'>SYTE Consultants</h2>
           </div>
 

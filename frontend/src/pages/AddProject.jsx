@@ -330,21 +330,23 @@ const AddProject = ({viewOnly=false}) => {
 
           // Set common area progress
           setProjectCommonAreasProgress((prevState) => {
-            const updatedProgress = { project_id: prevState.project_id }; // Keep the same project ID
+            const updatedProgress = { project_id: prevState.project_id };
           
             Object.keys(prevState).forEach((key) => {
               if (key !== 'project_id') {
-                const value = progress[key];
+                const obj = progress[key];
+          
                 updatedProgress[key] = {
-                  proposed: !!value, // Convert null/undefined to false, numbers to true
-                  percentage_of_work: value ? 100 : 0, // 100 if present, 0 otherwise
-                  details: '',
+                  proposed: obj?.proposed ?? false,
+                  percentage_of_work: obj?.percentage_of_work ?? 0,
+                  details: obj?.details ?? '',
                 };
               }
             });
           
             return updatedProgress;
-          });          
+          });
+                   
           toast.success("✅ Site progress loaded!");
         } catch (error) {
           console.error("❌ Error loading site progress:", error);

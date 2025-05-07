@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
 import Select from 'react-select';
 
@@ -77,6 +77,27 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
       return updatedPreviews;
     });
   };
+
+          useEffect(() => {
+            const uploadedUrls = {};
+        
+            Object.entries(formData || {}).forEach(([key, value]) => {
+              if (
+                typeof key === "string" &&
+                key.endsWith("_uploaded_url") &&
+                typeof value === "string" &&
+                value.startsWith("http")
+              ) {
+                uploadedUrls[key] = value;
+              }
+            });
+        
+            console.log("✅ Uploaded URLs:", uploadedUrls);
+        
+            if (Object.keys(uploadedUrls).length > 0) {
+              setFilePreviews(uploadedUrls);
+            }
+          },[formData])
 
   // Common input styles
   const commonInputStyles =

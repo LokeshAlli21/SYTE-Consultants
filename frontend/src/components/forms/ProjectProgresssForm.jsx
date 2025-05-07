@@ -14,6 +14,8 @@ function ProjectProgressForm({
 
   const [focusedField, setFocusedField] = useState({ key: null, name: null });
 const inputRefs = useRef({});
+// console.log(projectCommonAreasProgress);
+
 
 
   const handleBuildingChange = (e) => {
