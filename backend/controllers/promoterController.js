@@ -27,74 +27,86 @@ export const uploadPromoterData = async (req, res) => {
       company_incorporation_uploaded_url,
       promoter_photo_uploaded_url,
     } = req.body;
-
+  
     // Step 2: Insert promoter basic data into 'Promoters' table
     const response = await supabase
-  .from('promoters')
-  .insert([{
-    promoter_name,
-    contact_number,
-    email_id,
-    district,
-    city,
-    promoter_type,
-  }])
-  .select('id');
-
-console.log("🔍 Raw Supabase insert response:", response);
-const { data: promoterData, error: promoterError, status, statusText } = response;
-
-if (promoterError) {
-  console.error('❌ Error inserting into Promoters:', promoterError);
-  console.error('🔎 Supabase insert status:', status, statusText);
-  return res.status(500).json({
-    error: 'Failed to insert promoter data',
-    details: promoterError,
-    status,
-    statusText
-  });
-}
-
+      .from('promoters')
+      .insert([{
+        promoter_name,
+        contact_number,
+        email_id,
+        district,
+        city,
+        promoter_type,
+      }])
+      .select('id');
+  
+    console.log("🔍 Raw Supabase insert response:", response);
+    const { data: promoterData, error: promoterError, status, statusText } = response;
+  
+    if (promoterError) {
+      console.error('❌ Error inserting into Promoters:', promoterError);
+      console.error('🔎 Supabase insert status:', status, statusText);
+      return res.status(500).json({
+        error: 'Failed to insert promoter data',
+        details: promoterError,
+        status,
+        statusText
+      });
+    }
+  
     const promoterId = promoterData?.[0]?.id;
-
+  
     if (!promoterId) {
       return res.status(500).json({ error: 'Failed to retrieve promoter ID after insert' });
     }
-
-    // Step 3: Insert promoter details into 'PromoterDetails' table
+  
+    // Step 3: Construct the promoter details object dynamically
+    const promoterDetails = {
+      full_name,
+      office_address,
+      aadhar_number,
+      pan_number,
+      dob: dob || null, // Insert null if dob is not provided
+      contact_person_name,
+      partnership_pan_number,
+      company_pan_number,
+      company_incorporation_number,
+      promoter_id: promoterId, // Link the promoter details to the promoter
+      aadhar_uploaded_url,
+      pan_uploaded_url,
+      partnership_pan_uploaded_url,
+      company_pan_uploaded_url,
+      company_incorporation_uploaded_url,
+      promoter_photo_uploaded_url
+    };
+  
+    // Step 4: Filter out invalid or empty fields
+    const filteredPromoterDetails = {};
+    Object.entries(promoterDetails).forEach(([key, value]) => {
+      if (value && value !== 'null' && value !== 'undefined') {
+        filteredPromoterDetails[key] = value;
+      }
+    });
+  
+    // Step 5: Insert promoter details into 'PromoterDetails' table
     const { data: detailsData, error: detailsError } = await supabase
       .from('promoter_details')
-      .insert([{
-        full_name,
-        office_address,
-        aadhar_number,
-        aadhar_uploaded_url,
-        pan_number,
-        pan_uploaded_url,
-        dob: dob || null,
-        contact_person_name,
-        partnership_pan_number,
-        partnership_pan_uploaded_url,
-        company_pan_number,
-        company_pan_uploaded_url,
-        company_incorporation_number,
-        company_incorporation_uploaded_url,
-        promoter_photo_uploaded_url,
-        promoter_id: promoterId // Link the promoter details to the promoter
-      }]);
-
+      .insert([filteredPromoterDetails]);
+  
     if (detailsError) {
       console.error('Error inserting into PromoterDetails:', detailsError);
       return res.status(500).json({ error: 'Failed to insert promoter details', details: detailsError });
     }
-
-    // Step 4: Return success response
+  
+    // Step 6: Return success response
     res.status(201).json({ message: 'Promoter and details uploaded successfully', promoterData, detailsData });
-
+  
   } catch (error) {
     console.error('Unexpected error in uploadPromoterData:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
+  
 };
 
 export const uploadPromoterFiles = async (req, res) => {
@@ -254,3 +266,100 @@ export const getPromoterById = async (req, res) => {
   }
 };
 
+
+export const updatePromoter = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const {
+      promoter_name,
+      contact_number,
+      email_id,
+      district,
+      city,
+      promoter_type,
+      full_name,
+      office_address,
+      aadhar_number,
+      pan_number,
+      dob,
+      contact_person_name,
+      partnership_pan_number,
+      company_pan_number,
+      company_incorporation_number,
+      aadhar_uploaded_url,
+      pan_uploaded_url,
+      partnership_pan_uploaded_url,
+      company_pan_uploaded_url,
+      company_incorporation_uploaded_url,
+      promoter_photo_uploaded_url
+    } = req.body;
+
+    // Step 1: Update 'promoters' table
+    const { data: promoterData, error: promoterError } = await supabase
+      .from('promoters')
+      .update({
+        promoter_name,
+        contact_number,
+        email_id,
+        district,
+        city,
+        promoter_type,
+        updated_at: new Date().toISOString() // ensure updated timestamp
+      })
+      .eq('id', id);
+
+    if (promoterError) {
+      console.error('❌ Error updating Promoters table:', promoterError);
+      return res.status(500).json({ error: 'Failed to update promoter', details: promoterError });
+    }
+
+    // Step 2: Update 'promoter_details' table
+    const updateDetails = {
+      full_name,
+      office_address,
+      aadhar_number,
+      pan_number,
+      dob: dob || null,
+      contact_person_name,
+      partnership_pan_number,
+      company_pan_number,
+      company_incorporation_number,
+      aadhar_uploaded_url,
+      pan_uploaded_url,
+      partnership_pan_uploaded_url,
+      company_pan_uploaded_url,
+      company_incorporation_uploaded_url,
+      promoter_photo_uploaded_url,
+      updated_at: new Date().toISOString()
+    };
+
+    // Remove undefined/null values so we don't overwrite with empty fields
+    const filteredDetails = {};
+    Object.entries(updateDetails).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        filteredDetails[key] = value;
+      }
+    });
+
+    const { data: detailsData, error: detailsError } = await supabase
+      .from('promoter_details')
+      .update(filteredDetails)
+      .eq('promoter_id', id); // promoter_id foreign key
+
+    if (detailsError) {
+      console.error('❌ Error updating PromoterDetails table:', detailsError);
+      return res.status(500).json({ error: 'Failed to update promoter details', details: detailsError });
+    }
+
+    return res.status(200).json({
+      message: '✅ Promoter and details updated successfully',
+      promoterData,
+      detailsData
+    });
+
+  } catch (error) {
+    console.error('❌ Unexpected error in updatePromoter:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};

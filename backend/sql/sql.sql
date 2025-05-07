@@ -57,7 +57,7 @@ CREATE TABLE promoter_details (
     company_incorporation_number VARCHAR(20),  -- Company incorporation number
     company_incorporation_uploaded_url TEXT,  -- URL where incorporation document is uploaded
     promoter_id INT NOT NULL,  -- Foreign key linking to Promoters table
-    profile_photo_uploaded_url TEXT,
+    promoter_photo_uploaded_url TEXT,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Creation timestamp
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')  -- Update timestamp
 

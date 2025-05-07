@@ -130,6 +130,99 @@ class DatabaseService {
       throw error;
     }
   }
+  async updatePromoter(id, formData) {
+    try {
+      console.log('Original formData for update:', formData);
+  
+      const fileFormData = new FormData();
+      const fieldsToUpload = [];
+  
+      const promoterName = formData.promoter_name?.replace(/\s+/g, '_') || 'UnknownPromoter';
+      const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
+  
+      for (const key in formData) {
+        const file = formData[key];
+        if (key.endsWith('_uploaded_url') && file instanceof File) {
+          if (!file) continue;
+  
+          let identifier = "NoIdentifier";
+  
+          if (key === "pan_uploaded_url") {
+            identifier = formData.pan_number || "NoPAN";
+          } else if (key === "aadhar_uploaded_url") {
+            identifier = formData.aadhar_number || "NoAadhar";
+          } else if (key === "partnership_pan_uploaded_url") {
+            identifier = formData.partnership_pan_number || "NoPartnershipPAN";
+          } else if (key === "company_pan_uploaded_url") {
+            identifier = formData.company_pan_number || "NoCompanyPAN";
+          } else if (key === "company_incorporation_uploaded_url") {
+            identifier = formData.company_incorporation_number || "NoIncorpNumber";
+          } else if (key === "promoter_photo_uploaded_url") {
+            identifier = "";
+          }
+  
+          const extension = file.name?.split('.').pop() || 'pdf';
+          const renamedFile = new File(
+            [file],
+            `${promoterName}_${identifier}_${timestamp}.${extension}`,
+            { type: file.type }
+          );
+  
+          fileFormData.append(key, renamedFile);
+          fieldsToUpload.push(key);
+        }
+      }
+  
+      if (fieldsToUpload.length > 0) {
+        const fileUploadRes = await fetch(`${this.baseUrl}/api/promoters/upload-files`, {
+          method: "POST",
+          headers: this.getAuthHeaders(true),
+          body: fileFormData
+        });
+  
+        if (!fileUploadRes.ok) {
+          const errorData = await fileUploadRes.json();
+          throw new Error(errorData.message || "File upload failed.");
+        }
+  
+        const uploadedUrls = await fileUploadRes.json();
+  
+        for (const fieldName of fieldsToUpload) {
+          if (uploadedUrls[fieldName]) {
+            formData[fieldName] = uploadedUrls[fieldName];
+          } else {
+            throw new Error(`Missing URL for ${fieldName} in upload response`);
+          }
+        }
+      }
+  
+      console.log("Final formData for update:", formData);
+  
+      const response = await fetch(`${this.baseUrl}/api/promoters/update/${id}`, {
+        method: "PUT",
+        headers: {
+          ...this.getAuthHeaders(),
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(formData)
+      });
+  
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.message || "Promoter update failed.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Promoter updated successfully!");
+      return data;
+    } catch (err) {
+      console.error("❌ Error updating Promoter:", err);
+      toast.error(`❌ ${err.message}`);
+      throw err;
+    }
+  }
+  
+  
   
   async uploadProjectDetails(formData) {
     try {

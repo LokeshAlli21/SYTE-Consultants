@@ -40,7 +40,7 @@ const PromoterForm = ({id , disabled }) => {
     office_address: '',
     promoter_type: '',
     full_name: '',
-    aadhar_number: 0,
+    aadhar_number: null,
     aadhar_uploaded_url: '',
     pan_number: '',
     pan_uploaded_url: '',
@@ -68,24 +68,39 @@ const [filePreviews, setFilePreviews] = useState({});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if(!formData.promoter_type) {
-      alert('please select promoter type')
-      return
+  
+    // Validate promoter type
+    if (!formData.promoter_type) {
+      alert('Please select promoter type');
+      return;
     }
+  
     console.log('Form Data:', formData);
     setLoading(true);
+  
     try {
-      const response = await databaseService.uploadPromoterData(formData);
-      console.log("✅ Upload response:", response);
-      toast.success("✅ Promoter created successfully!");
-      navigate("/promoters"); // 👈 Navigate on success
+      // Check if formData contains an id for update or not
+      if (id) {
+        // If ID exists, update the promoter
+        const response = await databaseService.updatePromoter(id, formData);
+        console.log("✅ Promoter updated:", response);
+        toast.success("✅ Promoter updated successfully!");
+        navigate("/promoters"); // Navigate on success
+      } else {
+        // If no ID, create a new promoter
+        const response = await databaseService.uploadPromoterData(formData);
+        console.log("✅ Promoter created:", response);
+        toast.success("✅ Promoter created successfully!");
+        navigate("/promoters"); // Navigate on success
+      }
     } catch (error) {
-      console.error("❌ Error creating Promoter:", error);
-      toast.error(`❌ Failed to create Promoter: ${error.message}`);
+      console.error("❌ Error handling Promoter:", error);
+      toast.error(`❌ Failed to handle Promoter: ${error.message}`);
     } finally {
       setLoading(false);
     }
   };
+  
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
@@ -136,7 +151,37 @@ useEffect(() => {
     try {
       const response = await databaseService.getPromoterDetailsById(id);
       console.log("✅ Promoter Response:", response);
-      setFormData(response);
+      
+      if (response && response.promoter_details && response.promoter_details.length > 0) {
+        const details = response.promoter_details[0]; // assuming only one detail object
+
+        setFormData({
+          promoter_name: response.promoter_name || '',
+          contact_number: response.contact_number || '',
+          email_id: response.email_id || '',
+          district: response.district || '',
+          city: response.city || '',
+          promoter_type: response.promoter_type || '',
+          office_address: details.office_address || '',
+          full_name: details.full_name || '',
+          aadhar_number: details.aadhar_number || null,
+          aadhar_uploaded_url: details.aadhar_uploaded_url || '',
+          pan_number: details.pan_number || '',
+          pan_uploaded_url: details.pan_uploaded_url || '',
+          dob: details.dob || '',
+          contact_person_name: details.contact_person_name || '',
+          partnership_pan_number: details.partnership_pan_number || '',
+          partnership_pan_uploaded_url: details.partnership_pan_uploaded_url || '',
+          company_pan_number: details.company_pan_number || '',
+          company_pan_uploaded_url: details.company_pan_uploaded_url || '',
+          company_incorporation_number: details.company_incorporation_number || '',
+          company_incorporation_uploaded_url: details.company_incorporation_uploaded_url || '',
+          promoter_photo_uploaded_url: details.promoter_photo_uploaded_url || '',
+        });
+      } else {
+        toast.error("❌ Promoter details not found.");
+      }
+
 
       const uploadedUrls = {};
 
