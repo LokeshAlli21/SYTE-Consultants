@@ -102,7 +102,7 @@ const ProjectsPage = () => {
   };
 
   const handleView = (id) => {
-    console.log(`View clicked for id: ${id}`);
+    navigate(`/projects/view/${id}`);
   };
 
   return (

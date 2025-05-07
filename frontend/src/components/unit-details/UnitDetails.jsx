@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import databaseService from '../../backend-services/database/database';
 import {UnitDetailsForm} from '../index.js';
 
-function UnitDetails({setIsUnitDetailsFormActive, isUnitDetailsFormActive,formData,setFormData,activeTab,handleSubmitProjectUnit}) {
+function UnitDetails({ projectId , setIsUnitDetailsFormActive, isUnitDetailsFormActive,formData,setFormData,activeTab,handleSubmitProjectUnit}) {
 
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,6 +80,10 @@ function UnitDetails({setIsUnitDetailsFormActive, isUnitDetailsFormActive,formDa
   const handleView = (id) => {
     console.log(`View clicked for unit id: ${id}`);
   };
+
+  if(!projectId){
+    return
+  }
 
   return isUnitDetailsFormActive? (
     <UnitDetailsForm

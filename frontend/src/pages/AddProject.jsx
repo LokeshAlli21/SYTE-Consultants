@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { FaArrowLeft } from 'react-icons/fa6';
 import { FaFilePdf, FaTimes } from "react-icons/fa";
 import {
@@ -22,18 +22,22 @@ const tabs = [
 
 const AddProject = () => {
 
+  const {id} = useParams()
+
   const [isUnitDetailsFormActive, setIsUnitDetailsFormActive] = useState(false)
+
+  const [projectId, setProjectId] = useState(id || null)
 
     const navigate = useNavigate();
     const [activeTabIndex, setActiveTabIndex] = useState(0);
     const [projectDetails, setProjectDetails] = useState({
       channel_partner_id: null,
-      promoter_id: 1,
+      promoter_id: '',
       promoter_name: "",
       project_name: "",
       project_type: "",
       project_address: "",
-      project_pincode: 0,
+      project_pincode: '',
       login_id: "",
       password: "",
       district: "",
@@ -44,7 +48,7 @@ const AddProject = () => {
       expiry_date: "",
     });
     const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
-      project_id: 8,
+      project_id: projectId,
       engineer: {
         name: "",
         contact_number: "",
@@ -85,7 +89,7 @@ const AddProject = () => {
 
     const [projectUnit, setProjectUnit] = useState({
       id: 1,
-      project_id: 8,
+      project_id: projectId,
       
       // Unit Details
       unit_name: "",
@@ -123,7 +127,7 @@ const AddProject = () => {
     })
 
     const [projectDocuments,setProjectDocuments] = useState({
-      project_id: 8, // must match a valid project ID
+      project_id: projectId, // must match a valid project ID
 
       // Document URLs
       cc_uploaded_url: "",
@@ -137,7 +141,7 @@ const AddProject = () => {
     })
 
     const [projectBuildingProgress,setProjectBuildingProgress] = useState({
-      project_id: 8,
+      project_id: projectId,
     
       excavation: 0,
       basement: 0,
@@ -153,7 +157,7 @@ const AddProject = () => {
     })
 
     const [projectCommonAreasProgress, setProjectCommonAreasProgress] = useState({
-      project_id: 8,
+      project_id: projectId,
       internal_roads_footpaths: {
         proposed: false,
         percentage_of_work: 0,
@@ -220,6 +224,24 @@ const AddProject = () => {
         details: '',
       },
     })
+    // useEffect(() => {  // TODO ////////////////////////////////////////////////////////////////////
+    //   const fetchProject = async () => {
+    //     if (id) {
+    //       try {
+    //         const response = await databaseService.getProjectById(id);
+    //         console.log("✅ Project Response:", response);
+    //         setProjectDetails(response); // Set the fetched project data to state
+    //         toast.success("✅ Project details loaded successfully!");
+    //       } catch (error) {
+    //         console.error("❌ Error fetching project:", error);
+    //         toast.error(`❌ Failed to load project: ${error.message}`);
+    //       }
+    //     }
+    //   };
+    
+    //   fetchProject();
+    // }, [id]);
+    
   
     const handleBack = () => {
         navigate(-1);
@@ -231,9 +253,17 @@ const AddProject = () => {
       try {
         const response = await databaseService.uploadProjectDetails(projectDetails);
         console.log("✅ Project details uploaded:", response);
+    
+        // Extract project ID from response and set it
+        const newProjectId = response?.data?.[0]?.id;
+        if (newProjectId) {
+          setProjectId(newProjectId);
+          console.log("🆔 Project ID set to:", newProjectId);
+        }
+    
         toast.success("✅ Project details submitted successfully!");
         setProjectDetails(prev => resetObjectData(prev));
-        navigate("/projects"); // 👈 Navigate to projects page or wherever appropriate
+        setActiveTabIndex(1)
       } catch (error) {
         console.error("❌ Error submitting project details:", error);
         toast.error(`❌ Failed to submit project details: ${error.message}`);
@@ -241,6 +271,7 @@ const AddProject = () => {
         // setLoading(false);
       }
     };
+    
     const handleSubmitProjectProfessionalDetails = async () => {
       // console.log("Form Data Submitted:", projectProfessionalDetails);
       // setLoading(true);
@@ -357,6 +388,7 @@ const AddProject = () => {
           formData={projectDetails}
           setFormData={setProjectDetails}
           activeTab={activeTab}
+          projectId={projectId}
           handleSubmitProjectDetails={handleSubmitProjectDetails}
         />
           )}
@@ -366,6 +398,7 @@ const AddProject = () => {
             formData={projectProfessionalDetails}
             setFormData={setProjectProfessionalDetails}
             activeTab={activeTab}
+            projectId={projectId}
             handleSubmitProjectProfessionalDetails={handleSubmitProjectProfessionalDetails}
           />
           )}
@@ -377,6 +410,7 @@ const AddProject = () => {
            formData={projectUnit}
             setFormData={setProjectUnit}
             activeTab={activeTab}
+            projectId={projectId}
             handleSubmitProjectUnit={handleSubmitProjectUnit}
            />
           )}
@@ -386,6 +420,7 @@ const AddProject = () => {
              formData={projectDocuments}
              setFormData={setProjectDocuments}
              activeTab={activeTab}
+             projectId={projectId}
              handleSubmitProjectDocuments={handleSubmitProjectDocuments}
            />
           )}
@@ -397,6 +432,7 @@ const AddProject = () => {
              setProjectBuildingProgress={setProjectBuildingProgress}
              setProjectCommonAreasProgress={setProjectCommonAreasProgress}
              activeTab={activeTab}
+             projectId={projectId}
              handleSubmitProjectBuildingProgress={handleSubmitProjectBuildingProgress}
              handleSubmitProjectCommonAreasProgresss={handleSubmitProjectCommonAreasProgresss}
            />

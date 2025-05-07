@@ -19,26 +19,34 @@ export const uploadProjectData = async (req, res) => {
       registration_date,
       expiry_date,
     } = req.body;
-
+    
+    // Build insert object with conditional fields
+    const insertData = {
+      channel_partner_id,
+      promoter_id,
+      promoter_name,
+      project_name,
+      project_type,
+      project_address,
+      login_id,
+      password,
+      district,
+      city,
+      rera_number,
+      rera_certificate_uploaded_url,
+      registration_date: registration_date || null,
+      expiry_date: expiry_date || null,
+    };
+    
+    // Only add project_pincode if it’s not empty (undefined, null, or empty string)
+    if (project_pincode) {
+      insertData.project_pincode = project_pincode;
+    }
+    
     const { data, error } = await supabase
       .from('projects')
-      .insert([{
-        channel_partner_id,
-        promoter_id,
-        promoter_name,
-        project_name,
-        project_type,
-        project_address,
-        project_pincode,
-        login_id,
-        password,
-        district,
-        city,
-        rera_number,
-        rera_certificate_uploaded_url,
-        registration_date: registration_date || null,
-        expiry_date: expiry_date || null,
-      }]);
+      .insert([insertData])
+      .select();
 
     if (error) {
       console.error('❌ Error inserting project data:', error);

@@ -11,7 +11,9 @@ const projectTypeOptions = [
 ];
 
 
-function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubmitProjectDetails}) {
+function ProjectDetailsForm({ activeTab = '', formData, setFormData , handleSubmitProjectDetails, projectId}) {
+
+  const [showPassword, setShowPassword] = useState(false);
 
   const [promotersForDropdown, setPromotersForDropdown] = useState([]);
   const [channelPartnersForDropdown, setChannelPartnersForDropdown] = useState([]);
@@ -73,7 +75,7 @@ useEffect(() => {
   };
 
   const handleKeyDown = (e) => {
-    e.preventDefault();
+    
     if (e.key === 'Enter') {
       // If the currently focused element is react-select and menu is not open
       if (document.activeElement === selectRef.current?.inputRef && !selectRef.current?.state?.menuIsOpen) {
@@ -246,7 +248,7 @@ useEffect(() => {
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Project Name *</label>
   <input
-    type=""
+    type="text"
     name="project_name"
     required
     value={formData.project_name}
@@ -339,17 +341,25 @@ useEffect(() => {
 />
 </div>
 
-<div className="flex flex-col">
-  <label className="mb-2 font-medium">Password</label>
-  <input
-    type="password"
-    name="password"
-    value={formData.password}
-    onChange={handleChange}
-    onKeyDown={handleKeyDown}
-    className={commonInputStyles}
-/>
-</div>
+<div className="flex flex-col relative">
+      <label className="mb-2 font-medium">Password</label>
+      <input
+        type={showPassword ? "text" : "password"}
+        name="password"
+        value={formData.password}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        className={commonInputStyles}
+        placeholder="Enter Password"
+      />
+      <button
+        type="button"
+        onClick={() => setShowPassword(prev => !prev)}
+        className="absolute right-3 top-11 text-sm  font-bold text-red-500"
+      >
+        {showPassword ? "Hide" : "Show"}
+      </button>
+    </div>
 
           <div className="flex flex-col w-full">
   <label className="mb-2 font-medium text-gray-700">Select District</label>

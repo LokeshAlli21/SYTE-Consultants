@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
 
 function ProjectDocumentForm({
+  projectId,
   activeTab = '',
   formData,
   setFormData,
@@ -61,6 +62,10 @@ function ProjectDocumentForm({
     { name: 'promoter_letter_head_uploaded_url', label: "Promoter's Letterhead" },
     { name: 'promoter_sign_stamp_uploaded_url', label: "Promoter's Sign & Stamp" },
   ];
+
+  if(!projectId){
+    return
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">

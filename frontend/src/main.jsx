@@ -89,6 +89,20 @@ const router = createBrowserRouter([
          </AuthLayout>,
       },
       {
+        path: "/projects/view/:id",
+        element: 
+        <AuthLayout authentication>
+          <AddProject  viewOnly={true}  />
+         </AuthLayout>,
+      },
+      {
+        path: "/projects/edit/:id",
+        element: 
+        <AuthLayout authentication>
+          <AddProject  viewOnly={false}  />
+         </AuthLayout>,
+      },
+      {
         path: "/assignments",
         element: 
         <AuthLayout authentication>

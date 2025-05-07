@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
 
-function ProjectProfessionalDetailsForm({ activeTab = '', formData, setFormData, handleSubmitProjectProfessionalDetails }) {
+function ProjectProfessionalDetailsForm({projectId, activeTab = '', formData, setFormData, handleSubmitProjectProfessionalDetails }) {
   const [filePreviews, setFilePreviews] = useState({});
 
   // formData new added project_id: 123,
@@ -118,6 +118,10 @@ function ProjectProfessionalDetailsForm({ activeTab = '', formData, setFormData,
       </div>
     );
   };
+
+  if(!projectId){
+    return
+  }
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">

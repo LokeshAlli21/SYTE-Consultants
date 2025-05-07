@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 function ProjectProgressForm({
+  projectId,
   projectBuildingProgress,
   projectCommonAreasProgress,
   setProjectBuildingProgress,
@@ -238,6 +239,10 @@ const inputRefs = useRef({});
 </form>
 
   );
+
+  if(!projectId){
+    return
+  }
 
   return (
     <div className=" mx-auto rounded-xl ">
