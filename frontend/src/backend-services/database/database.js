@@ -36,6 +36,8 @@ class DatabaseService {
     return data;
   }
 
+
+  // Promoter
   
   async uploadPromoterData(formData) {
     try {
@@ -130,6 +132,7 @@ class DatabaseService {
       throw error;
     }
   }
+
   async updatePromoter(id, formData) {
     try {
       console.log('Original formData for update:', formData);
@@ -222,7 +225,108 @@ class DatabaseService {
     }
   }
   
+  async getPromoterDetailsById(id) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/promoters/get/${id}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
   
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch promoter details.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Promoter details fetched successfully!");
+      return data.promoter;
+  
+    } catch (error) {
+      console.error("❌ Error fetching promoter details:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+    
+  async getAllPromoters() {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch promoters.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Promoters fetched successfully!");
+      return data.promoters;
+  
+    } catch (error) {
+      console.error("❌ Error fetching promoters:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
+  async getAllPromotersForDropdown() {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch promoters.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Promoters fetched successfully!");
+  
+      // Map to label/value format for react-select or dropdowns
+      const dropdownOptions = data.promoters.map((promoter) => ({
+        label: promoter.promoter_name,
+        value: promoter.id,
+      }));
+  
+      return dropdownOptions;
+  
+    } catch (error) {
+      console.error("❌ Error fetching promoters:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+
+  async deletePromoterById(id) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/promoters/delete/${id}`, {
+        method: "DELETE",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete promoter.");
+      }
+  
+      toast.success("✅ Promoter deleted successfully!");
+      return true;
+  
+    } catch (error) {
+      console.error("❌ Error deleting promoter:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+
+
+
+
+  // Project
   
   async uploadProjectDetails(formData) {
     try {
@@ -304,6 +408,28 @@ class DatabaseService {
   
     } catch (error) {
       console.error("❌ Error uploading project data:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+
+  async getProjectById(id) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/get-project/${id}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch project details.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Project details fetched successfully!");
+      return data.project;
+    } catch (error) {
+      console.error("❌ Error fetching project details:", error);
       toast.error(`❌ ${error.message}`);
       throw error;
     }
@@ -392,7 +518,33 @@ class DatabaseService {
       throw error;
     }
   }
+
+  async deleteProjectById(id) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/delete/${id}`, {
+        method: "DELETE",
+        headers: this.getAuthHeaders(),
+      });
   
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete project.");
+      }
+  
+      toast.success("✅ Project deleted successfully!");
+      return true;
+  
+    } catch (error) {
+      console.error("❌ Error deleting project:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
+
+
+
+  // ProjectProfessional
 
   async uploadProjectProfessionalDetails(formData) {
   try {
@@ -491,6 +643,103 @@ class DatabaseService {
     throw error;
   }
 }
+
+async getProjectProfessionalData(projectId) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/get-project-professionals/${projectId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch project professional data.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Project professional data fetched successfully!");
+    return data.professionalData;
+
+  } catch (error) {
+    console.error("❌ Error fetching project professional data:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+    
+async getAllEngineers() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/engineers/get-all`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch engineers.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Engineers fetched successfully!");
+    return data.engineers;
+
+  } catch (error) {
+    console.error("❌ Error fetching engineers:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async getAllArchitects() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/architects/get-all`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch architects.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Architects fetched successfully!");
+    return data.architects;
+
+  } catch (error) {
+    console.error("❌ Error fetching architects:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async getAllCAs() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/cas/get-all`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch CAs.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ CAs fetched successfully!");
+    return data.cas;
+
+  } catch (error) {
+    console.error("❌ Error fetching CAs:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+
+
+
+  // ProjectUnit
 
 async uploadProjectUnitDetails(formData) {
   try {
@@ -624,7 +873,77 @@ async updateProjectUnitDetails(id, formData) {
   }
 }
 
+async getUnitById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/units/get-unit/${id}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
 
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch unit details.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Unit details fetched successfully!");
+    return data.unit;
+  } catch (error) {
+    console.error("❌ Error fetching unit details:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async getAllUnitsForProject(projectId) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/units/get-all/?project-id=${projectId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch units.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Units fetched successfully!");
+    return data.units;
+
+  } catch (error) {
+    console.error("❌ Error fetching units:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async deleteProjectUnitById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/units/delete/${id}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+  
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to delete unit.");
+    }
+  
+    toast.success("✅ Unit deleted successfully!");
+    return true;
+  
+  } catch (error) {
+    console.error("❌ Error deleting unit:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+  }
+
+
+
+
+  // ProjectDocument
 
 async uploadProjectDocuments(formData) {
   try {
@@ -692,6 +1011,47 @@ async uploadProjectDocuments(formData) {
   }
 }
 
+async getProjectDocuments(projectId) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/get-documents/${projectId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      
+      // Handle specific error messages returned from the backend
+      if (errorData.error === "No documents found for this project.") {
+        throw new Error("No documents found for this project.");
+      }
+      
+      throw new Error(errorData.message || "Failed to fetch project documents.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Project documents fetched successfully!");
+    return data.documents;
+
+  } catch (error) {
+    console.error("❌ Error fetching project documents:", error);
+
+    // Show user-friendly error message
+    if (error.message === "No documents found for this project.") {
+      toast.error("❌ No documents found for this project.");
+    } else {
+      toast.error(`❌ ${error.message}`);
+    }
+
+    throw error; // Re-throw error for further handling
+  }
+}
+
+
+
+
+// ProjectSiteProgress
+
 
 async uploadProjectBuildingProgress(formData) {
   try {
@@ -719,8 +1079,6 @@ async uploadProjectBuildingProgress(formData) {
   }
 }
 
-
-
 async uploadProjectCommonAreasProgress(formData) {
   try {
     const response = await fetch(`${this.baseUrl}/api/projects/add-common-areas-progress`, {
@@ -747,6 +1105,85 @@ async uploadProjectCommonAreasProgress(formData) {
   }
 }
 
+async getProjectSiteProgress(projectId) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/get-site-progress/${projectId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch site progress.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Project site progress fetched successfully!");
+    return data.siteProgress;
+  } catch (error) {
+    console.error("❌ Error fetching site progress:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async getAllProjects() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/get-all`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch promoters.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Projects fetched successfully!");
+    return data.projects;
+
+  } catch (error) {
+    console.error("❌ Error fetching promoters:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async getAllProjectsForDropdown() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/get-all`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch projects.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Projects fetched successfully!");
+
+    // Map to label/value format for react-select
+    const dropdownOptions = data.projects.map((project) => ({
+      label: project.project_name,
+      value: project.id,
+    }));
+
+    return dropdownOptions;
+
+  } catch (error) {
+    console.error("❌ Error fetching projects:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+
+
+
+// ChannelPartner
 
 async createChannelPartner(formData) {
   try {
@@ -796,263 +1233,6 @@ async updateChannelPartner( id, formData) {
     console.error("❌ Error updating Channel Partner:", err);
     toast.error(`❌ ${err.message}`);
     throw err;
-  }
-}
-
-
-async createNewAssignment(formData) {
-  try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/add`, {
-      method: "POST",
-      headers: {
-        ...this.getAuthHeaders(),
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formData)
-    });
-
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.message || "Assignment creation failed.");
-    }
-
-    const data = await response.json();
-    toast.success("✅ Assignment created successfully!");
-    return data;
-  } catch (err) {
-    console.error("❌ Error creating assignment:", err);
-    toast.error(`❌ ${err.message}`);
-    throw err;
-  }
-}
-  
-async getAssignmentById(id) {
-  try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/get/${id}`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch assignment details.");
-    }
-
-    const data = await response.json();
-    // console.log(data);
-    
-    toast.success("✅ Assignment details fetched successfully!");
-    return data.assignment; // assuming your API returns { assignment: {...} }
-
-  } catch (error) {
-    console.error("❌ Error fetching assignment details:", error);
-    toast.error(`❌ ${error.message}`);
-    throw error;
-  }
-}
-
-async updateAssignment(id, formData) {
-  try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/update/${id}`, {
-      method: "PUT",
-      headers: {
-        ...this.getAuthHeaders(),
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(formData)
-    });
-
-    if (!response.ok) {
-      const err = await response.json();
-      throw new Error(err.message || "Assignment update failed.");
-    }
-
-    const data = await response.json();
-    toast.success("✅ Assignment updated successfully!");
-    return data;
-  } catch (err) {
-    console.error("❌ Error updating Assignment:", err);
-    toast.error(`❌ ${err.message}`);
-    throw err;
-  }
-}
-
-  
-  async getAllPromoters() {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch promoters.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Promoters fetched successfully!");
-      return data.promoters;
-  
-    } catch (error) {
-      console.error("❌ Error fetching promoters:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-  async getAllPromotersForDropdown() {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch promoters.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Promoters fetched successfully!");
-  
-      // Map to label/value format for react-select or dropdowns
-      const dropdownOptions = data.promoters.map((promoter) => ({
-        label: promoter.promoter_name,
-        value: promoter.id,
-      }));
-  
-      return dropdownOptions;
-  
-    } catch (error) {
-      console.error("❌ Error fetching promoters:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-  
-
-
-  async getAllProjects() {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/get-all`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch promoters.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Projects fetched successfully!");
-      return data.projects;
-  
-    } catch (error) {
-      console.error("❌ Error fetching promoters:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-
-  async getAllProjectsForDropdown() {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/get-all`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch projects.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Projects fetched successfully!");
-  
-      // Map to label/value format for react-select
-      const dropdownOptions = data.projects.map((project) => ({
-        label: project.project_name,
-        value: project.id,
-      }));
-  
-      return dropdownOptions;
-  
-    } catch (error) {
-      console.error("❌ Error fetching projects:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-  
-
-  async getAllUnitsForProject(projectId) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/units/get-all/?project-id=${projectId}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch units.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Units fetched successfully!");
-      return data.units;
-  
-    } catch (error) {
-      console.error("❌ Error fetching units:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-
-  async getUnitById(id) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/units/get-unit/${id}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch unit details.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Unit details fetched successfully!");
-      return data.unit;
-    } catch (error) {
-      console.error("❌ Error fetching unit details:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-  
-  
-
-async getAllAssignments() {
-  try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/get-all`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch assignments.");
-    }
-
-    const data = await response.json();
-    toast.success("✅ Assignments fetched successfully!");
-    return data.assignments;
-
-  } catch (error) {
-    console.error("❌ Error fetching assignments:", error);
-    toast.error(`❌ ${error.message}`);
-    throw error;
   }
 }
 
@@ -1137,6 +1317,157 @@ async getAllChannelPartnersForDropdown() {
   }
 }
 
+async deleteChannelPartnerById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/channel-partners/delete/${id}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to delete channel partner.");
+    }
+
+    toast.success("✅ Channel Partner deleted successfully!");
+    return true;
+
+  } catch (error) {
+    console.error("❌ Error deleting channel partner:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+
+
+
+// Assignment
+
+async createNewAssignment(formData) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/add`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Assignment creation failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Assignment created successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error creating assignment:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+  
+async getAssignmentById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/get/${id}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch assignment details.");
+    }
+
+    const data = await response.json();
+    // console.log(data);
+    
+    toast.success("✅ Assignment details fetched successfully!");
+    return data.assignment; // assuming your API returns { assignment: {...} }
+
+  } catch (error) {
+    console.error("❌ Error fetching assignment details:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+async getAllAssignments() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/get-all`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch assignments.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Assignments fetched successfully!");
+    return data.assignments;
+
+  } catch (error) {
+    console.error("❌ Error fetching assignments:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+async updateAssignment(id, formData) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/update/${id}`, {
+      method: "PUT",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Assignment update failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Assignment updated successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error updating Assignment:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+async deleteAssignmentById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/delete/${id}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to delete assignment.");
+    }
+
+    toast.success("✅ Assignment deleted successfully!");
+    return true;
+
+  } catch (error) {
+    console.error("❌ Error deleting assignment:", error);
+    toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+
+
+
+ 
+// CitiesAndDistricts
 
 async getAllCitiesAndDistricts ()  {
   const cityOptions = [
@@ -1220,313 +1551,6 @@ async getAllCitiesAndDistricts ()  {
   return { cityOptions, districtOptions };
 };
 
-  async deletePromoterById(id) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/promoters/delete/${id}`, {
-        method: "DELETE",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete promoter.");
-      }
-  
-      toast.success("✅ Promoter deleted successfully!");
-      return true;
-  
-    } catch (error) {
-      console.error("❌ Error deleting promoter:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-  
-  async deleteProjectById(id) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/delete/${id}`, {
-        method: "DELETE",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to delete project.");
-      }
-  
-      toast.success("✅ Project deleted successfully!");
-      return true;
-  
-    } catch (error) {
-      console.error("❌ Error deleting project:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-  
-  async deleteProjectUnitById(id) {
-  try {
-    const response = await fetch(`${this.baseUrl}/api/projects/units/delete/${id}`, {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to delete unit.");
-    }
-
-    toast.success("✅ Unit deleted successfully!");
-    return true;
-
-  } catch (error) {
-    console.error("❌ Error deleting unit:", error);
-    toast.error(`❌ ${error.message}`);
-    throw error;
-  }
-}
-
-async deleteChannelPartnerById(id) {
-  try {
-    const response = await fetch(`${this.baseUrl}/api/channel-partners/delete/${id}`, {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to delete channel partner.");
-    }
-
-    toast.success("✅ Channel Partner deleted successfully!");
-    return true;
-
-  } catch (error) {
-    console.error("❌ Error deleting channel partner:", error);
-    toast.error(`❌ ${error.message}`);
-    throw error;
-  }
-}
-
-async deleteAssignmentById(id) {
-  try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/delete/${id}`, {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to delete assignment.");
-    }
-
-    toast.success("✅ Assignment deleted successfully!");
-    return true;
-
-  } catch (error) {
-    console.error("❌ Error deleting assignment:", error);
-    toast.error(`❌ ${error.message}`);
-    throw error;
-  }
-}
-
-
-  async getPromoterDetailsById(id) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/promoters/get/${id}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch promoter details.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Promoter details fetched successfully!");
-      return data.promoter;
-  
-    } catch (error) {
-      console.error("❌ Error fetching promoter details:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-  
-  async getAllEngineers() {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/engineers/get-all`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch engineers.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Engineers fetched successfully!");
-      return data.engineers;
-  
-    } catch (error) {
-      console.error("❌ Error fetching engineers:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-
-  async getAllArchitects() {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/architects/get-all`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch architects.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Architects fetched successfully!");
-      return data.architects;
-  
-    } catch (error) {
-      console.error("❌ Error fetching architects:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-
-  async getAllCAs() {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/cas/get-all`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch CAs.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ CAs fetched successfully!");
-      return data.cas;
-  
-    } catch (error) {
-      console.error("❌ Error fetching CAs:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-
-  async getProjectProfessionalData(projectId) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/get-project-professionals/${projectId}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch project professional data.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Project professional data fetched successfully!");
-      return data.professionalData;
-  
-    } catch (error) {
-      console.error("❌ Error fetching project professional data:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-  
-  async getProjectById(id) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/get-project/${id}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch project details.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Project details fetched successfully!");
-      return data.project;
-    } catch (error) {
-      console.error("❌ Error fetching project details:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-
-  async getProjectDocuments(projectId) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/get-documents/${projectId}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        
-        // Handle specific error messages returned from the backend
-        if (errorData.error === "No documents found for this project.") {
-          throw new Error("No documents found for this project.");
-        }
-        
-        throw new Error(errorData.message || "Failed to fetch project documents.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Project documents fetched successfully!");
-      return data.documents;
-  
-    } catch (error) {
-      console.error("❌ Error fetching project documents:", error);
-  
-      // Show user-friendly error message
-      if (error.message === "No documents found for this project.") {
-        toast.error("❌ No documents found for this project.");
-      } else {
-        toast.error(`❌ ${error.message}`);
-      }
-  
-      throw error; // Re-throw error for further handling
-    }
-  }
-  
-
-  async getProjectSiteProgress(projectId) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/projects/get-site-progress/${projectId}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to fetch site progress.");
-      }
-  
-      const data = await response.json();
-      toast.success("✅ Project site progress fetched successfully!");
-      return data.siteProgress;
-    } catch (error) {
-      console.error("❌ Error fetching site progress:", error);
-      toast.error(`❌ ${error.message}`);
-      throw error;
-    }
-  }
-  
   
   
 }

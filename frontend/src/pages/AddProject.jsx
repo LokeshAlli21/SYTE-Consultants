@@ -416,6 +416,36 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
     const handleSubmitProjectDetails = async () => {
       console.log("Form Data Submitted:", projectDetails);
       // setLoading(true);
+
+      function validateProjectDetails(projectDetails) {
+        const errors = [];
+      
+        // Validate RERA number (alphanumeric, 5 to 20 characters)
+        if (
+          projectDetails.rera_number &&
+          !/^[A-Z0-9]{5,20}$/i.test(projectDetails.rera_number)
+        ) {
+          errors.push('📄 Invalid RERA number (should be alphanumeric and 5-20 characters).');
+        }
+      
+        // Validate PIN code (must be a 6-digit number not starting with 0)
+        if (
+          projectDetails.project_pincode &&
+          !/^[1-9][0-9]{5}$/.test(projectDetails.project_pincode)
+        ) {
+          errors.push('📍 Invalid project PIN code (must be a 6-digit number).');
+        }
+      
+        if (errors.length > 0) {
+          errors.forEach((msg) => toast.error(msg));
+          return false;
+        }
+      
+        return true;
+      }
+
+      const isValid = validateProjectDetails(projectDetails);
+if (!isValid) return; // Stop form submission
     
       try {
         if (forUpdate && id) {

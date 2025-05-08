@@ -162,7 +162,7 @@ useEffect(() => {
 
 
         <div className="flex flex-col w-full">
-  <label className="mb-2 font-medium text-gray-700">Select Channel Partner *</label>
+  <label className="mb-2 font-medium text-gray-700">Select Channel Partner</label>
   <Select
 isDisabled={disabled}
     options={channelPartnersForDropdown}
@@ -174,7 +174,6 @@ isDisabled={disabled}
       }));
     }}
     isSearchable={true}
-    required={true}
     placeholder="Select a Channel Partner"
     ref={selectRef} // optional, only if you use it elsewhere
     styles={{
@@ -354,6 +353,8 @@ disabled={disabled}
     onChange={handleChange}
     onKeyDown={handleKeyDown}
     className={commonInputStyles}
+    maxLength={6}
+    minLength={6}
 />
 </div>
 

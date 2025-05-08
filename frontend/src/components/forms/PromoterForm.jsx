@@ -66,40 +66,89 @@ const [filePreviews, setFilePreviews] = useState({});
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-  
-    // Validate promoter type
-    if (!formData.promoter_type) {
-      alert('Please select promoter type');
-      return;
+function validateFormData(formData) {
+  const errors = [];
+
+  // Contact number: 10 digits
+  if (formData.contact_number && !/^\d{10}$/.test(formData.contact_number)) {
+    errors.push('📞 Contact number must be exactly 10 digits.');
+  }
+
+  // Email: basic format
+  if (formData.email_id && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email_id)) {
+    errors.push('📧 Invalid email address.');
+  }
+
+  // Aadhar: 12 digits
+  if (formData.aadhar_number && !/^\d{12}$/.test(formData.aadhar_number)) {
+    errors.push('🆔 Aadhar number must be exactly 12 digits.');
+  }
+
+  // PAN: Format ABCDE1234F
+  const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
+  if (formData.pan_number && !panRegex.test(formData.pan_number)) {
+    errors.push('📝 Invalid PAN number.');
+  }
+  if (formData.partnership_pan_number && !panRegex.test(formData.partnership_pan_number)) {
+    errors.push('🤝 Invalid Partnership PAN number.');
+  }
+  if (formData.company_pan_number && !panRegex.test(formData.company_pan_number)) {
+    errors.push('🏢 Invalid Company PAN number.');
+  }
+
+  if (errors.length > 0) {
+    errors.forEach((msg) => toast.error(msg));
+    return false;
+  }
+
+  return true;
+}
+
+
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  // Check if promoter_type is selected
+  if (!formData.promoter_type) {
+    toast.error('⚠️ Please select promoter type');
+    return;
+  }
+
+  // Run field-level validation
+  const isValid = validateFormData(formData);
+  if (!isValid) {
+    return; // Stop if validation fails
+  }
+
+  // Confirm before proceeding
+  const confirmed = window.confirm(
+    id ? 'Do you want to update this promoter?' : 'Do you want to create a new promoter?'
+  );
+  if (!confirmed) return;
+
+  console.log('Form Data:', formData);
+  setLoading(true);
+
+  try {
+    if (id) {
+      const response = await databaseService.updatePromoter(id, formData);
+      console.log('✅ Promoter updated:', response);
+      toast.success('✅ Promoter updated successfully!');
+    } else {
+      const response = await databaseService.uploadPromoterData(formData);
+      console.log('✅ Promoter created:', response);
+      toast.success('✅ Promoter created successfully!');
     }
-  
-    console.log('Form Data:', formData);
-    setLoading(true);
-  
-    try {
-      // Check if formData contains an id for update or not
-      if (id) {
-        // If ID exists, update the promoter
-        const response = await databaseService.updatePromoter(id, formData);
-        console.log("✅ Promoter updated:", response);
-        toast.success("✅ Promoter updated successfully!");
-        navigate("/promoters"); // Navigate on success
-      } else {
-        // If no ID, create a new promoter
-        const response = await databaseService.uploadPromoterData(formData);
-        console.log("✅ Promoter created:", response);
-        toast.success("✅ Promoter created successfully!");
-        navigate("/promoters"); // Navigate on success
-      }
-    } catch (error) {
-      console.error("❌ Error handling Promoter:", error);
-      toast.error(`❌ Failed to handle Promoter: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+
+    navigate('/promoters'); // Navigate on success
+  } catch (error) {
+    console.error('❌ Error handling Promoter:', error);
+    toast.error(`❌ Failed to handle Promoter: ${error.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
+
   
 
   const handleKeyDown = (e) => {
@@ -251,8 +300,13 @@ disabled={disabled}
 disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
+                maxLength={12}
+                minLength={12}
+                pattern="\d{12}"
               />
             </div>
+
+
   
             <FileInputWithPreview
               label="Upload Aadhar Document"
@@ -273,6 +327,8 @@ disabled={disabled}
 disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
+                maxLength={10}
+                minLength={10}
               />
             </div>
   
@@ -308,6 +364,9 @@ disabled={disabled}
 disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
+                pattern="\d{10}"
+                maxLength={10}
+                minLength={10}
               />
             </div>
   
@@ -352,6 +411,8 @@ disabled={disabled}
 disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
+                maxLength={10}
+                minLength={10}
               />
             </div>
   
@@ -374,6 +435,9 @@ disabled={disabled}
 disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
+                pattern="\d{10}"
+                maxLength={10}
+                minLength={10}
               />
             </div>
   
@@ -418,6 +482,8 @@ disabled={disabled}
 disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
+                maxLength={10}
+                minLength={10}
               />
             </div>
   
@@ -462,6 +528,9 @@ disabled={disabled}
 disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
+                pattern="\d{10}"
+                maxLength={10}
+                minLength={10}
               />
             </div>
   
