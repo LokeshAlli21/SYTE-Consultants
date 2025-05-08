@@ -20,7 +20,7 @@ const unitStatusOptions = [
 ];
 
 
-function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,handleSubmitProjectUnit }) {
+function UnitDetailsForm({disabled = false, setIsUnitDetailsFormActive, formData, setFormData,handleSubmitProjectUnit, setCurrentUnitId, currentUnitId , handleUpdateProjectUnit}) {
 
       const [filePreviews, setFilePreviews] = useState({});
 
@@ -46,7 +46,13 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
     e.preventDefault();
     const confirmed = window.confirm('Are you sure you want to submit?');
     if (confirmed) {
-      handleSubmitProjectUnit();
+      if(currentUnitId){
+        handleUpdateProjectUnit(currentUnitId) && setCurrentUnitId(null)
+        
+      } else {
+        handleSubmitProjectUnit();
+      }
+      
     }
   };  
 
@@ -92,12 +98,51 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
               }
             });
         
-            console.log("✅ Uploaded URLs:", uploadedUrls);
+            // console.log("✅ Uploaded URLs:", uploadedUrls);
         
             if (Object.keys(uploadedUrls).length > 0) {
               setFilePreviews(uploadedUrls);
             }
           },[formData])
+
+          useEffect(() => {
+            const total =
+              Number(formData.received_fy_2018_19 || 0) +
+              Number(formData.received_fy_2019_20 || 0) +
+              Number(formData.received_fy_2020_21 || 0) +
+              Number(formData.received_fy_2021_22 || 0) +
+              Number(formData.received_fy_2022_23 || 0) +
+              Number(formData.received_fy_2023_24 || 0) +
+              Number(formData.received_fy_2024_25 || 0) +
+              Number(formData.received_fy_2025_26 || 0) +
+              Number(formData.received_fy_2026_27 || 0) +
+              Number(formData.received_fy_2027_28 || 0) +
+              Number(formData.received_fy_2028_29 || 0) +
+              Number(formData.received_fy_2029_30 || 0);
+          
+            const agreementValue = Number(formData.agreement_value || 0);
+          
+            setFormData(prev => ({
+              ...prev,
+              total_received: total,
+              balance_amount: agreementValue - total
+            }));
+          }, [
+            formData.received_fy_2018_19,
+            formData.received_fy_2019_20,
+            formData.received_fy_2020_21,
+            formData.received_fy_2021_22,
+            formData.received_fy_2022_23,
+            formData.received_fy_2023_24,
+            formData.received_fy_2024_25,
+            formData.received_fy_2025_26,
+            formData.received_fy_2026_27,
+            formData.received_fy_2027_28,
+            formData.received_fy_2028_29,
+            formData.received_fy_2029_30,
+            formData.agreement_value
+          ]);          
+          
 
   // Common input styles
   const commonInputStyles =
@@ -115,6 +160,7 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
           <div className='flex flex-col'>
             <label className="mb-2 font-medium">Unit Name</label>
             <input
+disabled={disabled}
               type="text"
               name="unit_name"
               value={formData.unit_name}
@@ -125,6 +171,7 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
           <div className="flex flex-col">
   <label className="mb-2 font-medium">Unit Type</label>
   <Select
+isDisabled={disabled}
     options={unitTypeOptions}
     value={unitTypeOptions.find(opt => opt.value === formData.unit_type)}
     onChange={(selectedOption) =>
@@ -172,9 +219,10 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
 <div className='flex flex-col'>
           <label className="mb-2 font-medium">Carpet Area</label>
           <input
+disabled={disabled}
             type="number"
             name="carpet_area"
-            value={formData.carpet_area}
+            value={formData.carpet_area || ''}
             onChange={handleChange}
             className={commonInputStyles}
           /></div>
@@ -182,6 +230,7 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Unit Status</label>
   <Select
+isDisabled={disabled}
     options={unitStatusOptions}
     value={unitStatusOptions.find(opt => opt.value === formData.unit_status)}
     onChange={(selectedOption) =>
@@ -229,6 +278,7 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
         <div className='flex flex-col'>
           <label className="mb-2 font-medium">Customer Name</label>
           <input
+disabled={disabled}
             type="text"
             name="customer_name"
             value={formData.customer_name}
@@ -239,9 +289,10 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
 <div className='flex flex-col'>
           <label className="mb-2 font-medium">Agreement Value</label>
           <input
+disabled={disabled}
             type="number"
             name="agreement_value"
-            value={formData.agreement_value}
+            value={formData.agreement_value || ''}
             onChange={handleChange}
             className={commonInputStyles}
           /></div>
@@ -249,29 +300,62 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
 <div className='flex flex-col'>
           <label className="mb-2 font-medium">Agreement or Sale Deed Date</label>
           <input
+disabled={disabled}
             type="date"
             name="agreement_or_sale_deed_date"
-            value={formData.agreement_or_sale_deed_date}
+            value={formData.agreement_or_sale_deed_date || ''}
             onChange={handleChange}
             className={commonInputStyles}
-          /></div>
-        </div>
+          />
+          </div>
 
-        {/* Financial Year Received Amounts */}
-        <div className="grid grid-cols-2 gap-4">
+
           {['2018_19', '2019_20', '2020_21', '2021_22', '2022_23', '2023_24', '2024_25', '2025_26', '2026_27', '2027_28', '2028_29', '2029_30'].map((year) => (
             <div className="flex flex-col" key={year}>
               <label className="mb-2 font-medium">Received FY {year}</label>
               <input
+disabled={disabled}
                 type="number"
                 name={`received_fy_${year}`}
-                value={formData[`received_fy_${year}`]}
+                value={formData[`received_fy_${year}`] || ''}
                 onChange={(e) => handleFyChange(e, year)}
                 className={commonInputStyles}
               />
             </div>
           ))}
+
+
         </div>
+
+        {/* Financial Year Received Amounts */}
+        {/* <div className="grid grid-cols-2 gap-4">
+          
+        </div> */}
+
+        <div className='flex flex-col'>
+          <label className="mb-2 font-medium">Total Received</label>
+          <input
+            disabled={true}
+            type="number"
+            name="total_received"
+            value={formData.total_received || ''}
+            onChange={handleChange}
+            className={commonInputStyles}
+          />
+          </div>
+
+          <div className='flex flex-col'>
+          <label className="mb-2 font-medium">Balance Amount</label>
+          <input
+            disabled={true}
+            type="number"
+            name="balance_amount"
+            value={formData.balance_amount >= 0 ? formData.balance_amount : 0}
+            onChange={handleChange}
+            className={commonInputStyles}
+          />
+          </div>
+        
 
         {/* uplods */}
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -294,15 +378,21 @@ function UnitDetailsForm({ setIsUnitDetailsFormActive, formData, setFormData,han
 
         {/* Submit Button */}
         <div className="flex justify-end items-center">
+          { !disabled &&
           <button
             type="submit"
             className="px-6 py-3 bg-[#5CAAAB] text-white rounded-lg shadow-md hover:bg-[#489496]"
           >
             Submit
           </button>
+          }
           <button
             className="px-6 absolute top-4 right-4 py-3 bg-red-400 hover:bg-red-500 border-0 shadow-lg text-white rounded-lg"
-            onClick={() => setIsUnitDetailsFormActive(false)}
+            onClick={() => {
+              setIsUnitDetailsFormActive(false)
+              setCurrentUnitId(null)
+              }
+            }
             type="button"
           >
             Cancel

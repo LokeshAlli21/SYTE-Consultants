@@ -20,7 +20,7 @@ const tabs = [
   "Project Progress",
 ];
 
-const AddProject = ({viewOnly=false}) => {
+const AddProject = ({forUpdate = false, viewOnly=false}) => {
 
   const {id} = useParams()
 
@@ -49,6 +49,7 @@ const AddProject = ({viewOnly=false}) => {
     });
     const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
       project_id: projectId,
+      engineer_id: '',
       engineer: {
         name: "",
         contact_number: "",
@@ -61,6 +62,7 @@ const AddProject = ({viewOnly=false}) => {
         letter_head_uploaded_url: "",
         sign_stamp_uploaded_url: ""
       },
+      architect_id: '',
       architect: {
         name: "",
         contact_number: "",
@@ -73,6 +75,7 @@ const AddProject = ({viewOnly=false}) => {
         letter_head_uploaded_url: "",
         sign_stamp_uploaded_url: ""
       },
+      ca_id: '',
       ca: {
         name: "",
         contact_number: "",
@@ -94,7 +97,7 @@ const AddProject = ({viewOnly=false}) => {
       // Unit Details
       unit_name: "",
       unit_type: "",
-      carpet_area: 0,
+      carpet_area: '',
       unit_status: "",
       
       // Customer Details
@@ -103,22 +106,22 @@ const AddProject = ({viewOnly=false}) => {
       agreement_or_sale_deed_date: "",
       
       // Financial Year Received Amounts
-      received_fy_2018_19: 0,
-      received_fy_2019_20: 0,
-      received_fy_2020_21: 0,
-      received_fy_2021_22: 0,
-      received_fy_2022_23: 0,
-      received_fy_2023_24: 0,
-      received_fy_2024_25: 0,
-      received_fy_2025_26: 0,
-      received_fy_2026_27: 0,
-      received_fy_2027_28: 0,
-      received_fy_2028_29: 0,
-      received_fy_2029_30: 0,
+      received_fy_2018_19: '',
+      received_fy_2019_20: '',
+      received_fy_2020_21: '',
+      received_fy_2021_22: '',
+      received_fy_2022_23: '',
+      received_fy_2023_24: '',
+      received_fy_2024_25: '',
+      received_fy_2025_26: '',
+      received_fy_2026_27: '',
+      received_fy_2027_28: '',
+      received_fy_2028_29: '',
+      received_fy_2029_30: '',
       
       // Aggregated Financials
-      total_received: 0,
-      balance_amount: 0, // Example: agreement_value - total_received
+      total_received: '',
+      balance_amount: '', // Example: agreement_value - total_received
       
       // Documents
       afs_uploaded_url: "",
@@ -246,6 +249,7 @@ const AddProject = ({viewOnly=false}) => {
           console.log("✅ Professional Data Response:", professionals);
           setProjectProfessionalDetails({
             project_id: professionals.project_id,
+            engineer_id: professionals.engineer_id,
             engineer: {
               name: professionals.engineers.name,
               contact_number: professionals.engineers.contact_number,
@@ -258,6 +262,7 @@ const AddProject = ({viewOnly=false}) => {
               letter_head_uploaded_url: professionals.engineers.letter_head_uploaded_url,
               sign_stamp_uploaded_url: professionals.engineers.sign_stamp_uploaded_url
             },
+            architect_id: professionals.architect_id,
             architect: {
               name: professionals.architects.name,
               contact_number: professionals.architects.contact_number,
@@ -270,6 +275,7 @@ const AddProject = ({viewOnly=false}) => {
               letter_head_uploaded_url: professionals.architects.letter_head_uploaded_url,
               sign_stamp_uploaded_url: professionals.architects.sign_stamp_uploaded_url
             },
+            ca_id: professionals.ca_id,
             ca: {
               name: professionals.cas.name,
               contact_number: professionals.cas.contact_number,
@@ -358,36 +364,89 @@ const AddProject = ({viewOnly=false}) => {
     }, [id]);
     
     
+    const [engineerOptions, setEngineerOptions] = useState([]);
+    const [architectOptions, setArchitectOptions] = useState([]);
+    const [casOptions, setCAsOptions] = useState([]);
+    
+    useEffect(() => {
+      if (!viewOnly) {
+        const mapToOptions = (data) =>
+          data.map((item) => ({
+            label: item.name || `ID ${item.id}`,
+            value: item.id,
+          }));
+    
+        async function fetchOptions() {
+          try {
+            const engineers = await databaseService.getAllEngineers();
+            setEngineerOptions(mapToOptions(engineers));
+          } catch (error) {
+            console.error("Error fetching engineers:", error);
+          }
+    
+          try {
+            const architects = await databaseService.getAllArchitects();
+            setArchitectOptions(mapToOptions(architects));
+          } catch (error) {
+            console.error("Error fetching architects:", error);
+          }
+    
+          try {
+            const cas = await databaseService.getAllCAs();
+            setCAsOptions(mapToOptions(cas));
+          } catch (error) {
+            console.error("Error fetching CAs:", error);
+          }
+        }
+    
+        fetchOptions();
+      }
+    }, [id]);
+    
     
   
     const handleBack = () => {
+      if(activeTabIndex < 1) {
         navigate(-1);
+        return
+      }
+      setActiveTabIndex(p => p-1)
     };
-  
+
     const handleSubmitProjectDetails = async () => {
       console.log("Form Data Submitted:", projectDetails);
       // setLoading(true);
-      try {
-        const response = await databaseService.uploadProjectDetails(projectDetails);
-        console.log("✅ Project details uploaded:", response);
     
-        // Extract project ID from response and set it
-        const newProjectId = response?.data?.[0]?.id;
-        if (newProjectId) {
-          setProjectId(newProjectId);
-          console.log("🆔 Project ID set to:", newProjectId);
+      try {
+        if (forUpdate && id) {
+          const response = await databaseService.updateProjectDetails(id, projectDetails);
+          console.log("✏️ Project details updated:", response);
+    
+          toast.success("✅ Project details updated successfully!");
+        } else {
+          const response = await databaseService.uploadProjectDetails(projectDetails);
+          console.log("✅ Project details uploaded:", response);
+    
+          // Extract and set project ID
+          const newProjectId = response?.data?.[0]?.id;
+          if (newProjectId) {
+            setProjectId(newProjectId);
+            console.log("🆔 Project ID set to:", newProjectId);
+          }
+    
+          toast.success("✅ Project details submitted successfully!");
         }
     
-        toast.success("✅ Project details submitted successfully!");
+        // Common reset after submission
         setProjectDetails(prev => resetObjectData(prev));
-        setActiveTabIndex(1)
+        setActiveTabIndex(1);
       } catch (error) {
-        console.error("❌ Error submitting project details:", error);
-        toast.error(`❌ Failed to submit project details: ${error.message}`);
+        console.error("❌ Error submitting/updating project details:", error);
+        toast.error(`❌ Failed: ${error.message}`);
       } finally {
         // setLoading(false);
       }
-    };
+    };    
     
     const handleSubmitProjectProfessionalDetails = async () => {
       // console.log("Form Data Submitted:", projectProfessionalDetails);
@@ -420,6 +479,26 @@ const AddProject = ({viewOnly=false}) => {
         toast.error(`❌ Failed to submit unit details: ${error.message}`);
       }
     };
+
+    const handleUpdateProjectUnit = async (id) => {
+      console.log("🔄 Updating unit with ID:", id);
+      console.log(projectUnit);
+    
+      try {
+        const response = await databaseService.updateProjectUnitDetails(id, projectUnit);
+        console.log("✅ Project unit details updated:", response);
+        toast.success("✅ Unit details updated successfully!");
+        setProjectUnit(prev => resetObjectData(prev));
+        setIsUnitDetailsFormActive(false); // Optional: hide the form after update
+
+        return true
+      } catch (error) {
+        console.error("❌ Error updating unit details:", error);
+        toast.error(`❌ Failed to update unit details: ${error.message}`);
+        return false
+      }
+    };
+    
     
     const handleSubmitProjectDocuments = async () => {
       try {
@@ -519,6 +598,10 @@ const AddProject = ({viewOnly=false}) => {
             projectId={projectId}
             disabled={viewOnly}
             handleSubmitProjectProfessionalDetails={handleSubmitProjectProfessionalDetails}
+
+            engineerOptions={engineerOptions}
+            architectOptions={architectOptions}
+            casOptions={casOptions}
           />
           )}
 
@@ -532,6 +615,7 @@ const AddProject = ({viewOnly=false}) => {
             projectId={projectId}
             disabled={viewOnly}
             handleSubmitProjectUnit={handleSubmitProjectUnit}
+            handleUpdateProjectUnit={handleUpdateProjectUnit}
            />
           )}
 

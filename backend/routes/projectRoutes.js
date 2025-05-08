@@ -3,7 +3,7 @@ import { protect } from '../middlewares/protect.js';
 import { uploadProjectFiles, 
     uploadProjectData, 
     getAllProjects,
-    uploadProjectProfessionalData,
+    adddProjectProfessionals,
     uploadProjectProfessionalFiles,
     uploadUnitFiles,
     uploadProjectUnits,
@@ -11,7 +11,7 @@ import { uploadProjectFiles,
     uploadProjectDocuments,
     addBuildingProgress,
     addCommonAreasProgress,
-    getAllUnits,
+    getAllUnitsForProject,
     softDeleteProjectById,
     softDeleteProjectUnitById,
     getAllEngineers,
@@ -21,6 +21,9 @@ import { uploadProjectFiles,
     getSiteProgress,
     getDocuments,
     getProject,
+    updateProjectData,
+    getUnitById,
+    updateProjectUnits,
 } from '../controllers/projectController.js';
 import {upload} from '../supabase/supabaseClient.js'
 
@@ -28,20 +31,25 @@ const router = express.Router();
 
 router.post('/add-project', protect, uploadProjectData);
 
+router.put('/update/:projectId', protect, updateProjectData);
+
 router.get('/get-project/:id', protect, getProject);
 
 router.post('/upload-files', protect, upload.any(), uploadProjectFiles);
 
 router.get('/get-all', protect, getAllProjects);
 
-router.get('/units/get-all', protect, getAllUnits);
+router.get('/units/get-all', protect, getAllUnitsForProject);
+
+router.get('/units/get-unit/:id', protect, getUnitById);
+
 router.get('/engineers/get-all', protect, getAllEngineers);
 router.get('/architects/get-all', protect, getAllArchitects);
 router.get('/cas/get-all', protect, getAllCAs);
 
 router.delete('/units/delete/:id', protect, softDeleteProjectUnitById);
 
-router.post('/add-project-professionals', protect, uploadProjectProfessionalData);
+router.post('/add-project-professionals', protect, adddProjectProfessionals);
 
 router.get('/get-project-professionals/:id', protect, getProjectProfessionalData);
 
@@ -49,6 +57,8 @@ router.post('/professional-details/upload-files', protect, upload.any(), uploadP
 
 router.post('/unit-details/upload-files', protect, upload.any(), uploadUnitFiles);
 router.post('/add-project-units', protect, uploadProjectUnits);
+
+router.put('/update-project-units/:id', protect, updateProjectUnits);
 
 router.get('/get-documents/:id', protect, getDocuments);
 

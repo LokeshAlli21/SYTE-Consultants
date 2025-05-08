@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
+import Select from 'react-select';
 
-function ProjectProfessionalDetailsForm({disabled, projectId, activeTab = '', formData, setFormData, handleSubmitProjectProfessionalDetails }) {
+function ProjectProfessionalDetailsForm({
+  disabled, 
+  projectId, 
+  activeTab = '', 
+  formData, 
+  setFormData, 
+  handleSubmitProjectProfessionalDetails,
+  engineerOptions,
+  architectOptions,
+  casOptions,
+}) {
   const [filePreviews, setFilePreviews] = useState({});
 
 
@@ -102,7 +113,7 @@ function ProjectProfessionalDetailsForm({disabled, projectId, activeTab = '', fo
       //   }
       // });
   
-      console.log("✅ Uploaded URLs:", uploadedUrls);
+      // console.log("✅ Uploaded URLs:", uploadedUrls);
   
       if (Object.keys(uploadedUrls).length > 0) {
         setFilePreviews(uploadedUrls);
@@ -112,96 +123,115 @@ function ProjectProfessionalDetailsForm({disabled, projectId, activeTab = '', fo
   const commonInputStyles =
     "w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab]";
 
-  const renderProfessionalSection = (roleLabel, roleKey) => {
-    const data = formData[roleKey] || {};
-    return (
-      <div className="bg-white p-6 rounded-xl shadow-md">
-        <h2 className="text-xl font-bold text-[#4a9899] mb-4">{roleLabel}</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* <div className="flex flex-col w-full">
-            <label className="mb-2 font-medium text-gray-700">Select Promoter *</label>
-            <Select
-          isDisabled={disabled}
-              options={promotersForDropdown}
-              value={promotersForDropdown.find(opt => opt.value === formData.promoter_id)}
-              onChange={(selectedOption) => {
-                setFormData((prev) => ({
-                  ...prev,
-                  promoter_id: selectedOption ? selectedOption.value : '',
-                }));
-              }}
-              isSearchable={true}
-              required={true}
-              placeholder="Select a promoter"
-              ref={selectRef} // optional, only if you use it elsewhere
-              styles={{
-                control: (base, state) => ({
-                  ...base,
-                  padding: "6px",
-                  borderRadius: "0.5rem",
-                  borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
-                  boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none",
-                  "&:hover": {
-                    borderColor: "#5caaab",
-                  },
-                }),
-                menu: (base) => ({
-                  ...base,
-                  borderRadius: "0.5rem",
-                  zIndex: 20,
-                }),
-                option: (base, state) => ({
-                  ...base,
-                  backgroundColor: state.isSelected
-                    ? "#5caaab"
-                    : state.isFocused
-                    ? "#5caaab22"
-                    : "white",
-                  color: state.isSelected ? "white" : "black",
-                  padding: "10px 12px",
-                  cursor: "pointer",
-                }),
-              }}
-            />
-          </div> */}
-
-          {['name', 'contact_number', 'email_id', 'office_address', 'licence_number', 'pan_number'].map(field => (
-            <div className="flex flex-col" key={field}>
-              <label className="mb-2 font-medium capitalize">{field.replace(/_/g, ' ')}</label>
+    const renderProfessionalSection = (roleLabel, roleKey, roleKeyForId) => {
+      const data = formData[roleKey] || {};
+      const isSelecting = formData[`${roleKey}_isSelecting`] ?? true;
+    
+      const roleOptionsMap = {
+        engineer: engineerOptions,
+        architect: architectOptions,
+        ca: casOptions
+      };
+      const roleOptions = roleOptionsMap[roleKey];
+    
+      return (
+        <div className="bg-white p-6 rounded-xl shadow-md">
+          <h2 className="text-xl font-bold text-[#4a9899] mb-4">{roleLabel}</h2>
+    
+          {/* Toggle Selection Mode */}
+          { !disabled && <div className="flex gap-4 mb-4">
+            <label className="flex items-center gap-2">
               <input
-disabled={disabled}
-                type="text"
-                name={field}
-                value={data[field] || ''}
-                onChange={(e) => handleChange(e, roleKey)}
-                onKeyDown={handleKeyDown}
-                className={commonInputStyles}
+                type="radio"
+                checked={isSelecting}
+                onChange={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    [`${roleKey}_isSelecting`]: true,
+                  }))
+                }
               />
-            </div>
-          ))}
-
-          {[
-            { name: 'licence_uploaded_url', label: 'Licence File' },
-            { name: 'pan_uploaded_url', label: 'PAN File' },
-            { name: 'letter_head_uploaded_url', label: 'Letterhead' },
-            { name: 'sign_stamp_uploaded_url', label: 'Sign/Stamp' }
-          ].map(({ name, label }) => (
-            <FileInputWithPreview
-disabled={disabled}
-              key={name}
-              label={label}
-              name={name}
-              onChange={(e) => handleFileChange(e, roleKey)}
-              filePreview={filePreviews[`${roleKey}_${name}`]}
-              onDelete={() => handleFileDelete(roleKey, name)}
-            />
-          ))}
-
+              Select from List
+            </label>
+            <label className="flex items-center gap-2">
+              <input
+                type="radio"
+                checked={!isSelecting}
+                onChange={() =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    [`${roleKey}_isSelecting`]: false,
+                    [roleKeyForId]: '', // Clear selection
+                  }))
+                }
+              />
+              Add New
+            </label>
+          </div>}
+    
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Dropdown */}
+            {(isSelecting && !disabled) ? (
+              <div className="flex flex-col w-full">
+                <label className="mb-2 font-medium text-gray-700">Select {roleLabel} *</label>
+                <Select
+                  isDisabled={disabled}
+                  options={roleOptions}
+                  value={roleOptions.find(opt => opt.value === data?.id)}
+                  onChange={(selectedOption) => {
+                    const selected = selectedOption || {};
+                    setFormData((prev) => ({
+                      ...prev,
+                      [roleKeyForId]: selected.value || '',
+                    }));
+                  }}
+                  isSearchable
+                  required
+                  placeholder={`Select a ${roleLabel.toLowerCase()}`}
+                  styles={/* your styles here */ {}}
+                />
+              </div>
+            ) : (
+              <>
+                {['name', 'contact_number', 'email_id', 'office_address', 'licence_number', 'pan_number'].map(field => (
+                  <div className="flex flex-col" key={field}>
+                    <label className="mb-2 font-medium capitalize">{field.replace(/_/g, ' ')}</label>
+                    <input
+                      disabled={disabled}
+                      type="text"
+                      name={field}
+                      value={data[field] || ''}
+                      onChange={(e) => handleChange(e, roleKey)}
+                      onKeyDown={handleKeyDown}
+                      className={commonInputStyles}
+                    />
+                  </div>
+                ))}
+    
+                {[ // File Inputs
+                  { name: 'licence_uploaded_url', label: 'Licence File' },
+                  { name: 'pan_uploaded_url', label: 'PAN File' },
+                  { name: 'letter_head_uploaded_url', label: 'Letterhead' },
+                  { name: 'sign_stamp_uploaded_url', label: 'Sign/Stamp' }
+                ].map(({ name, label }) => (
+                  <FileInputWithPreview
+                    disabled={disabled}
+                    key={name}
+                    label={label}
+                    name={name}
+                    onChange={(e) => handleFileChange(e, roleKey)}
+                    filePreview={filePreviews[`${roleKey}_${name}`]}
+                    onDelete={() => handleFileDelete(roleKey, name)}
+                  />
+                ))}
+              </>
+            )}
+          </div>
         </div>
-      </div>
-    );
-  };
+      );
+    };
+    
+    
 
   if(!projectId){
     return
@@ -213,9 +243,9 @@ disabled={disabled}
         <h1 className="text-2xl font-bold text-white">{activeTab}</h1>
       </div>
 
-      {renderProfessionalSection("Engineer", "engineer")}
-      {renderProfessionalSection("Architect", "architect")}
-      {renderProfessionalSection("Chartered Accountant", "ca")}
+      {renderProfessionalSection("Engineer", "engineer", "engineer_id")}
+      {renderProfessionalSection("Architect", "architect", "architect_id")}
+      {renderProfessionalSection("Chartered Accountant", "ca", "ca_id")}
 
       {!disabled &&
       <button

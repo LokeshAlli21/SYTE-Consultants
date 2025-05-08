@@ -4,7 +4,11 @@ import { toast } from "react-toastify";
 import databaseService from '../../backend-services/database/database';
 import {UnitDetailsForm} from '../index.js';
 
-function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDetailsFormActive,formData,setFormData,activeTab,handleSubmitProjectUnit}) {
+function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDetailsFormActive,formData,setFormData,activeTab,handleSubmitProjectUnit, handleUpdateProjectUnit}) {
+
+  const [isDisabled, setIsDesabled] = useState(false)
+  
+  const [currentUnitId, setCurrentUnitId] = useState(null)
 
   const [units, setUnits] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,9 +22,12 @@ function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDe
   const currentUnits = units.slice(indexOfFirstUnit, indexOfLastUnit);
 
   useEffect(() => {
+    if(isUnitDetailsFormActive){
+      return
+    }
     const fetchUnits = async () => {
       try {
-        const data = await databaseService.getAllUnits();
+        const data = await databaseService.getAllUnitsForProject(projectId);
         console.log(data);
         
         setUnits(data);
@@ -31,7 +38,41 @@ function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDe
       }
     };
     fetchUnits();
+    setFormData(resetObjectData(formData))
   }, [isUnitDetailsFormActive]);
+
+  function resetObjectData(obj) {
+    if (Array.isArray(obj)) return [];
+    
+  
+    const clearedObj = {};
+  
+    for (const key in obj) {
+      const value = obj[key];
+  
+      // Skip resetting 'project_id'
+      if (key === 'project_id') {
+        clearedObj[key] = value;
+        continue;
+      }
+  
+      if (typeof value === "string") {
+        clearedObj[key] = "";
+      } else if (typeof value === "number") {
+        clearedObj[key] = '';
+      } else if (typeof value === "boolean") {
+        clearedObj[key] = false;
+      } else if (Array.isArray(value)) {
+        clearedObj[key] = [];
+      } else if (typeof value === "object" && value !== null) {
+        clearedObj[key] = resetObjectData(value); // recursively clear nested objects
+      } else {
+        clearedObj[key] = value; // keep other types as-is (like null, undefined)
+      }
+    }
+  
+    return clearedObj;
+  }
 
   const toggleSelectAll = () => {
     setSelectedIds((prev) =>
@@ -73,13 +114,42 @@ function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDe
     }
   };  
 
-  const handleEdit = (id) => {
-    (`/projects/units/edit/${id}`);
+  const handleEdit = async (id) => {
+    try {
+      setIsDesabled(false); // Enable fields for editing
+      
+      const unit = await databaseService.getUnitById(id);
+      
+      if (unit) {
+        setFormData(unit); 
+        setCurrentUnitId(id)
+        setIsUnitDetailsFormActive(true);
+      } else {
+        toast.error("❌ Unit not found");
+      }
+    } catch (error) {
+      console.error("❌ Error fetching unit for edit:", error);
+      toast.error("❌ Failed to load unit for editing.");
+    }
   };
-
-  const handleView = (id) => {
-    console.log(`View clicked for unit id: ${id}`);
+  
+  const handleView = async (id) => {
+    try {
+      setIsDesabled(true); // Disable fields for view-only
+      const unit = await databaseService.getUnitById(id);
+      
+      if (unit) {
+        setFormData(unit); // Assuming you have a state to hold selected unit
+        setIsUnitDetailsFormActive(true);
+      } else {
+        toast.error("❌ Unit not found");
+      }
+    } catch (error) {
+      console.error("❌ Error fetching unit for view:", error);
+      toast.error("❌ Failed to load unit for viewing.");
+    }
   };
+  
 
   if(!projectId){
     return
@@ -89,7 +159,11 @@ function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDe
     <UnitDetailsForm
     setIsUnitDetailsFormActive={setIsUnitDetailsFormActive}
     formData={formData}
+    disabled={isDisabled}
     setFormData={setFormData}
+    currentUnitId={currentUnitId}
+    setCurrentUnitId={setCurrentUnitId}
+    handleUpdateProjectUnit={handleUpdateProjectUnit}
     handleSubmitProjectUnit={handleSubmitProjectUnit}
      />
   )
@@ -99,7 +173,6 @@ function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDe
       <div className="flex flex-wrap gap-4 mb-6 items-center">
         <div className="relative">
           <input
-disabled={disabled}
             type="text"
             placeholder="Search by name, type, customer..."
             value={searchQuery}
@@ -108,12 +181,14 @@ disabled={disabled}
           />
           <span className="absolute top-2.5 left-3 text-gray-400"><FaSearch /></span>
         </div>
+        {!disabled &&
         <button
           onClick={() => setIsUnitDetailsFormActive(true)}
           className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-6 py-2 rounded-full font-medium transition hover:bg-[#489090] shadow-sm"
         >
           <FaPlus /> New Unit
         </button>
+        }
       </div>
 
       <div className="bg-white rounded-xl shadow-md overflow-x-auto px-0 py-6">

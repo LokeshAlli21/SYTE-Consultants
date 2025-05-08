@@ -309,6 +309,91 @@ class DatabaseService {
     }
   }
 
+  async updateProjectDetails(projectId, formData) {
+    try {
+      console.log('Original project formData for update:', formData);
+  
+      const fileFormData = new FormData();
+      const fieldsToUpload = [];
+  
+      const project_name = formData.project_name?.replace(/\s+/g, '_') || 'UnknownPromoter';
+      const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
+  
+      for (const key in formData) {
+        const file = formData[key];
+  
+        if (key.endsWith('_uploaded_url') && file instanceof File) {
+          if (!file) continue;
+  
+          let identifier = "NoIdentifier";
+  
+          if (key === "rera_certificate_uploaded_url") {
+            identifier = formData.rera_number || "NoRERA";
+          }
+  
+          const extension = file.name?.split('.').pop() || 'pdf';
+          const renamedFile = new File(
+            [file],
+            `${project_name}_${identifier}_${timestamp}.${extension}`,
+            { type: file.type }
+          );
+  
+          fileFormData.append(key, renamedFile);
+          fieldsToUpload.push(key);
+        }
+      }
+  
+      if (fieldsToUpload.length > 0) {
+        const fileUploadRes = await fetch(`${this.baseUrl}/api/projects/upload-files`, {
+          method: "POST",
+          headers: this.getAuthHeaders(true),
+          body: fileFormData,
+        });
+  
+        if (!fileUploadRes.ok) {
+          const errorData = await fileUploadRes.json();
+          throw new Error(errorData.message || "File upload failed.");
+        }
+  
+        const uploadedUrls = await fileUploadRes.json();
+  
+        for (const fieldName of fieldsToUpload) {
+          if (uploadedUrls[fieldName]) {
+            formData[fieldName] = uploadedUrls[fieldName];
+          } else {
+            throw new Error(`Missing URL for ${fieldName} in upload response`);
+          }
+        }
+      }
+  
+      console.log("Final project formData to update:", formData);
+  
+      const response = await fetch(`${this.baseUrl}/api/projects/update/${projectId}`, {
+        method: "PUT",
+        headers: {
+          ...this.getAuthHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Project update failed.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Project data updated successfully!");
+      return data;
+  
+    } catch (error) {
+      console.error("❌ Error updating project data:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
+
   async uploadProjectProfessionalDetails(formData) {
   try {
     console.log('Original professional details formData:', formData);
@@ -472,6 +557,73 @@ async uploadProjectUnitDetails(formData) {
     throw err;
   }
 }
+
+async updateProjectUnitDetails(id, formData) {
+  try {
+    const fileFormData = new FormData();
+    const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
+    const fileFields = ['afs_uploaded_url', 'sale_deed_uploaded_url'];
+    const uploadedFiles = [];
+
+    for (const key of fileFields) {
+      const file = formData[key];
+      if (file instanceof File) {
+        const extension = file.name?.split('.').pop() || 'pdf';
+        const newFileName = `unit_${key}_${formData.unit_name}_${timestamp}.${extension}`;
+        const renamedFile = new File([file], newFileName, { type: file.type });
+        fileFormData.append(key, renamedFile);
+        uploadedFiles.push(key);
+      }
+    }
+
+    // Upload new files if any
+    if (uploadedFiles.length > 0) {
+      const res = await fetch(`${this.baseUrl}/api/projects/unit-details/upload-files`, {
+        method: "POST",
+        headers: this.getAuthHeaders(true),
+        body: fileFormData
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "File upload failed.");
+      }
+
+      const urls = await res.json();
+      uploadedFiles.forEach((key) => {
+        if (urls[key]) {
+          formData[key] = urls[key];
+        } else {
+          throw new Error(`Missing uploaded URL for ${key}`);
+        }
+      });
+    }
+
+    // Submit updated unit details
+    const response = await fetch(`${this.baseUrl}/api/projects/update-project-units/${id}`, {
+      method: "PUT",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Unit update failed.");
+    }
+
+    const data = await response.json();
+    toast.success("✅ Project unit details updated successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error updating unit details:", err);
+    toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
 
 
 async uploadProjectDocuments(formData) {
@@ -834,9 +986,9 @@ async updateAssignment(id, formData) {
   }
   
 
-  async getAllUnits() {
+  async getAllUnitsForProject(projectId) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/projects/units/get-all`, {
+      const response = await fetch(`${this.baseUrl}/api/projects/units/get-all/?project-id=${projectId}`, {
         method: "GET",
         headers: this.getAuthHeaders(),
       });
@@ -856,6 +1008,29 @@ async updateAssignment(id, formData) {
       throw error;
     }
   }
+
+  async getUnitById(id) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/projects/units/get-unit/${id}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch unit details.");
+      }
+  
+      const data = await response.json();
+      toast.success("✅ Unit details fetched successfully!");
+      return data.unit;
+    } catch (error) {
+      console.error("❌ Error fetching unit details:", error);
+      toast.error(`❌ ${error.message}`);
+      throw error;
+    }
+  }
+  
   
 
 async getAllAssignments() {
@@ -1181,7 +1356,7 @@ async deleteAssignmentById(id) {
   
   async getAllEngineers() {
     try {
-      const response = await fetch(`${this.baseUrl}/api/engineers/get-all`, {
+      const response = await fetch(`${this.baseUrl}/api/projects/engineers/get-all`, {
         method: "GET",
         headers: this.getAuthHeaders(),
       });
@@ -1204,7 +1379,7 @@ async deleteAssignmentById(id) {
 
   async getAllArchitects() {
     try {
-      const response = await fetch(`${this.baseUrl}/api/architects/get-all`, {
+      const response = await fetch(`${this.baseUrl}/api/projects/architects/get-all`, {
         method: "GET",
         headers: this.getAuthHeaders(),
       });
@@ -1227,7 +1402,7 @@ async deleteAssignmentById(id) {
 
   async getAllCAs() {
     try {
-      const response = await fetch(`${this.baseUrl}/api/cas/get-all`, {
+      const response = await fetch(`${this.baseUrl}/api/projects/cas/get-all`, {
         method: "GET",
         headers: this.getAuthHeaders(),
       });

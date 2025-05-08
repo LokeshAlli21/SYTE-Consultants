@@ -61,6 +61,74 @@ export const uploadProjectData = async (req, res) => {
   }
 };
 
+export const updateProjectData = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+
+    const {
+      channel_partner_id,
+      promoter_id,
+      promoter_name,
+      project_name,
+      project_type,
+      project_address,
+      project_pincode,
+      login_id,
+      password,
+      district,
+      city,
+      rera_number,
+      rera_certificate_uploaded_url,
+      registration_date,
+      expiry_date,
+    } = req.body;
+
+    const updateData = {
+      channel_partner_id,
+      promoter_id,
+      promoter_name,
+      project_name,
+      project_type,
+      project_address,
+      login_id,
+      password,
+      district,
+      city,
+      rera_number,
+      rera_certificate_uploaded_url,
+      registration_date: registration_date || null,
+      expiry_date: expiry_date || null,
+      updated_at: new Date().toISOString(),
+    };
+
+    if (project_pincode) {
+      updateData.project_pincode = project_pincode;
+    }
+
+    const { data, error } = await supabase
+      .from('projects')
+      .update(updateData)
+      .eq('id', projectId)
+      .select();
+
+    if (error) {
+      console.error('❌ Error updating project data:', error);
+      return res.status(500).json({ error: 'Failed to update project data', details: error });
+    }
+
+    if (data.length === 0) {
+      return res.status(404).json({ error: 'Project not found' });
+    }
+
+    res.status(200).json({ message: '✅ Project updated successfully', data });
+
+  } catch (error) {
+    console.error('❌ Unexpected error in updateProjectData:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
 export const uploadProjectFiles = async (req, res) => {
   try {
     const files = req.files;
@@ -129,15 +197,22 @@ export const getAllProjects = async (req, res) => {
   }
 };
 
-export const getAllUnits = async (req, res) => {
+export const getAllUnitsForProject = async (req, res) => {
   try {
+    const projectId = req.query['project-id'];
+
+    if (!projectId) {
+      return res.status(400).json({ error: "Missing project-id in query params" });
+    }
+
     const { data, error } = await supabase
       .from('project_units')
       .select(
         `id, project_id, unit_name, unit_type, carpet_area, unit_status, customer_name,
          agreement_value, total_received, balance_amount, created_at, updated_at`
       )
-      .eq('status_for_delete','active');
+      .eq('project_id', projectId)
+      .eq('status_for_delete', 'active');
 
     if (error) {
       console.error('❌ Error fetching units:', error);
@@ -146,7 +221,7 @@ export const getAllUnits = async (req, res) => {
 
     res.status(200).json({ units: data });
   } catch (err) {
-    console.error('❌ Unexpected error in getAllUnits:', err);
+    console.error('❌ Unexpected error in getAllUnitsForProject:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -407,78 +482,86 @@ export const uploadProjectProfessionalFiles = async (req, res) => {
 };
 
 
-export const uploadProjectProfessionalData = async (req, res) => {
+export const adddProjectProfessionals = async (req, res) => {
   try {
-    const { project_id, engineer, architect, ca } = req.body;
-    // console.log('engineer: ',engineer);
-    // console.log('architect: ',architect);
-    // console.log('ca: ',ca);
-    
+    const { project_id, engineer, architect, ca, engineer_id, architect_id, ca_id } = req.body;
 
     if (!project_id) {
       return res.status(400).json({ message: "Missing project_id" });
     }
 
-    // Insert engineer
-    const { data: engineerData, error: engineerError } = await supabase
-      .from('engineers')
-      .insert([engineer])
-      .select()
-      .single();
+    const hasAnyValue = (obj) => {
+      return Object.values(obj || {}).some(
+        (val) => val && typeof val === 'string' && val.trim() !== ''
+      );
+    };
 
-    if (engineerError) {
-      console.error('❌ Error inserting engineer:', engineerError);
-      return res.status(500).json({ message: 'Failed to insert engineer', error: engineerError });
-    }
+    // 1. Engineer
+    let finalEngineerId = engineer_id;
+    if (!engineer_id && hasAnyValue(engineer)) {
+      const { data: engineerData, error: engineerError } = await supabase
+        .from('engineers')
+        .insert([engineer])
+        .select()
+        .single();
 
-    // Insert architect
-    const { data: architectData, error: architectError } = await supabase
-      .from('architects')
-      .insert([architect])
-      .select()
-      .single();
-
-    if (architectError) {
-      console.error('❌ Error inserting architect:', architectError);
-      return res.status(500).json({ message: 'Failed to insert architect', error: architectError });
-    }
-
-    // Insert CA
-    const { data: caData, error: caError } = await supabase
-      .from('cas')
-      .insert([ca])
-      .select()
-      .single();
-
-    if (caError) {
-      console.error('❌ Error inserting CA:', caError);
-      return res.status(500).json({ message: 'Failed to insert CA', error: caError });
-    }
-
-    // console.log("engineerData.id: ",engineerData.id);
-    // console.log("architectData.id: ",architectData.id);
-    // console.log("caData.id: ",caData.id);
-    // console.log("project_id: ",project_id);
-    
-    
-
-    // Insert into project_professional_details
-    const { data: linkData, error: linkError } = await supabase
-    .from('project_professional_details')
-    .upsert([
-      {
-        project_id,
-        engineer_id: engineerData.id,
-        architect_id: architectData.id,
-        ca_id: caData.id,
+      if (engineerError) {
+        console.error('❌ Error inserting engineer:', engineerError);
+        return res.status(500).json({ message: 'Failed to insert engineer', error: engineerError });
       }
-    ], { onConflict: 'project_id' })
-    .select()
-    .single(); // 👈 ensure it returns a single row  
+      finalEngineerId = engineerData.id;
+    }
 
-    // console.log('linkData: ',linkData);
-    
-      
+    // 2. Architect
+    let finalArchitectId = architect_id;
+    if (!architect_id && hasAnyValue(architect)) {
+      const { data: architectData, error: architectError } = await supabase
+        .from('architects')
+        .insert([architect])
+        .select()
+        .single();
+
+      if (architectError) {
+        console.error('❌ Error inserting architect:', architectError);
+        return res.status(500).json({ message: 'Failed to insert architect', error: architectError });
+      }
+      finalArchitectId = architectData.id;
+    }
+
+    // 3. CA
+    let finalCaId = ca_id;
+    if (!ca_id && hasAnyValue(ca)) {
+      const { data: caData, error: caError } = await supabase
+        .from('cas')
+        .insert([ca])
+        .select()
+        .single();
+
+      if (caError) {
+        console.error('❌ Error inserting CA:', caError);
+        return res.status(500).json({ message: 'Failed to insert CA', error: caError });
+      }
+      finalCaId = caData.id;
+    }
+
+    // If none of the professionals are provided (IDs or new data), stop here
+    if (!finalEngineerId && !finalArchitectId && !finalCaId) {
+      return res.status(400).json({ message: "No valid professional data provided" });
+    }
+
+    // 4. Link to project_professional_details
+    const { data: linkData, error: linkError } = await supabase
+      .from('project_professional_details')
+      .upsert([
+        {
+          project_id,
+          engineer_id: finalEngineerId,
+          architect_id: finalArchitectId,
+          ca_id: finalCaId,
+        }
+      ], { onConflict: 'project_id' })
+      .select()
+      .single();
 
     if (linkError) {
       console.error('❌ Error linking professional details to project:', linkError);
@@ -488,10 +571,10 @@ export const uploadProjectProfessionalData = async (req, res) => {
     res.status(201).json({
       message: "✅ Project professional details uploaded successfully",
       data: {
-        engineer_id: engineerData.id,
-        architect_id: architectData.id,
-        ca_id: caData.id,
-        project_professional_details_id: linkData[0]?.id
+        engineer_id: finalEngineerId,
+        architect_id: finalArchitectId,
+        ca_id: finalCaId,
+        project_professional_details_id: linkData?.id
       }
     });
 
@@ -563,7 +646,7 @@ export const uploadProjectUnits = async (req, res) => {
     // Loop through the unit and sanitize the values
     Object.entries(unit).forEach(([key, value]) => {
       // Skip numerical fields with 0
-      if (numFields.includes(key) && Number(value) === 0) return;
+      if (numFields.includes(key) && Number(value) === 0 || value === '') return;
 
       // Skip empty strings
       if (stringFields.includes(key) && value === '') return;
@@ -584,6 +667,57 @@ export const uploadProjectUnits = async (req, res) => {
     res.status(201).json({ message: '✅ Project unit inserted successfully' });
   } catch (error) {
     console.error('❌ Error inserting project unit:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const updateProjectUnits = async (req, res) => {
+  try {
+    const unit = req.body;
+    const { id } = req.params;
+    console.log(id);
+    console.log(unit);
+    
+    
+
+    if (!id || !unit || !unit.project_id) {
+      return res.status(400).json({ message: 'Missing id or required unit data' });
+    }
+
+    // Sanitize numerical and empty values
+    const numFields = [
+      "carpet_area", "agreement_value",
+      "received_fy_2018_19", "received_fy_2019_20", "received_fy_2020_21", "received_fy_2021_22",
+      "received_fy_2022_23", "received_fy_2023_24", "received_fy_2024_25", "received_fy_2025_26",
+      "received_fy_2026_27", "received_fy_2027_28", "received_fy_2028_29", "received_fy_2029_30",
+      "total_received", "balance_amount"
+    ];
+
+    const stringFields = [
+      "agreement_or_sale_deed_date", "afs_uploaded_url", "sale_deed_uploaded_url"
+    ];
+
+    const sanitizedUnit = {};
+
+    Object.entries(unit).forEach(([key, value]) => {
+      if (numFields.includes(key) && Number(value) === 0 || value === '') return;
+      if (stringFields.includes(key) && value === '') return;
+      sanitizedUnit[key] = value;
+    });
+
+    // Perform update operation
+    const { error } = await supabase
+      .from('project_units')
+      .update(sanitizedUnit)
+      .eq('id', id);
+
+    if (error) {
+      return res.status(500).json({ message: '❌ Failed to update unit data', error });
+    }
+
+    res.status(200).json({ message: '✅ Project unit updated successfully' });
+  } catch (error) {
+    console.error('❌ Error updating project unit:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 };
@@ -736,5 +870,62 @@ export const softDeleteProjectUnitById = async (req, res) => {
   } catch (err) {
     console.error('❌ Unexpected error in softDeleteProjectUnitById:', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+
+export const getUnitById = async (req, res) => {
+  const unitId = req.params.id;
+
+  try {
+    const { data, error } = await supabase
+      .from('project_units')
+      .select(`
+        id,
+        project_id,
+        status_for_delete,
+        unit_name,
+        unit_type,
+        carpet_area,
+        unit_status,
+        customer_name,
+        agreement_value,
+        agreement_or_sale_deed_date,
+        received_fy_2018_19,
+        received_fy_2019_20,
+        received_fy_2020_21,
+        received_fy_2021_22,
+        received_fy_2022_23,
+        received_fy_2023_24,
+        received_fy_2024_25,
+        received_fy_2025_26,
+        received_fy_2026_27,
+        received_fy_2027_28,
+        received_fy_2028_29,
+        received_fy_2029_30,
+        total_received,
+        balance_amount,
+        afs_uploaded_url,
+        sale_deed_uploaded_url,
+        created_at,
+        updated_at
+      `)
+      .eq('id', unitId)
+      .eq('status_for_delete', 'active')
+      .single();
+
+    if (error) {
+      console.error("❌ Error fetching unit:", error);
+      return res.status(500).json({ message: "Failed to fetch unit", details: error });
+    }
+
+    if (!data) {
+      return res.status(404).json({ message: "Unit not found" });
+    }
+
+    res.status(200).json({ unit: data });
+  } catch (err) {
+    console.error("❌ Unexpected error in getUnitById:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
