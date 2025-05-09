@@ -548,75 +548,6 @@ class DatabaseService {
 
   async uploadProjectProfessionalDetails(formData) {
   try {
-    console.log('Original professional details formData:', formData);
-
-    const fileFormData = new FormData();
-    const fieldsToUpload = [];
-
-    const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
-
-    // Iterate over each role (engineer, architect, ca)
-    for (const role of ['engineer', 'architect', 'ca']) {
-      const section = formData[role];
-      const roleName = section.name?.replace(/\s+/g, '') || "Unknown";
-    
-      for (const key in section) {
-        const value = section[key];
-    
-        // Handle only uploaded file fields
-        if (key.endsWith('_uploaded_url') && value instanceof File) {
-          if (!value) continue;
-    
-          const fileType = key.replace('_uploaded_url', '');
-          let identifier = '';
-    
-          // Try to match identifier field for this file type
-          switch (fileType) {
-            case 'pan':
-              identifier = section.pan_number || 'unknown';
-              break;
-            case 'licence':
-              identifier = section.licence_number || 'unknown';
-              break;
-            default:
-              identifier = fileType; // fallback if no identifier field
-          }
-    
-          const extension = value.name?.split('.').pop() || 'pdf';
-          const newFileName = `${role}_${roleName}_${fileType}_${identifier}_${timestamp}.${extension}`;
-          const renamedFile = new File([value], newFileName, { type: value.type });
-    
-          const fullFieldName = `${role}.${key}`;
-          fileFormData.append(fullFieldName, renamedFile);
-          fieldsToUpload.push({ role, fileType, identifier, fullFieldName });
-        }
-      }
-    }
-    // Upload files if there are any
-    if (fieldsToUpload.length > 0) {
-      const fileUploadRes = await fetch(`${this.baseUrl}/api/projects/professional-details/upload-files`, {
-        method: "POST",
-        headers: this.getAuthHeaders(true),
-        body: fileFormData
-      });
-
-      if (!fileUploadRes.ok) {
-        const errorData = await fileUploadRes.json();
-        throw new Error(errorData.message || "File upload failed.");
-      }
-
-      const uploadedUrls = await fileUploadRes.json();
-      console.log(uploadedUrls);
-
-      for (const { role, key, fullFieldName } of fieldsToUpload) {
-        if (uploadedUrls[fullFieldName]) {
-          const [roleFromUrl, rawKey] = fullFieldName.split('.');
-          formData[role][rawKey] = uploadedUrls[fullFieldName];
-        } else {
-          throw new Error(`Missing URL for ${fullFieldName} in upload response`);
-        }
-      }
-    }
     console.log("Final professional details formData to submit:", formData);
 
     const response = await fetch(`${this.baseUrl}/api/projects/add-project-professionals`, {
@@ -643,6 +574,113 @@ class DatabaseService {
     throw error;
   }
 }
+
+// ✅ Public method
+async addEngineer(data) {
+  return await this.#uploadProfessionalWithFiles(data, 'engineer');
+}
+
+// ✅ Public method
+async addArchitect(data) {
+  return await this.#uploadProfessionalWithFiles(data, 'architect');
+}
+
+// ✅ Public method
+async addCA(data) {
+  return await this.#uploadProfessionalWithFiles(data, 'ca');
+}
+
+// 🔒 Private method to upload files + submit form
+async #uploadProfessionalWithFiles(data, role) {
+  console.log(`Uploading ${role} data`, data);
+
+  const formData = { [role]: data }; // Mimic your structure
+  const fileFormData = new FormData();
+  const fieldsToUpload = [];
+
+  const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
+
+  const section = formData[role];
+  const roleName = section.name?.replace(/\s+/g, '') || "Unknown";
+
+  for (const key in section) {
+    const value = section[key];
+
+    if (key.endsWith('_uploaded_url') && value instanceof File) {
+      const fileType = key.replace('_uploaded_url', '');
+      let identifier = '';
+
+      switch (fileType) {
+        case 'pan':
+          identifier = section.pan_number || 'unknown';
+          break;
+        case 'licence':
+          identifier = section.licence_number || 'unknown';
+          break;
+        default:
+          identifier = fileType;
+      }
+
+      const extension = value.name?.split('.').pop() || 'pdf';
+      const newFileName = `${role}_${roleName}_${fileType}_${identifier}_${timestamp}.${extension}`;
+      const renamedFile = new File([value], newFileName, { type: value.type });
+
+      const fullFieldName = `${role}.${key}`;
+      fileFormData.append(fullFieldName, renamedFile);
+      fieldsToUpload.push({ role, fileType, identifier, fullFieldName });
+    }
+  }
+
+  // 🔄 Upload files if any
+  if (fieldsToUpload.length > 0) {
+    const fileUploadRes = await fetch(`${this.baseUrl}/api/projects/professional-details/upload-files`, {
+      method: "POST",
+      headers: this.getAuthHeaders(true), // skipContentType = true for multipart/form-data
+      body: fileFormData
+    });
+
+    if (!fileUploadRes.ok) {
+      const errorData = await fileUploadRes.json();
+      throw new Error(errorData.message || "File upload failed.");
+    }
+
+    const uploadedUrls = await fileUploadRes.json();
+    console.log("✅ Uploaded URLs:", uploadedUrls);
+
+    // 📝 Replace file fields with URLs
+    for (const { fullFieldName } of fieldsToUpload) {
+      if (uploadedUrls[fullFieldName]) {
+        const [_, rawKey] = fullFieldName.split('.');
+        formData[role][rawKey] = uploadedUrls[fullFieldName];
+      } else {
+        throw new Error(`Missing URL for ${fullFieldName}`);
+      }
+    }
+  }
+
+  // 📤 Submit final data
+  const finalPayload = {
+    ...formData[role],
+    project_id: data.project_id,
+  };
+
+  const res = await fetch(`${this.baseUrl}/api/projects/professional-details/add/${role}`, {
+    method: "POST",
+    headers: this.getAuthHeaders(),
+    body: JSON.stringify(finalPayload),
+  });
+
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || `Failed to upload ${role} details`);
+  }
+
+  const savedData = await res.json();
+  console.log(`✅ ${role} details saved successfully`, savedData);
+  return savedData;
+}
+
+
 
 async getProjectProfessionalData(projectId) {
   try {
@@ -680,7 +718,7 @@ async getAllEngineers() {
     }
 
     const data = await response.json();
-    toast.success("✅ Engineers fetched successfully!");
+    // toast.success("✅ Engineers fetched successfully!");
     return data.engineers;
 
   } catch (error) {
@@ -703,7 +741,7 @@ async getAllArchitects() {
     }
 
     const data = await response.json();
-    toast.success("✅ Architects fetched successfully!");
+    // toast.success("✅ Architects fetched successfully!");
     return data.architects;
 
   } catch (error) {
@@ -726,7 +764,7 @@ async getAllCAs() {
     }
 
     const data = await response.json();
-    toast.success("✅ CAs fetched successfully!");
+    // toast.success("✅ CAs fetched successfully!");
     return data.cas;
 
   } catch (error) {
@@ -1030,20 +1068,20 @@ async getProjectDocuments(projectId) {
     }
 
     const data = await response.json();
-    toast.success("✅ Project documents fetched successfully!");
+    // toast.success("✅ Project documents fetched successfully!");
     return data.documents;
 
   } catch (error) {
-    console.error("❌ Error fetching project documents:", error);
+    // console.error("❌ Error fetching project documents:", error);
 
     // Show user-friendly error message
     if (error.message === "No documents found for this project.") {
-      toast.error("❌ No documents found for this project.");
+      // toast.error("❌ No documents found for this project.");
     } else {
-      toast.error(`❌ ${error.message}`);
+      // toast.error(`❌ ${error.message}`);
     }
 
-    throw error; // Re-throw error for further handling
+    // throw error; // Re-throw error for further handling
   }
 }
 

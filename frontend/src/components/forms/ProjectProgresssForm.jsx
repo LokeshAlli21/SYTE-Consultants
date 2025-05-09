@@ -75,6 +75,47 @@ const inputRefs = useRef({});
   const inputStyles = "w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab]";
   const sectionBox = "bg-white p-6 rounded-xl shadow-md";
 
+  const YesNoToggle = ({ value, onChange, name, disabled = false, inputRef }) => {
+    const handleClick = (val) => {
+      if (!disabled) {
+        onChange({ target: { name, checked: val } });
+      }
+    };
+  
+    return (
+      <div className="flex gap-2 items-center">
+        <label
+          className={`px-3 py-1 rounded-md border text-sm cursor-pointer transition
+            ${value ? 'bg-[#5caaab] text-white border-[#5caaab]' : 'bg-white border-gray-300 text-gray-600'}
+          `}
+          onClick={() => handleClick(true)}
+        >
+          Yes
+        </label>
+        <label
+          className={`px-3 py-1 rounded-md border text-sm cursor-pointer transition
+            ${!value ? 'bg-[#5caaab] text-white border-[#5caaab]' : 'bg-white border-gray-300 text-gray-600'}
+          `}
+          onClick={() => handleClick(false)}
+        >
+          No
+        </label>
+  
+        {/* Hidden checkbox to allow form compatibility */}
+        <input
+          type="checkbox"
+          name={name}
+          checked={value}
+          onChange={() => {}}
+          ref={inputRef}
+          className="hidden"
+          disabled={disabled}
+        />
+      </div>
+    );
+  };
+  
+
   const ProgressBar = () => {
     // Define the steps
     const steps = [
@@ -134,46 +175,67 @@ const inputRefs = useRef({});
     <form onSubmit={handleSubmitBuilding} className="flex flex-col gap-6">
       <div className={sectionBox}>
         <h2 className="text-xl font-bold text-[#4a9899] mb-4">Building Progress</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {Object.entries(projectBuildingProgress)
-  .filter(([key]) => key !== 'project_id')
-  .map(([key, value]) => (
-    <div key={key} className="flex flex-col">
-      <label className="mb-2 font-medium capitalize">
-        {key.replace(/_/g, ' ')}
-      </label>
-      <input
-disabled={disabled}
-        type="number"
-        name={key}
-        value={value}
-        min={0}
-        max={100}
-        onChange={(e) => {
-          setFocusedField({ key, name: key }); // 👈 Set focused field
-          handleBuildingChange(e);
-        }}
-        onKeyDown={handleKeyDown}
-        className={inputStyles}
-        ref={(el) => {
-          inputRefs.current[`${key}-${key}`] = el; // 👈 Use key-name format
-        }}
-      />
-    </div>
-))}
-
+        <div className="overflow-x-auto">
+          <table className="min-w-full border border-gray-300 text-md">
+            <thead className="bg-gray-100 border-gray-300 text-[#5caaab] font-semibold">
+              <tr>
+                <th className="border border-gray-300 p-2 text-center w-15">Sr No</th>
+                <th className="border border-gray-300 p-2 text-left">Stage</th>
+                <th className="border border-gray-300 p-2 text-left">Percentage of Work</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(projectBuildingProgress)
+                .filter(([key]) => key !== 'project_id')
+                .map(([key, value], index) => (
+                  <tr key={key} className="even:bg-gray-50">
+                    <td className="border border-gray-300 p-2 w-15 text-center">{index + 1}</td>
+                    <td className="border border-gray-300 p-2 capitalize">{key.replace(/_/g, ' ')}</td>
+                    <td className="border border-gray-300 p-2">
+                      <div className="relative">
+                        <input
+                          disabled={disabled}
+                          type="number"
+                          name={key}
+                          value={value}
+                          min={0}
+                          max={100}
+                          onChange={(e) => {
+                            setFocusedField({ key, name: key });
+                            handleBuildingChange(e);
+                          }}
+                          onKeyDown={handleKeyDown}
+                          className={`${inputStyles} pr-10 appearance-none 
+                            [&::-webkit-inner-spin-button]:appearance-none 
+                            [&::-webkit-outer-spin-button]:appearance-none 
+                            moz:appearance-none`}
+                          ref={(el) => {
+                            inputRefs.current[`${key}-${key}`] = el;
+                          }}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                          %
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
         </div>
       </div>
-      {!disabled &&
-      <button
-        type="submit"
-        className="self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-white text-lg rounded-xl font-semibold shadow-lg transition"
-      >
-        Submit Building Progress
-      </button>
-}
+  
+      {!disabled && (
+        <button
+          type="submit"
+          className="self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-white text-lg rounded-xl font-semibold shadow-lg transition"
+        >
+          Submit Building Progress
+        </button>
+      )}
     </form>
   );
+   
 
   const CommonAreaForm = () => (
     <form onSubmit={handleSubmitCommonAreas} className="flex flex-col gap-6">
@@ -183,8 +245,9 @@ disabled={disabled}
       <table className="min-w-full border border-gray-300 text-md">
         <thead className="bg-gray-100 border-gray-300 text-[#5caaab] font-semibold">
           <tr>
+            <th className="border border-gray-300 p-2  w-15 text-center">Sr No</th>
             <th className="border border-gray-300 p-2 text-left">Area</th>
-            <th className="border border-gray-300 p-2 text-left">Proposed</th>
+            <th className="border border-gray-300 p-2 text-center">Proposed</th>
             <th className="border border-gray-300 p-2 text-left">Percentage of Work</th>
             <th className="border border-gray-300 p-2 text-left">Details</th>
           </tr>
@@ -192,8 +255,9 @@ disabled={disabled}
         <tbody>
         {Object.entries(projectCommonAreasProgress)
   .filter(([key]) => key !== 'project_id')
-  .map(([key, fields]) => (
+  .map(([key, fields], index) => (
     <tr key={key} className="even:bg-gray-50">
+      <td className="border border-gray-300 p-2  w-15 text-center">{index + 1}</td>
       <td className="border border-gray-300 p-2 capitalize">{key.replace(/_/g, ' ')}</td>
       <td className="border border-gray-300 p-2">
         <input
@@ -203,21 +267,30 @@ disabled={disabled}
           checked={fields.proposed}
           onChange={(e) => handleCommonAreaChange(e, key)}
           ref={el => inputRefs.current[`${key}-proposed`] = el}
+          className='  w-5 h-5 accent-[#5caaab] cursor-pointer disabled:cursor-not-allowed'
         />
       </td>
       <td className="border border-gray-300 p-2">
+      <div className="relative">
         <input
-disabled={disabled}
+          disabled={disabled}
           type="number"
           name="percentage_of_work"
-          value={fields.percentage_of_work}
+          value={fields.percentage_of_work || ''}
           onChange={(e) => handleCommonAreaChange(e, key)}
           onKeyDown={handleKeyDown}
           min={0}
           max={100}
-          className={inputStyles}
+          className={`${inputStyles} pr-10 appearance-none 
+            [&::-webkit-inner-spin-button]:appearance-none 
+            [&::-webkit-outer-spin-button]:appearance-none 
+            moz:appearance-none`}
           ref={el => inputRefs.current[`${key}-percentage_of_work`] = el}
         />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+          %
+        </span>
+</div>
       </td>
       <td className="border border-gray-300 p-2">
         <input

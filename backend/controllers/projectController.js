@@ -389,7 +389,7 @@ export const getDocuments = async (req, res) => {
 
     if (!data || data.length === 0) {
       console.log("⚠️ No documents found for project ID:", project_id);
-      return res.status(404).json({
+      return res.json({
         error: "No documents found for this project.",
       });
     }
@@ -490,74 +490,14 @@ export const adddProjectProfessionals = async (req, res) => {
       return res.status(400).json({ message: "Missing project_id" });
     }
 
-    const hasAnyValue = (obj) => {
-      return Object.values(obj || {}).some(
-        (val) => val && typeof val === 'string' && val.trim() !== ''
-      );
-    };
-
-    // 1. Engineer
-    let finalEngineerId = engineer_id;
-    if (!engineer_id && hasAnyValue(engineer)) {
-      const { data: engineerData, error: engineerError } = await supabase
-        .from('engineers')
-        .insert([engineer])
-        .select()
-        .single();
-
-      if (engineerError) {
-        console.error('❌ Error inserting engineer:', engineerError);
-        return res.status(500).json({ message: 'Failed to insert engineer', error: engineerError });
-      }
-      finalEngineerId = engineerData.id;
-    }
-
-    // 2. Architect
-    let finalArchitectId = architect_id;
-    if (!architect_id && hasAnyValue(architect)) {
-      const { data: architectData, error: architectError } = await supabase
-        .from('architects')
-        .insert([architect])
-        .select()
-        .single();
-
-      if (architectError) {
-        console.error('❌ Error inserting architect:', architectError);
-        return res.status(500).json({ message: 'Failed to insert architect', error: architectError });
-      }
-      finalArchitectId = architectData.id;
-    }
-
-    // 3. CA
-    let finalCaId = ca_id;
-    if (!ca_id && hasAnyValue(ca)) {
-      const { data: caData, error: caError } = await supabase
-        .from('cas')
-        .insert([ca])
-        .select()
-        .single();
-
-      if (caError) {
-        console.error('❌ Error inserting CA:', caError);
-        return res.status(500).json({ message: 'Failed to insert CA', error: caError });
-      }
-      finalCaId = caData.id;
-    }
-
-    // If none of the professionals are provided (IDs or new data), stop here
-    if (!finalEngineerId && !finalArchitectId && !finalCaId) {
-      return res.status(400).json({ message: "No valid professional data provided" });
-    }
-
-    // 4. Link to project_professional_details
     const { data: linkData, error: linkError } = await supabase
       .from('project_professional_details')
       .upsert([
         {
           project_id,
-          engineer_id: finalEngineerId,
-          architect_id: finalArchitectId,
-          ca_id: finalCaId,
+          engineer_id: parseInt(engineer_id),
+          architect_id: parseInt(architect_id),
+          ca_id: parseInt(ca_id),
         }
       ], { onConflict: 'project_id' })
       .select()
@@ -571,9 +511,9 @@ export const adddProjectProfessionals = async (req, res) => {
     res.status(201).json({
       message: "✅ Project professional details uploaded successfully",
       data: {
-        engineer_id: finalEngineerId,
-        architect_id: finalArchitectId,
-        ca_id: finalCaId,
+        engineer_id: engineer_id,
+        architect_id: architect_id,
+        ca_id: ca_id,
         project_professional_details_id: linkData?.id
       }
     });
@@ -927,5 +867,100 @@ export const getUnitById = async (req, res) => {
   } catch (err) {
     console.error("❌ Unexpected error in getUnitById:", err);
     res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+export const addEngineer = async (req, res) => {
+  const  engineer  = req.body;
+
+  const hasAnyValue = (obj) =>
+    Object.values(obj || {}).some(
+      (val) => val && typeof val === 'string' && val.trim() !== ''
+    );
+
+  try {
+    if (!hasAnyValue(engineer)) {
+      return res.status(400).json({ message: 'No valid engineer data provided' });
+    }
+
+    const { data, error } = await supabase
+      .from('engineers')
+      .insert([engineer])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Error inserting engineer:', error);
+      return res.status(500).json({ message: 'Failed to insert engineer', error });
+    }
+
+    return res.status(200).json({ message: 'Engineer added successfully', id: data.id });
+  } catch (err) {
+    console.error('❌ Unexpected error:', err);
+    return res.status(500).json({ message: 'Unexpected error occurred', error: err.message });
+  }
+};
+
+
+export const addArchitect = async (req, res) => {
+  const  architect  = req.body;
+
+  const hasAnyValue = (obj) =>
+    Object.values(obj || {}).some(
+      (val) => val && typeof val === 'string' && val.trim() !== ''
+    );
+
+  try {
+    if (!hasAnyValue(architect)) {
+      return res.status(400).json({ message: 'No valid architect data provided' });
+    }
+
+    const { data, error } = await supabase
+      .from('architects')
+      .insert([architect])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Error inserting architect:', error);
+      return res.status(500).json({ message: 'Failed to insert architect', error });
+    }
+
+    return res.status(200).json({ message: 'Architect added successfully', id: data.id });
+  } catch (err) {
+    console.error('❌ Unexpected error:', err);
+    return res.status(500).json({ message: 'Unexpected error occurred', error: err.message });
+  }
+};
+
+export const addCA = async (req, res) => {
+  const  ca  = req.body;
+
+  const hasAnyValue = (obj) =>
+    Object.values(obj || {}).some(
+      (val) => val && typeof val === 'string' && val.trim() !== ''
+    );
+
+  try {
+    if (!hasAnyValue(ca)) {
+      return res.status(400).json({ message: 'No valid CA data provided' });
+    }
+
+    const { data, error } = await supabase
+      .from('cas')
+      .insert([ca])
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Error inserting CA:', error);
+      return res.status(500).json({ message: 'Failed to insert CA', error });
+    }
+
+    return res.status(200).json({ message: 'CA added successfully', id: data.id });
+  } catch (err) {
+    console.error('❌ Unexpected error:', err);
+    return res.status(500).json({ message: 'Unexpected error occurred', error: err.message });
   }
 };

@@ -274,7 +274,7 @@ isDisabled={disabled}
         </div>
 
         {/* Customer Details */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className='flex flex-col'>
           <label className="mb-2 font-medium">Customer Name</label>
           <input
@@ -310,51 +310,81 @@ disabled={disabled}
           </div>
 
 
-          {['2018_19', '2019_20', '2020_21', '2021_22', '2022_23', '2023_24', '2024_25', '2025_26', '2026_27', '2027_28', '2028_29', '2029_30'].map((year) => (
-            <div className="flex flex-col" key={year}>
-              <label className="mb-2 font-medium">Received FY {year}</label>
+          {[
+          '2018_19', '2019_20', '2020_21', '2021_22',
+          '2022_23', '2023_24', '2024_25', '2025_26',
+          '2026_27', '2027_28', '2028_29', '2029_30'
+        ].map((year) => (
+          <div className="flex flex-col" key={year}>
+            <label className="mb-2 font-medium">Received FY {year}</label>
+
+            <div className="relative">
               <input
-disabled={disabled}
+                disabled={disabled}
                 type="number"
                 name={`received_fy_${year}`}
                 value={formData[`received_fy_${year}`] || ''}
                 onChange={(e) => handleFyChange(e, year)}
-                className={commonInputStyles}
+                className={`${commonInputStyles} pr-10 appearance-none 
+                  [&::-webkit-inner-spin-button]:appearance-none 
+                  [&::-webkit-outer-spin-button]:appearance-none 
+                  moz:appearance-none`}
               />
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                ₹
+              </span>
             </div>
-          ))}
+          </div>
+        ))}
 
 
         </div>
 
         {/* Financial Year Received Amounts */}
-        {/* <div className="grid grid-cols-2 gap-4">
-          
-        </div> */}
-
+        <div className="grid grid-cols-2 gap-4">
         <div className='flex flex-col'>
-          <label className="mb-2 font-medium">Total Received</label>
+        <label className="mb-2 font-medium">Total Received</label>
+        <div className="relative">
           <input
             disabled={true}
             type="number"
             name="total_received"
             value={formData.total_received || ''}
             onChange={handleChange}
-            className={commonInputStyles}
+            className={`${commonInputStyles} pr-10 appearance-none
+              [&::-webkit-inner-spin-button]:appearance-none 
+              [&::-webkit-outer-spin-button]:appearance-none 
+              moz:appearance-none`}
           />
-          </div>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+            ₹
+          </span>
+        </div>
+      </div>
 
-          <div className='flex flex-col'>
-          <label className="mb-2 font-medium">Balance Amount</label>
+      <div className='flex flex-col'>
+        <label className="mb-2 font-medium">Balance Amount</label>
+        <div className="relative">
           <input
             disabled={true}
             type="number"
             name="balance_amount"
             value={formData.balance_amount >= 0 ? formData.balance_amount : 0}
             onChange={handleChange}
-            className={commonInputStyles}
+            className={`${commonInputStyles} pr-10 appearance-none
+              [&::-webkit-inner-spin-button]:appearance-none 
+              [&::-webkit-outer-spin-button]:appearance-none 
+              moz:appearance-none`}
           />
-          </div>
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+            ₹
+          </span>
+        </div>
+      </div>
+        </div>
+
+
+
         
 
         {/* uplods */}

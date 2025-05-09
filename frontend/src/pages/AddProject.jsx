@@ -50,44 +50,47 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
     const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
       project_id: projectId,
       engineer_id: '',
-      engineer: {
-        name: "",
-        contact_number: "",
-        email_id: "",
-        office_address: "",
-        licence_number: "",
-        licence_uploaded_url: "",
-        pan_number: "",
-        pan_uploaded_url: "",
-        letter_head_uploaded_url: "",
-        sign_stamp_uploaded_url: ""
-      },
       architect_id: '',
-      architect: {
-        name: "",
-        contact_number: "",
-        email_id: "",
-        office_address: "",
-        licence_number: "",
-        licence_uploaded_url: "",
-        pan_number: "",
-        pan_uploaded_url: "",
-        letter_head_uploaded_url: "",
-        sign_stamp_uploaded_url: ""
-      },
       ca_id: '',
-      ca: {
-        name: "",
-        contact_number: "",
-        email_id: "",
-        office_address: "",
-        licence_number: "",
-        licence_uploaded_url: "",
-        pan_number: "",
-        pan_uploaded_url: "",
-        letter_head_uploaded_url: "",
-        sign_stamp_uploaded_url: ""
-      }
+    })
+
+    const [engineerData, setEngineerData] = useState({
+      name: "",
+      contact_number: "",
+      email_id: "",
+      office_address: "",
+      licence_number: "",
+      licence_uploaded_url: "",
+      pan_number: "",
+      pan_uploaded_url: "",
+      letter_head_uploaded_url: "",
+      sign_stamp_uploaded_url: ""
+    })
+
+    const [architectData, setArchitectData] = useState({
+      name: "",
+      contact_number: "",
+      email_id: "",
+      office_address: "",
+      licence_number: "",
+      licence_uploaded_url: "",
+      pan_number: "",
+      pan_uploaded_url: "",
+      letter_head_uploaded_url: "",
+      sign_stamp_uploaded_url: ""
+    })
+
+    const [caData, setCAData] = useState({
+      name: "",
+      contact_number: "",
+      email_id: "",
+      office_address: "",
+      licence_number: "",
+      licence_uploaded_url: "",
+      pan_number: "",
+      pan_uploaded_url: "",
+      letter_head_uploaded_url: "",
+      sign_stamp_uploaded_url: ""
     })
 
     const [projectUnit, setProjectUnit] = useState({
@@ -237,7 +240,7 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
           const project = await databaseService.getProjectById(id);
           console.log("✅ Project Response:", project);
           setProjectDetails(project);
-          toast.success("✅ Project details loaded!");
+          // toast.success("✅ Project details loaded!");
         } catch (error) {
           console.error("❌ Error loading project details:", error);
           toast.error(`❌ Failed to load project details: ${error.message}`);
@@ -247,49 +250,69 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
         try {
           const professionals = await databaseService.getProjectProfessionalData(id);
           console.log("✅ Professional Data Response:", professionals);
+
+          // Set IDs only in projectProfessionalDetails
           setProjectProfessionalDetails({
             project_id: professionals.project_id,
             engineer_id: professionals.engineer_id,
-            engineer: {
-              name: professionals.engineers.name,
-              contact_number: professionals.engineers.contact_number,
-              email_id: professionals.engineers.email_id,
-              office_address: professionals.engineers.office_address,
-              licence_number: professionals.engineers.licence_number,
-              licence_uploaded_url: professionals.engineers.licence_uploaded_url,
-              pan_number: professionals.engineers.pan_number,
-              pan_uploaded_url: professionals.engineers.pan_uploaded_url,
-              letter_head_uploaded_url: professionals.engineers.letter_head_uploaded_url,
-              sign_stamp_uploaded_url: professionals.engineers.sign_stamp_uploaded_url
-            },
             architect_id: professionals.architect_id,
-            architect: {
-              name: professionals.architects.name,
-              contact_number: professionals.architects.contact_number,
-              email_id: professionals.architects.email_id,
-              office_address: professionals.architects.office_address,
-              licence_number: professionals.architects.licence_number,
-              licence_uploaded_url: professionals.architects.licence_uploaded_url,
-              pan_number: professionals.architects.pan_number,
-              pan_uploaded_url: professionals.architects.pan_uploaded_url,
-              letter_head_uploaded_url: professionals.architects.letter_head_uploaded_url,
-              sign_stamp_uploaded_url: professionals.architects.sign_stamp_uploaded_url
-            },
             ca_id: professionals.ca_id,
-            ca: {
-              name: professionals.cas.name,
-              contact_number: professionals.cas.contact_number,
-              email_id: professionals.cas.email_id,
-              office_address: professionals.cas.office_address,
-              licence_number: professionals.cas.licence_number,
-              licence_uploaded_url: professionals.cas.licence_uploaded_url,
-              pan_number: professionals.cas.pan_number,
-              pan_uploaded_url: professionals.cas.pan_uploaded_url,
-              letter_head_uploaded_url: professionals.cas.letter_head_uploaded_url,
-              sign_stamp_uploaded_url: professionals.cas.sign_stamp_uploaded_url
-            }
           });
-          toast.success("✅ Project professionals loaded!");
+
+          if(viewOnly){
+            console.log('viewOnly: ', viewOnly);
+            // Set individual role data
+          setEngineerData({
+            name: professionals.engineers.name,
+            contact_number: professionals.engineers.contact_number,
+            email_id: professionals.engineers.email_id,
+            office_address: professionals.engineers.office_address,
+            licence_number: professionals.engineers.licence_number,
+            licence_uploaded_url: professionals.engineers.licence_uploaded_url,
+            pan_number: professionals.engineers.pan_number,
+            pan_uploaded_url: professionals.engineers.pan_uploaded_url,
+            letter_head_uploaded_url: professionals.engineers.letter_head_uploaded_url,
+            sign_stamp_uploaded_url: professionals.engineers.sign_stamp_uploaded_url
+          });
+          console.log('Engineer: ', engineerData);
+
+          setArchitectData({
+            name: professionals.architects.name,
+            contact_number: professionals.architects.contact_number,
+            email_id: professionals.architects.email_id,
+            office_address: professionals.architects.office_address,
+            licence_number: professionals.architects.licence_number,
+            licence_uploaded_url: professionals.architects.licence_uploaded_url,
+            pan_number: professionals.architects.pan_number,
+            pan_uploaded_url: professionals.architects.pan_uploaded_url,
+            letter_head_uploaded_url: professionals.architects.letter_head_uploaded_url,
+            sign_stamp_uploaded_url: professionals.architects.sign_stamp_uploaded_url
+          });
+          console.log('Architect: ', architectData);
+
+          setCAData({
+            name: professionals.cas.name,
+            contact_number: professionals.cas.contact_number,
+            email_id: professionals.cas.email_id,
+            office_address: professionals.cas.office_address,
+            licence_number: professionals.cas.licence_number,
+            licence_uploaded_url: professionals.cas.licence_uploaded_url,
+            pan_number: professionals.cas.pan_number,
+            pan_uploaded_url: professionals.cas.pan_uploaded_url,
+            letter_head_uploaded_url: professionals.cas.letter_head_uploaded_url,
+            sign_stamp_uploaded_url: professionals.cas.sign_stamp_uploaded_url
+          });
+          console.log('CA: ', caData);
+          }
+
+          
+          
+          
+          
+          
+          
+          // toast.success("✅ Project professionals loaded!");
+
         } catch (error) {
           console.error("❌ Error loading project professionals:", error);
           toast.error(`❌ Failed to load project professionals: ${error.message}`);
@@ -310,10 +333,10 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
             promoter_letter_head_uploaded_url: documents.promoter_letter_head_uploaded_url,
             promoter_sign_stamp_uploaded_url: documents.promoter_sign_stamp_uploaded_url,
           });
-          toast.success("✅ Project documents loaded!");
+          // toast.success("✅ Project documents loaded!");
         } catch (error) {
-          console.error("❌ Error loading project documents:", error);
-          toast.error(`❌ Failed to load project documents: ${error.message}`);
+          // console.error("❌ Error loading project documents:", error);
+          // toast.error(`❌ Failed to load project documents: ${error.message}`);
         }
     
         // 4. Site Progress
@@ -353,7 +376,7 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
             return updatedProgress;
           });
                    
-          toast.success("✅ Site progress loaded!");
+          // toast.success("✅ Site progress loaded!");
         } catch (error) {
           console.error("❌ Error loading site progress:", error);
           toast.error(`❌ Failed to load site progress: ${error.message}`);
@@ -367,41 +390,6 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
     const [engineerOptions, setEngineerOptions] = useState([]);
     const [architectOptions, setArchitectOptions] = useState([]);
     const [casOptions, setCAsOptions] = useState([]);
-    
-    useEffect(() => {
-      if (!viewOnly) {
-        const mapToOptions = (data) =>
-          data.map((item) => ({
-            label: item.name || `ID ${item.id}`,
-            value: item.id,
-          }));
-    
-        async function fetchOptions() {
-          try {
-            const engineers = await databaseService.getAllEngineers();
-            setEngineerOptions(mapToOptions(engineers));
-          } catch (error) {
-            console.error("Error fetching engineers:", error);
-          }
-    
-          try {
-            const architects = await databaseService.getAllArchitects();
-            setArchitectOptions(mapToOptions(architects));
-          } catch (error) {
-            console.error("Error fetching architects:", error);
-          }
-    
-          try {
-            const cas = await databaseService.getAllCAs();
-            setCAsOptions(mapToOptions(cas));
-          } catch (error) {
-            console.error("Error fetching CAs:", error);
-          }
-        }
-    
-        fetchOptions();
-      }
-    }, [id]);
     
     
   
@@ -479,21 +467,67 @@ if (!isValid) return; // Stop form submission
     };    
     
     const handleSubmitProjectProfessionalDetails = async () => {
-      // console.log("Form Data Submitted:", projectProfessionalDetails);
+      console.log("Form Data Submitted:", projectProfessionalDetails);
       // setLoading(true);
       try {
         const response = await databaseService.uploadProjectProfessionalDetails({...projectProfessionalDetails, project_id: projectId});
         console.log("✅ Project professional details uploaded:", response);
         toast.success("✅ Project professional details submitted successfully!");
         setProjectProfessionalDetails(prev => resetObjectData(prev));
-        navigate("/projects"); // 👈 Update the route if needed
+        setActiveTabIndex(p => p+1)
       } catch (error) {
         console.error("❌ Error submitting project professional details:", error);
         toast.error(`❌ Failed to submit professional details: ${error.message}`);
       } finally {
         // setLoading(false);
       }
-    };   
+    }; 
+
+    const handleSubmitEngineer = async () => {
+      console.log("Engineer Data Submitted:", engineerData);
+      try {
+        const response = await databaseService.addEngineer(engineerData);
+        console.log("✅ Engineer details uploaded:", response);
+        toast.success("✅ Engineer details submitted successfully!");
+        setEngineerData(prev => resetObjectData(prev));
+        return true
+      } catch (error) {
+        console.error("❌ Error submitting engineer details:", error);
+        toast.error(`❌ Failed to submit engineer details: ${error.message}`);
+        return false
+      }
+    };
+    
+    const handleSubmitArchitect = async () => {
+      console.log("Architect Data Submitted:", architectData);
+      try {
+        const response = await databaseService.addArchitect(architectData);
+        console.log("✅ Architect details uploaded:", response);
+        toast.success("✅ Architect details submitted successfully!");
+        setArchitectData(prev => resetObjectData(prev));
+        return true
+      } catch (error) {
+        console.error("❌ Error submitting architect details:", error);
+        toast.error(`❌ Failed to submit architect details: ${error.message}`);
+        return false
+      }
+    };
+    
+    const handleSubmitCA = async () => {
+      console.log("CA Data Submitted:", caData);
+      try {
+        const response = await databaseService.addCA(caData);
+        console.log("✅ CA details uploaded:", response);
+        toast.success("✅ CA details submitted successfully!");
+        setCAData(prev => resetObjectData(prev));
+        return true
+      } catch (error) {
+        console.error("❌ Error submitting CA details:", error);
+        toast.error(`❌ Failed to submit CA details: ${error.message}`);
+        return false
+      }
+    };
+    
      
     const handleSubmitProjectUnit = async () => {
       console.log(projectUnit);
@@ -536,6 +570,7 @@ if (!isValid) return; // Stop form submission
         console.log("✅ Project documents uploaded:", response);
         toast.success("✅ Documents submitted successfully!");
         setProjectDocuments(prev => resetObjectData(prev));
+        setActiveTabIndex(p => p+1)
       } catch (error) {
         console.error("❌ Error submitting documents:", error);
         toast.error(`❌ Failed to submit documents: ${error.message}`);
@@ -599,6 +634,41 @@ if (!isValid) return; // Stop form submission
     }
     
     
+        
+    useEffect(() => {
+      if (!viewOnly) {
+        const mapToOptions = (data) =>
+          data.map((item) => ({
+            label: item.name || `ID ${item.id}`,
+            value: item.id,
+          }));
+    
+        async function fetchOptions() {
+          try {
+            const engineers = await databaseService.getAllEngineers();
+            setEngineerOptions(mapToOptions(engineers));
+          } catch (error) {
+            console.error("Error fetching engineers:", error);
+          }
+    
+          try {
+            const architects = await databaseService.getAllArchitects();
+            setArchitectOptions(mapToOptions(architects));
+          } catch (error) {
+            console.error("Error fetching architects:", error);
+          }
+    
+          try {
+            const cas = await databaseService.getAllCAs();
+            setCAsOptions(mapToOptions(cas));
+          } catch (error) {
+            console.error("Error fetching CAs:", error);
+          }
+        }
+    
+        fetchOptions();
+      }
+    }, [id]);
   
 
   const commonInputStyles =
@@ -629,9 +699,24 @@ if (!isValid) return; // Stop form submission
             disabled={viewOnly}
             handleSubmitProjectProfessionalDetails={handleSubmitProjectProfessionalDetails}
 
+            engineerData={engineerData}
+            setEngineerData={setEngineerData}
+            handleSubmitEngineer={handleSubmitEngineer}
+
+            architectData={architectData}
+            setArchitectData={setArchitectData}
+            handleSubmitArchitect={handleSubmitArchitect}
+
+            caData={caData}
+            setCAData={setCAData}
+            handleSubmitCA={handleSubmitCA}
+
             engineerOptions={engineerOptions}
+            setEngineerOptions={setEngineerOptions}
             architectOptions={architectOptions}
+            setArchitectOptions={setArchitectOptions}
             casOptions={casOptions}
+            setCAsOptions={setCAsOptions}
           />
           )}
 

@@ -24,6 +24,9 @@ import { uploadProjectFiles,
     updateProjectData,
     getUnitById,
     updateProjectUnits,
+    addEngineer,
+    addArchitect,
+    addCA
 } from '../controllers/projectController.js';
 import {upload} from '../supabase/supabaseClient.js'
 
@@ -50,6 +53,10 @@ router.get('/cas/get-all', protect, getAllCAs);
 router.delete('/units/delete/:id', protect, softDeleteProjectUnitById);
 
 router.post('/add-project-professionals', protect, adddProjectProfessionals);
+
+router.post('/professional-details/add/engineer', protect, addEngineer);
+router.post('/professional-details/add/architect', protect, addArchitect);
+router.post('/professional-details/add/ca', protect, addCA);
 
 router.get('/get-project-professionals/:id', protect, getProjectProfessionalData);
 
