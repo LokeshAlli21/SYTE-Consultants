@@ -26,6 +26,7 @@ function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDe
       return
     }
     const fetchUnits = async () => {
+      if(projectId){
       try {
         const data = await databaseService.getAllUnitsForProject(projectId);
         console.log(data);
@@ -36,6 +37,7 @@ function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDe
       } finally {
         setLoading(false);
       }
+    }
     };
     fetchUnits();
     setFormData(resetObjectData(formData))

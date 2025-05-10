@@ -16,6 +16,7 @@ import ProjectDocumentForm from "./forms/ProjectDocumentForm";
 import ProjectProgresssForm from  './forms/ProjectProgresssForm'
 import AssignmentForm from "./forms/AssignmentForm";
 import ChannelPartnerForm from "./forms/ChannelPartnerForm";
+import CascadingDropdowns from "./forms/CascadingDropdowns";
 
 export {
     PromoterForm,
@@ -36,4 +37,5 @@ export {
     ProjectProgresssForm,
     AssignmentForm,
     ChannelPartnerForm,
+    CascadingDropdowns,
 }

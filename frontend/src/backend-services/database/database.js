@@ -1508,6 +1508,7 @@ async deleteAssignmentById(id) {
 // CitiesAndDistricts
 
 async getAllCitiesAndDistricts ()  {
+
   const cityOptions = [
     { value: 'Mumbai', label: 'Mumbai' },
     { value: 'Pune', label: 'Pune' },
@@ -1548,42 +1549,390 @@ async getAllCitiesAndDistricts ()  {
   ];
 
   const districtOptions = [
-    { value: 'Ahmednagar', label: 'Ahmednagar' },
-    { value: 'Akola', label: 'Akola' },
-    { value: 'Amravati', label: 'Amravati' },
-    { value: 'Aurangabad', label: 'Aurangabad' },
-    { value: 'Beed', label: 'Beed' },
-    { value: 'Bhandara', label: 'Bhandara' },
-    { value: 'Buldhana', label: 'Buldhana' },
-    { value: 'Chandrapur', label: 'Chandrapur' },
-    { value: 'Dhule', label: 'Dhule' },
-    { value: 'Gadchiroli', label: 'Gadchiroli' },
-    { value: 'Gondia', label: 'Gondia' },
-    { value: 'Hingoli', label: 'Hingoli' },
-    { value: 'Jalgaon', label: 'Jalgaon' },
-    { value: 'Jalna', label: 'Jalna' },
-    { value: 'Kolhapur', label: 'Kolhapur' },
-    { value: 'Latur', label: 'Latur' },
-    { value: 'Mumbai City', label: 'Mumbai City' },
-    { value: 'Mumbai Suburban', label: 'Mumbai Suburban' },
-    { value: 'Nandurbar', label: 'Nandurbar' },
-    { value: 'Nanded', label: 'Nanded' },
-    { value: 'Nashik', label: 'Nashik' },
-    { value: 'Osmanabad', label: 'Osmanabad' },
-    { value: 'Palghar', label: 'Palghar' },
-    { value: 'Parbhani', label: 'Parbhani' },
-    { value: 'Pune', label: 'Pune' },
-    { value: 'Raigad', label: 'Raigad' },
-    { value: 'Ratnagiri', label: 'Ratnagiri' },
-    { value: 'Sangli', label: 'Sangli' },
-    { value: 'Satara', label: 'Satara' },
-    { value: 'Sindhudurg', label: 'Sindhudurg' },
-    { value: 'Solapur', label: 'Solapur' },
-    { value: 'Thane', label: 'Thane' },
-    { value: 'Wardha', label: 'Wardha' },
-    { value: 'Washim', label: 'Washim' },
-    { value: 'Yavatmal', label: 'Yavatmal' },
-    { value: 'Nagpur', label: 'Nagpur' }
+    { value: 'Ahmednagar', label: 'Ahmednagar', 
+      city:[
+        { label: "Akole", value: "Akole" },
+        { label: "Jamkhed", value: "Jamkhed" },
+        { label: "Karjat", value: "Karjat" },
+        { label: "Kopargaon", value: "Kopargaon" },
+        { label: "Nagar", value: "Nagar" },
+        { label: "Nevasa", value: "Nevasa" },
+        { label: "Parner", value: "Parner" },
+        { label: "Pathardi", value: "Pathardi" },
+        { label: "Rahta", value: "Rahta" },
+        { label: "Rahuri", value: "Rahuri" },
+        { label: "Sangamner", value: "Sangamner" },
+        { label: "Shevgaon", value: "Shevgaon" },
+        { label: "Shrigonda", value: "Shrigonda" },
+        { label: "Shrirampur", value: "Shrirampur" }
+        ]
+    },
+    { value: 'Akola', label: 'Akola', 
+      city:[
+        { label: "Akola", value: "Akola" },
+        { label: "Akot", value: "Akot" },
+        { label: "Balapur", value: "Balapur" },
+        { label: "Barshitakli", value: "Barshitakli" },
+        { label: "Murtijapur", value: "Murtijapur" },
+        { label: "Patur", value: "Patur" },
+        { label: "Telhara", value: "Telhara" }
+      ]
+    },
+    { value: 'Amravati', label: 'Amravati', 
+      city:[
+        { label: "Achalpur", value: "Achalpur" },
+        { label: "Amravati", value: "Amravati" },
+        { label: "Anjangaon Surji", value: "Anjangaon Surji" },
+        { label: "Bhatkuli", value: "Bhatkuli" },
+        { label: "Chandur Railway", value: "Chandur Railway" },
+        { label: "Chandurbazar", value: "Chandurbazar" },
+        { label: "Chikhaldara", value: "Chikhaldara" },
+        { label: "Daryapur", value: "Daryapur" },
+        { label: "Dhamangaon Railway", value: "Dhamangaon Railway" },
+        { label: "Dharni", value: "Dharni" },
+        { label: "Morshi", value: "Morshi" },
+        { label: "Nandgaon-Khandeshwar", value: "Nandgaon-Khandeshwar" },
+        { label: "Tiosa", value: "Tiosa" },
+        { label: "Warud", value: "Warud" }
+      ]},
+    { value: 'Aurangabad', label: 'Aurangabad', 
+      city:[
+        { label: "Chhatrapati Sambhajinagar", value: "Chhatrapati Sambhajinagar" },
+        { label: "Gangapur", value: "Gangapur" },
+        { label: "Kannad", value: "Kannad" },
+        { label: "Khuldabad", value: "Khuldabad" },
+        { label: "Paithan", value: "Paithan" },
+        { label: "Phulambri", value: "Phulambri" },
+        { label: "Sillod", value: "Sillod" },
+        { label: "Soegaon", value: "Soegaon" },
+        { label: "Vaijapur", value: "Vaijapur" }
+      ]},
+    { value: 'Beed', label: 'Beed', 
+      city:[
+        { label: "Ambejogai", value: "Ambejogai" },
+        { label: "Ashti", value: "Ashti" },
+        { label: "Beed", value: "Beed" },
+        { label: "Dharur", value: "Dharur" },
+        { label: "Georai", value: "Georai" },
+        { label: "Kaij", value: "Kaij" },
+        { label: "Majalgaon", value: "Majalgaon" },
+        { label: "Parli", value: "Parli" },
+        { label: "Patoda", value: "Patoda" },
+        { label: "Shirur (Kasar)", value: "Shirur (Kasar)" },
+        { label: "Wadwani", value: "Wadwani" }
+      ]},
+    { value: 'Bhandara', label: 'Bhandara', 
+      city:[
+        { label: "Bhandara", value: "Bhandara" },
+        { label: "Lakhandur", value: "Lakhandur" },
+        { label: "Lakhani", value: "Lakhani" },
+        { label: "Mohadi", value: "Mohadi" },
+        { label: "Pauni", value: "Pauni" },
+        { label: "Sakoli", value: "Sakoli" },
+        { label: "Tumsar", value: "Tumsar" }
+      ]},
+    { value: 'Buldhana', label: 'Buldhana', 
+      city:[
+        { label: "Buldana", value: "Buldana" },
+        { label: "Chikhli", value: "Chikhli" },
+        { label: "Deolgaon Raja", value: "Deolgaon Raja" },
+        { label: "Jalgaon (Jamod)", value: "Jalgaon (Jamod)" },
+        { label: "Khamgaon", value: "Khamgaon" },
+        { label: "Lonar", value: "Lonar" },
+        { label: "Malkapur", value: "Malkapur" },
+        { label: "Mehkar", value: "Mehkar" },
+        { label: "Motala", value: "Motala" },
+        { label: "Nandura", value: "Nandura" },
+        { label: "Sangrampur", value: "Sangrampur" },
+        { label: "Shegaon", value: "Shegaon" },
+        { label: "Sindkhed Raja", value: "Sindkhed Raja" }
+      ]
+      },
+    { value: 'Chandrapur', label: 'Chandrapur', 
+      city:[
+        { label: "Ballarpur", value: "Ballarpur" },
+        { label: "Bhadravati", value: "Bhadravati" },
+        { label: "Brahmapuri", value: "Brahmapuri" },
+        { label: "Chandrapur", value: "Chandrapur" },
+        { label: "Chimur", value: "Chimur" },
+        { label: "Gondpipri", value: "Gondpipri" },
+        { label: "Jiwati", value: "Jiwati" },
+        { label: "Korpana", value: "Korpana" },
+        { label: "Mul", value: "Mul" },
+        { label: "Nagbhid", value: "Nagbhid" },
+        { label: "Pombhurna", value: "Pombhurna" },
+        { label: "Rajura", value: "Rajura" },
+        { label: "Sawali", value: "Sawali" },
+        { label: "Sindewahi", value: "Sindewahi" },
+        { label: "Warora", value: "Warora" }
+      ]
+      },
+    { value: 'Dhule', label: 'Dhule', 
+      city:[
+        { label: "Dhule", value: "Dhule" },
+        { label: "Sakri", value: "Sakri" },
+        { label: "Shirpur", value: "Shirpur" },
+        { label: "Sindkhede", value: "Sindkhede" }
+      ]
+      },
+    { value: 'Gadchiroli', label: 'Gadchiroli', 
+      city:[
+        { label: "Aheri", value: "Aheri" },
+        { label: "Armori", value: "Armori" },
+        { label: "Bhamragad", value: "Bhamragad" },
+        { label: "Chamorshi", value: "Chamorshi" },
+        { label: "Desaiganj (Vadasa)", value: "Desaiganj (Vadasa)" },
+        { label: "Dhanora", value: "Dhanora" },
+        { label: "Etapalli", value: "Etapalli" },
+        { label: "Gadchiroli", value: "Gadchiroli" },
+        { label: "Korchi", value: "Korchi" },
+        { label: "Kurkheda", value: "Kurkheda" },
+        { label: "Mulchera", value: "Mulchera" },
+        { label: "Sironcha", value: "Sironcha" }
+      ]
+      },
+    { value: 'Gondia', label: 'Gondia', 
+      city:[
+        { label: "Amgaon", value: "Amgaon" },
+        { label: "Arjuni Morgaon", value: "Arjuni Morgaon" },
+        { label: "Deori", value: "Deori" },
+        { label: "Gondiya", value: "Gondiya" },
+        { label: "Goregaon", value: "Goregaon" },
+        { label: "Sadak-Arjuni", value: "Sadak-Arjuni" },
+        { label: "Salekasa", value: "Salekasa" },
+        { label: "Tirora", value: "Tirora" }
+      ]
+      },
+    { value: 'Hingoli', label: 'Hingoli', 
+      city:[
+        { label: "Aundha (Nagnath)", value: "Aundha (Nagnath)" },
+        { label: "Hingoli", value: "Hingoli" },
+        { label: "Kalamnuri", value: "Kalamnuri" },
+        { label: "Sengaon", value: "Sengaon" },
+        { label: "Vasmath", value: "Vasmath" }
+      ]
+      },
+    { value: 'Jalgaon', label: 'Jalgaon', 
+      city:[
+        { label: "Amalner", value: "Amalner" },
+        { label: "Bhadgaon", value: "Bhadgaon" },
+        { label: "Bhusawal", value: "Bhusawal" },
+        { label: "Bodvad", value: "Bodvad" },
+        { label: "Chalisgaon", value: "Chalisgaon" },
+        { label: "Chopda", value: "Chopda" },
+        { label: "Dharangaon", value: "Dharangaon" },
+        { label: "Erandol", value: "Erandol" },
+        { label: "Jalgaon", value: "Jalgaon" },
+        { label: "Jamner", value: "Jamner" },
+        { label: "Muktainagar (Edlabad)", value: "Muktainagar (Edlabad)" },
+        { label: "Pachora", value: "Pachora" },
+        { label: "Parola", value: "Parola" },
+        { label: "Raver", value: "Raver" },
+        { label: "Yawal", value: "Yawal" }
+      ]
+      },
+    { value: 'Jalna', label: 'Jalna', 
+      city:[
+        { label: "Ambad", value: "Ambad" },
+        { label: "Badnapur", value: "Badnapur" },
+        { label: "Bhokardan", value: "Bhokardan" },
+        { label: "Ghansawangi", value: "Ghansawangi" },
+        { label: "Jafrabad", value: "Jafrabad" },
+        { label: "Jalna", value: "Jalna" },
+        { label: "Mantha", value: "Mantha" },
+        { label: "Partur", value: "Partur" }
+      ]
+      },
+    { value: 'Kolhapur', label: 'Kolhapur', 
+      city:[
+        { label: "Ajra", value: "Ajra" },
+        { label: "Bhudargad", value: "Bhudargad" },
+        { label: "Chandgad", value: "Chandgad" },
+        { label: "Gadhinglaj", value: "Gadhinglaj" },
+        { label: "Gaganbawada", value: "Gaganbawada" },
+        { label: "Hatkanangle", value: "Hatkanangle" },
+        { label: "Kagal", value: "Kagal" },
+        { label: "Karvir", value: "Karvir" },
+        { label: "Panhala", value: "Panhala" },
+        { label: "Radhanagari", value: "Radhanagari" },
+        { label: "Shahuwadi", value: "Shahuwadi" },
+        { label: "Shirol", value: "Shirol" }
+      ]
+      },
+    { value: 'Latur', label: 'Latur', 
+      city:[
+        { label: "Ahmadpur", value: "Ahmadpur" },
+        { label: "Ausa", value: "Ausa" },
+        { label: "Chakur", value: "Chakur" },
+        { label: "Deoni", value: "Deoni" },
+        { label: "Jalkot", value: "Jalkot" },
+        { label: "Latur", value: "Latur" },
+        { label: "Nilanga", value: "Nilanga" },
+        { label: "Renapur", value: "Renapur" },
+        { label: "Shirur Anantpal", value: "Shirur Anantpal" },
+        { label: "Udgir", value: "Udgir" }
+      ]
+      },
+    { value: 'Mumbai', label: 'Mumbai', 
+      city:[
+        {value: 'Mumbai City', label: 'Mumbai City'}
+      ]},
+    { value: 'Mumbai Suburban', label: 'Mumbai Suburban', 
+      city:[
+        { label: "Andheri", value: "Andheri" },
+        { label: "Borivali", value: "Borivali" },
+        { label: "Kurla", value: "Kurla" }
+      ]
+      },
+    { value: 'Nandurbar', label: 'Nandurbar', 
+      city:[
+        { label: "Akkalkuwa", value: "Akkalkuwa" },
+        { label: "Akrani", value: "Akrani" },
+        { label: "Nandurbar", value: "Nandurbar" },
+        { label: "Nawapur", value: "Nawapur" },
+        { label: "Shahade", value: "Shahade" },
+        { label: "Talode", value: "Talode" }
+      ]
+      },
+    { value: 'Nanded', label: 'Nanded', 
+      city:[
+        { label: "Ardhapur", value: "Ardhapur" },
+        { label: "Bhokar", value: "Bhokar" },
+        { label: "Biloli", value: "Biloli" },
+        { label: "Deglur", value: "Deglur" },
+        { label: "Dharmabad", value: "Dharmabad" },
+        { label: "Hadgaon", value: "Hadgaon" },
+        { label: "Himayatnagar", value: "Himayatnagar" },
+        { label: "Kandhar", value: "Kandhar" },
+        { label: "Kinwat", value: "Kinwat" },
+        { label: "Loha", value: "Loha" },
+        { label: "Mahur", value: "Mahur" },
+        { label: "Mudkhed", value: "Mudkhed" },
+        { label: "Mukhed", value: "Mukhed" },
+        { label: "Naigaon (Khairgaon)", value: "Naigaon (Khairgaon)" },
+        { label: "Nanded", value: "Nanded" },
+        { label: "Umri", value: "Umri" }
+      ]
+      },
+    { value: 'Nashik', label: 'Nashik', 
+      city:[
+        { label: "Baglan", value: "Baglan" },
+        { label: "Chandvad", value: "Chandvad" },
+        { label: "Deola", value: "Deola" },
+        { label: "Dindori", value: "Dindori" },
+        { label: "Igatpuri", value: "Igatpuri" },
+        { label: "Kalwan", value: "Kalwan" },
+        { label: "Malegaon", value: "Malegaon" },
+        { label: "Nandgaon", value: "Nandgaon" },
+        { label: "Nashik", value: "Nashik" },
+        { label: "Niphad", value: "Niphad" },
+        { label: "Peth", value: "Peth" },
+        { label: "Sinnar", value: "Sinnar" },
+        { label: "Surgana", value: "Surgana" },
+        { label: "Trimbakeshwar", value: "Trimbakeshwar" },
+        { label: "Yevla", value: "Yevla" }
+      ]
+      },
+    { value: 'Osmanabad', label: 'Osmanabad', 
+      city:[
+        { label: "Bhum", value: "Bhum" },
+        { label: "Dharashiv", value: "Dharashiv" },
+        { label: "Kalamb", value: "Kalamb" },
+        { label: "Lohara", value: "Lohara" },
+        { label: "Omarga", value: "Omarga" },
+        { label: "Paranda", value: "Paranda" },
+        { label: "Tuljapur", value: "Tuljapur" },
+        { label: "Washi", value: "Washi" }
+      ]
+      },
+    // { value: 'Palghar', label: 'Palghar', 
+    //   city:},
+    { value: 'Parbhani', label: 'Parbhani', 
+      city:[
+        { label: "Gangakhed", value: "Gangakhed" },
+        { label: "Jintur", value: "Jintur" },
+        { label: "Manwath", value: "Manwath" },
+        { label: "Palam", value: "Palam" },
+        { label: "Parbhani", value: "Parbhani" },
+        { label: "Pathri", value: "Pathri" },
+        { label: "Purna", value: "Purna" },
+        { label: "Selu", value: "Selu" },
+        { label: "Sonpeth", value: "Sonpeth" }
+      ]
+      },
+    { value: 'Pune', label: 'Pune', 
+      city:[
+        { label: "Ambegaon", value: "Ambegaon" },
+        { label: "Baramati", value: "Baramati" },
+        { label: "Bhor", value: "Bhor" },
+        { label: "Daund", value: "Daund" },
+        { label: "Haveli", value: "Haveli" },
+        { label: "Indapur", value: "Indapur" },
+        { label: "Junnar", value: "Junnar" },
+        { label: "Khed", value: "Khed" },
+        { label: "Mawal", value: "Mawal" },
+        { label: "Mulshi", value: "Mulshi" },
+        { label: "Pune City", value: "Pune City" },
+        { label: "Purandhar", value: "Purandhar" },
+        { label: "Shirur", value: "Shirur" },
+        { label: "Velhe", value: "Velhe" }
+      ]
+      },
+    { value: 'Raigad', label: 'Raigad', 
+      city:[
+        { label: "Alibag", value: "Alibag" },
+        { label: "Karjat", value: "Karjat" },
+        { label: "Khalapur", value: "Khalapur" },
+        { label: "Mahad", value: "Mahad" },
+        { label: "Mangaon", value: "Mangaon" },
+        { label: "Mhasla", value: "Mhasla" },
+        { label: "Murud", value: "Murud" },
+        { label: "Panvel", value: "Panvel" },
+        { label: "Pen", value: "Pen" },
+        { label: "Poladpur", value: "Poladpur" },
+        { label: "Roha", value: "Roha" },
+        { label: "Shrivardhan", value: "Shrivardhan" },
+        { label: "Sudhagad", value: "Sudhagad" },
+        { label: "Tala", value: "Tala" },
+        { label: "Uran", value: "Uran" }
+      ]
+      },
+    // { value: 'Ratnagiri', label: 'Ratnagiri', 
+    //   city:},
+    // { value: 'Sangli', label: 'Sangli', 
+    //   city:},
+    // { value: 'Satara', label: 'Satara', 
+    //   city:},
+    // { value: 'Sindhudurg', label: 'Sindhudurg', 
+    //   city:},
+    // { value: 'Solapur', label: 'Solapur', 
+    //   city:},
+    // { value: 'Thane', label: 'Thane', 
+    //   city:},
+    // { value: 'Wardha', label: 'Wardha', 
+    //   city:},
+    // { value: 'Washim', label: 'Washim', 
+    //   city:},
+    // { value: 'Yavatmal', label: 'Yavatmal', 
+    //   city:},
+    { value: 'Nagpur', label: 'Nagpur', 
+      city:[
+        { label: "Bhiwapur", value: "Bhiwapur" },
+        { label: "Hingna", value: "Hingna" },
+        { label: "Kalameshwar", value: "Kalameshwar" },
+        { label: "Kamptee", value: "Kamptee" },
+        { label: "Katol", value: "Katol" },
+        { label: "Kuhi", value: "Kuhi" },
+        { label: "Mauda", value: "Mauda" },
+        { label: "Nagpur (Rural)", value: "Nagpur (Rural)" },
+        { label: "Nagpur (Urban)", value: "Nagpur (Urban)" },
+        { label: "Narkhed", value: "Narkhed" },
+        { label: "Parseoni", value: "Parseoni" },
+        { label: "Ramtek", value: "Ramtek" },
+        { label: "Savner", value: "Savner" },
+        { label: "Umred", value: "Umred" }
+      ]
+      }
   ];
 
   return { cityOptions, districtOptions };

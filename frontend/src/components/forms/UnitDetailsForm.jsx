@@ -7,16 +7,30 @@ const unitTypeOptions = [
   { value: '2 BHK', label: '2 BHK' },
   { value: '3 BHK', label: '3 BHK' },
   { value: '4 BHK', label: '4 BHK' },
+  { value: 'Duplex', label: 'Duplex' },
+  { value: 'Office Space', label: 'Office Space' },
+  { value: 'Other', label: 'Other' },
   { value: '5 BHK', label: '5 BHK' },
-  { value: 'shop', label: 'Shop' },
-  { value: 'office', label: 'Office' },
-  { value: 'plot', label: 'Plot' },
+  { value: '6 BHK', label: '6 BHK' },
+  { value: 'Bunglow', label: 'Bunglow' },
+  { value: 'Shops', label: 'Shops' },
+  { value: 'Showroom', label: 'Showroom' },
+  { value: 'Hall', label: 'Hall' },
+  { value: 'Amenity', label: 'Amenity' },
+  { value: 'Multi Purpose Room', label: 'Multi Purpose Room' },
+  { value: '1 Room Kitchen', label: '1 Room Kitchen' },
+  { value: 'Row Houses', label: 'Row Houses' }
 ];
 
 const unitStatusOptions = [
-  { value: 'booked', label: 'Booked' },
-  { value: 'sold', label: 'Sold' },
-  { value: 'unsold', label: 'Unsold' },
+  { value: 'Sold', label: 'Sold' },
+  { value: 'Unsold', label: 'Unsold' },
+  { value: 'Booked', label: 'Booked' },
+  { value: 'Mortgage', label: 'Mortgage' },
+  { value: 'Reservation', label: 'Reservation' },
+  { value: 'Rehab', label: 'Rehab' },
+  { value: 'Land Owner/Investor Share (Not for Sale)', label: 'Land Owner/Investor Share (Not for Sale)' },
+  { value: 'Land Owner/Investor Share (for Sale)', label: 'Land Owner/Investor Share (for Sale)' }
 ];
 
 
@@ -271,10 +285,6 @@ isDisabled={disabled}
     }}
   />
 </div>
-        </div>
-
-        {/* Customer Details */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className='flex flex-col'>
           <label className="mb-2 font-medium">Customer Name</label>
           <input
@@ -288,57 +298,73 @@ disabled={disabled}
 
 <div className='flex flex-col'>
           <label className="mb-2 font-medium">Agreement Value</label>
-          <input
+          <div className="relative">
+            <input
 disabled={disabled}
             type="number"
             name="agreement_value"
             value={formData.agreement_value || ''}
             onChange={handleChange}
-            className={commonInputStyles}
-          /></div>
-
-<div className='flex flex-col'>
-          <label className="mb-2 font-medium">Agreement or Sale Deed Date</label>
-          <input
-disabled={disabled}
-            type="date"
-            name="agreement_or_sale_deed_date"
-            value={formData.agreement_or_sale_deed_date || ''}
-            onChange={handleChange}
-            className={commonInputStyles}
+            className={`${commonInputStyles} pr-10 appearance-none
+              [&::-webkit-inner-spin-button]:appearance-none 
+              [&::-webkit-outer-spin-button]:appearance-none 
+              moz:appearance-none`}
           />
-          </div>
-
-
-          {[
-          '2018_19', '2019_20', '2020_21', '2021_22',
-          '2022_23', '2023_24', '2024_25', '2025_26',
-          '2026_27', '2027_28', '2028_29', '2029_30'
-        ].map((year) => (
-          <div className="flex flex-col" key={year}>
-            <label className="mb-2 font-medium">Received FY {year}</label>
-
-            <div className="relative">
-              <input
-                disabled={disabled}
-                type="number"
-                name={`received_fy_${year}`}
-                value={formData[`received_fy_${year}`] || ''}
-                onChange={(e) => handleFyChange(e, year)}
-                className={`${commonInputStyles} pr-10 appearance-none 
-                  [&::-webkit-inner-spin-button]:appearance-none 
-                  [&::-webkit-outer-spin-button]:appearance-none 
-                  moz:appearance-none`}
-              />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
                 ₹
               </span>
-            </div>
           </div>
-        ))}
-
-
+              </div>
         </div>
+
+        {/* Customer Details in Table Format */}
+        <div className='bg-white rounded-xl mt-[-10px]'>
+          <h2 className="text-xl font-bold text-[#4a9899] mb-4">Customer Payment Received
+            {/* to increase financial years needs changes in database schema,  */}
+          </h2>
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-300 text-md">
+              <thead className="bg-gray-100 border-gray-300 text-[#5caaab] font-semibold">
+                <tr>
+                  <th className="border border-gray-300 p-2 text-center w-15">Sr No</th>
+                  <th className="border border-gray-300 p-2 text-left">Financial Year</th>
+                  <th className="border border-gray-300 p-2 text-left">Received Amount (₹)</th>
+                </tr>
+              </thead>
+              <tbody> 
+                {[
+                  '2018_19', '2019_20', '2020_21', '2021_22',
+                  '2022_23', '2023_24', '2024_25', '2025_26',
+                  '2026_27', '2027_28', '2028_29', '2029_30'
+                ].map((year, index) => (
+                  <tr key={year} className="even:bg-gray-50">
+                    <td className="border border-gray-300 p-2 text-center">{index + 1}</td>
+                    <td className="border border-gray-300 p-2">FY {year.replace('_', '-')}</td>
+                    <td className="border border-gray-300 p-2">
+                      <div className="relative">
+                        <input
+                          disabled={disabled}
+                          type="number"
+                          name={`received_fy_${year}`}
+                          value={formData[`received_fy_${year}`] || ''}
+                          onChange={(e) => handleFyChange(e, year)}
+                          className={`${commonInputStyles} pr-10 appearance-none 
+                            [&::-webkit-inner-spin-button]:appearance-none 
+                            [&::-webkit-outer-spin-button]:appearance-none 
+                            moz:appearance-none`}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                          ₹
+                        </span>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
 
         {/* Financial Year Received Amounts */}
         <div className="grid grid-cols-2 gap-4">
@@ -404,6 +430,30 @@ disabled={disabled}
   filePreview={filePreviews.sale_deed_uploaded_url}
   onDelete={() => handleFileDelete("sale_deed_uploaded_url")}
 />
+
+<div className='flex flex-col'>
+          <label className="mb-2 font-medium">Agreement or Sale Deed Date</label>
+          <input
+disabled={disabled}
+            type="date"
+            name="agreement_or_sale_deed_date"
+            value={formData.agreement_or_sale_deed_date || ''}
+            onChange={handleChange}
+            className={commonInputStyles}
+          />
+          </div>
+{/* // TODO */}
+          <div className='flex flex-col'>
+          <label className="mb-2 font-medium">Agreement or Sale Deed Date</label>
+          <input
+disabled={disabled}
+            type="date"
+            name="agreement_or_sale_deed_date"
+            value={formData.agreement_or_sale_deed_date || ''}
+            onChange={handleChange}
+            className={commonInputStyles}
+          />
+          </div>
         </div>
 
         {/* Submit Button */}

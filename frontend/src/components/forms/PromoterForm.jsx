@@ -598,12 +598,36 @@ disabled={disabled}
     options={[
       { label: 'Individual', value: 'individual' },
       { label: 'Partnership Firm', value: 'partnership_firm' },
-      { label: 'PVT LTD', value: 'pvt_ltd' }
+      { label: 'PVT LTD', value: 'pvt_ltd' },
+      { label: 'Hindu Undivided Family', value: 'hindu_undivided_family' },
+      { label: 'Proprietor', value: 'proprietor' },
+      { label: 'Company', value: 'company' },
+      { label: 'Partnership', value: 'partnership' },
+      { label: 'Limited Liability Partnership', value: 'limited_liability_partnership' },
+      { label: 'Trust', value: 'trust' },
+      { label: 'Society', value: 'society' },
+      { label: 'Public Authority', value: 'public_authority' },
+      { label: 'AOP/BOI', value: 'aop_boi' },
+      { label: 'Joint Venture', value: 'joint_venture' },
+      { label: 'Others', value: 'others' }
     ]}
     value={{
-      label: formData.promoter_type === 'individual' ? 'Individual' :
-             formData.promoter_type === 'partnership_firm' ? 'Partnership Firm' :
-             formData.promoter_type === 'pvt_ltd' ? 'PVT LTD' : "",
+      label: 
+        formData.promoter_type === 'individual' ? 'Individual' :
+        formData.promoter_type === 'partnership_firm' ? 'Partnership Firm' :
+        formData.promoter_type === 'pvt_ltd' ? 'PVT LTD':
+        formData.promoter_type === 'hindu_undivided_family' ? 'Hindu Undivided Family' :
+        formData.promoter_type === 'proprietor' ? 'Proprietor' :
+        formData.promoter_type === 'company' ? 'Company' :
+        formData.promoter_type === 'partnership' ? 'Partnership' :
+        formData.promoter_type === 'limited_liability_partnership' ? 'Limited Liability Partnership' :
+        formData.promoter_type === 'trust' ? 'Trust' :
+        formData.promoter_type === 'society' ? 'Society' :
+        formData.promoter_type === 'public_authority' ? 'Public Authority' :
+        formData.promoter_type === 'aop_boi' ? 'AOP/BOI' :
+        formData.promoter_type === 'joint_venture' ? 'Joint Venture' :
+        formData.promoter_type === 'others' ? 'Others' :
+        '',
       value: formData.promoter_type
     }}
     required={true}

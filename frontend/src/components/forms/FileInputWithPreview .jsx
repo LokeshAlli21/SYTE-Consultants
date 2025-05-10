@@ -59,26 +59,38 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, di
   return (
     <div className="flex flex-col gap-2">
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      {!filePreview &&
+
+       {disabled && !filePreview &&
+      <h3 className='flex font-medium flex-col items-center justify-center bg-gray-50 text-[#ff0800]  border-gray-300 w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition' >Not exists</h3>
+      }
+
+
+      {!filePreview && !disabled &&
         <div
-        className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition ${dragging ? 'border-[#5caaab] bg-gray-100' : 'border-gray-300 bg-gray-50'}`}
+        className={`flex flex-col items-center justify-center w-full h-12 border-2 border-dashed rounded-lg cursor-pointer transition ${dragging ? 'border-[#5caaab] bg-gray-100' : 'border-gray-300 bg-gray-50'}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         onClick={() => inputRef.current.click()}
       >
-        <div className="flex flex-col items-center justify-start pt-5 pb-6">
+        <div className="flex flex-row items-center w-full justify-around p-4">
           {fileName ? (
             <p className="text-sm text-[#5caaab] font-semibold">{fileName}</p>
           ) : (
             <>
-              <div className="w-8 h-8 mb-2">
-                <FaFilePdf className="text-[#5caaab]" />
+              <div className=" mb-1 w-10">
+                <FaFilePdf className="text-[#5caaab] h-12 mx-auto" />
               </div>
-              <p className="mb-1 text-sm text-[#5caaab] font-semibold">Click or drag to upload</p>
-              <p className="text-xs text-gray-500">Images or PDF
-                {/* (max 20MB) */}
+              <div className='flex flex-row items-center w-full justify-center gap-2 '>
+                <p className="mb-1 text-sm text-[#5caaab] font-semibold">Click or drag to upload</p>
+              <p className="text-xs text-gray-500 mb-1">(Image or PDF)
+                
                 </p>
+                {/* <span className="text-xs text-gray-500">
+                (max 20MB)
+
+                </span> */}
+              </div>
             </>
           )}
         </div>
@@ -96,14 +108,14 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, di
 
 {/* File Preview */}
 {filePreview && (
-  <div className="relative flex items-center justify-around mt-3">
+  <div className="relative flex items-center justify-around ">
     {(typeof filePreview === 'object' && filePreview?.type?.startsWith('image/')) ||
     (typeof filePreview === 'string' &&
       filePreview.match(/\.(jpeg|jpg|png|gif|webp|png)$/i)) ? (
       <img
         src={typeof filePreview === 'object' ? filePreview.url : filePreview}
         alt="Preview"
-        className="h-32 w-auto rounded-md object-cover border shadow-sm cursor-pointer"
+        className="h-12 w-auto rounded-md object-cover border shadow-sm cursor-pointer"
         onClick={handlePreviewClick}
       />
     ) : (
@@ -121,7 +133,7 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, di
     <button
       type="button"
       onClick={handleDelete}
-      className="relative py-1 px-2 text-red-600 font-bold text-lg bg-transparent rounded-xl shadow-xl shadow-neutral-50 hover:bg-zinc-100 transition-all"
+      className="relative py-2 px-5 text-red-600 font-bold text-lg bg-transparent rounded-xl shadow-sm shadow-neutral-50 hover:bg-zinc-100 transition-all"
       title="Remove selected file"
     >
       Delete ❌
@@ -138,7 +150,7 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, di
         <img
           src={fullScreenPreview}
           alt="Full Screen Preview"
-          className="max-w-full max-h-full min-w-[50vw] min-h-[50vh] object-contain"
+          className="max-w-full h-[90vh] min-w-[50vw] object-contain"
         />
       ) : (
         <iframe
