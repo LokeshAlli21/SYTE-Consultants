@@ -372,51 +372,67 @@ CREATE TABLE project_documents (
 -- 13.	Electrical meter room, sub-station, receiving station			
 
 -- Creating the SiteProgress table
+-- Table to track progress for each project
 CREATE TABLE site_progress (
-    id SERIAL PRIMARY KEY,
-    project_id INT NOT NULL unique,
+    id SERIAL PRIMARY KEY,  -- Unique ID for the site progress entry
+    project_id INT NOT NULL UNIQUE,  -- Foreign Key to the projects table
+    -- Foreign Key referencing the 'projects' table, ensures each entry is linked to a specific project
+    FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+);
 
-    CONSTRAINT fk_project_site_progress
-        FOREIGN KEY (project_id)
-        REFERENCES projects(id)
-        ON DELETE CASCADE,
+-- Table to store building progress details linked to site progress
+CREATE TABLE building_progress (
+    id SERIAL PRIMARY KEY,  -- Unique ID for the building progress entry
+    site_progress_id INT NOT NULL,  -- Foreign Key to the site_progress table
 
-    -- project_building_progress 
-    excavation NUMERIC(5,2) CHECK (excavation BETWEEN 0 AND 100),   -- 1. Excavation
-    basement NUMERIC(5,2) CHECK (basement BETWEEN 0 AND 100),       -- 2. Basements (if any)
-    podium NUMERIC(5,2) CHECK (podium BETWEEN 0 AND 100),           -- 3. Podiums (if any)	
-    plinth NUMERIC(5,2) CHECK (plinth BETWEEN 0 AND 100),           -- 4. Plinth	
+    excavation NUMERIC(5,2) CHECK (excavation BETWEEN 0 AND 100),                       -- 1. Excavation
+    basement NUMERIC(5,2) CHECK (basement BETWEEN 0 AND 100),                           -- 2. Basements (if any)
+    podium NUMERIC(5,2) CHECK (podium BETWEEN 0 AND 100),                               -- 3. Podiums (if any)	
+    plinth NUMERIC(5,2) CHECK (plinth BETWEEN 0 AND 100),                               -- 4. Plinth	
     stilt NUMERIC(5,2) CHECK (stilt BETWEEN 0 AND 100),                                 -- 5. Stilt Floor	
-    superstructure NUMERIC(5,2) CHECK (superstructure BETWEEN 0 AND 100),               -- 6.	Slabs of Super Structure	
-    interior_finishing NUMERIC(5,2) CHECK (interior_finishing BETWEEN 0 AND 100),       -- 7.	nternal walls, Internal Plaster, Floorings, Doors and Windows within Flats/Premises	
-    sanitary_fittings NUMERIC(5,2) CHECK (sanitary_fittings BETWEEN 0 AND 100),         -- 8. Sanitary Fittings within the Flat/Premises	
-    common_infrastructure NUMERIC(5,2) CHECK (common_infrastructure BETWEEN 0 AND 100), -- 9. Staircases, Lifts Wells and Lobbies at each Floor level, Overhead and Underground Water Tanks	
-    external_works NUMERIC(5,2) CHECK (external_works BETWEEN 0 AND 100),               -- 10. External plumbing and external plaster, elevation, completion of terraces with waterproofing of the Building/Wing.	
-    final_installations NUMERIC(5,2) CHECK (final_installations BETWEEN 0 AND 100),     -- 11. Installation of lifts, water pumps, Fire Fighting Fittings And Equipment as per CFO NOC, Electrical fittings, mechanical equipment, Compliance to conditions of environment/CRZ NOC, Finishing to entrance lobby/s, plinth protection, paving of areas appurtenant to Building / Wing, Compound Wall and all other requirements as maybe required to complete project as per specifications in agreement of Sale. Any other activities.	
+    superstructure NUMERIC(5,2) CHECK (superstructure BETWEEN 0 AND 100),               -- 6. Slabs of Super Structure
+    interior_finishing NUMERIC(5,2) CHECK (interior_finishing BETWEEN 0 AND 100),       -- 7. Internal work
+    sanitary_fittings NUMERIC(5,2) CHECK (sanitary_fittings BETWEEN 0 AND 100),         -- 8. Sanitary Fittings
+    common_infrastructure NUMERIC(5,2) CHECK (common_infrastructure BETWEEN 0 AND 100), -- 9. Staircases, Lobbies etc.
+    external_works NUMERIC(5,2) CHECK (external_works BETWEEN 0 AND 100),               -- 10. External work
+    final_installations NUMERIC(5,2) CHECK (final_installations BETWEEN 0 AND 100),     -- 11. Final Installations
 
-    -- project_common_areas_progress 
-    
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Record creation timestamp
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Last update timestamp
+    -- Foreign Key referencing the 'site_progress' table, ensuring each entry is linked to a specific site progress record
+    FOREIGN KEY (site_progress_id) REFERENCES site_progress(id) ON DELETE CASCADE
+);
+
+-- Table to store progress for common areas of the project
+CREATE TABLE common_areas_progress (
+        -- JSON format
         -- {
         -- "proposed": true,
         -- "percentage_of_work": 80.5,
         -- "details": "STP completed and tested"
         -- }
-    internal_roads_footpaths JSONB, -- 1.	Internal Roads&Footpaths
-    water_supply JSONB,             -- 2.	Water Supply
-    sewerage JSONB,                 -- 3.	Sewerage (chamber, lines, Septic Tank, STP)	
-    storm_water_drains JSONB,       -- 4.	Storm Water Drains		
-    landscaping_tree_planting JSONB,-- 5.	Landscaping & Tree Planting	
-    street_lighting JSONB,          -- 6.	Street Lighting		
-    community_buildings JSONB,      -- 7.	Community Buildings	
-    sewage_treatment JSONB,         -- 8.	Treatment and disposal of sewage and sullage water	
-    solid_waste_management JSONB,   -- 9.	Solid Waste management & Disposal	
-    rain_water_harvesting JSONB,    -- 10.	Water conservation, Rain water harvesting
-    energy_management JSONB,        -- 11.	Energy management
-    fire_safety JSONB,              -- 12.	Fire protectionAnd fire safety requirements	
-    electrical_metering JSONB,      -- 13.	Electrical meter room, sub-station, receiving station
 
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+    id SERIAL PRIMARY KEY,  -- Unique ID for the common areas progress entry
+    site_progress_id INT NOT NULL,  -- Foreign Key to the site_progress table
+
+    internal_roads_footpaths JSONB,       -- 1. Internal Roads & Footpaths
+    water_supply JSONB,                   -- 2. Water Supply
+    sewerage JSONB,                       -- 3. Sewerage (chamber, lines, Septic Tank, STP)	
+    storm_water_drains JSONB,             -- 4. Storm Water Drains		
+    landscaping_tree_planting JSONB,      -- 5. Landscaping & Tree Planting	
+    street_lighting JSONB,                -- 6. Street Lighting		
+    community_buildings JSONB,            -- 7. Community Buildings	
+    sewage_treatment JSONB,               -- 8. Sewage and sullage water disposal	
+    solid_waste_management JSONB,         -- 9. Solid Waste management & Disposal	
+    rain_water_harvesting JSONB,          -- 10. Rain Water Harvesting
+    energy_management JSONB,              -- 11. Energy Management
+    fire_safety JSONB,                    -- 12. Fire Safety Requirements	
+    electrical_metering JSONB,            -- 13. Electrical Metering Infrastructure
+
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Record creation timestamp
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Last update timestamp
+    -- Foreign Key referencing the 'site_progress' table, ensuring each entry is linked to a specific site progress record
+    FOREIGN KEY (site_progress_id) REFERENCES site_progress(id) ON DELETE CASCADE
 );
 
 ----------------------------------------------------TABLE assignments-------------------------------------------------------------------------

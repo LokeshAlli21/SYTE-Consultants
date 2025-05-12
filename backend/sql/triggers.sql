@@ -125,19 +125,38 @@ EXECUTE FUNCTION update_project_documents_timestamp();
 --------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Trigger function to auto-update updated_at
-CREATE OR REPLACE FUNCTION update_site_progress_timestamp()
+-- Function to update 'updated_at' timestamp for common_areas_progress
+CREATE OR REPLACE FUNCTION update_common_areas_progress_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
+   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'; -- Set the updated_at to the current time in IST
    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger to auto-update 'updated_at' on row updates
-CREATE TRIGGER update_site_progress_updated_at
-BEFORE UPDATE ON site_progress
+-- Trigger to auto-update 'updated_at' on row updates for common_areas_progress
+CREATE TRIGGER update_common_areas_progress_updated_at
+BEFORE UPDATE ON common_areas_progress
 FOR EACH ROW
-EXECUTE FUNCTION update_site_progress_timestamp();
+EXECUTE FUNCTION update_common_areas_progress_timestamp();
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Function to update 'updated_at' timestamp for building_progress
+CREATE OR REPLACE FUNCTION update_building_progress_timestamp()
+RETURNS TRIGGER AS $$ 
+BEGIN
+   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'; -- Set the updated_at to the current time in IST
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to auto-update 'updated_at' on row updates for building_progress
+CREATE TRIGGER update_building_progress_updated_at
+BEFORE UPDATE ON building_progress
+FOR EACH ROW
+EXECUTE FUNCTION update_building_progress_timestamp();
+
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 
