@@ -1,6 +1,4 @@
--------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------TABLE Promoters-------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Creating the Promoters table with promoter type and status
 CREATE TABLE promoters (
@@ -16,22 +14,6 @@ CREATE TABLE promoters (
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')  -- Automatically stores the update time in IST
 );
 
--- Creating a trigger function to update the 'updated_at' column on row updates
-CREATE OR REPLACE FUNCTION update_promoter_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';  -- Set the updated_at to the current time in IST
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Creating the trigger to automatically update the 'updated_at' column when a row is updated
-CREATE TRIGGER update_promoter_updated_at
-BEFORE UPDATE ON promoters
-FOR EACH ROW
-EXECUTE FUNCTION update_promoter_timestamp();
-
-
 -- Creating the PromoteDetails table with foreign key to Promoters
 CREATE TABLE promoter_details (
     id SERIAL PRIMARY KEY,
@@ -46,22 +28,6 @@ CREATE TABLE promoter_details (
         REFERENCES promoters(id)
         ON DELETE CASCADE
 );
-
--- Function to update the 'updated_at' column
-CREATE OR REPLACE FUNCTION update_promoter_details_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to call the function before each update
-CREATE TRIGGER update_promoter_details_updated_at
-BEFORE UPDATE ON promoter_details
-FOR EACH ROW
-EXECUTE FUNCTION update_promoter_details_timestamp();
-
 
 -- Separate Detail Tables by promoter_type --
 
@@ -179,9 +145,7 @@ CREATE TABLE joint_venture_promoters (
     joint_venture_deed_of_formation_uploaded_url TEXT
 );
 
--------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------TABLE Projects-------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Creating the Projects table
 CREATE TABLE projects (
@@ -218,27 +182,9 @@ CREATE TABLE projects (
     expiry_date DATE,  -- Expiry date of the project
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Automatically stores creation time in IST
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')  -- Automatically stores update time in IST
-
 );
 
--- Creating a trigger function to update the 'updated_at' column on row updates
-CREATE OR REPLACE FUNCTION update_project_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';  -- Set the updated_at to the current time in IST
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Creating the trigger to automatically update the 'updated_at' column when a row is updated
-CREATE TRIGGER update_project_updated_at
-BEFORE UPDATE ON projects
-FOR EACH ROW
-EXECUTE FUNCTION update_project_timestamp();
-
--------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------TABLE ProjectProfessionalDetails-------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE TABLE engineers (
     id SERIAL PRIMARY KEY,
@@ -282,7 +228,6 @@ CREATE TABLE cas (
     sign_stamp_uploaded_url TEXT
 );
 
-
 -- Creating the ProjectProfessionalDetails table
 CREATE TABLE project_professional_details (
     id SERIAL PRIMARY KEY,  -- Unique identifier for each record
@@ -307,27 +252,9 @@ CREATE TABLE project_professional_details (
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
-
 );
 
--- Trigger function to update the 'updated_at' column
-CREATE OR REPLACE FUNCTION update_project_professional_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to auto-update 'updated_at' on row updates
-CREATE TRIGGER update_project_professional_updated_at
-BEFORE UPDATE ON project_professional_details
-FOR EACH ROW
-EXECUTE FUNCTION update_project_professional_timestamp();
-
--------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------TABLE ProjectUnits-------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------
 
 -- Creating the ProjectUnits table
 CREATE TABLE project_units (
@@ -384,51 +311,7 @@ CREATE TABLE project_units (
 
 );
 
-
--- Create trigger function to calculate total_received
-CREATE OR REPLACE FUNCTION update_total_received_and_balance_amount()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.total_received := NEW.received_fy_2018_19 + NEW.received_fy_2019_20 + 
-                          NEW.received_fy_2020_21 + NEW.received_fy_2021_22 + 
-                          NEW.received_fy_2022_23 + NEW.received_fy_2023_24 + 
-                          NEW.received_fy_2024_25 + NEW.received_fy_2025_26 + 
-                          NEW.received_fy_2026_27 + NEW.received_fy_2027_28 + 
-                          NEW.received_fy_2028_29 + NEW.received_fy_2029_30;
-
-    NEW.balance_amount := NEW.agreement_value - NEW.total_received;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to auto-update 'total_received' and 'balance_amount' before insert or update
-CREATE TRIGGER update_project_unit_total_received_balance
-BEFORE INSERT OR UPDATE ON project_units
-FOR EACH ROW
-EXECUTE FUNCTION update_total_received_and_balance_amount();
-
-
-
-
--- Trigger function to auto-update updated_at
-CREATE OR REPLACE FUNCTION update_project_unit_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to auto-update 'updated_at' on update
-CREATE TRIGGER update_project_unit_updated_at
-BEFORE UPDATE ON project_units
-FOR EACH ROW
-EXECUTE FUNCTION update_project_unit_timestamp();
-
--------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------TABLE project_documents-------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------
-
 
 -- Creating the ProjectDocuments table
 CREATE TABLE project_documents (
@@ -458,24 +341,7 @@ CREATE TABLE project_documents (
 
 );
 
--- Trigger function to auto-update updated_at
-CREATE OR REPLACE FUNCTION update_project_documents_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to auto-update 'updated_at' on row updates
-CREATE TRIGGER update_project_documents_updated_at
-BEFORE UPDATE ON project_documents
-FOR EACH ROW
-EXECUTE FUNCTION update_project_documents_timestamp();
-
--------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------TABLE site_progress-------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------
 
 ---------------------- project_building_progress ----------------------
 -- 1.	excavation              : Excavation	
@@ -505,7 +371,6 @@ EXECUTE FUNCTION update_project_documents_timestamp();
 -- 12.	Fire protectionAnd fire safety requirements			
 -- 13.	Electrical meter room, sub-station, receiving station			
 
-
 -- Creating the SiteProgress table
 CREATE TABLE site_progress (
     id SERIAL PRIMARY KEY,
@@ -527,7 +392,7 @@ CREATE TABLE site_progress (
     sanitary_fittings NUMERIC(5,2) CHECK (sanitary_fittings BETWEEN 0 AND 100),         -- 8. Sanitary Fittings within the Flat/Premises	
     common_infrastructure NUMERIC(5,2) CHECK (common_infrastructure BETWEEN 0 AND 100), -- 9. Staircases, Lifts Wells and Lobbies at each Floor level, Overhead and Underground Water Tanks	
     external_works NUMERIC(5,2) CHECK (external_works BETWEEN 0 AND 100),               -- 10. External plumbing and external plaster, elevation, completion of terraces with waterproofing of the Building/Wing.	
-    final_installations NUMERIC(5,2) CHECK (final_installations BETWEEN 0 AND 100),      -- 11. Installation of lifts, water pumps, Fire Fighting Fittings And Equipment as per CFO NOC, Electrical fittings, mechanical equipment, Compliance to conditions of environment/CRZ NOC, Finishing to entrance lobby/s, plinth protection, paving of areas appurtenant to Building / Wing, Compound Wall and all other requirements as maybe required to complete project as per specifications in agreement of Sale. Any other activities.	
+    final_installations NUMERIC(5,2) CHECK (final_installations BETWEEN 0 AND 100),     -- 11. Installation of lifts, water pumps, Fire Fighting Fittings And Equipment as per CFO NOC, Electrical fittings, mechanical equipment, Compliance to conditions of environment/CRZ NOC, Finishing to entrance lobby/s, plinth protection, paving of areas appurtenant to Building / Wing, Compound Wall and all other requirements as maybe required to complete project as per specifications in agreement of Sale. Any other activities.	
 
     -- project_common_areas_progress 
     
@@ -552,28 +417,9 @@ CREATE TABLE site_progress (
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
-
 );
 
--- Trigger function to auto-update updated_at
-CREATE OR REPLACE FUNCTION update_site_progress_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to auto-update 'updated_at' on row updates
-CREATE TRIGGER update_site_progress_updated_at
-BEFORE UPDATE ON site_progress
-FOR EACH ROW
-EXECUTE FUNCTION update_site_progress_timestamp();
-
-
--------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------TABLE assignments-------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE TABLE assignments (
     id SERIAL PRIMARY KEY,
@@ -604,25 +450,7 @@ CREATE TABLE assignments (
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
 );
 
--- Function to update the `updated_at` timestamp on row update
-CREATE OR REPLACE FUNCTION update_assignments_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to auto-update 'updated_at' on updates to the assignments table
-CREATE TRIGGER update_assignments_updated_at
-BEFORE UPDATE ON assignments
-FOR EACH ROW
-EXECUTE FUNCTION update_assignments_timestamp();
-
-
--------------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------TABLE channel_partners-------------------------------------------------------------------------
--------------------------------------------------------------------------------------------------------------------------------------------
 
 CREATE TABLE channel_partners (
     id SERIAL PRIMARY KEY,
@@ -639,20 +467,3 @@ CREATE TABLE channel_partners (
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
 );
-
-CREATE OR REPLACE FUNCTION update_channel_partners_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION update_channel_partners_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
