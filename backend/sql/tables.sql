@@ -145,6 +145,24 @@ CREATE TABLE joint_venture_promoters (
     joint_venture_deed_of_formation_uploaded_url TEXT
 );
 
+----------------------------------------------------TABLE channel_partners-------------------------------------------------------------------------
+
+CREATE TABLE channel_partners (
+    id SERIAL PRIMARY KEY,
+    
+    full_name VARCHAR(255) NOT NULL,
+    contact_number VARCHAR(20) NOT NULL,
+    alternate_contact_number VARCHAR(20),
+    email_id VARCHAR(255),
+    district VARCHAR(100),
+    city VARCHAR(100),
+
+    status_for_delete VARCHAR(20) DEFAULT 'active',
+
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+);
+
 ----------------------------------------------------TABLE Projects-------------------------------------------------------------------------
 
 -- Creating the Projects table
@@ -461,24 +479,6 @@ CREATE TABLE assignments (
     liasioning_fees NUMERIC(12, 2), -- Liasioning (paid by us)
 
     remarks TEXT,
-
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
-);
-
-----------------------------------------------------TABLE channel_partners-------------------------------------------------------------------------
-
-CREATE TABLE channel_partners (
-    id SERIAL PRIMARY KEY,
-    
-    full_name VARCHAR(255) NOT NULL,
-    contact_number VARCHAR(20) NOT NULL,
-    alternate_contact_number VARCHAR(20),
-    email_id VARCHAR(255),
-    district VARCHAR(100),
-    city VARCHAR(100),
-
-    status_for_delete VARCHAR(20) DEFAULT 'active',
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
