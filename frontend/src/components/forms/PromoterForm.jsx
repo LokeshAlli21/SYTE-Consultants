@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
 import { FaSpinner } from "react-icons/fa";
 import Select from 'react-select';
+import { Individual } from './promoter-form-components/index.js';
 
 const PromoterForm = ({id , disabled }) => { 
 
@@ -275,7 +276,7 @@ useEffect(() => {
   
     switch (formData.promoter_type) {
       case 'individual':
-        return (
+          return (
           <>
             <div className="flex flex-col">
               <label className="mb-2 font-medium">Full Name</label>
@@ -385,7 +386,7 @@ disabled={disabled}
           </>
         );
   
-      case 'partnership_firm':
+      case 'partnership':
         return (
           <>
             <div className="flex flex-col">
@@ -575,6 +576,82 @@ disabled={disabled}
   
       <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Common Fields */}
+
+        <div className="flex flex-col w-full">
+          <label className="mb-2 font-medium text-gray-700">Promoter Type *</label>
+          <Select
+            options={[
+              { label: 'Individual', value: 'individual' },
+              { label: 'Hindu Undivided Family', value: 'hindu_undivided_family' },
+              { label: 'Proprietor', value: 'proprietor' },
+              { label: 'Company', value: 'company' },
+              { label: 'Partnership', value: 'partnership' },
+              { label: 'Limited Liability Partnership', value: 'limited_liability_partnership' },
+              { label: 'Trust', value: 'trust' },
+              { label: 'Society', value: 'society' },
+              { label: 'Public Authority', value: 'public_authority' },
+              { label: 'AOP/BOI', value: 'aop_boi' },
+              { label: 'Joint Venture', value: 'joint_venture' },
+              { label: 'Others', value: 'others' }
+            ]}
+            value={{
+              label: 
+                formData.promoter_type === 'individual' ? 'Individual' :
+                formData.promoter_type === 'hindu_undivided_family' ? 'Hindu Undivided Family' :
+                formData.promoter_type === 'proprietor' ? 'Proprietor' :
+                formData.promoter_type === 'company' ? 'Company' :
+                formData.promoter_type === 'partnership' ? 'Partnership' :
+                formData.promoter_type === 'limited_liability_partnership' ? 'Limited Liability Partnership' :
+                formData.promoter_type === 'trust' ? 'Trust' :
+                formData.promoter_type === 'society' ? 'Society' :
+                formData.promoter_type === 'public_authority' ? 'Public Authority' :
+                formData.promoter_type === 'aop_boi' ? 'AOP/BOI' :
+                formData.promoter_type === 'joint_venture' ? 'Joint Venture' :
+                formData.promoter_type === 'others' ? 'Others' :
+                '',
+              value: formData.promoter_type
+            }}
+            required={true}
+            isDisabled={disabled}
+            onChange={(selectedOption) => {
+              setFormData((prev) => ({
+                ...prev,
+                promoter_type: selectedOption ? selectedOption.value : ''
+              }));
+            }}
+            isSearchable={true}
+            placeholder="Select Promoter Type"
+            styles={{
+              control: (base, state) => ({
+                ...base,
+                padding: "6px",
+                borderRadius: "0.5rem",
+                borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+                boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none",
+                "&:hover": {
+                  borderColor: "#5caaab",
+                },
+              }),
+              menu: (base) => ({
+                ...base,
+                borderRadius: "0.5rem",
+                zIndex: 20,
+              }),
+              option: (base, state) => ({
+                ...base,
+                backgroundColor: state.isSelected
+                  ? "#5caaab"
+                  : state.isFocused
+                  ? "#5caaab22"
+                  : "white",
+                color: state.isSelected ? "white" : "black",
+                padding: "10px 12px",
+                cursor: "pointer",
+              }),
+            }}
+          />
+        </div>
+
         <div className="flex flex-col gap-2">
           <label className="text-gray-700 font-semibold text-sm mb-1">
             Promoter Name *
@@ -592,86 +669,30 @@ disabled={disabled}
           />
         </div>
 
-<div className="flex flex-col w-full">
-  <label className="mb-2 font-medium text-gray-700">Promoter Type *</label>
-  <Select
-    options={[
-      { label: 'Individual', value: 'individual' },
-      { label: 'Partnership Firm', value: 'partnership_firm' },
-      { label: 'PVT LTD', value: 'pvt_ltd' },
-      { label: 'Hindu Undivided Family', value: 'hindu_undivided_family' },
-      { label: 'Proprietor', value: 'proprietor' },
-      { label: 'Company', value: 'company' },
-      { label: 'Partnership', value: 'partnership' },
-      { label: 'Limited Liability Partnership', value: 'limited_liability_partnership' },
-      { label: 'Trust', value: 'trust' },
-      { label: 'Society', value: 'society' },
-      { label: 'Public Authority', value: 'public_authority' },
-      { label: 'AOP/BOI', value: 'aop_boi' },
-      { label: 'Joint Venture', value: 'joint_venture' },
-      { label: 'Others', value: 'others' }
-    ]}
-    value={{
-      label: 
-        formData.promoter_type === 'individual' ? 'Individual' :
-        formData.promoter_type === 'partnership_firm' ? 'Partnership Firm' :
-        formData.promoter_type === 'pvt_ltd' ? 'PVT LTD':
-        formData.promoter_type === 'hindu_undivided_family' ? 'Hindu Undivided Family' :
-        formData.promoter_type === 'proprietor' ? 'Proprietor' :
-        formData.promoter_type === 'company' ? 'Company' :
-        formData.promoter_type === 'partnership' ? 'Partnership' :
-        formData.promoter_type === 'limited_liability_partnership' ? 'Limited Liability Partnership' :
-        formData.promoter_type === 'trust' ? 'Trust' :
-        formData.promoter_type === 'society' ? 'Society' :
-        formData.promoter_type === 'public_authority' ? 'Public Authority' :
-        formData.promoter_type === 'aop_boi' ? 'AOP/BOI' :
-        formData.promoter_type === 'joint_venture' ? 'Joint Venture' :
-        formData.promoter_type === 'others' ? 'Others' :
-        '',
-      value: formData.promoter_type
-    }}
-    required={true}
-    isDisabled={disabled}
-    onChange={(selectedOption) => {
-      setFormData((prev) => ({
-        ...prev,
-        promoter_type: selectedOption ? selectedOption.value : ''
-      }));
-    }}
-    isSearchable={true}
-    placeholder="Select Promoter Type"
-    styles={{
-      control: (base, state) => ({
-        ...base,
-        padding: "6px",
-        borderRadius: "0.5rem",
-        borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
-        boxShadow: state.isFocused ? "0 0 0 2px #5caaab66" : "none",
-        "&:hover": {
-          borderColor: "#5caaab",
-        },
-      }),
-      menu: (base) => ({
-        ...base,
-        borderRadius: "0.5rem",
-        zIndex: 20,
-      }),
-      option: (base, state) => ({
-        ...base,
-        backgroundColor: state.isSelected
-          ? "#5caaab"
-          : state.isFocused
-          ? "#5caaab22"
-          : "white",
-        color: state.isSelected ? "white" : "black",
-        padding: "10px 12px",
-        cursor: "pointer",
-      }),
-    }}
-  />
-</div>
+<div className="flex flex-col gap-2">
+          <label className="text-gray-700 font-semibold text-sm mb-1">
+            Office Address
+          </label>
+          <input
+            type="text"
+            name="office_address"
+            value={formData.office_address || ''}
+            onChange={handleChange}
+disabled={disabled}
+            onKeyDown={handleKeyDown}
+            className={commonInputClass}
+          />
+        </div>
 
-  
+                <FileInputWithPreview
+              label="Upload Photo"
+              name="promoter_photo_uploaded_url"
+              onChange={handleFileChange}
+disabled={disabled}
+              filePreview={filePreviews.promoter_photo_uploaded_url}
+              onDelete={() => handleFileDelete("promoter_photo_uploaded_url")}
+            />
+
         <div className="flex flex-col w-full">
   <label className="mb-2 font-medium text-gray-700">Select District *</label>
   <Select
@@ -719,14 +740,6 @@ disabled={disabled}
   />
 </div>
 
-        <FileInputWithPreview
-              label="Upload Photo"
-              name="promoter_photo_uploaded_url"
-              onChange={handleFileChange}
-disabled={disabled}
-              filePreview={filePreviews.promoter_photo_uploaded_url}
-              onDelete={() => handleFileDelete("promoter_photo_uploaded_url")}
-            />
 
 <div className="flex flex-col w-full">
   <label className="mb-2 font-medium text-gray-700">Select City *</label>
@@ -775,20 +788,6 @@ disabled={disabled}
   />
 </div>
   
-        <div className="flex flex-col gap-2">
-          <label className="text-gray-700 font-semibold text-sm mb-1">
-            Office Address
-          </label>
-          <input
-            type="text"
-            name="office_address"
-            value={formData.office_address || ''}
-            onChange={handleChange}
-disabled={disabled}
-            onKeyDown={handleKeyDown}
-            className={commonInputClass}
-          />
-        </div>
   
         {/* Conditional Fields */}
         {renderConditionalFields()}

@@ -7,10 +7,10 @@ CREATE TABLE promoters (
     id SERIAL PRIMARY KEY,  -- Unique identifier for each promoter
     promoter_name VARCHAR(255) NOT NULL,  -- Promoter's name
     contact_number VARCHAR(15),  -- Contact number (adjust length as per your needs)
-    email_id VARCHAR(255) ,  -- Email id (unique)
+    email_id VARCHAR(255) ,  -- Email id 
     district VARCHAR(100) NOT NULL,  -- District where the promoter is located
     city VARCHAR(100) NOT NULL,  -- City where the promoter is located
-    promoter_type VARCHAR(50) NOT NULL,  -- Type of the promoter (e.g., "Agent", "Manager", etc.)
+    promoter_type VARCHAR(50) NOT NULL,  -- Type of the promoter
     status_for_delete VARCHAR(20) DEFAULT 'active',  -- Status of the promoter (default to 'active')
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Automatically stores the creation time in IST
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')  -- Automatically stores the update time in IST
@@ -34,33 +34,133 @@ EXECUTE FUNCTION update_promoter_timestamp();
 
 -- Creating the PromoteDetails table with foreign key to Promoters
 CREATE TABLE promoter_details (
-    id SERIAL PRIMARY KEY,  -- Unique identifier for each promoter's details
-
-    -- Adding Foreign Key Constraint
+    id SERIAL PRIMARY KEY,
+    promoter_id INT NOT NULL,
+    promoter_photo_uploaded_url TEXT,
+    office_address TEXT,
+    contact_person_name VARCHAR(255),
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
     CONSTRAINT fk_promoter
         FOREIGN KEY (promoter_id) 
         REFERENCES promoters(id)
-        ON DELETE CASCADE,
+        ON DELETE CASCADE
+);
 
-    full_name VARCHAR(255),  -- Full name of the promoter
-    office_address TEXT,  -- Office address of the promoter
-    aadhar_number NUMERIC(12, 0) ,  -- Aadhar number (12 digits, unique)
-    aadhar_uploaded_url TEXT,  -- URL where the Aadhar document is uploaded
-    pan_number VARCHAR(10) ,  -- PAN number (10 characters, unique)
-    pan_uploaded_url TEXT,  -- URL where the PAN document is uploaded
-    dob DATE,  -- Date of birth
-    contact_person_name VARCHAR(255),  -- Contact person name
-    partnership_pan_number VARCHAR(10),  -- Partnership firm's PAN number
-    partnership_pan_uploaded_url TEXT,  -- URL where partnership PAN document is uploaded
-    company_pan_number VARCHAR(10),  -- Company's PAN number
-    company_pan_uploaded_url TEXT,  -- URL where company's PAN document is uploaded
-    company_incorporation_number VARCHAR(20),  -- Company incorporation number
-    company_incorporation_uploaded_url TEXT,  -- URL where incorporation document is uploaded
-    promoter_id INT NOT NULL,  -- Foreign key linking to Promoters table
-    promoter_photo_uploaded_url TEXT,
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Creation timestamp
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')  -- Update timestamp
+-- Separate Detail Tables by promoter_type --
 
+CREATE TABLE individual_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    first_name VARCHAR(255),
+    middle_name VARCHAR(255),
+    last_name VARCHAR(255),
+    father_full_name VARCHAR(255),
+    dob DATE,
+    aadhar_number NUMERIC(12, 0),
+    aadhar_uploaded_url TEXT,
+    pan_number VARCHAR(10),
+    pan_uploaded_url TEXT,
+    gstin_number VARCHAR(15),
+    individual_disclosure_of_interest BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE huf_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    huf_name VARCHAR(255),
+    karta_first_name VARCHAR(100),
+    karta_middle_name VARCHAR(100),
+    karta_last_name VARCHAR(100),
+    karta_pan_card VARCHAR(10),
+    karta_pan_uploaded_url TEXT,
+    huf_pan_card VARCHAR(10),
+    huf_pan_pan_uploaded_url TEXT,
+    huf_gstin_number VARCHAR(15)
+);
+
+CREATE TABLE proprietor_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    proprietor_concern_name VARCHAR(255),
+    proprietor_first_name VARCHAR(100),
+    proprietor_middle_name VARCHAR(100),
+    proprietor_last_name VARCHAR(100),
+    proprietor_pan_number VARCHAR(10),
+    pan_uploaded_url TEXT,
+    proprietor_father_full_name VARCHAR(255),
+    proprietor_gstin_number VARCHAR(15),
+    proprietor_disclosure_of_interest BOOLEAN DEFAULT FALSE
+);
+
+CREATE TABLE company_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    company_name VARCHAR(255),
+    company_pan_number VARCHAR(10),
+    company_pan_uploaded_url TEXT,
+    company_cin_number VARCHAR(21),
+    company_gstin_number VARCHAR(15),
+    company_incorporation_number VARCHAR(20),
+    company_incorporation_uploaded_url TEXT
+);
+
+CREATE TABLE partnership_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    partnership_name VARCHAR(255),
+    partnership_pan_number VARCHAR(10),
+    partnership_pan_uploaded_url TEXT,
+    partnership_gstin_number VARCHAR(15)
+);
+
+CREATE TABLE llp_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    llp_name VARCHAR(255),
+    llp_pan_number VARCHAR(10),
+    llp_pan_uploaded_url TEXT,
+    llp_gstin_number VARCHAR(15),
+    llp_llpin_number VARCHAR(15)
+);
+
+CREATE TABLE trust_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    trust_name VARCHAR(255),
+    trust_registration_number VARCHAR(50),
+    trust_pan_number VARCHAR(10),
+    trust_pan_uploaded_url TEXT,
+    trust_gstin_number VARCHAR(15)
+);
+
+CREATE TABLE society_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    society_name VARCHAR(255),
+    society_registration_number VARCHAR(50),
+    society_pan_number VARCHAR(10),
+    society_pan_uploaded_url TEXT,
+    society_gstin_number VARCHAR(15)
+);
+
+CREATE TABLE public_authority_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    public_authority_name VARCHAR(255),
+    public_authority_pan_number VARCHAR(10),
+    public_authority_pan_uploaded_url TEXT,
+    public_authority_gstin_number VARCHAR(15)
+);
+
+CREATE TABLE aop_boi_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    aop_boi_name VARCHAR(255),
+    aop_boi_gstin_number VARCHAR(15),
+    aop_boi_pan_number VARCHAR(10),
+    aop_boi_pan_uploaded_url TEXT,
+    aop_boi_deed_of_formation_uploaded_url TEXT
+);
+
+CREATE TABLE joint_venture_promoters (
+    promoter_details_id INT PRIMARY KEY REFERENCES promoter_details(id) ON DELETE CASCADE,
+    joint_venture_name VARCHAR(255),
+    joint_venture_no_of_entities_involved INT,
+    joint_venture_pan_number VARCHAR(10),
+    joint_venture_pan_uploaded_url TEXT,
+    joint_venture_gstin_number VARCHAR(15),
+    joint_venture_deed_of_formation_uploaded_url TEXT
 );
 
 -------------------------------------------------------------------------------------------------------------------------------------------

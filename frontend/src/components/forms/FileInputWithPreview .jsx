@@ -108,7 +108,7 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, di
 
 {/* File Preview */}
 {filePreview && (
-  <div className="relative flex items-center justify-around ">
+  <div className="relative flex items-center justify-around">
     {(typeof filePreview === 'object' && filePreview?.type?.startsWith('image/')) ||
     (typeof filePreview === 'string' &&
       filePreview.match(/\.(jpeg|jpg|png|gif|webp|png)$/i)) ? (
