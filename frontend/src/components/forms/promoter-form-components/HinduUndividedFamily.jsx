@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import FileInputWithPreview from "../FileInputWithPreview ";
+import React, { useState } from 'react'
+import FileInputWithPreview from '../FileInputWithPreview ';
 
-function Individual({ 
+function HinduUndividedFamily({ 
   formData, 
   disabled, 
   commonInputClass, 
@@ -61,17 +61,15 @@ function Individual({
       return updatedPreviews;
     });
   };
-  // console.log(formData);
-  
 
-return (
+  return (
   <>
     <div className="flex flex-col">
-      <label className="mb-2 font-medium">First Name</label>
+      <label className="mb-2 font-medium">HUF Name</label>
       <input
         type="text"
-        name="first_name"
-        value={formData.first_name}
+        name="huf_name"
+        value={formData.huf_name}
         onChange={handleChange}
         disabled={disabled}
         onKeyDown={handleKeyDown}
@@ -80,11 +78,11 @@ return (
     </div>
 
     <div className="flex flex-col">
-      <label className="mb-2 font-medium">Middle Name</label>
+      <label className="mb-2 font-medium">Karta First Name</label>
       <input
         type="text"
-        name="middle_name"
-        value={formData.middle_name}
+        name="karta_first_name"
+        value={formData.karta_first_name}
         onChange={handleChange}
         disabled={disabled}
         onKeyDown={handleKeyDown}
@@ -93,11 +91,11 @@ return (
     </div>
 
     <div className="flex flex-col">
-      <label className="mb-2 font-medium">Last Name</label>
+      <label className="mb-2 font-medium">Karta Middle Name</label>
       <input
         type="text"
-        name="last_name"
-        value={formData.last_name}
+        name="karta_middle_name"
+        value={formData.karta_middle_name}
         onChange={handleChange}
         disabled={disabled}
         onKeyDown={handleKeyDown}
@@ -106,11 +104,11 @@ return (
     </div>
 
     <div className="flex flex-col">
-      <label className="mb-2 font-medium">Father's Full Name</label>
+      <label className="mb-2 font-medium">Karta Last Name</label>
       <input
         type="text"
-        name="father_full_name"
-        value={formData.father_full_name}
+        name="karta_last_name"
+        value={formData.karta_last_name}
         onChange={handleChange}
         disabled={disabled}
         onKeyDown={handleKeyDown}
@@ -119,49 +117,11 @@ return (
     </div>
 
     <div className="flex flex-col">
-      <label className="mb-2 font-medium">Date of Birth</label>
-      <input
-        type="date"
-        name="dob"
-        value={formData.dob}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-      />
-    </div>
-
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">Aadhar Number</label>
-      <input
-        type="number"
-        name="aadhar_number"
-        value={formData.aadhar_number || ""}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-        maxLength={12}
-        minLength={12}
-        pattern="\d{12}"
-      />
-    </div>
-
-    <FileInputWithPreview
-      label="Upload Aadhar Document"
-      name="aadhar_uploaded_url"
-      onChange={handleFileChange}
-      disabled={disabled}
-      filePreview={filePreviews.aadhar_uploaded_url}
-      onDelete={() => handleFileDelete("aadhar_uploaded_url")}
-    />
-
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">PAN Number</label>
+      <label className="mb-2 font-medium">Karta PAN Card</label>
       <input
         type="text"
-        name="pan_number"
-        value={formData.pan_number}
+        name="karta_pan_card"
+        value={formData.karta_pan_card}
         onChange={handleChange}
         disabled={disabled}
         onKeyDown={handleKeyDown}
@@ -172,20 +132,44 @@ return (
     </div>
 
     <FileInputWithPreview
-      label="Upload PAN Document"
-      name="pan_uploaded_url"
+      label="Upload Karta PAN"
+      name="karta_pan_uploaded_url"
       onChange={handleFileChange}
       disabled={disabled}
-      filePreview={filePreviews.pan_uploaded_url}
-      onDelete={() => handleFileDelete("pan_uploaded_url")}
+      filePreview={filePreviews.karta_pan_uploaded_url}
+      onDelete={() => handleFileDelete("karta_pan_uploaded_url")}
     />
 
     <div className="flex flex-col">
-      <label className="mb-2 font-medium">GSTIN Number</label>
+      <label className="mb-2 font-medium">HUF PAN Card</label>
       <input
         type="text"
-        name="gstin_number"
-        value={formData.gstin_number}
+        name="huf_pan_card"
+        value={formData.huf_pan_card}
+        onChange={handleChange}
+        disabled={disabled}
+        onKeyDown={handleKeyDown}
+        className={commonInputClass}
+        maxLength={10}
+        minLength={10}
+      />
+    </div>
+
+    <FileInputWithPreview
+      label="Upload HUF PAN"
+      name="huf_pan_pan_uploaded_url"
+      onChange={handleFileChange}
+      disabled={disabled}
+      filePreview={filePreviews.huf_pan_pan_uploaded_url}
+      onDelete={() => handleFileDelete("huf_pan_pan_uploaded_url")}
+    />
+
+    <div className="flex flex-col">
+      <label className="mb-2 font-medium">HUF GSTIN Number</label>
+      <input
+        type="text"
+        name="huf_gstin_number"
+        value={formData.huf_gstin_number}
         onChange={handleChange}
         disabled={disabled}
         onKeyDown={handleKeyDown}
@@ -193,40 +177,9 @@ return (
         maxLength={15}
       />
     </div>
-
-<div className="flex flex-col space-y-2">
-  <label className="font-medium text-gray-700">
-    Disclosure of Interest
-  </label>
-  <p className="text-sm text-gray-600">
-    Are you a Director/Designated Partner/Partner/Proprietor of any real estate project registered with RERA?
-  </p>
-  <div className="flex items-center gap-2 mt-1">
-    <input
-  type="checkbox"
-  id="individual_disclosure_of_interest"
-  name="individual_disclosure_of_interest"
-  checked={formData.individual_disclosure_of_interest}
-  onChange={(e) =>
-    setFormData((prev) => ({
-      ...prev,
-      individual_disclosure_of_interest: e.target.checked,
-    }))
-  }
-  disabled={disabled}
-  className="h-6 w-6 rounded border-gray-300 text-primary accent-[#5CAAAB] focus:ring-primary"
-/>
-
-    <label htmlFor="individual_disclosure_of_interest" className="text-sm text-gray-700">
-      Yes
-    </label>
-  </div>
-</div>
-
-
   </>
 );
 
 }
 
-export default Individual;
+export default HinduUndividedFamily
