@@ -47,6 +47,22 @@ CREATE TABLE promoter_details (
         ON DELETE CASCADE
 );
 
+-- Function to update the 'updated_at' column
+CREATE OR REPLACE FUNCTION update_promoter_details_timestamp()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to call the function before each update
+CREATE TRIGGER update_promoter_details_updated_at
+BEFORE UPDATE ON promoter_details
+FOR EACH ROW
+EXECUTE FUNCTION update_promoter_details_timestamp();
+
+
 -- Separate Detail Tables by promoter_type --
 
 CREATE TABLE individual_promoters (
