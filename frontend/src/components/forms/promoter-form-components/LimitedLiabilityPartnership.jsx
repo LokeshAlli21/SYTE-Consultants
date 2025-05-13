@@ -63,13 +63,26 @@ function LimitedLiabilityPartnership({
   };
 
   return (
-  <>
+  <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
     <div className="flex flex-col">
       <label className="mb-2 font-medium">LLP Name</label>
       <input
         type="text"
         name="llp_name"
         value={formData.llp_name}
+        onChange={handleChange}
+        disabled={disabled}
+        onKeyDown={handleKeyDown}
+        className={commonInputClass}
+      />
+    </div>
+    
+    <div className="flex flex-col">
+      <label className="mb-2 font-medium">LLPIN Number</label>
+      <input
+        type="text"
+        name="llp_llpin_number"
+        value={formData.llp_llpin_number}
         onChange={handleChange}
         disabled={disabled}
         onKeyDown={handleKeyDown}
@@ -114,20 +127,7 @@ function LimitedLiabilityPartnership({
         maxLength={15}
       />
     </div>
-
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">LLPIN Number</label>
-      <input
-        type="text"
-        name="llp_llpin_number"
-        value={formData.llp_llpin_number}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-      />
-    </div>
-  </>
+  </div>
 );
 
 

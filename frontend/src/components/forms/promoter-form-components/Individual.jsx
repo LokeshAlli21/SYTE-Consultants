@@ -1,12 +1,7 @@
 import React, { useState } from "react";
 import FileInputWithPreview from "../FileInputWithPreview ";
 
-function Individual({ 
-  formData, 
-  disabled, 
-  commonInputClass, 
-  setFormData 
-}) {
+function Individual({ formData, disabled, commonInputClass, setFormData }) {
   const [filePreviews, setFilePreviews] = useState({});
 
   const handleChange = (e) => {
@@ -62,171 +57,178 @@ function Individual({
     });
   };
   // console.log(formData);
-  
 
-return (
-  <>
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">First Name</label>
-      <input
-        type="text"
-        name="first_name"
-        value={formData.first_name}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-      />
-    </div>
+  return (
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
+        <div className="flex flex-col">
+          <label className="mb-2 font-medium">First Name</label>
+          <input
+            type="text"
+            name="first_name"
+            value={formData.first_name}
+            onChange={handleChange}
+            disabled={disabled}
+            onKeyDown={handleKeyDown}
+            className={commonInputClass}
+          />
+        </div>
 
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">Middle Name</label>
-      <input
-        type="text"
-        name="middle_name"
-        value={formData.middle_name}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-      />
-    </div>
+        <div className="flex flex-col">
+          <label className="mb-2 font-medium">Middle Name</label>
+          <input
+            type="text"
+            name="middle_name"
+            value={formData.middle_name}
+            onChange={handleChange}
+            disabled={disabled}
+            onKeyDown={handleKeyDown}
+            className={commonInputClass}
+          />
+        </div>
 
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">Last Name</label>
-      <input
-        type="text"
-        name="last_name"
-        value={formData.last_name}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-      />
-    </div>
+        <div className="flex flex-col">
+          <label className="mb-2 font-medium">Last Name</label>
+          <input
+            type="text"
+            name="last_name"
+            value={formData.last_name}
+            onChange={handleChange}
+            disabled={disabled}
+            onKeyDown={handleKeyDown}
+            className={commonInputClass}
+          />
+        </div>
 
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">Father's Full Name</label>
-      <input
-        type="text"
-        name="father_full_name"
-        value={formData.father_full_name}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-      />
-    </div>
+        <div className="flex flex-col">
+          <label className="mb-2 font-medium">Father's Full Name</label>
+          <input
+            type="text"
+            name="father_full_name"
+            value={formData.father_full_name}
+            onChange={handleChange}
+            disabled={disabled}
+            onKeyDown={handleKeyDown}
+            className={commonInputClass}
+          />
+        </div>
 
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">Date of Birth</label>
-      <input
-        type="date"
-        name="dob"
-        value={formData.dob}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-      />
-    </div>
+        <div className="flex flex-col">
+          <label className="mb-2 font-medium">Aadhar Number</label>
+          <input
+            type="number"
+            name="aadhar_number"
+            value={formData.aadhar_number || ""}
+            onChange={handleChange}
+            disabled={disabled}
+            onKeyDown={handleKeyDown}
+            className={commonInputClass}
+            maxLength={12}
+            minLength={12}
+            pattern="\d{12}"
+          />
+        </div>
 
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">Aadhar Number</label>
-      <input
-        type="number"
-        name="aadhar_number"
-        value={formData.aadhar_number || ""}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-        maxLength={12}
-        minLength={12}
-        pattern="\d{12}"
-      />
-    </div>
+        <div className="flex flex-col">
+          <FileInputWithPreview
+            label="Upload Aadhar Document"
+            name="aadhar_uploaded_url"
+            onChange={handleFileChange}
+            disabled={disabled}
+            filePreview={filePreviews.aadhar_uploaded_url}
+            onDelete={() => handleFileDelete("aadhar_uploaded_url")}
+          />
+        </div>
 
-    <FileInputWithPreview
-      label="Upload Aadhar Document"
-      name="aadhar_uploaded_url"
-      onChange={handleFileChange}
-      disabled={disabled}
-      filePreview={filePreviews.aadhar_uploaded_url}
-      onDelete={() => handleFileDelete("aadhar_uploaded_url")}
-    />
+        <div className="flex flex-col">
+          <label className="mb-2 font-medium">PAN Number</label>
+          <input
+            type="text"
+            name="pan_number"
+            value={formData.pan_number}
+            onChange={handleChange}
+            disabled={disabled}
+            onKeyDown={handleKeyDown}
+            className={commonInputClass}
+            maxLength={10}
+            minLength={10}
+          />
+        </div>
 
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">PAN Number</label>
-      <input
-        type="text"
-        name="pan_number"
-        value={formData.pan_number}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-        maxLength={10}
-        minLength={10}
-      />
-    </div>
+        <div className="flex flex-col">
+          <FileInputWithPreview
+            label="Upload PAN Document"
+            name="pan_uploaded_url"
+            onChange={handleFileChange}
+            disabled={disabled}
+            filePreview={filePreviews.pan_uploaded_url}
+            onDelete={() => handleFileDelete("pan_uploaded_url")}
+          />
+        </div>
 
-    <FileInputWithPreview
-      label="Upload PAN Document"
-      name="pan_uploaded_url"
-      onChange={handleFileChange}
-      disabled={disabled}
-      filePreview={filePreviews.pan_uploaded_url}
-      onDelete={() => handleFileDelete("pan_uploaded_url")}
-    />
+        <div className="flex flex-col">
+          <label className="mb-2 font-medium">Date of Birth</label>
+          <input
+            type="date"
+            name="dob"
+            value={formData.dob}
+            onChange={handleChange}
+            disabled={disabled}
+            onKeyDown={handleKeyDown}
+            className={commonInputClass}
+          />
+        </div>
 
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">GSTIN Number</label>
-      <input
-        type="text"
-        name="gstin_number"
-        value={formData.gstin_number}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-        maxLength={15}
-      />
-    </div>
+        <div className="flex flex-col">
+          <label className="mb-2 font-medium">GSTIN Number</label>
+          <input
+            type="text"
+            name="gstin_number"
+            value={formData.gstin_number}
+            onChange={handleChange}
+            disabled={disabled}
+            onKeyDown={handleKeyDown}
+            className={commonInputClass}
+            maxLength={15}
+          />
+        </div>
+      </div>
 
-<div className="flex flex-col space-y-2">
-  <label className="font-medium text-gray-700">
-    Disclosure of Interest
-  </label>
-  <p className="text-sm text-gray-600">
-    Are you a Director/Designated Partner/Partner/Proprietor of any real estate project registered with RERA?
-  </p>
-  <div className="flex items-center gap-2 mt-1">
-    <input
-  type="checkbox"
-  id="individual_disclosure_of_interest"
-  name="individual_disclosure_of_interest"
-  checked={formData.individual_disclosure_of_interest}
-  onChange={(e) =>
-    setFormData((prev) => ({
-      ...prev,
-      individual_disclosure_of_interest: e.target.checked,
-    }))
-  }
-  disabled={disabled}
-  className="h-6 w-6 rounded border-gray-300 text-primary accent-[#5CAAAB] focus:ring-primary"
-/>
-
-    <label htmlFor="individual_disclosure_of_interest" className="text-sm text-gray-700">
-      Yes
-    </label>
-  </div>
-</div>
-
-
-  </>
-);
-
+      <div className="flex flex-col w-full bg-[#598c8c13] rounded-xl py-4 px-6 ">
+        <div className="flex flex-col space-y-2">
+          <label className="font-medium text-gray-700">
+            Disclosure of Interest
+          </label>
+          <p className="text-sm text-gray-600">
+            Are you a Director/Designated Partner/Partner/Proprietor of any real
+            estate project registered with RERA?
+          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <input
+              type="checkbox"
+              id="individual_disclosure_of_interest"
+              name="individual_disclosure_of_interest"
+              checked={formData.individual_disclosure_of_interest}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  individual_disclosure_of_interest: e.target.checked,
+                }))
+              }
+              disabled={disabled}
+              className="h-6 w-6 rounded border-gray-300 text-primary accent-[#5CAAAB] focus:ring-primary"
+            />
+            <label
+              htmlFor="individual_disclosure_of_interest"
+              className="text-sm text-gray-700"
+            >
+              Yes
+            </label>
+          </div>
+        </div>
+      </div>
+    </>
+  );
 }
 
 export default Individual;

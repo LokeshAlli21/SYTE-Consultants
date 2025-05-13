@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { FaFilePdf, FaImage } from 'react-icons/fa';
 
-const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, disabled=false }) => {
+const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, disabled=false, className }) => {
   const inputRef = useRef(null);
   const [fullScreenPreview, setFullScreenPreview] = useState(null);
   const [dragging, setDragging] = useState(false);
@@ -67,7 +67,7 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, di
 
       {!filePreview && !disabled &&
         <div
-        className={`flex flex-col items-center justify-center w-full h-12 border-2 border-dashed rounded-lg cursor-pointer transition ${dragging ? 'border-[#5caaab] bg-gray-100' : 'border-gray-300 bg-gray-50'}`}
+        className={`flex flex-col items-center justify-center w-full h-12 border-2 border-dashed rounded-lg cursor-pointer transition ${dragging ? 'border-[#5caaab] bg-gray-100' : 'border-gray-300 bg-gray-50'} ${className}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -115,7 +115,7 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, di
       <img
         src={typeof filePreview === 'object' ? filePreview.url : filePreview}
         alt="Preview"
-        className="h-12 w-auto rounded-md object-cover border shadow-sm cursor-pointer"
+        className={`h-12 ${!className && 'w-auto'} rounded-md object-cover border shadow-sm cursor-pointer ${className}`}
         onClick={handlePreviewClick}
       />
     ) : (

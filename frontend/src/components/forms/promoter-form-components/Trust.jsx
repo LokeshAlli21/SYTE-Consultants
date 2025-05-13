@@ -63,7 +63,7 @@ function Trust({
   };
   
 return (
-  <>
+    <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
     <div className="flex flex-col">
       <label className="mb-2 font-medium">Trust Name</label>
       <input
@@ -127,7 +127,7 @@ return (
         maxLength={15}
       />
     </div>
-  </>
+  </div>
 );
 
 }

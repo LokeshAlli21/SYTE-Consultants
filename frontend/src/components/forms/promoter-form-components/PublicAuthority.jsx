@@ -63,7 +63,7 @@ function PublicAuthority({
   };
   
 return (
-  <>
+    <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
     <div className="flex flex-col">
       <label className="mb-2 font-medium">Public Authority Name</label>
       <input
@@ -74,6 +74,20 @@ return (
         disabled={disabled}
         onKeyDown={handleKeyDown}
         className={commonInputClass}
+      />
+    </div>
+
+    <div className="flex flex-col">
+      <label className="mb-2 font-medium">GSTIN Number</label>
+      <input
+        type="text"
+        name="public_authority_gstin_number"
+        value={formData.public_authority_gstin_number}
+        onChange={handleChange}
+        disabled={disabled}
+        onKeyDown={handleKeyDown}
+        className={commonInputClass}
+        maxLength={15}
       />
     </div>
 
@@ -101,20 +115,7 @@ return (
       onDelete={() => handleFileDelete("public_authority_pan_uploaded_url")}
     />
 
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">GSTIN Number</label>
-      <input
-        type="text"
-        name="public_authority_gstin_number"
-        value={formData.public_authority_gstin_number}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-        maxLength={15}
-      />
-    </div>
-  </>
+  </div>
 );
 
 }

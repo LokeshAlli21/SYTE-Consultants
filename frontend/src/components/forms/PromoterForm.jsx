@@ -219,10 +219,10 @@ const PromoterForm = ({ id, disabled }) => {
     }
 
     // Run field-level validation
-    const isValid = validateFormData(formData);
-    if (!isValid) {
-      return; // Stop if validation fails
-    }
+    // const isValid = validateFormData(formData);
+    // if (!isValid) {
+    //   return; // Stop if validation fails
+    // }
 
     // Confirm before proceeding
     const confirmed = window.confirm(
@@ -232,27 +232,64 @@ const PromoterForm = ({ id, disabled }) => {
     );
     if (!confirmed) return;
 
-    console.log("Form Data:", formData);
-    setLoading(true);
-
-    try {
-      if (id) {
-        const response = await databaseService.updatePromoter(id, formData);
-        console.log("✅ Promoter updated:", response);
-        toast.success("✅ Promoter updated successfully!");
-      } else {
-        const response = await databaseService.uploadPromoterData(formData);
-        console.log("✅ Promoter created:", response);
-        toast.success("✅ Promoter created successfully!");
-      }
-
-      navigate("/promoters"); // Navigate on success
-    } catch (error) {
-      console.error("❌ Error handling Promoter:", error);
-      toast.error(`❌ Failed to handle Promoter: ${error.message}`);
-    } finally {
-      setLoading(false);
+    if(formData.promoter_type === 'individual'){
+      console.log(individualTypeForm);
     }
+    if(formData.promoter_type === 'hindu_undivided_family'){
+      console.log(hinduUndividedFamilyForm);
+    }
+    if(formData.promoter_type === 'proprietor'){
+      console.log(proprietorForm);
+    }
+    if(formData.promoter_type === 'company'){
+      console.log(companyForm);
+    }
+    if(formData.promoter_type === 'partnership'){
+      console.log(partnershipForm);
+    }
+    if(formData.promoter_type === 'limited_liability_partnership'){
+      console.log(llpForm);
+    }
+    if(formData.promoter_type === 'trust'){
+      console.log(trustForm);
+    }
+    if(formData.promoter_type === 'society'){
+      console.log(societyForm);
+    }
+    if(formData.promoter_type === 'public_authority'){
+      console.log(publicAuthorityForm);
+    }
+    if(formData.promoter_type === 'aop_boi'){
+      console.log(aopBoiForm);
+    }
+    if(formData.promoter_type === 'joint_venture'){
+      console.log(jointVentureForm);
+    }
+    if(formData.promoter_type === 'others'){
+      console.log("othersForm :",othersForm);
+    }
+
+    console.log("Form Data:", formData);
+    // setLoading(true);
+
+    // try {
+    //   if (id) {
+    //     const response = await databaseService.updatePromoter(id, formData);
+    //     console.log("✅ Promoter updated:", response);
+    //     toast.success("✅ Promoter updated successfully!");
+    //   } else {
+    //     const response = await databaseService.uploadPromoterData(formData);
+    //     console.log("✅ Promoter created:", response);
+    //     toast.success("✅ Promoter created successfully!");
+    //   }
+
+    //   navigate("/promoters"); // Navigate on success
+    // } catch (error) {
+    //   console.error("❌ Error handling Promoter:", error);
+    //   toast.error(`❌ Failed to handle Promoter: ${error.message}`);
+    // } finally {
+    //   // setLoading(false);
+    // }
   };
 
   const handleKeyDown = (e) => {
@@ -477,10 +514,21 @@ const PromoterForm = ({ id, disabled }) => {
             Promoter Information
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             {/* Common Fields */}
 
-            <div className="flex flex-col w-full">
+            <FileInputWithPreview
+              label="Upload Photo"
+              name="promoter_photo_uploaded_url"
+              onChange={handleFileChange}
+              disabled={disabled}
+              className={' w-[150px] h-[150px]'}
+              filePreview={filePreviews.promoter_photo_uploaded_url}
+              onDelete={() => handleFileDelete("promoter_photo_uploaded_url")}
+            />
+
+<div className=" lg:col-span-3 grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+              <div className="flex flex-col w-full">
               <label className="mb-2 font-medium text-gray-700">
                 Promoter Type *
               </label>
@@ -593,7 +641,7 @@ const PromoterForm = ({ id, disabled }) => {
               />
             </div>
 
-            <div className="flex flex-col gap-2">
+            <div className="flex col-span-2 flex-col gap-2">
               <label className="text-gray-700 font-semibold text-sm mb-1">
                 Office Address
               </label>
@@ -608,16 +656,15 @@ const PromoterForm = ({ id, disabled }) => {
               />
             </div>
 
-            <FileInputWithPreview
-              label="Upload Photo"
-              name="promoter_photo_uploaded_url"
-              onChange={handleFileChange}
-              disabled={disabled}
-              filePreview={filePreviews.promoter_photo_uploaded_url}
-              onDelete={() => handleFileDelete("promoter_photo_uploaded_url")}
-            />
+</div>
 
-            <div className="flex flex-col w-full">
+          </div>
+
+            {/* Conditional Fields */}
+            {renderConditionalFields()}
+
+            <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6  mb-6">
+                          <div className="flex flex-col w-full">
               <label className="mb-2 font-medium text-gray-700">
                 Select District *
               </label>
@@ -716,10 +763,52 @@ const PromoterForm = ({ id, disabled }) => {
                 }}
               />
             </div>
+            </div>
 
-            {/* Conditional Fields */}
-            {renderConditionalFields()}
+          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 ">
+                        <div className="flex flex-col">
+              <label className="mb-2 font-medium">Contact Person Name</label>
+              <input
+                type="text"
+                name="contact_person_name"
+                value={formData.contact_person_name}
+                onChange={handleChange}
+                disabled={disabled}
+                onKeyDown={handleKeyDown}
+                className={commonInputClass}
+              />
+            </div>
+
+             <div className="flex flex-col">
+              <label className="mb-2 font-medium">Contact Number</label>
+              <input
+                type="text"
+                name="contact_number"
+                value={formData.contact_number}
+                onChange={handleChange}
+                disabled={disabled}
+                onKeyDown={handleKeyDown}
+                className={commonInputClass}
+                pattern="\d{10}"
+                maxLength={10}
+                minLength={10}
+              />
+            </div>
+  
+            <div className="flex flex-col">
+              <label className="mb-2 font-medium">Email ID</label>
+              <input
+                type="email"
+                name="email_id"
+                value={formData.email_id}
+                onChange={handleChange}
+disabled={disabled}
+                onKeyDown={handleKeyDown}
+                className={commonInputClass}
+              />
+            </div>
           </div>
+
           {!disabled && (
             <button
               type="submit"

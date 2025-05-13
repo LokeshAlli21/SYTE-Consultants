@@ -63,13 +63,26 @@ function Company({
   };
   
   return (
-  <>
+  <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
     <div className="flex flex-col">
       <label className="mb-2 font-medium">Company Name</label>
       <input
         type="text"
         name="company_name"
         value={formData.company_name}
+        onChange={handleChange}
+        disabled={disabled}
+        onKeyDown={handleKeyDown}
+        className={commonInputClass}
+      />
+    </div>
+
+    <div className="flex flex-col">
+      <label className="mb-2 font-medium">CIN Number</label>
+      <input
+        type="text"
+        name="company_cin_number"
+        value={formData.company_cin_number}
         onChange={handleChange}
         disabled={disabled}
         onKeyDown={handleKeyDown}
@@ -102,33 +115,6 @@ function Company({
     />
 
     <div className="flex flex-col">
-      <label className="mb-2 font-medium">CIN Number</label>
-      <input
-        type="text"
-        name="company_cin_number"
-        value={formData.company_cin_number}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-      />
-    </div>
-
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">GSTIN Number</label>
-      <input
-        type="text"
-        name="company_gstin_number"
-        value={formData.company_gstin_number}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-        maxLength={15}
-      />
-    </div>
-
-    <div className="flex flex-col">
       <label className="mb-2 font-medium">Incorporation Number</label>
       <input
         type="text"
@@ -149,7 +135,21 @@ function Company({
       filePreview={filePreviews.company_incorporation_uploaded_url}
       onDelete={() => handleFileDelete("company_incorporation_uploaded_url")}
     />
-  </>
+     <div className="flex flex-col">
+      <label className="mb-2 font-medium">GSTIN Number</label>
+      <input
+        type="text"
+        name="company_gstin_number"
+        value={formData.company_gstin_number}
+        onChange={handleChange}
+        disabled={disabled}
+        onKeyDown={handleKeyDown}
+        className={commonInputClass}
+        maxLength={15}
+      />
+    </div>
+    
+  </div>
 );
 
 

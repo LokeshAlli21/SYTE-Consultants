@@ -64,19 +64,7 @@ function Proprietor({
   
   return (
   <>
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">Concern Name</label>
-      <input
-        type="text"
-        name="proprietor_concern_name"
-        value={formData.proprietor_concern_name}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-      />
-    </div>
-
+  <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
     <div className="flex flex-col">
       <label className="mb-2 font-medium">First Name</label>
       <input
@@ -115,7 +103,37 @@ function Proprietor({
         className={commonInputClass}
       />
     </div>
+</div>
 
+    <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 mb-6">
+<div className="flex flex-col">
+      <label className="mb-2 font-medium">Concern Name</label>
+      <input
+        type="text"
+        name="proprietor_concern_name"
+        value={formData.proprietor_concern_name}
+        onChange={handleChange}
+        disabled={disabled}
+        onKeyDown={handleKeyDown}
+        className={commonInputClass}
+      />
+    </div>
+        <div className="flex flex-col">
+      <label className="mb-2 font-medium">Father's Full Name</label>
+      <input
+        type="text"
+        name="proprietor_father_full_name"
+        value={formData.proprietor_father_full_name}
+        onChange={handleChange}
+        disabled={disabled}
+        onKeyDown={handleKeyDown}
+        className={commonInputClass}
+      />
+    </div>
+    </div>
+
+<div className='grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6'>
+  
     <div className="flex flex-col">
       <label className="mb-2 font-medium">PAN Number</label>
       <input
@@ -140,20 +158,7 @@ function Proprietor({
       onDelete={() => handleFileDelete("pan_uploaded_url")}
     />
 
-    <div className="flex flex-col">
-      <label className="mb-2 font-medium">Father's Full Name</label>
-      <input
-        type="text"
-        name="proprietor_father_full_name"
-        value={formData.proprietor_father_full_name}
-        onChange={handleChange}
-        disabled={disabled}
-        onKeyDown={handleKeyDown}
-        className={commonInputClass}
-      />
-    </div>
-
-    <div className="flex flex-col">
+<div className="flex flex-col">
       <label className="mb-2 font-medium">GSTIN Number</label>
       <input
         type="text"
@@ -167,22 +172,42 @@ function Proprietor({
       />
     </div>
 
-    <div className="flex flex-row items-center space-x-3 mt-4">
-      <input
-        type="checkbox"
-        name="proprietor_disclosure_of_interest"
-        checked={formData.proprietor_disclosure_of_interest}
-        onChange={(e) =>
-          setFormData((prev) => ({
-            ...prev,
-            proprietor_disclosure_of_interest: e.target.checked,
-          }))
-        }
-        disabled={disabled}
-        className="w-4 h-4"
-      />
-      <label className="font-medium">Disclosure of Interest</label>
+
     </div>
+
+      <div className="flex flex-col w-full bg-[#598c8c13]  rounded-xl py-4 px-6 ">
+        <div className="flex flex-col space-y-2">
+          <label className="font-medium text-gray-700">
+            Disclosure of Interest
+          </label>
+          <p className="text-sm text-gray-600">
+            Are you a Director/Designated Partner/Partner/Proprietor of any real
+            estate project registered with RERA?
+          </p>
+          <div className="flex items-center gap-2 mt-1">
+            <input
+              type="checkbox"
+              id="individual_disclosure_of_interest"
+              name="individual_disclosure_of_interest"
+              checked={formData.individual_disclosure_of_interest}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  individual_disclosure_of_interest: e.target.checked,
+                }))
+              }
+              disabled={disabled}
+              className="h-6 w-6 rounded border-gray-300 text-primary accent-[#5CAAAB] focus:ring-primary"
+            />
+            <label
+              htmlFor="individual_disclosure_of_interest"
+              className="text-sm text-gray-700"
+            >
+              Yes
+            </label>
+          </div>
+        </div>
+      </div>
   </>
 );
 
