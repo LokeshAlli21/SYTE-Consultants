@@ -20,6 +20,8 @@ import {
   Others,
 } from "./promoter-form-components/index.js";
 
+import { validateFormData } from "./promoter-form-components/validateFormData.jsx";
+
 const PromoterForm = ({ id, disabled }) => {
   const selectRef = useRef(null);
 
@@ -139,7 +141,7 @@ const PromoterForm = ({ id, disabled }) => {
   const [filePreviews, setFilePreviews] = useState({});
 
   const [districtCityMap, setDistrictCityMap] = useState({})
-  
+
   // Fetch cities and districts on component mount
   useEffect(() => {
     async function fetchCitiesAndDistricts() {
@@ -172,135 +174,106 @@ const PromoterForm = ({ id, disabled }) => {
     }));
   };
 
-  function validateFormData(formData) {
-    const errors = [];
+  const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    // Contact number: 10 digits
-    if (formData.contact_number && !/^\d{10}$/.test(formData.contact_number)) {
-      errors.push("📞 Contact number must be exactly 10 digits.");
-    }
-
-    // Email: basic format
-    if (
-      formData.email_id &&
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email_id)
-    ) {
-      errors.push("📧 Invalid email address.");
-    }
-
-    // Aadhar: 12 digits
-    if (formData.aadhar_number && !/^\d{12}$/.test(formData.aadhar_number)) {
-      errors.push("🆔 Aadhar number must be exactly 12 digits.");
-    }
-
-    // PAN: Format ABCDE1234F
-    const panRegex = /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/;
-    if (formData.pan_number && !panRegex.test(formData.pan_number)) {
-      errors.push("📝 Invalid PAN number.");
-    }
-    if (
-      formData.partnership_pan_number &&
-      !panRegex.test(formData.partnership_pan_number)
-    ) {
-      errors.push("🤝 Invalid Partnership PAN number.");
-    }
-    if (
-      formData.company_pan_number &&
-      !panRegex.test(formData.company_pan_number)
-    ) {
-      errors.push("🏢 Invalid Company PAN number.");
-    }
-
-    if (errors.length > 0) {
-      errors.forEach((msg) => toast.error(msg));
-      return false;
-    }
-
-    return true;
+  if (!formData.promoter_type) {
+    toast.error("⚠️ Please select promoter type");
+    return;
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const confirmed = window.confirm(
+    id
+      ? "Do you want to update this promoter?"
+      : "Do you want to create a new promoter?"
+  );
+  if (!confirmed) return;
 
-    // Check if promoter_type is selected
-    if (!formData.promoter_type) {
-      toast.error("⚠️ Please select promoter type");
+  setLoading(true);
+
+  // Choose correct formData based on promoter type
+  let typeFormData = null;
+  switch (formData.promoter_type) {
+    case "individual":
+      typeFormData = individualTypeForm;
+      break;
+    case "hindu_undivided_family":
+      typeFormData = hinduUndividedFamilyForm;
+      break;
+    case "proprietor":
+      typeFormData = proprietorForm;
+      break;
+    case "company":
+      typeFormData = companyForm;
+      break;
+    case "partnership":
+      typeFormData = partnershipForm;
+      break;
+    case "limited_liability_partnership":
+      typeFormData = llpForm;
+      break;
+    case "trust":
+      typeFormData = trustForm;
+      break;
+    case "society":
+      typeFormData = societyForm;
+      break;
+    case "public_authority":
+      typeFormData = publicAuthorityForm;
+      break;
+    case "aop_boi":
+      typeFormData = aopBoiForm;
+      break;
+    case "joint_venture":
+      typeFormData = jointVentureForm;
+      break;
+    case "others":
+      typeFormData = othersForm;
+      break;
+    default:
+      toast.error("⚠️ Unknown promoter type");
+      setLoading(false);
       return;
+  }
+
+  // Run validations
+  const isCommonValid = validateFormData(formData);
+  const isTypeValid = validateFormData(typeFormData);
+
+  if (!isCommonValid || !isTypeValid) {
+    setLoading(false);
+    return;
+  }
+
+  try {
+    let response;
+
+    if (id) {
+      response = await databaseService.updatePromoter(id, {
+        commonData: formData,
+        formData: typeFormData,
+        promoterType: formData.promoter_type,
+      });
+      console.log("✅ Promoter updated:", response);
+      toast.success("✅ Promoter updated successfully!");
+    } else {
+      response = await databaseService.uploadPromoterData({
+        commonData: formData,
+        formData: typeFormData,
+        promoterType: formData.promoter_type,
+      });
+      console.log("✅ Promoter created:", response);
+      toast.success("✅ Promoter created successfully!");
     }
 
-    // Run field-level validation
-    // const isValid = validateFormData(formData);
-    // if (!isValid) {
-    //   return; // Stop if validation fails
-    // }
-
-    // Confirm before proceeding
-    const confirmed = window.confirm(
-      id
-        ? "Do you want to update this promoter?"
-        : "Do you want to create a new promoter?"
-    );
-    if (!confirmed) return;
-
-    if(formData.promoter_type === 'individual'){
-      console.log(individualTypeForm);
-    }
-    if(formData.promoter_type === 'hindu_undivided_family'){
-      console.log(hinduUndividedFamilyForm);
-    }
-    if(formData.promoter_type === 'proprietor'){
-      console.log(proprietorForm);
-    }
-    if(formData.promoter_type === 'company'){
-      console.log(companyForm);
-    }
-    if(formData.promoter_type === 'partnership'){
-      console.log(partnershipForm);
-    }
-    if(formData.promoter_type === 'limited_liability_partnership'){
-      console.log(llpForm);
-    }
-    if(formData.promoter_type === 'trust'){
-      console.log(trustForm);
-    }
-    if(formData.promoter_type === 'society'){
-      console.log(societyForm);
-    }
-    if(formData.promoter_type === 'public_authority'){
-      console.log(publicAuthorityForm);
-    }
-    if(formData.promoter_type === 'aop_boi'){
-      console.log(aopBoiForm);
-    }
-    if(formData.promoter_type === 'joint_venture'){
-      console.log(jointVentureForm);
-    }
-    if(formData.promoter_type === 'others'){
-      console.log("othersForm :",othersForm);
-    }
-
-    console.log("Form Data:", formData);
-    // setLoading(true);
-
-    // try {
-    //   if (id) {
-    //     const response = await databaseService.updatePromoter(id, formData);
-    //     console.log("✅ Promoter updated:", response);
-    //     toast.success("✅ Promoter updated successfully!");
-    //   } else {
-    //     const response = await databaseService.uploadPromoterData(formData);
-    //     console.log("✅ Promoter created:", response);
-    //     toast.success("✅ Promoter created successfully!");
-    //   }
-
-    //   navigate("/promoters"); // Navigate on success
-    // } catch (error) {
-    //   console.error("❌ Error handling Promoter:", error);
-    //   toast.error(`❌ Failed to handle Promoter: ${error.message}`);
-    // } finally {
-    //   // setLoading(false);
-    // }
-  };
+    navigate("/promoters");
+  } catch (error) {
+    console.error("❌ Error handling Promoter:", error);
+    toast.error(`❌ Failed to handle Promoter: ${error.message}`);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
@@ -561,7 +534,7 @@ const PromoterForm = ({ id, disabled }) => {
                   { label: "Public Authority", value: "public_authority" },
                   { label: "AOP/BOI", value: "aop_boi" },
                   { label: "Joint Venture", value: "joint_venture" },
-                  { label: "Others", value: "others" },
+                  // { label: "Others", value: "others" },
                 ]}
                 value={{
                   label:

@@ -3,7 +3,7 @@ import { supabase } from '../supabase/supabaseClient.js';
 
 export const uploadPromoterData = async (req, res) => {
   try {
-    // Step 1: Extract data from the request body
+    // Step 1: Extract data from request body
     const {
       promoter_name,
       contact_number,
@@ -11,25 +11,14 @@ export const uploadPromoterData = async (req, res) => {
       district,
       city,
       promoter_type,
-      full_name,
       office_address,
-      aadhar_number,
-      pan_number,
-      dob,
       contact_person_name,
-      partnership_pan_number,
-      company_pan_number,
-      company_incorporation_number,
-      aadhar_uploaded_url,
-      pan_uploaded_url,
-      partnership_pan_uploaded_url,
-      company_pan_uploaded_url,
-      company_incorporation_uploaded_url,
       promoter_photo_uploaded_url,
+      promoter_details,
     } = req.body;
-  
-    // Step 2: Insert promoter basic data into 'Promoters' table
-    const response = await supabase
+
+    // Step 2: Insert into 'promoters' table
+    const promoterInsertRes = await supabase
       .from('promoters')
       .insert([{
         promoter_name,
@@ -40,73 +29,117 @@ export const uploadPromoterData = async (req, res) => {
         promoter_type,
       }])
       .select('id');
-  
-    console.log("🔍 Raw Supabase insert response:", response);
-    const { data: promoterData, error: promoterError, status, statusText } = response;
-  
+
+    const { data: promoterData, error: promoterError, status, statusText } = promoterInsertRes;
+
     if (promoterError) {
       console.error('❌ Error inserting into Promoters:', promoterError);
-      console.error('🔎 Supabase insert status:', status, statusText);
       return res.status(500).json({
         error: 'Failed to insert promoter data',
         details: promoterError,
         status,
-        statusText
+        statusText,
       });
     }
-  
-    const promoterId = promoterData?.[0]?.id;
-  
+
+    if (!promoterData || promoterData.length === 0) {
+      return res.status(500).json({ error: 'No promoter data returned' });
+    }
+
+    const promoterId = promoterData[0].id;
     if (!promoterId) {
       return res.status(500).json({ error: 'Failed to retrieve promoter ID after insert' });
     }
-  
-    // Step 3: Construct the promoter details object dynamically
+
+    // Step 3: Build promoter_details object
     const promoterDetails = {
-      full_name,
       office_address,
-      aadhar_number,
-      pan_number,
-      dob: dob || null, // Insert null if dob is not provided
       contact_person_name,
-      partnership_pan_number,
-      company_pan_number,
-      company_incorporation_number,
-      promoter_id: promoterId, // Link the promoter details to the promoter
-      aadhar_uploaded_url,
-      pan_uploaded_url,
-      partnership_pan_uploaded_url,
-      company_pan_uploaded_url,
-      company_incorporation_uploaded_url,
-      promoter_photo_uploaded_url
+      promoter_id: promoterId,
+      promoter_photo_uploaded_url,
     };
-  
-    // Step 4: Filter out invalid or empty fields
+
+    // Step 4: Filter out empty/invalid fields
     const filteredPromoterDetails = {};
     Object.entries(promoterDetails).forEach(([key, value]) => {
-      if (value && value !== 'null' && value !== 'undefined') {
+      if (value && value !== 'null' && value !== 'undefined' && value !== '') {
         filteredPromoterDetails[key] = value;
       }
     });
-  
-    // Step 5: Insert promoter details into 'PromoterDetails' table
+
+    // Step 5: Insert into 'promoter_details' table
     const { data: detailsData, error: detailsError } = await supabase
       .from('promoter_details')
-      .insert([filteredPromoterDetails]);
-  
+      .insert([filteredPromoterDetails])
+      .select('id');
+
     if (detailsError) {
-      console.error('Error inserting into PromoterDetails:', detailsError);
-      return res.status(500).json({ error: 'Failed to insert promoter details', details: detailsError });
+      console.error('❌ Error inserting into PromoterDetails:', detailsError);
+      return res.status(500).json({
+        error: 'Failed to insert promoter details',
+        details: detailsError,
+      });
     }
-  
-    // Step 6: Return success response
-    res.status(201).json({ message: 'Promoter and details uploaded successfully', promoterData, detailsData });
-  
+
+    if (!detailsData || detailsData.length === 0) {
+      return res.status(500).json({ error: 'No details data returned' });
+    }
+
+    const promoterDetailsId = detailsData[0].id;
+
+    // Step 6: Filter promoter_details object
+    const filteredAdditionalDetails = {};
+    Object.entries(promoter_details).forEach(([key, value]) => {
+      if (value && value !== 'null' && value !== 'undefined' && value !== '') {
+        filteredAdditionalDetails[key] = value;
+      }
+    });
+
+    // Step 7: Insert additional details based on promoter_type
+    const tableMap = {
+      individual: 'individual_promoters',
+      hindu_undivided_family: 'huf_promoters',
+      proprietor: 'proprietor_promoters',
+      company: 'company_promoters',
+      partnership: 'partnership_promoters',
+      limited_liability_partnership: 'llp_promoters',
+      trust: 'trust_promoters',
+      society: 'society_promoters',
+      public_authority: 'public_authority_promoters',
+      aop_boi: 'aop_boi_promoters',
+      joint_venture: 'joint_venture_promoters',
+    };
+
+    const targetTable = tableMap[promoter_type];
+
+    if (!targetTable) {
+      return res.status(400).json({ error: 'Invalid promoter type' });
+    }
+
+    const additionalInsertRes = await supabase
+      .from(targetTable)
+      .insert([{ promoter_details_id: detailsData[0].id, ...filteredAdditionalDetails }]);
+
+    if (additionalInsertRes.error) {
+      console.error('Error inserting additional promoter details:', additionalInsertRes.error);
+      return res.status(500).json({
+        error: 'Failed to insert additional promoter details',
+        details: additionalInsertRes.error
+      });
+    }
+
+    // Step 7: Success response
+    return res.status(201).json({
+      message: '✅ Promoter and details uploaded successfully',
+      promoterData,
+      detailsData,
+      additionalInsertRes,
+    });
+
   } catch (error) {
-    console.error('Unexpected error in uploadPromoterData:', error);
+    console.error('❌ Unexpected error in uploadPromoterData:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
-  
 };
 
 export const uploadPromoterFiles = async (req, res) => {
