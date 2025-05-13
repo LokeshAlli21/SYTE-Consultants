@@ -49,20 +49,32 @@ useEffect(() => {
       const [cityOptions, setCityOptions] = useState([]);
       const [districtOptions, setDistrictOptions] = useState([]);
     
-      // Fetch cities and districts on component mount
-      useEffect(() => {
-        async function fetchCitiesAndDistricts() {
-          try {
-            const { cityOptions, districtOptions } = await databaseService.getAllCitiesAndDistricts(); // Make sure this returns data
-            setCityOptions(cityOptions);
-            setDistrictOptions(districtOptions);
-          } catch (error) {
-            console.error("Error fetching cities and districts:", error);
-          }
-        }
-    
-        fetchCitiesAndDistricts();
-      }, []);
+  const [districtCityMap, setDistrictCityMap] = useState({})
+  
+  // Fetch cities and districts on component mount
+  useEffect(() => {
+    async function fetchCitiesAndDistricts() {
+      try {
+        const {districtOptions, districtCityMap } =
+          await databaseService.getAllCitiesAndDistricts(); // Make sure this returns data
+        setDistrictCityMap(districtCityMap)
+        setDistrictOptions(districtOptions);
+      } catch (error) {
+        console.error("Error fetching cities and districts:", error);
+      }
+    }
+
+    fetchCitiesAndDistricts();
+  }, []);
+
+    useEffect(() => {
+    if (formData.district) {
+      setCityOptions(districtCityMap[formData.district] || []);
+      console.log(districtCityMap[formData.district]|| []);
+      
+    }
+  }, [formData.district]);
+
     
 
     
