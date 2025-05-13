@@ -49,45 +49,51 @@ class DatabaseService {
     const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
 
     // 🗂 Upload file fields in formData
-    for (const key in formData) {
-      const file = formData[key];
+const identifierMap = {
+  aadhar_uploaded_url: "aadhar_number",
+  pan_uploaded_url:  (promoterType === 'proprietor') ?"proprietor_pan_number" : "pan_number",
+  karta_pan_uploaded_url: "karta_pan_card",
+  huf_pan_pan_uploaded_url: "huf_pan_card",
+  company_pan_uploaded_url: "company_pan_number",
+  company_incorporation_uploaded_url: "company_incorporation_number",
+  partnership_pan_uploaded_url: "partnership_pan_number",
+  llp_pan_uploaded_url: "llp_pan_number",
+  trust_pan_uploaded_url: "trust_pan_number",
+  society_pan_uploaded_url: "society_pan_number",
+  public_authority_pan_uploaded_url: "public_authority_pan_number",
+  aop_boi_pan_uploaded_url: "aop_boi_pan_number",
+  aop_boi_deed_of_formation_uploaded_url: "",
+  joint_venture_pan_uploaded_url: "joint_venture_pan_number",
+  joint_venture_deed_of_formation_uploaded_url: ""
+};
 
-      if (key.endsWith("_uploaded_url") && file instanceof File) {
-        if (!file) continue;
+for (const key in formData) {
+  const file = formData[key];
 
-        let identifier = "NoIdentifier";
-        const ext = file.name?.split(".").pop() || "pdf";
+  if (key.endsWith("_uploaded_url") && file instanceof File) {
+    if (!file) continue;
 
-        switch (key) {
-          case "pan_uploaded_url":
-            identifier = formData.pan_number || "NoPAN";
-            break;
-          case "aadhar_uploaded_url":
-            identifier = formData.aadhar_number || "NoAadhar";
-            break;
-          case "partnership_pan_uploaded_url":
-            identifier = formData.partnership_pan_number || "NoPartnershipPAN";
-            break;
-          case "company_pan_uploaded_url":
-            identifier = formData.company_pan_number || "NoCompanyPAN";
-            break;
-          case "company_incorporation_uploaded_url":
-            identifier = formData.company_incorporation_number || "NoIncorpNumber";
-            break;
-          default:
-            identifier = key.replace("_uploaded_url", "");
-        }
+    const ext = file.name?.split(".").pop() || "pdf";
+    const identifierField = identifierMap[key];
 
-        const renamedFile = new File(
-          [file],
-          `${promoterName}_${identifier}_${timestamp}.${ext}`,
-          { type: file.type }
-        );
+    let identifier =''
 
-        fileFormData.append(key, renamedFile);
-        fieldsToUpload.push(key);
-      }
+    if(promoterType === 'proprietor' && key.includes("pan")){
+      identifier = `proprietor_${(identifierField && formData[identifierField]) || key.replace("_uploaded_url", "")}`
+    } else {
+      identifier = (identifierField && formData[identifierField]) || key.replace("_uploaded_url", "")
     }
+
+    const renamedFile = new File(
+      [file],
+      `${promoterName}_${identifier}_${timestamp}.${ext}`,
+      { type: file.type }
+    );
+
+    fileFormData.append(key, renamedFile);
+    fieldsToUpload.push(key);
+  }
+}
 
     // 📸 Handle promoter_photo_uploaded_url from commonData separately
     if (

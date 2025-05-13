@@ -152,19 +152,35 @@ export const uploadPromoterFiles = async (req, res) => {
 
     const uploadedUrls = {};
 
+    // Define folder mapping for each specific fieldname
+    const folderMap = {
+      promoter_photo_uploaded_url:'photo',
+      aadhar_uploaded_url: "individual/aadhar",
+      pan_uploaded_url: "individual/pan",
+      proprietor_pan_uploaded_url: "proprietor/pan",
+      karta_pan_uploaded_url: "huf/karta/pan",
+      huf_pan_pan_uploaded_url: "huf/huf/pan",
+      company_pan_uploaded_url: "company/pan",
+      company_incorporation_uploaded_url: "company/incorporation",
+      partnership_pan_uploaded_url: "partnership/pan",
+      llp_pan_uploaded_url: "llp/pan",
+      trust_pan_uploaded_url: "trust/pan",
+      society_pan_uploaded_url: "society/pan",
+      public_authority_pan_uploaded_url: "public_authority/pan",
+      aop_boi_pan_uploaded_url: "aop_boi/pan",
+      aop_boi_deed_of_formation_uploaded_url: "aop_boi/deed_of_formation",
+      joint_venture_pan_uploaded_url: "joint_venture/pan",
+      joint_venture_deed_of_formation_uploaded_url: "joint_venture/deed_of_formation"
+    };
+
     for (const file of files) {
       const fieldName = file.fieldname;
+      // console.log("fieldName :",fieldName);
+      
       const originalName = file.originalname;
 
-      // Extract folder name based on fieldname convention
-      let folder = "others";
-      if (fieldName.includes("pan")) folder = "pan";
-      else if (fieldName.includes("aadhar")) folder = "aadhar";
-      else if (fieldName.includes("incorporation")) folder = "incorporation";
-      else if (fieldName.includes("partnership")) folder = "partnership";
-      else if (fieldName.includes("company")) folder = "company";
-      else if (fieldName.includes("address")) folder = "address";
-      else if (fieldName.includes("photo")) folder = "photo";
+      // Determine folder from map or fallback to "others"
+      const folder = folderMap[fieldName] || "others";
 
       const fileExt = originalName.split('.').pop();
       const filePath = `promoter-files/${folder}/${originalName}`;
@@ -187,8 +203,7 @@ export const uploadPromoterFiles = async (req, res) => {
         .getPublicUrl(filePath);
 
       uploadedUrls[fieldName] = publicUrlData.publicUrl;
-      console.log(uploadedUrls);
-      
+      console.log(`${fieldName} uploaded to ${publicUrlData.publicUrl}`);
     }
 
     return res.status(200).json(uploadedUrls);
