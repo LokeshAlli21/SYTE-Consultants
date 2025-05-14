@@ -165,6 +165,7 @@ function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDe
     setFormData={setFormData}
     currentUnitId={currentUnitId}
     setCurrentUnitId={setCurrentUnitId}
+    setIsDesabled={setIsDesabled}
     handleUpdateProjectUnit={handleUpdateProjectUnit}
     handleSubmitProjectUnit={handleSubmitProjectUnit}
      />

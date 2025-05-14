@@ -41,6 +41,7 @@ const unitStatusOptions = [
 ];
 
 function UnitDetailsForm({
+  setIsDesabled,
   disabled = false,
   setIsUnitDetailsFormActive,
   formData,
@@ -179,6 +180,7 @@ function UnitDetailsForm({
           onClick={() => {
                 setIsUnitDetailsFormActive(false);
                 setCurrentUnitId(null);
+                setIsDesabled(false)
               }}
           className="fixed top-4 right-4 text-gray-600 hover:text-red-500 text-5xl"
           aria-label="Close"
@@ -504,6 +506,7 @@ function UnitDetailsForm({
               onClick={() => {
                 setIsUnitDetailsFormActive(false);
                 setCurrentUnitId(null);
+                setIsDesabled(false)
               }}
               type="button"
             >

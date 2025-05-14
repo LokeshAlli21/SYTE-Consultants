@@ -195,7 +195,7 @@ function ProjectProfessionalDetailsForm({
           )}
     
           {/* --- SELECT MODE --- */}
-          {mode === 'select' && (
+          {mode === 'select' && !disabled && (
             <div className="mb-4">
               <label className="mb-2 block font-medium text-gray-700">Select {roleLabel} *</label>
               <Select
@@ -244,7 +244,18 @@ function ProjectProfessionalDetailsForm({
           )}
     
           {/* --- ADD MODE --- */}
-          {(mode === 'add' || disabled) && (
+
+          {(disabled) && !roleData?.name && (
+            <div className="flex justify-center items-center py-">
+              <div className="bg-red-50  text-red-700 px-6 py-4 rounded-xl  w-full ">
+                <h3 className="text-center font-semibold text-lg">
+                  🚫 <span className="font-bold">{roleLabel}</span> is not available.
+                </h3>
+              </div>
+            </div>
+          )}
+
+          {(mode === 'add' || disabled) && !((disabled) && !roleData?.name) &&(
             <>
             <div className='grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6'>
               {['name', 'contact_number', 'email_id', 'office_address', 'licence_number', 'pan_number'].map(field => (
