@@ -401,7 +401,7 @@ CREATE TABLE site_progress (
 -- Table to store building progress details linked to site progress
 CREATE TABLE building_progress (
     id SERIAL PRIMARY KEY,  -- Unique ID for the building progress entry
-    site_progress_id INT NOT NULL,  -- Foreign Key to the site_progress table
+    site_progress_id INT NOT NULL UNIQUE,  -- Foreign Key to the site_progress table
 
     excavation NUMERIC(5,2) CHECK (excavation BETWEEN 0 AND 100),                       -- 1. Excavation
     basement NUMERIC(5,2) CHECK (basement BETWEEN 0 AND 100),                           -- 2. Basements (if any)
@@ -431,7 +431,7 @@ CREATE TABLE common_areas_progress (
         -- }
 
     id SERIAL PRIMARY KEY,  -- Unique ID for the common areas progress entry
-    site_progress_id INT NOT NULL,  -- Foreign Key to the site_progress table
+    site_progress_id INT NOT NULL UNIQUE,  -- Foreign Key to the site_progress table
 
     internal_roads_footpaths JSONB,       -- 1. Internal Roads & Footpaths
     water_supply JSONB,                   -- 2. Water Supply

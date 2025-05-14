@@ -419,6 +419,7 @@ disabled={disabled}
         <FileInputWithPreview
   label="Upload AFS"
   name="afs_uploaded_url"
+  disabled={disabled}
   onChange={handleFileChange}
   filePreview={filePreviews.afs_uploaded_url}
   onDelete={() => handleFileDelete("afs_uploaded_url")}
@@ -427,6 +428,7 @@ disabled={disabled}
   label="Upload Sale Deed"
   name="sale_deed_uploaded_url"
   onChange={handleFileChange}
+    disabled={disabled}
   filePreview={filePreviews.sale_deed_uploaded_url}
   onDelete={() => handleFileDelete("sale_deed_uploaded_url")}
 />

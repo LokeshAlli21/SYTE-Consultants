@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 function ProjectProgressForm({
   disabled,
@@ -11,6 +12,8 @@ function ProjectProgressForm({
   handleSubmitProjectCommonAreasProgresss,
 }) {
   const [step, setStep] = useState(1);
+
+  const navigate = useNavigate()
 
   const [focusedField, setFocusedField] = useState({ key: null, name: null });
 const inputRefs = useRef({});
@@ -57,64 +60,22 @@ const inputRefs = useRef({});
     }
   };
 
-  const handleSubmitBuilding = (e) => {
+  const handleSubmitBuilding = async(e) => {
     e.preventDefault();
     const confirm = window.confirm("Submit Building Progress?");
     if (!confirm) return;
-    handleSubmitProjectBuildingProgress();
-    setStep(2);
+    if(await handleSubmitProjectBuildingProgress()) {setStep(p => p+1)}
   };
 
-  const handleSubmitCommonAreas = (e) => {
+  const handleSubmitCommonAreas = async(e) => {
     e.preventDefault();
     const confirm = window.confirm("Submit Common Area Progress?");
     if (!confirm) return;
-    handleSubmitProjectCommonAreasProgresss();
+    if(await handleSubmitProjectCommonAreasProgresss()) {navigate('/projects')}
   };
 
   const inputStyles = "w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab]";
   const sectionBox = "bg-white p-6 rounded-xl shadow-md";
-
-  const YesNoToggle = ({ value, onChange, name, disabled = false, inputRef }) => {
-    const handleClick = (val) => {
-      if (!disabled) {
-        onChange({ target: { name, checked: val } });
-      }
-    };
-  
-    return (
-      <div className="flex gap-2 items-center">
-        <label
-          className={`px-3 py-1 rounded-md border text-sm cursor-pointer transition
-            ${value ? 'bg-[#5caaab] text-white border-[#5caaab]' : 'bg-white border-gray-300 text-gray-600'}
-          `}
-          onClick={() => handleClick(true)}
-        >
-          Yes
-        </label>
-        <label
-          className={`px-3 py-1 rounded-md border text-sm cursor-pointer transition
-            ${!value ? 'bg-[#5caaab] text-white border-[#5caaab]' : 'bg-white border-gray-300 text-gray-600'}
-          `}
-          onClick={() => handleClick(false)}
-        >
-          No
-        </label>
-  
-        {/* Hidden checkbox to allow form compatibility */}
-        <input
-          type="checkbox"
-          name={name}
-          checked={value}
-          onChange={() => {}}
-          ref={inputRef}
-          className="hidden"
-          disabled={disabled}
-        />
-      </div>
-    );
-  };
-  
 
   const ProgressBar = () => {
     // Define the steps
@@ -174,7 +135,17 @@ const inputRefs = useRef({});
   const BuildingForm = () => (
     <form onSubmit={handleSubmitBuilding} className="flex flex-col gap-6">
       <div className={sectionBox}>
-        <h2 className="text-xl font-bold text-[#4a9899] mb-4">Building Progress</h2>
+        <div className='mb-4 flex flex-row items-center justify-between'>
+          <h2 className="text-xl font-bold text-[#4a9899] ">Building Progress</h2>
+          {projectBuildingProgress.updated_at && (
+            <div className="flex items-center space-x-2 text-lg text-gray-700">
+              <span className="font-medium">Last Updated:</span>
+              <span className="text-red-600 font-semibold">
+                {projectBuildingProgress.updated_at}
+              </span>
+            </div>
+          )}
+        </div>
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-300 text-md">
             <thead className="bg-gray-100 border-gray-300 text-[#5caaab] font-semibold">
@@ -239,8 +210,18 @@ const inputRefs = useRef({});
 
   const CommonAreaForm = () => (
     <form onSubmit={handleSubmitCommonAreas} className="flex flex-col gap-6">
-  <div className={sectionBox}>
-    <h2 className="text-xl font-bold text-[#4a9899] mb-4">Common Areas Progress</h2>
+        <div className={sectionBox}>
+        <div className='mb-4 flex flex-row items-center justify-between'>
+          <h2 className="text-xl font-bold text-[#4a9899] ">Building Progress</h2>
+          {projectCommonAreasProgress.updated_at && (
+            <div className="flex items-center space-x-2 text-lg text-gray-700">
+              <span className="font-medium">Last Updated:</span>
+              <span className="text-red-600 font-semibold">
+                {projectCommonAreasProgress.updated_at}
+              </span>
+            </div>
+          )}
+        </div>
     <div className="overflow-x-auto">
       <table className="min-w-full border border-gray-300 text-md">
         <thead className="bg-gray-100 border-gray-300 text-[#5caaab] font-semibold">

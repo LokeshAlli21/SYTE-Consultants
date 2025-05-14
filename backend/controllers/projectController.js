@@ -721,55 +721,114 @@ export const uploadProjectDocuments = async (req, res) => {
   }
 };
 
+// Helper to get or create site_progress entry and return its id
+const getOrCreateSiteProgressId = async (project_id) => {
+  // Try to fetch existing entry
+  const { data: existing, error: fetchError } = await supabase
+    .from('site_progress')
+    .select('id')
+    .eq('project_id', project_id)
+    .single();
+
+  if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
+
+  if (existing) return existing.id;
+
+  // Insert new if not exists
+  const { data: inserted, error: insertError } = await supabase
+    .from('site_progress')
+    .insert({ project_id })
+    .select('id')
+    .single();
+
+  if (insertError) throw insertError;
+
+  return inserted.id;
+};
 
 export const addBuildingProgress = async (req, res) => {
   try {
     const { project_id, ...progressData } = req.body;
     // console.log(req.body);
     
-    if (!project_id) return res.status(400).json({ message: 'Missing project_id' });
 
+    if (!project_id) {
+      return res.status(400).json({ message: 'Missing project_id' });
+    }
+
+    // Clean the input data
     const filtered = {};
     Object.entries(progressData).forEach(([key, value]) => {
-      if (typeof value === 'number' && value === 0) return;
-      filtered[key] = value;
+      if (value !== null && value !== '' && value !== undefined) {
+        filtered[key] = value;
+      }
     });
 
-    const { error } = await supabase.from('site_progress').upsert([{ project_id, ...filtered }], { onConflict: 'project_id' });
-    // console.log(error);
+    if (Object.keys(filtered).length === 0) {
+      return res.status(400).json({ message: 'No valid building progress data provided' });
+    }
+
+    // const site_progress_id = await getOrCreateSiteProgressId(project_id);
+
+    console.log('site_progress_id :',site_progress_id);
     
-    if (error) return res.status(500).json({ message: 'Failed to insert progress data', error });
+    const { error } = await supabase
+      .from('building_progress')
+      .upsert([{ site_progress_id, ...filtered }], {
+        onConflict: 'site_progress_id',
+      });
+
+      // console.log('error :',error);
+      
+
+    if (error) {
+      return res.status(500).json({ message: 'Failed to save building progress', error });
+    }
 
     res.status(201).json({ message: '✅ Building progress uploaded successfully' });
   } catch (error) {
-    console.error('❌ Error inserting building progress:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('❌ Error in addBuildingProgress:', error);
+    res.status(500).json({ message: 'Internal server error', error });
   }
 };
-
 
 export const addCommonAreasProgress = async (req, res) => {
   try {
     const { project_id, ...commonData } = req.body;
-    if (!project_id) return res.status(400).json({ message: 'Missing project_id' });
+
+    if (!project_id) {
+      return res.status(400).json({ message: 'Missing project_id' });
+    }
 
     const filtered = {};
     Object.entries(commonData).forEach(([key, value]) => {
-      if (!value || (typeof value === 'object' && Object.keys(value).length === 0)) return;
-      filtered[key] = value;
+      if (value && typeof value === 'object' && Object.keys(value).length > 0) {
+        filtered[key] = value;
+      }
     });
 
-    const { error } = await supabase.from('site_progress').upsert([{ project_id, ...filtered }], { onConflict: 'project_id' });
-    if (error) return res.status(500).json({ message: 'Failed to insert common areas progress', error });
+    if (Object.keys(filtered).length === 0) {
+      return res.status(400).json({ message: 'No valid common area data provided' });
+    }
+
+    const site_progress_id = await getOrCreateSiteProgressId(project_id);
+
+    const { error } = await supabase
+      .from('common_areas_progress')
+      .upsert([{ site_progress_id, ...filtered }], {
+        onConflict: 'site_progress_id',
+      });
+
+    if (error) {
+      return res.status(500).json({ message: 'Failed to save common areas progress', error });
+    }
 
     res.status(201).json({ message: '✅ Common areas progress uploaded successfully' });
   } catch (error) {
-    console.error('❌ Error inserting common area progress:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('❌ Error in addCommonAreasProgress:', error);
+    res.status(500).json({ message: 'Internal server error', error });
   }
 };
-
-
 
 export const softDeleteProjectById = async (req, res) => {
   const projectId = req.params.id;

@@ -1198,6 +1198,9 @@ async uploadProjectBuildingProgress(formData) {
       body: JSON.stringify(formData)
     });
 
+    console.log(response);
+    
+
     if (!response.ok) {
       const err = await response.json();
       throw new Error(err.message || "Building progress submission failed.");

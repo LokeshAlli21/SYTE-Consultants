@@ -149,242 +149,253 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
     const [projectBuildingProgress,setProjectBuildingProgress] = useState({
       project_id: projectId,
     
-      excavation: 0,
-      basement: 0,
-      podium: 0,
-      plinth: 0,
-      stilt: 0,
-      superstructure: 0,
-      interior_finishing: 0,
-      sanitary_fittings: 0,
-      common_infrastructure: 0,
-      external_works: 0,
-      final_installations: 0,
+      excavation: '',
+      basement: '',
+      podium: '',
+      plinth: '',
+      stilt: '',
+      superstructure: '',
+      interior_finishing: '',
+      sanitary_fittings: '',
+      common_infrastructure: '',
+      external_works: '',
+      final_installations: '',
+
+      updated_at: '',
     })
 
     const [projectCommonAreasProgress, setProjectCommonAreasProgress] = useState({
       project_id: projectId,
+      updated_at: '',
       internal_roads_footpaths: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       water_supply: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       sewerage: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       storm_water_drains: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       landscaping_tree_planting: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       street_lighting: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       community_buildings: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       sewage_treatment: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       solid_waste_management: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       rain_water_harvesting: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       energy_management: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       fire_safety: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
       electrical_metering: {
         proposed: false,
-        percentage_of_work: 0,
+        percentage_of_work: '',
         details: '',
       },
     })
 
-    useEffect(() => {
-      const fetchAllProjectData = async () => {
-        if (!id) return;
-    
-        // 1. Project Details
-        try {
-          const project = await databaseService.getProjectById(id);
-          console.log("✅ Project Response:", project);
-          setProjectDetails(project);
-          // toast.success("✅ Project details loaded!");
-        } catch (error) {
-          console.error("❌ Error loading project details:", error);
-          toast.error(`❌ Failed to load project details: ${error.message}`);
-        }
-    
-        // 2. Project Professionals
-        try {
-          const professionals = await databaseService.getProjectProfessionalData(id);
-          console.log("✅ Professional Data Response:", professionals);
+  useEffect(() => {
+    const fetchAllProjectData = async () => {
+      if (!id) return;
 
-          // Set IDs only in projectProfessionalDetails
-          setProjectProfessionalDetails({
-            project_id: professionals.project_id,
-            engineer_id: professionals.engineer_id,
-            architect_id: professionals.architect_id,
-            ca_id: professionals.ca_id,
-          });
+      // 1. Project Details
+      try {
+        const project = await databaseService.getProjectById(id);
+        console.log("✅ Project Response:", project);
+        setProjectDetails(project);
+        // toast.success("✅ Project details loaded!");
+      } catch (error) {
+        console.error("❌ Error loading project details:", error);
+        toast.error(`❌ Failed to load project details: ${error.message}`);
+      }
 
-          if(viewOnly){
-            console.log('viewOnly: ', viewOnly);
-            // Set individual role data
-          setEngineerData({
-            name: professionals.engineers.name,
-            contact_number: professionals.engineers.contact_number,
-            email_id: professionals.engineers.email_id,
-            office_address: professionals.engineers.office_address,
-            licence_number: professionals.engineers.licence_number,
-            licence_uploaded_url: professionals.engineers.licence_uploaded_url,
-            pan_number: professionals.engineers.pan_number,
-            pan_uploaded_url: professionals.engineers.pan_uploaded_url,
-            letter_head_uploaded_url: professionals.engineers.letter_head_uploaded_url,
-            sign_stamp_uploaded_url: professionals.engineers.sign_stamp_uploaded_url
-          });
-          console.log('Engineer: ', engineerData);
+      // 2. Project Professionals
+      try {
+        const professionals = await databaseService.getProjectProfessionalData(
+          id
+        );
+        console.log("✅ Professional Data Response:", professionals);
 
-          setArchitectData({
-            name: professionals.architects.name,
-            contact_number: professionals.architects.contact_number,
-            email_id: professionals.architects.email_id,
-            office_address: professionals.architects.office_address,
-            licence_number: professionals.architects.licence_number,
-            licence_uploaded_url: professionals.architects.licence_uploaded_url,
-            pan_number: professionals.architects.pan_number,
-            pan_uploaded_url: professionals.architects.pan_uploaded_url,
-            letter_head_uploaded_url: professionals.architects.letter_head_uploaded_url,
-            sign_stamp_uploaded_url: professionals.architects.sign_stamp_uploaded_url
-          });
-          console.log('Architect: ', architectData);
+        // Set IDs only in projectProfessionalDetails
+        setProjectProfessionalDetails({
+          project_id: professionals.project_id,
+          engineer_id: professionals.engineer_id,
+          architect_id: professionals.architect_id,
+          ca_id: professionals.ca_id,
+        });
 
-          setCAData({
-            name: professionals.cas.name,
-            contact_number: professionals.cas.contact_number,
-            email_id: professionals.cas.email_id,
-            office_address: professionals.cas.office_address,
-            licence_number: professionals.cas.licence_number,
-            licence_uploaded_url: professionals.cas.licence_uploaded_url,
-            pan_number: professionals.cas.pan_number,
-            pan_uploaded_url: professionals.cas.pan_uploaded_url,
-            letter_head_uploaded_url: professionals.cas.letter_head_uploaded_url,
-            sign_stamp_uploaded_url: professionals.cas.sign_stamp_uploaded_url
-          });
-          console.log('CA: ', caData);
+        if (viewOnly) {
+          console.log("viewOnly: ", viewOnly);
+          // Set individual role data
+          if (professionals.engineers) {
+            setEngineerData({
+              name: professionals.engineers.name,
+              contact_number: professionals.engineers.contact_number,
+              email_id: professionals.engineers.email_id,
+              office_address: professionals.engineers.office_address,
+              licence_number: professionals.engineers.licence_number,
+              licence_uploaded_url: professionals.engineers.licence_uploaded_url,
+              pan_number: professionals.engineers.pan_number,
+              pan_uploaded_url: professionals.engineers.pan_uploaded_url,
+              letter_head_uploaded_url:
+                professionals.engineers.letter_head_uploaded_url,
+              sign_stamp_uploaded_url:
+                professionals.engineers.sign_stamp_uploaded_url,
+            });
+            // console.log('Engineer: ', engineerData);
           }
 
-          
-          
-          
-          
-          
-          
-          // toast.success("✅ Project professionals loaded!");
-
-        } catch (error) {
-          console.error("❌ Error loading project professionals:", error);
-          toast.error(`❌ Failed to load project professionals: ${error.message}`);
-        }
-    
-        // 3. Project Documents
-        try {
-          const documents = await databaseService.getProjectDocuments(id);
-          console.log("✅ Documents Response:", documents);
-          setProjectDocuments({
-            project_id: documents.project_id, // Set project_id from the fetched data
-            cc_uploaded_url: documents.cc_uploaded_url,
-            plan_uploaded_url: documents.plan_uploaded_url,
-            search_report_uploaded_url: documents.search_report_uploaded_url,
-            da_uploaded_url: documents.da_uploaded_url,
-            pa_uploaded_url: documents.pa_uploaded_url,
-            satbara_uploaded_url: documents.satbara_uploaded_url,
-            promoter_letter_head_uploaded_url: documents.promoter_letter_head_uploaded_url,
-            promoter_sign_stamp_uploaded_url: documents.promoter_sign_stamp_uploaded_url,
-          });
-          // toast.success("✅ Project documents loaded!");
-        } catch (error) {
-          // console.error("❌ Error loading project documents:", error);
-          // toast.error(`❌ Failed to load project documents: ${error.message}`);
-        }
-    
-        // 4. Site Progress
-        try {
-          const progress = await databaseService.getProjectSiteProgress(id);
-          console.log("✅ Site Progress Response:", progress);
-              // Set building progress
-              setProjectBuildingProgress((prevState) => {
-                const updatedProgress = Object.keys(prevState).reduce((acc, key) => {
-                  if (key === 'project_id') {
-                    acc[key] = prevState[key]; // retain the existing project_id
-                  } else {
-                    acc[key] = progress[key] ?? prevState[key];
-                  }
-                  return acc;
-                }, {});
-                return updatedProgress;
-              });
-              
-
-          // Set common area progress
-          setProjectCommonAreasProgress((prevState) => {
-            const updatedProgress = { project_id: prevState.project_id };
-          
-            Object.keys(prevState).forEach((key) => {
-              if (key !== 'project_id') {
-                const obj = progress[key];
-          
-                updatedProgress[key] = {
-                  proposed: obj?.proposed ?? false,
-                  percentage_of_work: obj?.percentage_of_work ?? 0,
-                  details: obj?.details ?? '',
-                };
-              }
+          if (professionals.architects) {
+            setArchitectData({
+              name: professionals.architects.name,
+              contact_number: professionals.architects.contact_number,
+              email_id: professionals.architects.email_id,
+              office_address: professionals.architects.office_address,
+              licence_number: professionals.architects.licence_number,
+              licence_uploaded_url: professionals.architects.licence_uploaded_url,
+              pan_number: professionals.architects.pan_number,
+              pan_uploaded_url: professionals.architects.pan_uploaded_url,
+              letter_head_uploaded_url:
+                professionals.architects.letter_head_uploaded_url,
+              sign_stamp_uploaded_url:
+                professionals.architects.sign_stamp_uploaded_url,
             });
-          
-            return updatedProgress;
-          });
-                   
-          // toast.success("✅ Site progress loaded!");
-        } catch (error) {
-          console.error("❌ Error loading site progress:", error);
-          toast.error(`❌ Failed to load site progress: ${error.message}`);
+            // console.log('Architect: ', architectData);
+          }
+
+          if (professionals.cas) {
+            setCAData({
+              name: professionals.cas.name,
+              contact_number: professionals.cas.contact_number,
+              email_id: professionals.cas.email_id,
+              office_address: professionals.cas.office_address,
+              licence_number: professionals.cas.licence_number,
+              licence_uploaded_url: professionals.cas.licence_uploaded_url,
+              pan_number: professionals.cas.pan_number,
+              pan_uploaded_url: professionals.cas.pan_uploaded_url,
+              letter_head_uploaded_url:
+                professionals.cas.letter_head_uploaded_url,
+              sign_stamp_uploaded_url: professionals.cas.sign_stamp_uploaded_url,
+            });
+            // console.log('CA: ', caData);
+          }
         }
-      };
-    
-      fetchAllProjectData();
-    }, [id]);
+
+        // toast.success("✅ Project professionals loaded!");
+      } catch (error) {
+        console.error("❌ Error loading project professionals:", error);
+        toast.error(`❌ Failed to load project professionals: ${error.message}`);
+      }
+
+      // 3. Project Documents
+      try {
+        const documents = await databaseService.getProjectDocuments(id);
+        console.log("✅ Documents Response:", documents);
+        setProjectDocuments({
+          project_id: documents.project_id, // Set project_id from the fetched data
+          cc_uploaded_url: documents.cc_uploaded_url,
+          plan_uploaded_url: documents.plan_uploaded_url,
+          search_report_uploaded_url: documents.search_report_uploaded_url,
+          da_uploaded_url: documents.da_uploaded_url,
+          pa_uploaded_url: documents.pa_uploaded_url,
+          satbara_uploaded_url: documents.satbara_uploaded_url,
+          promoter_letter_head_uploaded_url:
+            documents.promoter_letter_head_uploaded_url,
+          promoter_sign_stamp_uploaded_url:
+            documents.promoter_sign_stamp_uploaded_url,
+        });
+        // toast.success("✅ Project documents loaded!");
+      } catch (error) {
+        // console.error("❌ Error loading project documents:", error);
+        // toast.error(`❌ Failed to load project documents: ${error.message}`);
+      }
+
+      // 4. Site Progress
+      try {
+        const progress = await databaseService.getProjectSiteProgress(id);
+        console.log("✅ Site Progress Response:", progress);
+        // Set building progress
+        setProjectBuildingProgress((prevState) => {
+          const updatedProgress = Object.keys(prevState).reduce((acc, key) => {
+            if (key === "project_id") {
+              acc[key] = prevState[key]; // retain the existing project_id
+            } else {
+              acc[key] = progress[key] ?? prevState[key];
+            }
+            return acc;
+          }, {});
+          return updatedProgress;
+        });
+
+        // Set common area progress
+        setProjectCommonAreasProgress((prevState) => {
+          const updatedProgress = { project_id: prevState.project_id };
+
+          Object.keys(prevState).forEach((key) => {
+            if (key !== "project_id" && key !== 'updated_at') {
+              const obj = progress[key];
+
+              updatedProgress[key] = {
+                proposed: obj?.proposed ?? false,
+                percentage_of_work: obj?.percentage_of_work ?? '',
+                details: obj?.details ?? "",
+              };
+            }
+          });
+
+          return updatedProgress;
+        });
+
+        // toast.success("✅ Site progress loaded!");
+      } catch (error) {
+        console.error("❌ Error loading site progress:", error);
+        toast.error(`❌ Failed to load site progress: ${error.message}`);
+      }
+    };
+
+    fetchAllProjectData();
+  }, [id]);
+
     
     
     const [engineerOptions, setEngineerOptions] = useState([]);
@@ -569,7 +580,7 @@ if (!isValid) return; // Stop form submission
         const response = await databaseService.uploadProjectDocuments(projectDocuments);
         console.log("✅ Project documents uploaded:", response);
         toast.success("✅ Documents submitted successfully!");
-        setProjectDocuments(prev => resetObjectData(prev));
+        // setProjectDocuments(prev => resetObjectData(prev));
         setActiveTabIndex(p => p+1)
       } catch (error) {
         console.error("❌ Error submitting documents:", error);
@@ -582,10 +593,12 @@ if (!isValid) return; // Stop form submission
         const response = await databaseService.uploadProjectBuildingProgress(projectBuildingProgress);
         console.log("✅ Building progress uploaded:", response);
         toast.success("✅ Building progress submitted successfully!");
-        setProjectBuildingProgress(prev => resetObjectData(prev));
+        return true
+        // setProjectBuildingProgress(prev => resetObjectData(prev));
       } catch (error) {
         console.error("❌ Error submitting building progress:", error);
         toast.error(`❌ Failed to submit building progress: ${error.message}`);
+        return false
       }
     };
     
@@ -594,10 +607,12 @@ if (!isValid) return; // Stop form submission
         const response = await databaseService.uploadProjectCommonAreasProgress(projectCommonAreasProgress);
         console.log("✅ Common areas progress uploaded:", response);
         toast.success("✅ Common areas progress submitted successfully!");
-        setProjectCommonAreasProgress(prev => resetObjectData(prev));
+        return true
+        // setProjectCommonAreasProgress(prev => resetObjectData(prev));
       } catch (error) {
         console.error("❌ Error submitting common areas progress:", error);
         toast.error(`❌ Failed to submit common areas progress: ${error.message}`);
+        return false
       }
     };    
 
