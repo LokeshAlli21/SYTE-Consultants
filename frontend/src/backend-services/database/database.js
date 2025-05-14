@@ -284,6 +284,8 @@ for (const key in formData) {
       }
   
       const data = await response.json();
+      console.log(data);
+      
       toast.success("✅ Promoter details fetched successfully!");
       return data.promoter;
   

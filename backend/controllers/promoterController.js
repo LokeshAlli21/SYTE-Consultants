@@ -258,9 +258,11 @@ export const getPromoterById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { data, error } = await supabase
+    // Fetch base promoter and promoter_details
+    const { data: promoterData, error: promoterError } = await supabase
       .from('promoters')
-      .select(`
+      .select(
+        `
         id,
         promoter_name,
         contact_number,
@@ -270,47 +272,85 @@ export const getPromoterById = async (req, res) => {
         promoter_type,
         status_for_delete,
         promoter_details (
-          full_name,
+          id,
           office_address,
-          aadhar_number,
-          aadhar_uploaded_url,
-          pan_number,
-          pan_uploaded_url,
-          dob,
           contact_person_name,
-          partnership_pan_number,
-          partnership_pan_uploaded_url,
-          company_pan_number,
-          company_pan_uploaded_url,
-          company_incorporation_number,
-          company_incorporation_uploaded_url,
           promoter_photo_uploaded_url
         )
-      `)
+        `
+      )
       .eq('id', id)
       .single();
 
-    if (error) {
-      console.error(`❌ Error fetching promoter with ID ${id}:`, error);
-      return res.status(500).json({ error: 'Failed to fetch promoter', details: error });
+    if (promoterError) {
+      console.error(`❌ Error fetching promoter:`, promoterError);
+      return res.status(500).json({ error: 'Failed to fetch promoter' });
     }
 
-    if (!data) {
-      return res.status(404).json({ error: 'Promoter not found or inactive' });
+    if (!promoterData) {
+      return res.status(404).json({ error: 'Promoter not found' });
     }
 
-    // Merge promoter and promoterDetails
-    const merged = {
-      ...data,
-      ...(data.PromoterDetails || {})
-    };
-    delete merged.PromoterDetails;
+    // console.log(promoterData);
+    
 
-    res.status(200).json({ promoter: merged });
+    const promoterDetailsId = promoterData.promoter_details[0]?.id;
+    const promoterType = promoterData.promoter_type;
 
+    let specificDetails = {};
+
+    // console.log(promoterDetailsId);
+    
+
+    if (promoterDetailsId) {
+      const tableMap = {
+        individual: 'individual_promoters',
+        huf: 'huf_promoters',
+        proprietor: 'proprietor_promoters',
+        company: 'company_promoters',
+        partnership: 'partnership_promoters',
+        llp: 'llp_promoters',
+        trust: 'trust_promoters',
+        society: 'society_promoters',
+        public_authority: 'public_authority_promoters',
+        aop_boi: 'aop_boi_promoters',
+        joint_venture: 'joint_venture_promoters',
+      };
+
+      const tableName = tableMap[promoterType?.toLowerCase()];
+      console.log(tableName);
+      
+      if (tableName) {
+        const { data: typeDetails, error: typeError } = await supabase
+          .from(tableName)
+          .select('*')
+          .eq('promoter_details_id', promoterDetailsId)
+          .single();
+
+          // console.log(typeDetails);
+          
+        if (typeError) {
+          console.error(`❌ Error fetching ${tableName} data:`, typeError);
+        } else {
+          specificDetails = typeDetails;
+        }
+      }
+    }
+
+  const response = {
+    ...promoterData,
+    promoter_details: {
+      ...(promoterData.promoter_details?.[0] || {}),
+      [promoterType]: {
+        ...specificDetails,
+      },
+    },
+  };
+
+    return res.status(200).json({ promoter: response });
   } catch (err) {
     console.error('❌ Unexpected error in getPromoterById:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 };
 

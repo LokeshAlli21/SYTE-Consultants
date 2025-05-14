@@ -1,8 +1,33 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import FileInputWithPreview from "../FileInputWithPreview ";
 
 function Individual({ formData, disabled, commonInputClass, setFormData }) {
   const [filePreviews, setFilePreviews] = useState({});
+
+  useEffect(() => {
+    const fetchPromoterData = async () => {
+      const uploadedUrls = {};
+
+      Object.entries(formData || {}).forEach(([key, value]) => {
+        if (
+          typeof key === "string" &&
+          key.endsWith("_uploaded_url") &&
+          typeof value === "string" &&
+          value.startsWith("http")
+        ) {
+          uploadedUrls[key] = value;
+        }
+      });
+
+      // console.log("✅ Uploaded URLs:", uploadedUrls);
+
+      if (Object.keys(uploadedUrls).length > 0) {
+        setFilePreviews(uploadedUrls);
+      }
+    };
+
+    fetchPromoterData();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

@@ -161,7 +161,7 @@ const PromoterForm = ({ id, disabled }) => {
     useEffect(() => {
     if (formData.district) {
       setCityOptions(districtCityMap[formData.district] || []);
-      console.log(districtCityMap[formData.district]|| []);
+      // console.log(districtCityMap[formData.district]|| []);
       
     }
   }, [formData.district]);
@@ -325,65 +325,171 @@ const PromoterForm = ({ id, disabled }) => {
       if (!id) return;
 
       try {
-        const response = await databaseService.getPromoterDetailsById(id);
-        console.log("✅ Promoter Response:", response);
+const response = await databaseService.getPromoterDetailsById(id);
+console.log("✅ Promoter Response:", response);
 
-        if (
-          response &&
-          response.promoter_details &&
-          response.promoter_details.length > 0
-        ) {
-          const details = response.promoter_details[0]; // assuming only one detail object
+// Set formData (common data)
+setFormData({
+  promoter_name: response.promoter_name || "",
+  contact_number: response.contact_number || "",
+  email_id: response.email_id || "",
+  district: response.district || "",
+  city: response.city || "",
+  promoter_type: response.promoter_type || "",
+  promoter_photo_uploaded_url: response.promoter_details?.promoter_photo_uploaded_url || "",
+  office_address: response.promoter_details?.office_address || "",
+  contact_person_name: response.promoter_details?.contact_person_name || "",
+});
 
-          setFormData({
-            promoter_name: response.promoter_name || "",
-            contact_number: response.contact_number || "",
-            email_id: response.email_id || "",
-            district: response.district || "",
-            city: response.city || "",
-            promoter_type: response.promoter_type || "",
-            office_address: details.office_address || "",
-            full_name: details.full_name || "",
-            aadhar_number: details.aadhar_number || null,
-            aadhar_uploaded_url: details.aadhar_uploaded_url || "",
-            pan_number: details.pan_number || "",
-            pan_uploaded_url: details.pan_uploaded_url || "",
-            dob: details.dob || "",
-            contact_person_name: details.contact_person_name || "",
-            partnership_pan_number: details.partnership_pan_number || "",
-            partnership_pan_uploaded_url:
-              details.partnership_pan_uploaded_url || "",
-            company_pan_number: details.company_pan_number || "",
-            company_pan_uploaded_url: details.company_pan_uploaded_url || "",
-            company_incorporation_number:
-              details.company_incorporation_number || "",
-            company_incorporation_uploaded_url:
-              details.company_incorporation_uploaded_url || "",
-            promoter_photo_uploaded_url:
-              details.promoter_photo_uploaded_url || "",
-          });
-        } else {
-          toast.error("❌ Promoter details not found.");
-        }
+// Set promoter-type-specific form
+const promoterDetails = response.promoter_details || {};
+const promoterType = response.promoter_type;
+
+switch (promoterType) {
+  case "individual":
+    setIndividualTypeForm({
+      first_name: promoterDetails.individual?.first_name || "",
+      middle_name: promoterDetails.individual?.middle_name || "",
+      last_name: promoterDetails.individual?.last_name || "",
+      father_full_name: promoterDetails.individual?.father_full_name || "",
+      dob: promoterDetails.individual?.dob || "",
+      aadhar_number: promoterDetails.individual?.aadhar_number || "",
+      aadhar_uploaded_url: promoterDetails.individual?.aadhar_uploaded_url || "",
+      pan_number: promoterDetails.individual?.pan_number || "",
+      pan_uploaded_url: promoterDetails.individual?.pan_uploaded_url || "",
+      gstin_number: promoterDetails.individual?.gstin_number || "",
+      individual_disclosure_of_interest: promoterDetails.individual?.individual_disclosure_of_interest || false,
+    });
+    break;
+
+  case "hindu_undivided_family":
+    setHinduUndividedFamilyForm({
+      huf_name: promoterDetails.hindu_undivided_family?.huf_name || "",
+      karta_first_name: promoterDetails.hindu_undivided_family?.karta_first_name || "",
+      karta_middle_name: promoterDetails.hindu_undivided_family?.karta_middle_name || "",
+      karta_last_name: promoterDetails.hindu_undivided_family?.karta_last_name || "",
+      karta_pan_card: promoterDetails.hindu_undivided_family?.karta_pan_card || "",
+      karta_pan_uploaded_url: promoterDetails.hindu_undivided_family?.karta_pan_uploaded_url || "",
+      huf_pan_card: promoterDetails.hindu_undivided_family?.huf_pan_card || "",
+      huf_pan_pan_uploaded_url: promoterDetails.hindu_undivided_family?.huf_pan_pan_uploaded_url || "",
+      huf_gstin_number: promoterDetails.hindu_undivided_family?.huf_gstin_number || "",
+    });
+    break;
+
+  case "proprietor":
+    setProprietorForm({
+      proprietor_concern_name: promoterDetails.proprietor?.proprietor_concern_name || "",
+      proprietor_first_name: promoterDetails.proprietor?.proprietor_first_name || "",
+      proprietor_middle_name: promoterDetails.proprietor?.proprietor_middle_name || "",
+      proprietor_last_name: promoterDetails.proprietor?.proprietor_last_name || "",
+      proprietor_pan_number: promoterDetails.proprietor?.proprietor_pan_number || "",
+      pan_uploaded_url: promoterDetails.proprietor?.pan_uploaded_url || "",
+      proprietor_father_full_name: promoterDetails.proprietor?.proprietor_father_full_name || "",
+      proprietor_gstin_number: promoterDetails.proprietor?.proprietor_gstin_number || "",
+      proprietor_disclosure_of_interest: promoterDetails.proprietor?.proprietor_disclosure_of_interest || false,
+    });
+    break;
+
+  case "company":
+    setCompanyForm({
+      company_name: promoterDetails.company?.company_name || "",
+      company_pan_number: promoterDetails.company?.company_pan_number || "",
+      company_pan_uploaded_url: promoterDetails.company?.company_pan_uploaded_url || "",
+      company_cin_number: promoterDetails.company?.company_cin_number || "",
+      company_gstin_number: promoterDetails.company?.company_gstin_number || "",
+      company_incorporation_number: promoterDetails.company?.company_incorporation_number || "",
+      company_incorporation_uploaded_url: promoterDetails.company?.company_incorporation_uploaded_url || "",
+    });
+    break;
+
+  case "partnership":
+    setPartnershipForm({
+      partnership_name: promoterDetails.partnership?.partnership_name || "",
+      partnership_pan_number: promoterDetails.partnership?.partnership_pan_number || "",
+      partnership_pan_uploaded_url: promoterDetails.partnership?.partnership_pan_uploaded_url || "",
+      partnership_gstin_number: promoterDetails.partnership?.partnership_gstin_number || "",
+    });
+    break;
+
+  case "llp":
+    setLlpForm({
+      llp_name: promoterDetails.llp?.llp_name || "",
+      llp_pan_number: promoterDetails.llp?.llp_pan_number || "",
+      llp_pan_uploaded_url: promoterDetails.llp?.llp_pan_uploaded_url || "",
+      llp_gstin_number: promoterDetails.llp?.llp_gstin_number || "",
+      llp_llpin_number: promoterDetails.llp?.llp_llpin_number || "",
+    });
+    break;
+
+  case "trust":
+    setTrustForm({
+      trust_name: promoterDetails.trust?.trust_name || "",
+      trust_registration_number: promoterDetails.trust?.trust_registration_number || "",
+      trust_pan_number: promoterDetails.trust?.trust_pan_number || "",
+      trust_pan_uploaded_url: promoterDetails.trust?.trust_pan_uploaded_url || "",
+      trust_gstin_number: promoterDetails.trust?.trust_gstin_number || "",
+    });
+    break;
+
+  case "society":
+    setSocietyForm({
+      society_name: promoterDetails.society?.society_name || "",
+      society_registration_number: promoterDetails.society?.society_registration_number || "",
+      society_pan_number: promoterDetails.society?.society_pan_number || "",
+      society_pan_uploaded_url: promoterDetails.society?.society_pan_uploaded_url || "",
+      society_gstin_number: promoterDetails.society?.society_gstin_number || "",
+    });
+    break;
+
+  case "public_authority":
+    setPublicAuthorityForm({
+      public_authority_name: promoterDetails.public_authority?.public_authority_name || "",
+      public_authority_pan_number: promoterDetails.public_authority?.public_authority_pan_number || "",
+      public_authority_pan_uploaded_url: promoterDetails.public_authority?.public_authority_pan_uploaded_url || "",
+      public_authority_gstin_number: promoterDetails.public_authority?.public_authority_gstin_number || "",
+    });
+    break;
+
+  case "aop_boi":
+    setAopBoiForm({
+      aop_boi_name: promoterDetails.aop_boi?.aop_boi_name || "",
+      aop_boi_gstin_number: promoterDetails.aop_boi?.aop_boi_gstin_number || "",
+      aop_boi_pan_number: promoterDetails.aop_boi?.aop_boi_pan_number || "",
+      aop_boi_pan_uploaded_url: promoterDetails.aop_boi?.aop_boi_pan_uploaded_url || "",
+      aop_boi_deed_of_formation_uploaded_url: promoterDetails.aop_boi?.aop_boi_deed_of_formation_uploaded_url || "",
+    });
+    break;
+
+  case "joint_venture":
+    setJointVentureForm({
+      joint_venture_name: promoterDetails.joint_venture?.joint_venture_name || "",
+      joint_venture_no_of_entities_involved: promoterDetails.joint_venture?.joint_venture_no_of_entities_involved || "",
+      joint_venture_pan_number: promoterDetails.joint_venture?.joint_venture_pan_number || "",
+      joint_venture_pan_uploaded_url: promoterDetails.joint_venture?.joint_venture_pan_uploaded_url || "",
+      joint_venture_gstin_number: promoterDetails.joint_venture?.joint_venture_gstin_number || "",
+      joint_venture_deed_of_formation_uploaded_url: promoterDetails.joint_venture?.joint_venture_deed_of_formation_uploaded_url || "",
+    });
+    break;
+
+  default:
+    console.warn("Unknown promoter type:", promoterType);
+}
 
         const uploadedUrls = {};
 
-        if (Array.isArray(response?.promoter_details)) {
-          response.promoter_details.forEach((detail) => {
-            Object.entries(detail || {}).forEach(([key, value]) => {
+            Object.entries(response.promoter_details || {}).forEach(([key, value]) => {
               if (
                 typeof key === "string" &&
                 key.endsWith("_uploaded_url") &&
+                
                 typeof value === "string" &&
                 value.startsWith("http")
               ) {
                 uploadedUrls[key] = value;
               }
             });
-          });
-        }
 
-        console.log("✅ Uploaded URLs:", uploadedUrls);
+        // console.log("✅ Uploaded URLs:", uploadedUrls);
 
         if (Object.keys(uploadedUrls).length > 0) {
           setFilePreviews(uploadedUrls);
