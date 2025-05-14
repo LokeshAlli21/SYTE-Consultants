@@ -366,21 +366,10 @@ export const updatePromoter = async (req, res) => {
       district,
       city,
       promoter_type,
-      full_name,
       office_address,
-      aadhar_number,
-      pan_number,
-      dob,
       contact_person_name,
-      partnership_pan_number,
-      company_pan_number,
-      company_incorporation_number,
-      aadhar_uploaded_url,
-      pan_uploaded_url,
-      partnership_pan_uploaded_url,
-      company_pan_uploaded_url,
-      company_incorporation_uploaded_url,
-      promoter_photo_uploaded_url
+      promoter_photo_uploaded_url,
+      promoter_details
     } = req.body;
 
     // Step 1: Update 'promoters' table
@@ -393,57 +382,118 @@ export const updatePromoter = async (req, res) => {
         district,
         city,
         promoter_type,
-        updated_at: new Date().toISOString() // ensure updated timestamp
+        updated_at: new Date().toISOString()
       })
-      .eq('id', id);
+      .eq('id', id)
+      .select('id');
 
     if (promoterError) {
       console.error('❌ Error updating Promoters table:', promoterError);
       return res.status(500).json({ error: 'Failed to update promoter', details: promoterError });
     }
 
-    // Step 2: Update 'promoter_details' table
-    const updateDetails = {
-      full_name,
+    if (!promoterData || promoterData.length === 0) {
+      return res.status(404).json({ error: 'Promoter not found for update' });
+    }
+
+    // Step 2: Fetch promoter_details ID
+    const { data: existingDetails, error: detailsFetchError } = await supabase
+      .from('promoter_details')
+      .select('id')
+      .eq('promoter_id', id)
+      .single();
+
+    if (detailsFetchError || !existingDetails) {
+      return res.status(404).json({ error: 'Promoter details not found', details: detailsFetchError });
+    }
+
+    const promoterDetailsId = existingDetails.id;
+
+    // Step 3: Update promoter_details table
+    const detailsToUpdate = {
       office_address,
-      aadhar_number,
-      pan_number,
-      dob: dob || null,
       contact_person_name,
-      partnership_pan_number,
-      company_pan_number,
-      company_incorporation_number,
-      aadhar_uploaded_url,
-      pan_uploaded_url,
-      partnership_pan_uploaded_url,
-      company_pan_uploaded_url,
-      company_incorporation_uploaded_url,
       promoter_photo_uploaded_url,
       updated_at: new Date().toISOString()
     };
 
-    // Remove undefined/null values so we don't overwrite with empty fields
     const filteredDetails = {};
-    Object.entries(updateDetails).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
+    Object.entries(detailsToUpdate).forEach(([key, value]) => {
+      if (value && value !== 'null' && value !== 'undefined' && value !== '') {
         filteredDetails[key] = value;
       }
     });
 
-    const { data: detailsData, error: detailsError } = await supabase
+    const { data: updatedDetails, error: detailsUpdateError } = await supabase
       .from('promoter_details')
       .update(filteredDetails)
-      .eq('promoter_id', id); // promoter_id foreign key
+      .eq('id', promoterDetailsId)
+      .select();
 
-    if (detailsError) {
-      console.error('❌ Error updating PromoterDetails table:', detailsError);
-      return res.status(500).json({ error: 'Failed to update promoter details', details: detailsError });
+    if (detailsUpdateError) {
+      console.error('❌ Error updating promoter_details:', detailsUpdateError);
+      return res.status(500).json({ error: 'Failed to update promoter details', details: detailsUpdateError });
     }
 
+    // Step 4: Update additional promoter type table
+    const tableMap = {
+      individual: 'individual_promoters',
+      hindu_undivided_family: 'huf_promoters',
+      proprietor: 'proprietor_promoters',
+      company: 'company_promoters',
+      partnership: 'partnership_promoters',
+      limited_liability_partnership: 'llp_promoters',
+      trust: 'trust_promoters',
+      society: 'society_promoters',
+      public_authority: 'public_authority_promoters',
+      aop_boi: 'aop_boi_promoters',
+      joint_venture: 'joint_venture_promoters',
+    };
+
+    const targetTable = tableMap[promoter_type];
+
+    if (!targetTable) {
+      return res.status(400).json({ error: 'Invalid promoter type' });
+    }
+
+    const filteredAdditionalDetails = {};
+    Object.entries(promoter_details || {}).forEach(([key, value]) => {
+      if (value && value !== 'null' && value !== 'undefined' && value !== '') {
+        filteredAdditionalDetails[key] = value;
+      }
+    });
+
+    const { data: existingEntry, error: entryFetchError } = await supabase
+      .from(targetTable)
+      .select('*')
+      .eq('promoter_details_id', promoterDetailsId)
+      .single();
+
+    if (entryFetchError) {
+      console.error(`❌ Could not find existing entry in ${targetTable}:`, entryFetchError);
+      return res.status(404).json({ error: `No existing entry found in ${targetTable}` });
+    }
+
+    // console.log("existingEntry :",existingEntry);
+    
+
+    const { data: updatedAdditionalData, error: updateAdditionalError } = await supabase
+      .from(targetTable)
+      .update(filteredAdditionalDetails)
+      .eq('promoter_details_id', promoterDetailsId)
+      .select();
+
+    if (updateAdditionalError) {
+      console.error(`❌ Error updating ${targetTable}:`, updateAdditionalError);
+      return res.status(500).json({ error: `Failed to update ${targetTable}`, details: updateAdditionalError });
+    }
+
+    // Step 5: Final success response
     return res.status(200).json({
       message: '✅ Promoter and details updated successfully',
       promoterData,
-      detailsData
+      updatedDetails,
+      updatedAdditionalData
     });
 
   } catch (error) {

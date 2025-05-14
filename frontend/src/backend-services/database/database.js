@@ -179,88 +179,136 @@ for (const key in formData) {
   }
 }
 
-  async updatePromoter(id, formData) {
+  async updatePromoter(id, { commonData, formData, promoterType }) {
     try {
-      console.log('Original formData for update:', formData);
-  
+      console.log("📝 Original formData for update:", formData);
+
       const fileFormData = new FormData();
       const fieldsToUpload = [];
-  
-      const promoterName = formData.promoter_name?.replace(/\s+/g, '_') || 'UnknownPromoter';
+
+      const promoterName = commonData.promoter_name?.replace(/\s+/g, "_") || "UnknownPromoter";
       const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
-  
+
+      // 🗂 Identifier map for different promoter types
+      const identifierMap = {
+        aadhar_uploaded_url: "aadhar_number",
+        pan_uploaded_url: (promoterType === 'proprietor') ? "proprietor_pan_number" : "pan_number",
+        karta_pan_uploaded_url: "karta_pan_card",
+        huf_pan_pan_uploaded_url: "huf_pan_card",
+        company_pan_uploaded_url: "company_pan_number",
+        company_incorporation_uploaded_url: "company_incorporation_number",
+        partnership_pan_uploaded_url: "partnership_pan_number",
+        llp_pan_uploaded_url: "llp_pan_number",
+        trust_pan_uploaded_url: "trust_pan_number",
+        society_pan_uploaded_url: "society_pan_number",
+        public_authority_pan_uploaded_url: "public_authority_pan_number",
+        aop_boi_pan_uploaded_url: "aop_boi_pan_number",
+        aop_boi_deed_of_formation_uploaded_url: "",
+        joint_venture_pan_uploaded_url: "joint_venture_pan_number",
+        joint_venture_deed_of_formation_uploaded_url: ""
+      };
+
+      // 🔍 Process file fields in formData
       for (const key in formData) {
         const file = formData[key];
-        if (key.endsWith('_uploaded_url') && file instanceof File) {
+
+        if (key.endsWith("_uploaded_url") && file instanceof File) {
           if (!file) continue;
-  
-          let identifier = "NoIdentifier";
-  
-          if (key === "pan_uploaded_url") {
-            identifier = formData.pan_number || "NoPAN";
-          } else if (key === "aadhar_uploaded_url") {
-            identifier = formData.aadhar_number || "NoAadhar";
-          } else if (key === "partnership_pan_uploaded_url") {
-            identifier = formData.partnership_pan_number || "NoPartnershipPAN";
-          } else if (key === "company_pan_uploaded_url") {
-            identifier = formData.company_pan_number || "NoCompanyPAN";
-          } else if (key === "company_incorporation_uploaded_url") {
-            identifier = formData.company_incorporation_number || "NoIncorpNumber";
-          } else if (key === "promoter_photo_uploaded_url") {
-            identifier = "";
+
+          const ext = file.name?.split(".").pop() || "pdf";
+          const identifierField = identifierMap[key];
+
+          let identifier = "";
+
+          if (promoterType === "proprietor" && key.includes("pan")) {
+            identifier = `proprietor_${(identifierField && formData[identifierField]) || key.replace("_uploaded_url", "")}`;
+          } else {
+            identifier = (identifierField && formData[identifierField]) || key.replace("_uploaded_url", "");
           }
-  
-          const extension = file.name?.split('.').pop() || 'pdf';
+
           const renamedFile = new File(
             [file],
-            `${promoterName}_${identifier}_${timestamp}.${extension}`,
+            `${promoterName}_${identifier}_${timestamp}.${ext}`,
             { type: file.type }
           );
-  
+
           fileFormData.append(key, renamedFile);
           fieldsToUpload.push(key);
         }
       }
-  
+
+      // 📸 Handle promoter photo from commonData
+      if (
+        commonData?.promoter_photo_uploaded_url &&
+        commonData.promoter_photo_uploaded_url instanceof File
+      ) {
+        const file = commonData.promoter_photo_uploaded_url;
+        const ext = file.name?.split(".").pop() || "pdf";
+
+        const renamedFile = new File(
+          [file],
+          `${promoterName}_Photo_${timestamp}.${ext}`,
+          { type: file.type }
+        );
+
+        fileFormData.append("promoter_photo_uploaded_url", renamedFile);
+        fieldsToUpload.push("promoter_photo_uploaded_url");
+      }
+
+      // ⬆️ Upload files if any
       if (fieldsToUpload.length > 0) {
-        const fileUploadRes = await fetch(`${this.baseUrl}/api/promoters/upload-files`, {
+        const uploadRes = await fetch(`${this.baseUrl}/api/promoters/upload-files`, {
           method: "POST",
           headers: this.getAuthHeaders(true),
-          body: fileFormData
+          body: fileFormData,
         });
-  
-        if (!fileUploadRes.ok) {
-          const errorData = await fileUploadRes.json();
-          throw new Error(errorData.message || "File upload failed.");
+
+        if (!uploadRes.ok) {
+          const errorRes = await uploadRes.json();
+          throw new Error(errorRes.message || "File upload failed.");
         }
-  
-        const uploadedUrls = await fileUploadRes.json();
-  
-        for (const fieldName of fieldsToUpload) {
-          if (uploadedUrls[fieldName]) {
-            formData[fieldName] = uploadedUrls[fieldName];
+
+        const uploadedUrls = await uploadRes.json();
+        console.log("📥 Uploaded URLs:", uploadedUrls);
+
+        // 🔁 Merge uploaded URLs back to formData or commonData
+        for (const field of fieldsToUpload) {
+          if (!uploadedUrls[field]) {
+            throw new Error(`Missing uploaded URL for field: ${field}`);
+          }
+
+          if (field === "promoter_photo_uploaded_url") {
+            commonData.promoter_photo_uploaded_url = uploadedUrls[field];
           } else {
-            throw new Error(`Missing URL for ${fieldName} in upload response`);
+            formData[field] = uploadedUrls[field];
           }
         }
       }
-  
-      console.log("Final formData for update:", formData);
-  
+
+      // 📦 Final payload
+      const payload = {
+        ...commonData,
+        promoter_type: promoterType,
+        promoter_details: formData,
+      };
+
+      console.log("📤 Final Payload for update:", payload);
+
+      // 🔄 Make update API call
       const response = await fetch(`${this.baseUrl}/api/promoters/update/${id}`, {
         method: "PUT",
         headers: {
           ...this.getAuthHeaders(),
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(payload),
       });
-  
+
       if (!response.ok) {
         const err = await response.json();
         throw new Error(err.message || "Promoter update failed.");
       }
-  
+
       const data = await response.json();
       toast.success("✅ Promoter updated successfully!");
       return data;
