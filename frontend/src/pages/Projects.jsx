@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import databaseService from "../backend-services/database/database";
+import Select from "react-select";
+import { IoClose } from "react-icons/io5"
 
 const ProjectsPage = () => {
   const navigate = useNavigate();
@@ -21,6 +23,35 @@ const ProjectsPage = () => {
 
   const indexOfLastProject = currentPage * projectsPerPage;
   const indexOfFirstProject = indexOfLastProject - projectsPerPage;
+
+    const [districtOptions, setDistrictOptions] = useState([]);
+    const [cityOptions, setCityOptions] = useState([]);
+    const [districtCityMap, setDistrictCityMap] = useState({})
+    
+    useEffect(() => {
+      async function fetchCitiesAndDistricts() {
+        try {
+          const {districtOptions, districtCityMap } =
+            await databaseService.getAllCitiesAndDistricts(); // Make sure this returns data
+          setDistrictCityMap(districtCityMap)
+          setDistrictOptions(districtOptions);
+        } catch (error) {
+          console.error("Error fetching cities and districts:", error);
+        }
+      }
+  
+      fetchCitiesAndDistricts();
+    }, []);
+  
+    useEffect(() => {
+      // console.log(filters);
+      
+      if (filters.district) {
+        setCityOptions(districtCityMap[filters.district] || []);
+        // console.log(districtCityMap[formData.district]|| []);
+        
+      }
+    }, [filters.district]);
 
   useEffect(() => {
     const fetchProjects = async () => {
@@ -112,44 +143,178 @@ const ProjectsPage = () => {
         <div className="w-10 h-10 bg-[#C2C2FF] rounded-full"></div>
       </div>
 
+      {/* Search & Filters */}
       <div className="flex flex-wrap gap-4 mb-6 items-center">
-        <div className="flex items-center gap-4">
-          <div className="relative">
+        <div className="flex flex-1 items-center flex-wrap gap-4">
+          <div className="relative w-full max-w-sm">
             <input
               type="text"
               placeholder="Search here..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="bg-white rounded-full outline-0 px-4 py-2 w-64 pl-10 shadow-sm border border-[#5CAAAB]"
+              className="w-full pl-10 pr-10 py-2.5 rounded-full border border-[#5CAAAB] font-medium text-zinc-500 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5CAAAB] transition duration-200"
             />
-            <span className="absolute top-2.5 left-3 text-gray-400"><FaSearch /></span>
+
+            {/* Search Icon */}
+            <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-[#5CAAAB] text-base" />
+
+            {/* Clear (X) Icon - shown only when input has value */}
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => handleSearchChange({ target: { value: "" } })}
+                className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition"
+              >
+                <IoClose className="text-2xl" />
+              </button>
+            )}
           </div>
-          <select
-            name="district"
-            value={filters.district}
-            onChange={handleFilterChange}
-            className="bg-white rounded-full px-4 py-2 shadow-md border-[#5CAAAB]"
-          >
-            <option value="">Select District</option>
-            <option value="district1">District 1</option>
-            <option value="district2">District 2</option>
-          </select>
-          <select
-            name="city"
-            value={filters.city}
-            onChange={handleFilterChange}
-            className="bg-white rounded-full px-4 py-2 shadow-md border-[#5CAAAB]"
-          >
-            <option value="">Select City</option>
-            <option value="city1">City 1</option>
-            <option value="city2">City 2</option>
-          </select>
+          <div className="flex flex-col w-[200px] ">
+            <Select
+              isClearable
+              options={districtOptions} // This should be the array of districts
+              value={districtOptions.find((opt) => opt.value === filters.district)}
+              onChange={(selectedOption) => {
+                setFilters({
+                  ...filters,
+                  district: selectedOption ? selectedOption.value : "",
+                });
+                setCurrentPage(1);
+              }}
+              isSearchable={true}
+              placeholder="Select a district"
+              styles={{
+                control: (base, state) => ({
+                  ...base,
+                  padding: "6px",
+                  minHeight: "44px",
+                  borderRadius: "calc(infinity * 1px)",
+                  borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+                  boxShadow: state.isFocused ? "0 0 0 3px #5caaab55" : "none",
+                  transition:
+                    "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+                  "&:hover": {
+                    borderColor: "#5caaab",
+                  },
+                  backgroundColor: "white",
+                }),
+
+                menu: (base) => ({
+                  ...base,
+                  borderRadius: "0.75rem",
+                  zIndex: 50,
+                  marginTop: "4px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                  overflow: "hidden",
+                }),
+
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isSelected
+                    ? "#5caaab"
+                    : state.isFocused
+                    ? "#5caaab22"
+                    : "white",
+                  color: state.isSelected ? "white" : "#1f2937", // dark gray text
+                  padding: "10px 14px",
+                  fontSize: "0.95rem",
+                  fontWeight: state.isSelected ? 600 : 400,
+                  cursor: "pointer",
+                  transition: "background-color 0.2s ease-in-out",
+                }),
+
+                placeholder: (base) => ({
+                  ...base,
+                  color: "#9ca3af", // tailwind gray-400
+                  fontSize: "0.95rem",
+                }),
+
+                singleValue: (base) => ({
+                  ...base,
+                  color: "#374151", // tailwind gray-700
+                  fontWeight: 500,
+                }),
+              }}
+            />
+          </div>
+
+          <div className="flex flex-col w-[200px]">
+            <Select
+              isClearable
+              options={cityOptions} // This should be the array of cities
+              value={cityOptions.find((opt) => opt.value === filters.city)}
+              onChange={(selectedOption) => {
+                setFilters({
+                  ...filters,
+                  city: selectedOption ? selectedOption.value : "",
+                });
+                setCurrentPage(1);
+              }}
+              isSearchable={true}
+              isDisabled={cityOptions.length < 1}
+              placeholder="Select a city"
+              styles={{
+                control: (base, state) => ({
+                  ...base,
+                  padding: "6px",
+                  minHeight: "44px",
+                  borderRadius: "calc(infinity * 1px)",
+                  borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+                  boxShadow: state.isFocused ? "0 0 0 3px #5caaab55" : "none",
+                  transition:
+                    "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
+                  "&:hover": {
+                    borderColor: "#5caaab",
+                  },
+                  backgroundColor: "white",
+                }),
+
+                menu: (base) => ({
+                  ...base,
+                  borderRadius: "0.75rem",
+                  zIndex: 50,
+                  marginTop: "4px",
+                  boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+                  overflow: "hidden",
+                }),
+
+                option: (base, state) => ({
+                  ...base,
+                  backgroundColor: state.isSelected
+                    ? "#5caaab"
+                    : state.isFocused
+                    ? "#5caaab22"
+                    : "white",
+                  color: state.isSelected ? "white" : "#1f2937", // dark gray text
+                  padding: "10px 14px",
+                  fontSize: "0.95rem",
+                  fontWeight: state.isSelected ? 600 : 400,
+                  cursor: "pointer",
+                  transition: "background-color 0.2s ease-in-out",
+                }),
+
+                placeholder: (base) => ({
+                  ...base,
+                  color: "#9ca3af", // tailwind gray-400
+                  fontSize: "0.95rem",
+                }),
+
+                singleValue: (base) => ({
+                  ...base,
+                  color: "#374151", // tailwind gray-700
+                  fontWeight: 500,
+                }),
+              }}
+            />
+          </div>
         </div>
+
         <button
           onClick={handleNewProjectClick}
-          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-6 py-2 rounded-full font-medium transition hover:bg-[#489090] shadow-sm"
+          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-md transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
         >
-          <FaPlus /> New Project
+          <FaPlus className="text-base" />
+          New Project
         </button>
       </div>
 
