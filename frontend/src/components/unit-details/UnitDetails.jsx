@@ -265,9 +265,11 @@ disabled={disabled}
                         <button title="View" onClick={() => handleView(u.id)} className="text-blue-400 hover:text-blue-800">
                           <FaEye />
                         </button>
+                        { !disabled &&
                         <button title="Edit" onClick={() => handleEdit(u.id)} className="text-yellow-500 hover:text-yellow-600">
                           <FaEdit />
                         </button>
+                        }
                         <button title="Delete" onClick={() => handleDelete(u.id, u.unit_name)} className="text-red-400 hover:text-red-600">
                           <FaTrash />
                         </button>

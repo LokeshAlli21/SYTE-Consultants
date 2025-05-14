@@ -556,7 +556,7 @@ disabled={disabled}
         type="submit"
         className="w-fit px-5 m-0 bg-[#5CAAAB] hover:bg-[#489496] text-lg shadow-xl text-white py-3 rounded-xl self-end font-semibold transition"
       >
-        Submit
+        Save
       </button>
       }
         </form>

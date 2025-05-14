@@ -344,7 +344,7 @@ function ProjectProfessionalDetailsForm({
         type="submit"
         className="mt-6 bg-[#5caaab] hover:bg-[#4a9899] text-white px-6 py-3 rounded-lg font-semibold"
       >
-        Submit All
+        Save All
       </button>
 }
     </form>

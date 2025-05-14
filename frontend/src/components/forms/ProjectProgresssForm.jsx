@@ -208,7 +208,7 @@ const inputRefs = useRef({});
           type="submit"
           className="self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-white text-lg rounded-xl font-semibold shadow-lg transition"
         >
-          Submit Building Progress
+          Save Building Progress
         </button>
       )}
     </form>
@@ -312,7 +312,7 @@ disabled={disabled}
     type="submit"
     className="self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-white text-lg rounded-xl font-semibold shadow-lg transition"
   >
-    Submit Common Area Progress
+    Save Common Area Progress
   </button>
 }
 </form>
