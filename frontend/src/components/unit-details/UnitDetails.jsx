@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import databaseService from '../../backend-services/database/database';
 import {UnitDetailsForm} from '../index.js';
+import { IoClose } from "react-icons/io5"
 
 function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDetailsFormActive,formData,setFormData,activeTab,handleSubmitProjectUnit, handleUpdateProjectUnit}) {
 
@@ -174,23 +175,37 @@ function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDe
   (
     <div className="p-0 pt-3">
       <div className="flex flex-wrap gap-4 mb-6 items-center">
-        <div className="relative">
-          <input
-            type="text"
-            placeholder="Search by name, type, customer..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-            className="bg-white rounded-full outline-0 px-4 py-2 w-64 pl-10 shadow-sm border border-[#5CAAAB]"
-          />
-          <span className="absolute top-2.5 left-3 text-gray-400"><FaSearch /></span>
-        </div>
+          <div className="relative w-full max-w-sm">
+            <input
+              type="text"
+              placeholder="Search here..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="w-full pl-10 pr-10 py-2.5 rounded-full border border-[#5CAAAB] font-medium text-zinc-500 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5CAAAB] transition duration-200"
+            />
+
+            {/* Search Icon */}
+            <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-[#5CAAAB] text-base" />
+
+            {/* Clear (X) Icon - shown only when input has value */}
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => handleSearchChange({ target: { value: "" } })}
+                className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition"
+              >
+                <IoClose className="text-2xl" />
+              </button>
+            )}
+          </div>
         {!disabled &&
-        <button
-          onClick={() => setIsUnitDetailsFormActive(true)}
-          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-6 py-2 rounded-full font-medium transition hover:bg-[#489090] shadow-sm"
-        >
-          <FaPlus /> New Unit
-        </button>
+           <button
+                  onClick={() => setIsUnitDetailsFormActive(true)}
+                  className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-md transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
+                >
+                  <FaPlus className="text-base" />
+                  New Assignment
+                </button>
         }
       </div>
 
