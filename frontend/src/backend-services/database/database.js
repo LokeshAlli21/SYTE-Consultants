@@ -1255,8 +1255,15 @@ async getProjectSiteProgress(projectId) {
     }
 
     const data = await response.json();
+
     toast.success("✅ Project site progress fetched successfully!");
-    return data.siteProgress;
+
+    // Return the full structure with all components
+    return {
+      siteProgress: data.siteProgress,
+      buildingProgress: data.buildingProgress,
+      commonAreasProgress: data.commonAreasProgress,
+    };
   } catch (error) {
     console.error("❌ Error fetching site progress:", error);
     toast.error(`❌ ${error.message}`);

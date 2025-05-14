@@ -106,7 +106,8 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
       // Customer Details
       customer_name: "",
       agreement_value: '',
-      agreement_or_sale_deed_date: "",
+      agreement_for_sale_date: '',
+      sale_deed_date: "",
       
       // Financial Year Received Amounts
       received_fy_2018_19: '',
@@ -352,45 +353,43 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
 
       // 4. Site Progress
       try {
-        const progress = await databaseService.getProjectSiteProgress(id);
-        console.log("✅ Site Progress Response:", progress);
-        // Set building progress
-        setProjectBuildingProgress((prevState) => {
-          const updatedProgress = Object.keys(prevState).reduce((acc, key) => {
-            if (key === "project_id") {
-              acc[key] = prevState[key]; // retain the existing project_id
-            } else {
-              acc[key] = progress[key] ?? prevState[key];
-            }
-            return acc;
-          }, {});
-          return updatedProgress;
-        });
+      const progress = await databaseService.getProjectSiteProgress(id);
+      console.log("✅ Site Progress Response:", progress);
 
-        // Set common area progress
+      // Set Building Progress (if available)
+      if (progress.buildingProgress) {
+        setProjectBuildingProgress((prevState) => ({
+          ...prevState,
+          ...progress.buildingProgress,
+        }));
+      }
+
+      // Set Common Area Progress (if available)
+      if (progress.commonAreasProgress) {
         setProjectCommonAreasProgress((prevState) => {
-          const updatedProgress = { project_id: prevState.project_id };
+          const updatedProgress = { project_id: prevState.project_id, updated_at: progress.commonAreasProgress.updated_at || '' };
 
           Object.keys(prevState).forEach((key) => {
-            if (key !== "project_id" && key !== 'updated_at') {
-              const obj = progress[key];
-
+            if (key !== "project_id" && key !== "updated_at") {
+              const areaData = progress.commonAreasProgress[key];
               updatedProgress[key] = {
-                proposed: obj?.proposed ?? false,
-                percentage_of_work: obj?.percentage_of_work ?? '',
-                details: obj?.details ?? "",
+                proposed: areaData?.proposed ?? false,
+                percentage_of_work: areaData?.percentage_of_work ?? '',
+                details: areaData?.details ?? '',
               };
             }
           });
 
           return updatedProgress;
         });
+      }
 
-        // toast.success("✅ Site progress loaded!");
+      // toast.success("✅ Site progress loaded!");
       } catch (error) {
         console.error("❌ Error loading site progress:", error);
         toast.error(`❌ Failed to load site progress: ${error.message}`);
       }
+
     };
 
     fetchAllProjectData();

@@ -141,8 +141,15 @@ const inputRefs = useRef({});
             <div className="flex items-center space-x-2 text-lg text-gray-700">
               <span className="font-medium">Last Updated:</span>
               <span className="text-red-600 font-semibold">
-                {projectBuildingProgress.updated_at}
-              </span>
+              {new Date(projectBuildingProgress.updated_at).toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              })}
+            </span>
             </div>
           )}
         </div>
@@ -168,7 +175,7 @@ const inputRefs = useRef({});
                           disabled={disabled}
                           type="number"
                           name={key}
-                          value={value}
+                          value={value || ''}
                           min={0}
                           max={100}
                           onChange={(e) => {
@@ -217,8 +224,15 @@ const inputRefs = useRef({});
             <div className="flex items-center space-x-2 text-lg text-gray-700">
               <span className="font-medium">Last Updated:</span>
               <span className="text-red-600 font-semibold">
-                {projectCommonAreasProgress.updated_at}
-              </span>
+              {new Date(projectCommonAreasProgress.updated_at).toLocaleString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true,
+              })}
+            </span>
             </div>
           )}
         </div>

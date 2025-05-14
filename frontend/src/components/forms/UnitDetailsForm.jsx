@@ -417,7 +417,7 @@ disabled={disabled}
         <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 
         <FileInputWithPreview
-  label="Upload AFS"
+  label="Upload AFS (Agreement for Sale)"
   name="afs_uploaded_url"
   disabled={disabled}
   onChange={handleFileChange}
@@ -434,24 +434,24 @@ disabled={disabled}
 />
 
 <div className='flex flex-col'>
-          <label className="mb-2 font-medium">Agreement or Sale Deed Date</label>
+          <label className="mb-2 font-medium">Agreement for Sale Date</label>
           <input
 disabled={disabled}
             type="date"
-            name="agreement_or_sale_deed_date"
-            value={formData.agreement_or_sale_deed_date || ''}
+            name="agreement_for_sale_date" 
+            value={formData.agreement_for_sale_date || ''}
             onChange={handleChange}
             className={commonInputStyles}
           />
           </div>
-{/* // TODO */}
+          
           <div className='flex flex-col'>
-          <label className="mb-2 font-medium">Agreement or Sale Deed Date</label>
+          <label className="mb-2 font-medium">Sale Deed Date</label>
           <input
 disabled={disabled}
             type="date"
-            name="agreement_or_sale_deed_date"
-            value={formData.agreement_or_sale_deed_date || ''}
+            name="sale_deed_date"
+            value={formData.sale_deed_date || ''}
             onChange={handleChange}
             className={commonInputStyles}
           />

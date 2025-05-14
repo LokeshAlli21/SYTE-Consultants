@@ -347,21 +347,55 @@ export const getSiteProgress = async (req, res) => {
   try {
     const { id: project_id } = req.params;
 
-    const { data, error } = await supabase
+    // Step 1: Fetch site_progress by project_id
+    const { data: siteProgressData, error: siteError } = await supabase
       .from('site_progress')
       .select('*')
       .eq('project_id', project_id);
 
-    if (error) {
-      console.error("❌ Supabase error fetching site progress:", error.message);
+    if (siteError) {
+      console.error("❌ Supabase error fetching site_progress:", siteError.message);
       return res.status(500).json({ error: "Failed to fetch site progress." });
     }
 
-    if (!data || data.length === 0) {
+    if (!siteProgressData || siteProgressData.length === 0) {
       return res.status(404).json({ error: "No site progress found for this project." });
     }
 
-    res.status(200).json({ siteProgress: data[0] });
+    const siteProgress = siteProgressData[0];
+    const site_progress_id = siteProgress.id;
+
+    // Step 2: Fetch building_progress using site_progress_id
+    const { data: buildingProgress, error: buildingError } = await supabase
+      .from('building_progress')
+      .select('*')
+      .eq('site_progress_id', site_progress_id)
+      .single();
+
+    if (buildingError && buildingError.code !== 'PGRST116') {
+      console.error("❌ Supabase error fetching building_progress:", buildingError.message);
+      return res.status(500).json({ error: "Failed to fetch building progress." });
+    }
+
+    // Step 3: Fetch common_areas_progress using site_progress_id
+    const { data: commonAreasProgress, error: commonError } = await supabase
+      .from('common_areas_progress')
+      .select('*')
+      .eq('site_progress_id', site_progress_id)
+      .single();
+
+    if (commonError && commonError.code !== 'PGRST116') {
+      console.error("❌ Supabase error fetching common_areas_progress:", commonError.message);
+      return res.status(500).json({ error: "Failed to fetch common areas progress." });
+    }
+
+    // Return combined data
+    res.status(200).json({
+      siteProgress,
+      buildingProgress: buildingProgress || null,
+      commonAreasProgress: commonAreasProgress || null,
+    });
+
   } catch (error) {
     console.error("❌ Unexpected error fetching site progress:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -578,7 +612,7 @@ export const uploadProjectUnits = async (req, res) => {
     ];
 
     const stringFields = [
-      "agreement_or_sale_deed_date", "afs_uploaded_url", "sale_deed_uploaded_url"
+      "agreement_for_sale_date", "sale_deed_date", "afs_uploaded_url", "sale_deed_uploaded_url"
     ];
 
     const sanitizedUnit = {};
@@ -634,7 +668,7 @@ export const updateProjectUnits = async (req, res) => {
     ];
 
     const stringFields = [
-      "agreement_or_sale_deed_date", "afs_uploaded_url", "sale_deed_uploaded_url"
+      "agreement_for_sale_date", "sale_deed_date", "afs_uploaded_url", "sale_deed_uploaded_url"
     ];
 
     const sanitizedUnit = {};
@@ -889,7 +923,8 @@ export const getUnitById = async (req, res) => {
         unit_status,
         customer_name,
         agreement_value,
-        agreement_or_sale_deed_date,
+        agreement_for_sale_date, 
+        sale_deed_date,
         received_fy_2018_19,
         received_fy_2019_20,
         received_fy_2020_21,

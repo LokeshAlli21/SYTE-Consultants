@@ -298,7 +298,8 @@ CREATE TABLE project_units (
     -- Customer Details
     customer_name VARCHAR(255),
     agreement_value NUMERIC(15, 2),
-    agreement_or_sale_deed_date DATE,
+    agreement_for_sale_date DATE,
+    sale_deed_date DATE,
 
     -- Financial Year Received Amounts (FY 2018-19 to FY 2029-30)
     received_fy_2018_19 NUMERIC(15, 2) DEFAULT 0,

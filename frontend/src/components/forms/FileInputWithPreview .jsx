@@ -61,7 +61,7 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, di
       <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
 
        {disabled && !filePreview &&
-      <h3 className='flex font-medium flex-col items-center justify-center bg-gray-50 text-[#ff0800]  border-gray-300 w-full h-32 border-2 border-dashed rounded-lg cursor-pointer transition' >Not exists</h3>
+      <h3 className='flex font-medium flex-col items-center justify-center bg-gray-50 text-[#ff0800]  border-gray-300 w-full h-12 border-2 border-dashed rounded-lg cursor-pointer transition' >Not exists</h3>
       }
 
 
