@@ -104,8 +104,24 @@ const PromotersPage = () => {
 
   const handleEdit = (id) => navigate(`/promoters/edit/${id}`);
   const handleView = (id) => navigate(`/promoters/view/${id}`);
-  const handleMail = (id) => console.log(`handleMail: ${id}`);
-  const handleWhatsapp = (id) => console.log(`handleWhatsapp: ${id}`);
+  
+  const sendMail = (email, subject = "Hello", body = "This is a test message.") => {
+    const mailtoLink = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    window.open(mailtoLink, "_blank");
+  };
+  const sendWhatsapp = (phoneNumber, message = "Hello! This is a test message.") => {
+    const whatsappLink = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappLink, "_blank");
+  };
+
+
+  const handleMail = (id) => {
+    sendMail("someone@example.com", "Greetings!", `Hi there,\n\nJust reaching out to say hello. id: ${id}`);
+  };
+  const handleWhatsapp = (id) => {
+    sendWhatsapp("919876543210", `Hi! Just checking in about our project. id: ${id}`);
+
+  }
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
@@ -147,7 +163,7 @@ const PromotersPage = () => {
       {/* Search & Filters */}
       <div className="flex flex-wrap gap-4 mb-6 items-center">
         <div className="flex flex-1 items-center flex-wrap gap-4">
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full max-w-sm rounded-full shadow-sm">
             <input
               type="text"
               placeholder="Search here..."
@@ -170,7 +186,7 @@ const PromotersPage = () => {
               </button>
             )}
           </div>
-          <div className="flex flex-col w-[200px] ">
+          <div className="flex flex-col w-[200px]  rounded-full shadow-md">
             <Select
               isClearable
               options={districtOptions} // This should be the array of districts
@@ -190,7 +206,7 @@ const PromotersPage = () => {
                   padding: "6px",
                   minHeight: "44px",
                   borderRadius: "calc(infinity * 1px)",
-                  borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+                  borderColor: "transparent",
                   boxShadow: state.isFocused ? "0 0 0 3px #5caaab55" : "none",
                   transition:
                     "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
@@ -239,7 +255,7 @@ const PromotersPage = () => {
             />
           </div>
 
-          <div className="flex flex-col w-[200px]">
+          <div className="flex flex-col w-[200px] rounded-full shadow-md">
             <Select
               isClearable
               options={cityOptions} // This should be the array of cities
@@ -260,7 +276,7 @@ const PromotersPage = () => {
                   padding: "6px",
                   minHeight: "44px",
                   borderRadius: "calc(infinity * 1px)",
-                  borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+                  borderColor: "transparent",
                   boxShadow: state.isFocused ? "0 0 0 3px #5caaab55" : "none",
                   transition:
                     "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
@@ -312,7 +328,7 @@ const PromotersPage = () => {
 
         <button
           onClick={handleNewPromoterClick}
-          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-md transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
+          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-xl transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
         >
           <FaPlus className="text-base" />
           New Promoter
@@ -320,7 +336,7 @@ const PromotersPage = () => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-md overflow-x-auto px-0 py-6">
+      <div className="bg-white rounded-xl shadow-lg overflow-x-auto px-0 py-6">
         <div className="flex mx-6 items-center justify-between mb-4">
           <h2 className="text-2xl font-semibold text-gray-800">Promoter List</h2>
           <span className="text-sm text-gray-500">

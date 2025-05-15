@@ -107,7 +107,7 @@ const ChannelPartners = () => {
       {/* Search & Filters */}
       <div className="flex flex-wrap gap-4 mb-6 items-center">
         <div className="flex flex-1 items-center flex-wrap gap-4">
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full max-w-sm rounded-full shadow-md">
             <input
               type="text"
               placeholder="Search here..."
@@ -130,7 +130,7 @@ const ChannelPartners = () => {
               </button>
             )}
           </div>
-          <div className="flex flex-col w-[200px] ">
+          <div className="flex flex-col w-[200px] shadow-md rounded-full">
             <Select
               isClearable
               options={districtOptions} // This should be the array of districts
@@ -150,7 +150,7 @@ const ChannelPartners = () => {
                   padding: "6px",
                   minHeight: "44px",
                   borderRadius: "calc(infinity * 1px)",
-                  borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+                  borderColor: "transparent",
                   boxShadow: state.isFocused ? "0 0 0 3px #5caaab55" : "none",
                   transition:
                     "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
@@ -199,7 +199,7 @@ const ChannelPartners = () => {
             />
           </div>
 
-          <div className="flex flex-col w-[200px]">
+          <div className="flex flex-col w-[200px] shadow-md rounded-full">
             <Select
               isClearable
               options={cityOptions} // This should be the array of cities
@@ -220,7 +220,7 @@ const ChannelPartners = () => {
                   padding: "6px",
                   minHeight: "44px",
                   borderRadius: "calc(infinity * 1px)",
-                  borderColor: state.isFocused ? "#5caaab" : "#d1d5db",
+                  borderColor: "transparent",
                   boxShadow: state.isFocused ? "0 0 0 3px #5caaab55" : "none",
                   transition:
                     "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
@@ -272,14 +272,14 @@ const ChannelPartners = () => {
 
         <button
           onClick={handleAdd}
-          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-md transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
+          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-xl transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
         >
           <FaPlus className="text-base" />
           New Channel Partner
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow p-4 overflow-x-auto">
+      <div className="bg-white rounded-xl shadow-lg p-4 overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-600 font-semibold">
             <tr>

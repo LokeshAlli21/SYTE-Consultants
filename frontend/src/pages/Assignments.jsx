@@ -67,7 +67,7 @@ setLoading(true)
       </div>
 
       <div className="flex flex-wrap gap-4 mb-6 items-center">
-          <div className="relative w-full max-w-sm">
+          <div className="relative w-full max-w-sm shadow-md rounded-full">
             <input
               type="text"
               placeholder="Search here..."
@@ -92,14 +92,14 @@ setLoading(true)
           </div>
                 <button
                   onClick={() => navigate('/assignments/add')}
-                  className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-md transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
+                  className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-xl transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
                 >
                   <FaPlus className="text-base" />
                   New Assignment
                 </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md overflow-x-auto px-0 py-6">
+      <div className="bg-white rounded-xl shadow-lg overflow-x-auto px-0 py-6">
         <div className="flex mx-6 items-center justify-between mb-4">
           <h2 className="text-2xl font-semibold text-gray-800">Assignment List</h2>
           <span className="text-sm text-gray-500">
