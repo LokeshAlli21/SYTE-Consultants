@@ -49,15 +49,6 @@ export function validateFormData(formData) {
     errors.push("📅 Invalid Date of Birth.");
   }
 
-  // File Upload Validations
-  const uploadedFields = Object.keys(formData).filter((key) => key.endsWith("_uploaded_url"));
-  for (const field of uploadedFields) {
-    const value = formData[field];
-    if (value && !value) {
-      errors.push(`📎 Please upload required document for "${field.replace(/_/g, " ")}".`);
-    }
-  }
-
   // Required Field Validations (only check for fields that have a value)
   const requiredFields = Object.entries(formData).filter(([key, value]) => {
     const skipFields = ["individual_disclosure_of_interest", "proprietor_disclosure_of_interest"];

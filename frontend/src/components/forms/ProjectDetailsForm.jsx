@@ -151,7 +151,7 @@ useEffect(() => {
             }
           });
       
-          console.log("✅ Uploaded URLs:", uploadedUrls);
+          // console.log("✅ Uploaded URLs:", uploadedUrls);
       
           if (Object.keys(uploadedUrls).length > 0) {
             setFilePreviews(uploadedUrls);
@@ -345,35 +345,26 @@ isDisabled={disabled}
 
 
 <div className="flex flex-col">
-  <label className="mb-2 font-medium">Project Address</label>
-  <textarea
-  disabled={disabled}
-    name="project_address"
-    value={formData.project_address}
+  <label className="mb-2 font-medium">RERA Number</label>
+  <input
+disabled={disabled}
+    type="text"
+    name="rera_number"
+    value={formData.rera_number}
     onChange={handleChange}
-    rows={3}
+    onKeyDown={handleKeyDown}
     className={commonInputStyles}
 />
 </div>
 
-<div className="flex flex-col">
-  <label className="mb-2 font-medium">Project Pincode</label>
-  <input
+<FileInputWithPreview
 disabled={disabled}
-    type='number'
-          onWheel={(e) => e.target.blur()}
-    name="project_pincode"
-    value={formData.project_pincode || ''}
-    onChange={handleChange}
-    onKeyDown={handleKeyDown}
-    className={`${commonInputStyles} pr-10 appearance-none 
-            [&::-webkit-inner-spin-button]:appearance-none 
-            [&::-webkit-outer-spin-button]:appearance-none 
-            moz:appearance-none`}
-    maxLength={6}
-    minLength={6}
+  label="RERA Certificate"
+  name="rera_certificate_uploaded_url"
+  onChange={handleFileChange}
+  filePreview={filePreviews.rera_certificate_uploaded_url}
+  onDelete={() => handleFileDelete("rera_certificate_uploaded_url")}
 />
-</div>
 
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Login ID</label>
@@ -502,27 +493,35 @@ isDisabled={disabled}
 </div>
 
 <div className="flex flex-col">
-  <label className="mb-2 font-medium">RERA Number</label>
+  <label className="mb-2 font-medium">Project Pincode</label>
   <input
 disabled={disabled}
-    type="text"
-    name="rera_number"
-    value={formData.rera_number}
+    type='number'
+          onWheel={(e) => e.target.blur()}
+    name="project_pincode"
+    value={formData.project_pincode || ''}
     onChange={handleChange}
     onKeyDown={handleKeyDown}
-    className={commonInputStyles}
+    className={`${commonInputStyles} pr-10 appearance-none 
+            [&::-webkit-inner-spin-button]:appearance-none 
+            [&::-webkit-outer-spin-button]:appearance-none 
+            moz:appearance-none`}
+    maxLength={6}
+    minLength={6}
 />
 </div>
 
-<FileInputWithPreview
-disabled={disabled}
-  label="RERA Certificate"
-  name="rera_certificate_uploaded_url"
-  onChange={handleFileChange}
-  filePreview={filePreviews.rera_certificate_uploaded_url}
-  onDelete={() => handleFileDelete("rera_certificate_uploaded_url")}
+<div className="flex flex-col">
+  <label className="mb-2 font-medium">Project Address</label>
+  <textarea
+  disabled={disabled}
+    name="project_address"
+    value={formData.project_address}
+    onChange={handleChange}
+    rows={3}
+    className={commonInputStyles}
 />
-
+</div>
 
 <div className="flex flex-col">
   <label className="mb-2 font-medium">Registration Date</label>

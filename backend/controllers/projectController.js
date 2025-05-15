@@ -594,6 +594,8 @@ export const uploadUnitFiles = async (req, res) => {
 export const uploadProjectUnits = async (req, res) => {
   try {
     const unit = req.body;
+    // console.log(req.body);
+    
     
     if (!unit || !unit.project_id) {
       return res.status(400).json({ message: 'Missing project_id or unit data' });

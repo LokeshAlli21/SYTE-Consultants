@@ -1,17 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { FaArrowLeft } from 'react-icons/fa6';
+import React, { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { FaArrowLeft } from "react-icons/fa6";
 import { FaFilePdf, FaTimes } from "react-icons/fa";
 import {
-    ProjectDetailsForm,
-    ProjectProfessionalDetailsForm,
-    UnitDetails,
-    ProjectDocumentForm,
-    ProjectProgresssForm,
-  } from '../components/index.js';
-import databaseService from '../backend-services/database/database'
-import { toast } from 'react-toastify';
+  ProjectDetailsForm,
+  ProjectProfessionalDetailsForm,
+  UnitDetails,
+  ProjectDocumentForm,
+  ProjectProgresssForm,
+} from "../components/index.js";
+import databaseService from "../backend-services/database/database";
+import { toast } from "react-toastify";
 import { FaSpinner } from "react-icons/fa";
+import { validateFormDataForProject } from "../components/forms/validateFormDataForProject.jsx";
 
 const tabs = [
   "Project Details",
@@ -21,222 +22,221 @@ const tabs = [
   "Project Progress",
 ];
 
-const AddProject = ({forUpdate = false, viewOnly=false}) => {
+const AddProject = ({ forUpdate = false, viewOnly = false }) => {
+  const { id } = useParams();
 
-  const {id} = useParams()
+  const [loading, setLoading] = useState(false);
 
-  const [loading, setLoading] = useState(false)
+  const [isUnitDetailsFormActive, setIsUnitDetailsFormActive] = useState(false);
 
-  const [isUnitDetailsFormActive, setIsUnitDetailsFormActive] = useState(false)
+  const [projectId, setProjectId] = useState(id || null);
+  console.log(projectId);
 
-  const [projectId, setProjectId] = useState(id || null)
+  const navigate = useNavigate();
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [projectDetails, setProjectDetails] = useState({
+    channel_partner_id: null,
+    promoter_id: "",
+    promoter_name: "",
+    project_name: "",
+    project_type: "",
+    project_address: "",
+    project_pincode: "",
+    login_id: "",
+    password: "",
+    district: "",
+    city: "",
+    rera_number: "",
+    rera_certificate_uploaded_url: "",
+    registration_date: "",
+    expiry_date: "",
+  });
+  const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
+    project_id: projectId,
+    engineer_id: "",
+    architect_id: "",
+    ca_id: "",
+  });
 
-    const navigate = useNavigate();
-    const [activeTabIndex, setActiveTabIndex] = useState(0);
-    const [projectDetails, setProjectDetails] = useState({
-      channel_partner_id: null,
-      promoter_id: '',
-      promoter_name: "",
-      project_name: "",
-      project_type: "",
-      project_address: "",
-      project_pincode: '',
-      login_id: "",
-      password: "",
-      district: "",
-      city: "",
-      rera_number: "",
-      rera_certificate_uploaded_url: "",
-      registration_date: "",
-      expiry_date: "",
-    });
-    const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
-      project_id: projectId,
-      engineer_id: '',
-      architect_id: '',
-      ca_id: '',
-    })
+  const [engineerData, setEngineerData] = useState({
+    name: "",
+    contact_number: "",
+    email_id: "",
+    office_address: "",
+    licence_number: "",
+    licence_uploaded_url: "",
+    pan_number: "",
+    pan_uploaded_url: "",
+    letter_head_uploaded_url: "",
+    sign_stamp_uploaded_url: "",
+  });
 
-    const [engineerData, setEngineerData] = useState({
-      name: "",
-      contact_number: "",
-      email_id: "",
-      office_address: "",
-      licence_number: "",
-      licence_uploaded_url: "",
-      pan_number: "",
-      pan_uploaded_url: "",
-      letter_head_uploaded_url: "",
-      sign_stamp_uploaded_url: ""
-    })
+  const [architectData, setArchitectData] = useState({
+    name: "",
+    contact_number: "",
+    email_id: "",
+    office_address: "",
+    licence_number: "",
+    licence_uploaded_url: "",
+    pan_number: "",
+    pan_uploaded_url: "",
+    letter_head_uploaded_url: "",
+    sign_stamp_uploaded_url: "",
+  });
 
-    const [architectData, setArchitectData] = useState({
-      name: "",
-      contact_number: "",
-      email_id: "",
-      office_address: "",
-      licence_number: "",
-      licence_uploaded_url: "",
-      pan_number: "",
-      pan_uploaded_url: "",
-      letter_head_uploaded_url: "",
-      sign_stamp_uploaded_url: ""
-    })
+  const [caData, setCAData] = useState({
+    name: "",
+    contact_number: "",
+    email_id: "",
+    office_address: "",
+    licence_number: "",
+    licence_uploaded_url: "",
+    pan_number: "",
+    pan_uploaded_url: "",
+    letter_head_uploaded_url: "",
+    sign_stamp_uploaded_url: "",
+  });
 
-    const [caData, setCAData] = useState({
-      name: "",
-      contact_number: "",
-      email_id: "",
-      office_address: "",
-      licence_number: "",
-      licence_uploaded_url: "",
-      pan_number: "",
-      pan_uploaded_url: "",
-      letter_head_uploaded_url: "",
-      sign_stamp_uploaded_url: ""
-    })
+  const [projectUnit, setProjectUnit] = useState({
+    id: 1,
+    project_id: projectId,
 
-    const [projectUnit, setProjectUnit] = useState({
-      id: 1,
-      project_id: projectId,
-      
-      // Unit Details
-      unit_name: "",
-      unit_type: "",
-      carpet_area: '',
-      unit_status: "",
-      
-      // Customer Details
-      customer_name: "",
-      agreement_value: '',
-      agreement_for_sale_date: '',
-      sale_deed_date: "",
-      
-      // Financial Year Received Amounts
-      received_fy_2018_19: '',
-      received_fy_2019_20: '',
-      received_fy_2020_21: '',
-      received_fy_2021_22: '',
-      received_fy_2022_23: '',
-      received_fy_2023_24: '',
-      received_fy_2024_25: '',
-      received_fy_2025_26: '',
-      received_fy_2026_27: '',
-      received_fy_2027_28: '',
-      received_fy_2028_29: '',
-      received_fy_2029_30: '',
-      
-      // Aggregated Financials
-      total_received: '',
-      balance_amount: '', // Example: agreement_value - total_received
-      
-      // Documents
-      afs_uploaded_url: "",
-      sale_deed_uploaded_url: "",
-      
-    })
+    // Unit Details
+    unit_name: "",
+    unit_type: "",
+    carpet_area: "",
+    unit_status: "",
 
-    const [projectDocuments,setProjectDocuments] = useState({
-      project_id: projectId, // must match a valid project ID
+    // Customer Details
+    customer_name: "",
+    agreement_value: "",
+    agreement_for_sale_date: "",
+    sale_deed_date: "",
 
-      // Document URLs
-      cc_uploaded_url: "",
-      plan_uploaded_url: "",
-      search_report_uploaded_url: "",
-      da_uploaded_url: "",
-      pa_uploaded_url: "",
-      satbara_uploaded_url: "",
-      promoter_letter_head_uploaded_url: "",
-      promoter_sign_stamp_uploaded_url: "",
-    })
+    // Financial Year Received Amounts
+    received_fy_2018_19: "",
+    received_fy_2019_20: "",
+    received_fy_2020_21: "",
+    received_fy_2021_22: "",
+    received_fy_2022_23: "",
+    received_fy_2023_24: "",
+    received_fy_2024_25: "",
+    received_fy_2025_26: "",
+    received_fy_2026_27: "",
+    received_fy_2027_28: "",
+    received_fy_2028_29: "",
+    received_fy_2029_30: "",
 
-    const [projectBuildingProgress,setProjectBuildingProgress] = useState({
-      project_id: projectId,
-    
-      excavation: '',
-      basement: '',
-      podium: '',
-      plinth: '',
-      stilt: '',
-      superstructure: '',
-      interior_finishing: '',
-      sanitary_fittings: '',
-      common_infrastructure: '',
-      external_works: '',
-      final_installations: '',
+    // Aggregated Financials
+    total_received: "",
+    balance_amount: "", // Example: agreement_value - total_received
 
-      updated_at: '',
-    })
+    // Documents
+    afs_uploaded_url: "",
+    sale_deed_uploaded_url: "",
+  });
 
-    const [projectCommonAreasProgress, setProjectCommonAreasProgress] = useState({
-      project_id: projectId,
-      updated_at: '',
-      internal_roads_footpaths: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      water_supply: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      sewerage: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      storm_water_drains: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      landscaping_tree_planting: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      street_lighting: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      community_buildings: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      sewage_treatment: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      solid_waste_management: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      rain_water_harvesting: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      energy_management: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      fire_safety: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-      electrical_metering: {
-        proposed: false,
-        percentage_of_work: '',
-        details: '',
-      },
-    })
+  const [projectDocuments, setProjectDocuments] = useState({
+    project_id: projectId, // must match a valid project ID
+
+    // Document URLs
+    cc_uploaded_url: "",
+    plan_uploaded_url: "",
+    search_report_uploaded_url: "",
+    da_uploaded_url: "",
+    pa_uploaded_url: "",
+    satbara_uploaded_url: "",
+    promoter_letter_head_uploaded_url: "",
+    promoter_sign_stamp_uploaded_url: "",
+  });
+
+  const [projectBuildingProgress, setProjectBuildingProgress] = useState({
+    project_id: projectId,
+
+    excavation: "",
+    basement: "",
+    podium: "",
+    plinth: "",
+    stilt: "",
+    superstructure: "",
+    interior_finishing: "",
+    sanitary_fittings: "",
+    common_infrastructure: "",
+    external_works: "",
+    final_installations: "",
+
+    updated_at: "",
+  });
+
+  const [projectCommonAreasProgress, setProjectCommonAreasProgress] = useState({
+    project_id: projectId,
+    updated_at: "",
+    internal_roads_footpaths: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    water_supply: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    sewerage: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    storm_water_drains: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    landscaping_tree_planting: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    street_lighting: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    community_buildings: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    sewage_treatment: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    solid_waste_management: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    rain_water_harvesting: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    energy_management: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    fire_safety: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+    electrical_metering: {
+      proposed: false,
+      percentage_of_work: "",
+      details: "",
+    },
+  });
 
   useEffect(() => {
     const fetchAllProjectData = async () => {
@@ -278,7 +278,8 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
               email_id: professionals.engineers.email_id,
               office_address: professionals.engineers.office_address,
               licence_number: professionals.engineers.licence_number,
-              licence_uploaded_url: professionals.engineers.licence_uploaded_url,
+              licence_uploaded_url:
+                professionals.engineers.licence_uploaded_url,
               pan_number: professionals.engineers.pan_number,
               pan_uploaded_url: professionals.engineers.pan_uploaded_url,
               letter_head_uploaded_url:
@@ -296,7 +297,8 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
               email_id: professionals.architects.email_id,
               office_address: professionals.architects.office_address,
               licence_number: professionals.architects.licence_number,
-              licence_uploaded_url: professionals.architects.licence_uploaded_url,
+              licence_uploaded_url:
+                professionals.architects.licence_uploaded_url,
               pan_number: professionals.architects.pan_number,
               pan_uploaded_url: professionals.architects.pan_uploaded_url,
               letter_head_uploaded_url:
@@ -319,7 +321,8 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
               pan_uploaded_url: professionals.cas.pan_uploaded_url,
               letter_head_uploaded_url:
                 professionals.cas.letter_head_uploaded_url,
-              sign_stamp_uploaded_url: professionals.cas.sign_stamp_uploaded_url,
+              sign_stamp_uploaded_url:
+                professionals.cas.sign_stamp_uploaded_url,
             });
             // console.log('CA: ', caData);
           }
@@ -328,7 +331,9 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
         // toast.success("✅ Project professionals loaded!");
       } catch (error) {
         console.error("❌ Error loading project professionals:", error);
-        toast.error(`❌ Failed to load project professionals: ${error.message}`);
+        toast.error(
+          `❌ Failed to load project professionals: ${error.message}`
+        );
       }
 
       // 3. Project Documents
@@ -356,374 +361,416 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
 
       // 4. Site Progress
       try {
-      const progress = await databaseService.getProjectSiteProgress(id);
-      console.log("✅ Site Progress Response:", progress);
+        const progress = await databaseService.getProjectSiteProgress(id);
+        console.log("✅ Site Progress Response:", progress);
 
-      // Set Building Progress (if available)
-      if (progress.buildingProgress) {
-        setProjectBuildingProgress((prevState) => ({
-          ...prevState,
-          ...progress.buildingProgress,
-        }));
-      }
+        // Set Building Progress (if available)
+        if (progress.buildingProgress) {
+          setProjectBuildingProgress((prevState) => ({
+            ...prevState,
+            ...progress.buildingProgress,
+          }));
+        }
 
-      // Set Common Area Progress (if available)
-      if (progress.commonAreasProgress) {
-        setProjectCommonAreasProgress((prevState) => {
-          const updatedProgress = { project_id: prevState.project_id, updated_at: progress.commonAreasProgress.updated_at || '' };
+        // Set Common Area Progress (if available)
+        if (progress.commonAreasProgress) {
+          setProjectCommonAreasProgress((prevState) => {
+            const updatedProgress = {
+              project_id: prevState.project_id,
+              updated_at: progress.commonAreasProgress.updated_at || "",
+            };
 
-          Object.keys(prevState).forEach((key) => {
-            if (key !== "project_id" && key !== "updated_at") {
-              const areaData = progress.commonAreasProgress[key];
-              updatedProgress[key] = {
-                proposed: areaData?.proposed ?? false,
-                percentage_of_work: areaData?.percentage_of_work ?? '',
-                details: areaData?.details ?? '',
-              };
-            }
+            Object.keys(prevState).forEach((key) => {
+              if (key !== "project_id" && key !== "updated_at") {
+                const areaData = progress.commonAreasProgress[key];
+                updatedProgress[key] = {
+                  proposed: areaData?.proposed ?? false,
+                  percentage_of_work: areaData?.percentage_of_work ?? "",
+                  details: areaData?.details ?? "",
+                };
+              }
+            });
+
+            return updatedProgress;
           });
+        }
 
-          return updatedProgress;
-        });
-      }
-
-      // toast.success("✅ Site progress loaded!");
+        // toast.success("✅ Site progress loaded!");
       } catch (error) {
         console.error("❌ Error loading site progress:", error);
         toast.error(`❌ Failed to load site progress: ${error.message}`);
       }
-
     };
 
     fetchAllProjectData();
   }, [id]);
 
-    
-    
-    const [engineerOptions, setEngineerOptions] = useState([]);
-    const [architectOptions, setArchitectOptions] = useState([]);
-    const [casOptions, setCAsOptions] = useState([]);
-    
-    
-  
-    const handleBack = () => {
-      if(activeTabIndex < 1) {
-        navigate(-1);
-        return
-      }
-      setActiveTabIndex(p => p-1)
-    };
+  useEffect(() => {
+    setProjectCommonAreasProgress((prev) => ({
+      ...prev,
+      project_id: projectId,
+    }));
 
-    const handleSubmitProjectDetails = async () => {
-      console.log("Form Data Submitted:", projectDetails);
-      setLoading(true);
+    setProjectBuildingProgress((prev) => ({
+      ...prev,
+      project_id: projectId,
+    }));
 
-      function validateProjectDetails(projectDetails) {
-        const errors = [];
-      
-        // Validate RERA number (alphanumeric, 5 to 20 characters)
-        if (
-          projectDetails.rera_number &&
-          !/^[A-Z0-9]{5,20}$/i.test(projectDetails.rera_number)
-        ) {
-          errors.push('📄 Invalid RERA number (should be alphanumeric and 5-20 characters).');
-        }
-      
-        // Validate PIN code (must be a 6-digit number not starting with 0)
-        if (
-          projectDetails.project_pincode &&
-          !/^[1-9][0-9]{5}$/.test(projectDetails.project_pincode)
-        ) {
-          errors.push('📍 Invalid project PIN code (must be a 6-digit number).');
-        }
-      
-        if (errors.length > 0) {
-          errors.forEach((msg) => toast.error(msg));
-          return false;
-        }
-      
-        return true;
-      }
+    setProjectDocuments((prev) => ({
+      ...prev,
+      project_id: projectId,
+    }));
 
-      const isValid = validateProjectDetails(projectDetails);
-if (!isValid) return; // Stop form submission
-    
-      try {
-        if (forUpdate && id) {
-          const response = await databaseService.updateProjectDetails(id, projectDetails);
-          console.log("✏️ Project details updated:", response);
-    
-          toast.success("✅ Project details updated successfully!");
-        } else {
-          const response = await databaseService.uploadProjectDetails(projectDetails);
-          console.log("✅ Project details uploaded:", response);
-    
-          // Extract and set project ID
-          const newProjectId = response?.data?.[0]?.id;
-          if (newProjectId) {
-            setProjectId(newProjectId);
-            console.log("🆔 Project ID set to:", newProjectId);
-          }
-    
-          toast.success("✅ Project details submitted successfully!");
-        }
-    
-        // Common reset after submission
-        setProjectDetails(prev => resetObjectData(prev));
-        setActiveTabIndex(1);
-      } catch (error) {
-        console.error("❌ Error submitting/updating project details:", error);
-        toast.error(`❌ Failed: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
-    };    
-    
-    const handleSubmitProjectProfessionalDetails = async () => {
-      console.log("Form Data Submitted:", projectProfessionalDetails);
-      setLoading(true);
-      try {
-        const response = await databaseService.uploadProjectProfessionalDetails({...projectProfessionalDetails, project_id: projectId});
-        console.log("✅ Project professional details uploaded:", response);
-        toast.success("✅ Project professional details submitted successfully!");
-        setProjectProfessionalDetails(prev => resetObjectData(prev));
-        setActiveTabIndex(p => p+1)
-      } catch (error) {
-        console.error("❌ Error submitting project professional details:", error);
-        toast.error(`❌ Failed to submit professional details: ${error.message}`);
-      } finally {
-        setLoading(false);
-      }
-    }; 
+    setProjectUnit((prev) => ({
+      ...prev,
+      project_id: projectId,
+    }));
 
-    const handleSubmitEngineer = async () => {
-            setLoading(true);
-      console.log("Engineer Data Submitted:", engineerData);
-      try {
-        const response = await databaseService.addEngineer(engineerData);
-        console.log("✅ Engineer details uploaded:", response);
-        toast.success("✅ Engineer details submitted successfully!");
-        setEngineerData(prev => resetObjectData(prev));
-        return true
-      } catch (error) {
-        console.error("❌ Error submitting engineer details:", error);
-        toast.error(`❌ Failed to submit engineer details: ${error.message}`);
-        return false
-      } finally{
-              setLoading(false);
-      }
-    };
-    
-    const handleSubmitArchitect = async () => {
-              setLoading(true);
-      console.log("Architect Data Submitted:", architectData);
-      try {
-        const response = await databaseService.addArchitect(architectData);
-        console.log("✅ Architect details uploaded:", response);
-        toast.success("✅ Architect details submitted successfully!");
-        setArchitectData(prev => resetObjectData(prev));
-        return true
-      } catch (error) {
-        console.error("❌ Error submitting architect details:", error);
-        toast.error(`❌ Failed to submit architect details: ${error.message}`);
-        return false
-      } finally{
-         setLoading(false);
-      }
-    };
-    
-    const handleSubmitCA = async () => {
-       setLoading(true);
-      console.log("CA Data Submitted:", caData);
-      try {
-        const response = await databaseService.addCA(caData);
-        console.log("✅ CA details uploaded:", response);
-        toast.success("✅ CA details submitted successfully!");
-        setCAData(prev => resetObjectData(prev));
-        return true
-      } catch (error) {
-        console.error("❌ Error submitting CA details:", error);
-        toast.error(`❌ Failed to submit CA details: ${error.message}`);
-        return false
-      } finally{
-         setLoading(false);
-      }
-    };
-    
-     
-    const handleSubmitProjectUnit = async () => {
-      console.log(projectUnit);
-       setLoading(true);
-      try {
-        const response = await databaseService.uploadProjectUnitDetails(projectUnit);
-        console.log("✅ Project unit details uploaded:", response);
-        toast.success("✅ Unit details submitted successfully!");
-        setProjectUnit(prev => resetObjectData(prev));
-        setIsUnitDetailsFormActive(false); // Optional: disable unit form after submission
-      } catch (error) {
-        console.error("❌ Error submitting unit details:", error);
-        toast.error(`❌ Failed to submit unit details: ${error.message}`);
-      }finally{
-         setLoading(false);
-      }
-    };
+    setProjectProfessionalDetails((prev) => ({
+      ...prev,
+      project_id: projectId,
+    }));
+  }, [projectId, id]);
 
-    const handleUpdateProjectUnit = async (id) => {
-      console.log("🔄 Updating unit with ID:", id);
-      console.log(projectUnit);
-     setLoading(true);
-      try {
-        const response = await databaseService.updateProjectUnitDetails(id, projectUnit);
-        console.log("✅ Project unit details updated:", response);
-        toast.success("✅ Unit details updated successfully!");
-        setProjectUnit(prev => resetObjectData(prev));
-        setIsUnitDetailsFormActive(false); // Optional: hide the form after update
+  const [engineerOptions, setEngineerOptions] = useState([]);
+  const [architectOptions, setArchitectOptions] = useState([]);
+  const [casOptions, setCAsOptions] = useState([]);
 
-        return true
-      } catch (error) {
-        console.error("❌ Error updating unit details:", error);
-        toast.error(`❌ Failed to update unit details: ${error.message}`);
-        return false
-      } finally{
-         setLoading(false);
-      }
-    };
-    
-    
-    const handleSubmitProjectDocuments = async () => {
-       setLoading(true);
-      try {
-        const response = await databaseService.uploadProjectDocuments(projectDocuments);
-        console.log("✅ Project documents uploaded:", response);
-        toast.success("✅ Documents submitted successfully!");
-        // setProjectDocuments(prev => resetObjectData(prev));
-        setActiveTabIndex(p => p+1)
-      } catch (error) {
-        console.error("❌ Error submitting documents:", error);
-        toast.error(`❌ Failed to submit documents: ${error.message}`);
-      } finally{
-         setLoading(false);
-      }
-    };
-    
-    const handleSubmitProjectBuildingProgress = async () => {
-      console.log(projectBuildingProgress);
-      
-       setLoading(true);
-      try {
-        const date = new Date();
-        const isoWithIST = new Date(date.getTime() + 5.5 * 60 * 60 * 1000).toISOString().replace('Z', '+05:30');
-        projectBuildingProgress.updated_at = isoWithIST;
-
-        console.log(projectBuildingProgress.updated_at);
-        
-        const response = await databaseService.uploadProjectBuildingProgress(projectBuildingProgress);
-        console.log("✅ Building progress uploaded:", response);
-        toast.success("✅ Building progress submitted successfully!");
-        return true
-        // setProjectBuildingProgress(prev => resetObjectData(prev));
-      } catch (error) {
-        console.error("❌ Error submitting building progress:", error);
-        toast.error(`❌ Failed to submit building progress: ${error.message}`);
-        return false
-      }finally{
-         setLoading(false);
-      }
-    };
-    
-    const handleSubmitProjectCommonAreasProgresss = async () => {
-       setLoading(true);
-      try {
-         const date = new Date();
-        const isoWithIST = new Date(date.getTime() + 5.5 * 60 * 60 * 1000).toISOString().replace('Z', '+05:30');
-        projectCommonAreasProgress.updated_at = isoWithIST;
-
-        console.log(projectCommonAreasProgress.updated_at);
-        console.log(projectCommonAreasProgress);
-        
-        const response = await databaseService.uploadProjectCommonAreasProgress(projectCommonAreasProgress);
-        console.log("✅ Common areas progress uploaded:", response);
-        toast.success("✅ Common areas progress submitted successfully!");
-        return true
-        // setProjectCommonAreasProgress(prev => resetObjectData(prev));
-      } catch (error) {
-        console.error("❌ Error submitting common areas progress:", error);
-        toast.error(`❌ Failed to submit common areas progress: ${error.message}`);
-        return false
-      } finally{
-         setLoading(false);
-      }
-    };    
-
-    function resetObjectData(obj) {
-      if (Array.isArray(obj)) return [];
-    
-      const clearedObj = {};
-    
-      for (const key in obj) {
-        const value = obj[key];
-    
-        // Skip resetting 'project_id'
-        if (key === 'project_id') {
-          clearedObj[key] = value;
-          continue;
-        }
-    
-        if (typeof value === "string") {
-          clearedObj[key] = "";
-        } else if (typeof value === "number") {
-          clearedObj[key] = '';
-        } else if (typeof value === "boolean") {
-          clearedObj[key] = false;
-        } else if (Array.isArray(value)) {
-          clearedObj[key] = [];
-        } else if (typeof value === "object" && value !== null) {
-          clearedObj[key] = resetObjectData(value); // recursively clear nested objects
-        } else {
-          clearedObj[key] = value; // keep other types as-is (like null, undefined)
-        }
-      }
-    
-      return clearedObj;
+  const handleBack = () => {
+    if (activeTabIndex < 1) {
+      navigate(-1);
+      return;
     }
-    
-    
-        
-    useEffect(() => {
-      if (!viewOnly) {
-        const mapToOptions = (data) =>
-          data.map((item) => ({
-            label: item.name || `ID ${item.id}`,
-            value: item.id,
-          }));
-    
-        async function fetchOptions() {
-          try {
-            const engineers = await databaseService.getAllEngineers();
-            setEngineerOptions(mapToOptions(engineers));
-          } catch (error) {
-            console.error("Error fetching engineers:", error);
-          }
-    
-          try {
-            const architects = await databaseService.getAllArchitects();
-            setArchitectOptions(mapToOptions(architects));
-          } catch (error) {
-            console.error("Error fetching architects:", error);
-          }
-    
-          try {
-            const cas = await databaseService.getAllCAs();
-            setCAsOptions(mapToOptions(cas));
-          } catch (error) {
-            console.error("Error fetching CAs:", error);
-          }
+    setActiveTabIndex((p) => p - 1);
+  };
+
+  const handleSubmitProjectDetails = async () => {
+    console.log("Form Data Submitted:", projectDetails);
+
+    setLoading(true);
+
+    const isValid = validateFormDataForProject(projectDetails);
+    if (!isValid) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      if (forUpdate && id) {
+        const response = await databaseService.updateProjectDetails(
+          id,
+          projectDetails
+        );
+        console.log("✏️ Project details updated:", response);
+
+        toast.success("✅ Project details updated successfully!");
+      } else {
+        const response = await databaseService.uploadProjectDetails(
+          projectDetails
+        );
+        console.log("✅ Project details uploaded:", response);
+
+        // Extract and set project ID
+        const newProjectId = response?.data?.[0]?.id;
+        if (newProjectId) {
+          setProjectId(newProjectId);
+          console.log("🆔 Project ID set to:", newProjectId);
         }
-    
-        fetchOptions();
+
+        toast.success("✅ Project details submitted successfully!");
       }
-    }, [id]);
-  
+
+      // Common reset after submission
+      setProjectDetails((prev) => resetObjectData(prev));
+      setActiveTabIndex(1);
+    } catch (error) {
+      console.error("❌ Error submitting/updating project details:", error);
+      toast.error(`❌ Failed: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitProjectProfessionalDetails = async () => {
+    console.log("Form Data Submitted:", projectProfessionalDetails);
+    setLoading(true);
+    const isValid = validateFormDataForProject(projectProfessionalDetails);
+    if (!isValid) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await databaseService.uploadProjectProfessionalDetails({
+        ...projectProfessionalDetails,
+        project_id: projectId,
+      });
+      console.log("✅ Project professional details uploaded:", response);
+      toast.success("✅ Project professional details submitted successfully!");
+      setProjectProfessionalDetails((prev) => resetObjectData(prev));
+      setActiveTabIndex((p) => p + 1);
+    } catch (error) {
+      console.error("❌ Error submitting project professional details:", error);
+      toast.error(`❌ Failed to submit professional details: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitEngineer = async () => {
+    setLoading(true);
+    console.log("Engineer Data Submitted:", engineerData);
+    const isValid = validateFormDataForProject(engineerData);
+    if (!isValid) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await databaseService.addEngineer(engineerData);
+      console.log("✅ Engineer details uploaded:", response);
+      toast.success("✅ Engineer details submitted successfully!");
+      setEngineerData((prev) => resetObjectData(prev));
+      return true;
+    } catch (error) {
+      console.error("❌ Error submitting engineer details:", error);
+      toast.error(`❌ Failed to submit engineer details: ${error.message}`);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitArchitect = async () => {
+    setLoading(true);
+    console.log("Architect Data Submitted:", architectData);
+    const isValid = validateFormDataForProject(architectData);
+    if (!isValid) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await databaseService.addArchitect(architectData);
+      console.log("✅ Architect details uploaded:", response);
+      toast.success("✅ Architect details submitted successfully!");
+      setArchitectData((prev) => resetObjectData(prev));
+      return true;
+    } catch (error) {
+      console.error("❌ Error submitting architect details:", error);
+      toast.error(`❌ Failed to submit architect details: ${error.message}`);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitCA = async () => {
+    setLoading(true);
+    console.log("CA Data Submitted:", caData);
+    const isValid = validateFormDataForProject(caData);
+    if (!isValid) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await databaseService.addCA(caData);
+      console.log("✅ CA details uploaded:", response);
+      toast.success("✅ CA details submitted successfully!");
+      setCAData((prev) => resetObjectData(prev));
+      return true;
+    } catch (error) {
+      console.error("❌ Error submitting CA details:", error);
+      toast.error(`❌ Failed to submit CA details: ${error.message}`);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitProjectUnit = async () => {
+    console.log(projectUnit);
+    setLoading(true);
+    try {
+      const response = await databaseService.uploadProjectUnitDetails(
+        projectUnit
+      );
+      console.log("✅ Project unit details uploaded:", response);
+      toast.success("✅ Unit details submitted successfully!");
+      setProjectUnit((prev) => resetObjectData(prev));
+      setIsUnitDetailsFormActive(false); // Optional: disable unit form after submission
+    } catch (error) {
+      console.error("❌ Error submitting unit details:", error);
+      toast.error(`❌ Failed to submit unit details: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdateProjectUnit = async (id) => {
+    console.log("🔄 Updating unit with ID:", id);
+    console.log(projectUnit);
+    setLoading(true);
+    try {
+      const response = await databaseService.updateProjectUnitDetails(
+        id,
+        projectUnit
+      );
+      console.log("✅ Project unit details updated:", response);
+      toast.success("✅ Unit details updated successfully!");
+      setProjectUnit((prev) => resetObjectData(prev));
+      setIsUnitDetailsFormActive(false); // Optional: hide the form after update
+
+      return true;
+    } catch (error) {
+      console.error("❌ Error updating unit details:", error);
+      toast.error(`❌ Failed to update unit details: ${error.message}`);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitProjectDocuments = async () => {
+    setLoading(true);
+    try {
+      const response = await databaseService.uploadProjectDocuments(
+        projectDocuments
+      );
+      console.log("✅ Project documents uploaded:", response);
+      toast.success("✅ Documents submitted successfully!");
+      // setProjectDocuments(prev => resetObjectData(prev));
+      setActiveTabIndex((p) => p + 1);
+    } catch (error) {
+      console.error("❌ Error submitting documents:", error);
+      toast.error(`❌ Failed to submit documents: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitProjectBuildingProgress = async () => {
+    console.log(projectBuildingProgress);
+
+    setLoading(true);
+    try {
+      const date = new Date();
+      const isoWithIST = new Date(date.getTime() + 5.5 * 60 * 60 * 1000)
+        .toISOString()
+        .replace("Z", "+05:30");
+      projectBuildingProgress.updated_at = isoWithIST;
+
+      console.log(projectBuildingProgress.updated_at);
+
+      const response = await databaseService.uploadProjectBuildingProgress(
+        projectBuildingProgress
+      );
+      console.log("✅ Building progress uploaded:", response);
+      toast.success("✅ Building progress submitted successfully!");
+      return true;
+      // setProjectBuildingProgress(prev => resetObjectData(prev));
+    } catch (error) {
+      console.error("❌ Error submitting building progress:", error);
+      toast.error(`❌ Failed to submit building progress: ${error.message}`);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitProjectCommonAreasProgresss = async () => {
+    setLoading(true);
+    try {
+      const date = new Date();
+      const isoWithIST = new Date(date.getTime() + 5.5 * 60 * 60 * 1000)
+        .toISOString()
+        .replace("Z", "+05:30");
+      projectCommonAreasProgress.updated_at = isoWithIST;
+
+      console.log(projectCommonAreasProgress.updated_at);
+      console.log(projectCommonAreasProgress);
+
+      const response = await databaseService.uploadProjectCommonAreasProgress(
+        projectCommonAreasProgress
+      );
+      console.log("✅ Common areas progress uploaded:", response);
+      toast.success("✅ Common areas progress submitted successfully!");
+      return true;
+      // setProjectCommonAreasProgress(prev => resetObjectData(prev));
+    } catch (error) {
+      console.error("❌ Error submitting common areas progress:", error);
+      toast.error(
+        `❌ Failed to submit common areas progress: ${error.message}`
+      );
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  function resetObjectData(obj) {
+    if (Array.isArray(obj)) return [];
+
+    const clearedObj = {};
+
+    for (const key in obj) {
+      const value = obj[key];
+
+      // Skip resetting 'project_id'
+      if (key === "project_id") {
+        clearedObj[key] = value;
+        continue;
+      }
+
+      if (typeof value === "string") {
+        clearedObj[key] = "";
+      } else if (typeof value === "number") {
+        clearedObj[key] = "";
+      } else if (typeof value === "boolean") {
+        clearedObj[key] = false;
+      } else if (Array.isArray(value)) {
+        clearedObj[key] = [];
+      } else if (typeof value === "object" && value !== null) {
+        clearedObj[key] = resetObjectData(value); // recursively clear nested objects
+      } else {
+        clearedObj[key] = value; // keep other types as-is (like null, undefined)
+      }
+    }
+
+    return clearedObj;
+  }
+
+  useEffect(() => {
+    if (!viewOnly) {
+      const mapToOptions = (data) =>
+        data.map((item) => ({
+          label: item.name || `ID ${item.id}`,
+          value: item.id,
+        }));
+
+      async function fetchOptions() {
+        try {
+          const engineers = await databaseService.getAllEngineers();
+          setEngineerOptions(mapToOptions(engineers));
+        } catch (error) {
+          console.error("Error fetching engineers:", error);
+        }
+
+        try {
+          const architects = await databaseService.getAllArchitects();
+          setArchitectOptions(mapToOptions(architects));
+        } catch (error) {
+          console.error("Error fetching architects:", error);
+        }
+
+        try {
+          const cas = await databaseService.getAllCAs();
+          setCAsOptions(mapToOptions(cas));
+        } catch (error) {
+          console.error("Error fetching CAs:", error);
+        }
+      }
+
+      fetchOptions();
+    }
+  }, [id]);
 
   const commonInputStyles =
     "w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab]";
@@ -733,38 +780,36 @@ if (!isValid) return; // Stop form submission
 
     return (
       <>
-      {activeTab === "Project Details" && (
+        {activeTab === "Project Details" && (
           <ProjectDetailsForm
-          formData={projectDetails}
-          setFormData={setProjectDetails}
-          activeTab={activeTab}
-          projectId={projectId}
-          disabled={viewOnly}
-          handleSubmitProjectDetails={handleSubmitProjectDetails}
-        />
-          )}
+            formData={projectDetails}
+            setFormData={setProjectDetails}
+            activeTab={activeTab}
+            projectId={projectId}
+            disabled={viewOnly}
+            handleSubmitProjectDetails={handleSubmitProjectDetails}
+          />
+        )}
 
-          {activeTab === "Professional Details" && (
-            <ProjectProfessionalDetailsForm
+        {activeTab === "Professional Details" && (
+          <ProjectProfessionalDetailsForm
             formData={projectProfessionalDetails}
             setFormData={setProjectProfessionalDetails}
             activeTab={activeTab}
             projectId={projectId}
             disabled={viewOnly}
-            handleSubmitProjectProfessionalDetails={handleSubmitProjectProfessionalDetails}
-
+            handleSubmitProjectProfessionalDetails={
+              handleSubmitProjectProfessionalDetails
+            }
             engineerData={engineerData}
             setEngineerData={setEngineerData}
             handleSubmitEngineer={handleSubmitEngineer}
-
             architectData={architectData}
             setArchitectData={setArchitectData}
             handleSubmitArchitect={handleSubmitArchitect}
-
             caData={caData}
             setCAData={setCAData}
             handleSubmitCA={handleSubmitCA}
-
             engineerOptions={engineerOptions}
             setEngineerOptions={setEngineerOptions}
             architectOptions={architectOptions}
@@ -772,64 +817,76 @@ if (!isValid) return; // Stop form submission
             casOptions={casOptions}
             setCAsOptions={setCAsOptions}
           />
-          )}
+        )}
 
-          {activeTab === "Unit Details" && (
-           <UnitDetails 
-           isUnitDetailsFormActive={isUnitDetailsFormActive}
-           setIsUnitDetailsFormActive={setIsUnitDetailsFormActive}
-           formData={projectUnit}
+        {activeTab === "Unit Details" && (
+          <UnitDetails
+            isUnitDetailsFormActive={isUnitDetailsFormActive}
+            setIsUnitDetailsFormActive={setIsUnitDetailsFormActive}
+            formData={projectUnit}
             setFormData={setProjectUnit}
             activeTab={activeTab}
             projectId={projectId}
             disabled={viewOnly}
             handleSubmitProjectUnit={handleSubmitProjectUnit}
             handleUpdateProjectUnit={handleUpdateProjectUnit}
-           />
-          )}
+          />
+        )}
 
-          {activeTab === "Documents" && (
-             <ProjectDocumentForm
-             formData={projectDocuments}
-             setFormData={setProjectDocuments}
-             activeTab={activeTab}
-             projectId={projectId}
-             disabled={viewOnly}
-             handleSubmitProjectDocuments={handleSubmitProjectDocuments}
-           />
-          )}
+        {activeTab === "Documents" && (
+          <ProjectDocumentForm
+            formData={projectDocuments}
+            setFormData={setProjectDocuments}
+            activeTab={activeTab}
+            projectId={projectId}
+            disabled={viewOnly}
+            handleSubmitProjectDocuments={handleSubmitProjectDocuments}
+          />
+        )}
 
-          {activeTab === "Project Progress" && (
-             <ProjectProgresssForm
-             projectBuildingProgress={projectBuildingProgress}
-             projectCommonAreasProgress={projectCommonAreasProgress}
-             setProjectBuildingProgress={setProjectBuildingProgress}
-             setProjectCommonAreasProgress={setProjectCommonAreasProgress}
-             activeTab={activeTab}
-             projectId={projectId}
-             disabled={viewOnly}
-             handleSubmitProjectBuildingProgress={handleSubmitProjectBuildingProgress}
-             handleSubmitProjectCommonAreasProgresss={handleSubmitProjectCommonAreasProgresss}
-           />
-          )}</>
+        {activeTab === "Project Progress" && (
+          <ProjectProgresssForm
+            projectBuildingProgress={projectBuildingProgress}
+            projectCommonAreasProgress={projectCommonAreasProgress}
+            setProjectBuildingProgress={setProjectBuildingProgress}
+            setProjectCommonAreasProgress={setProjectCommonAreasProgress}
+            activeTab={activeTab}
+            projectId={projectId}
+            disabled={viewOnly}
+            handleSubmitProjectBuildingProgress={
+              handleSubmitProjectBuildingProgress
+            }
+            handleSubmitProjectCommonAreasProgresss={
+              handleSubmitProjectCommonAreasProgresss
+            }
+          />
+        )}
+      </>
     );
   };
 
-  if(loading){
-            return <div className="fixed inset-0 min-h-screen bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
-              <div className="flex items-center space-x-2 text-white">
-                <FaSpinner className="animate-spin text-4xl" />
-                <span className="text-xl">Loading...</span>
-              </div>
-            </div>
+  if (loading) {
+    return (
+      <div className="fixed inset-0 min-h-screen bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+        <div className="flex items-center space-x-2 text-white">
+          <FaSpinner className="animate-spin text-4xl" />
+          <span className="text-xl">Loading...</span>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen p-8 pt-3">
       <div className="flex items-center justify-between mb-6 pl-6">
         <div className="flex items-center gap-2">
-          <FaArrowLeft className="text-[#2F4C92] text-3xl cursor-pointer" onClick={handleBack} />
-          <h1 className="text-[24px] font-bold text-[#2F4C92]">Add {tabs[activeTabIndex]}</h1>
+          <FaArrowLeft
+            className="text-[#2F4C92] text-3xl cursor-pointer"
+            onClick={handleBack}
+          />
+          <h1 className="text-[24px] font-bold text-[#2F4C92]">
+            Add {tabs[activeTabIndex]}
+          </h1>
         </div>
 
         <div className="flex items-center gap-6">
@@ -853,7 +910,7 @@ if (!isValid) return; // Stop form submission
                 : "text-gray-500 hover:text-[#5caaab]"
             }`}
           >
-            {tab} 
+            {tab}
           </button>
         ))}
       </div>

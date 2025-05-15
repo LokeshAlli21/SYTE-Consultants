@@ -241,7 +241,10 @@ function AssignmentForm({disabled, formData, setFormData, handleSubmitAssignment
               value={formData[field] || ''}
               onChange={handleNumberChange}
               onKeyDown={handleKeyDown}
-              className={commonInputStyles}
+              className={`${commonInputStyles} pr-10 appearance-none 
+            [&::-webkit-inner-spin-button]:appearance-none 
+            [&::-webkit-outer-spin-button]:appearance-none 
+            moz:appearance-none`}
             />
           </div>
         ))}
