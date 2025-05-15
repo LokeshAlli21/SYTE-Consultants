@@ -106,12 +106,16 @@ return (
       <label className="mb-2 font-medium">Number of Entities Involved</label>
       <input
         type="number"
+          onWheel={(e) => e.target.blur()}
         name="joint_venture_no_of_entities_involved"
         value={formData.joint_venture_no_of_entities_involved}
         onChange={handleChange}
         disabled={disabled}
         onKeyDown={handleKeyDown}
-        className={commonInputClass}
+        className={`${commonInputClass} pr-10 appearance-none 
+            [&::-webkit-inner-spin-button]:appearance-none 
+            [&::-webkit-outer-spin-button]:appearance-none 
+            moz:appearance-none`}
         min="1"
       />
     </div>

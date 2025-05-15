@@ -234,6 +234,7 @@ function AssignmentForm({disabled, formData, setFormData, handleSubmitAssignment
             <label className="mb-2 font-medium capitalize">{field.replace(/_/g, ' ')}</label>
             <input
               type="number"
+          onWheel={(e) => e.target.blur()}
               step="0.01"
               name={field}
               disabled={disabled} 

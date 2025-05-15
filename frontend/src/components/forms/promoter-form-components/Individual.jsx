@@ -143,11 +143,15 @@ function Individual({ formData, disabled, commonInputClass, setFormData }) {
           <input
             type="number"
             name="aadhar_number"
+          onWheel={(e) => e.target.blur()}
             value={formData.aadhar_number || ""}
             onChange={handleChange}
             disabled={disabled}
             onKeyDown={handleKeyDown}
-            className={commonInputClass}
+            className={`${commonInputClass} pr-10 appearance-none 
+            [&::-webkit-inner-spin-button]:appearance-none 
+            [&::-webkit-outer-spin-button]:appearance-none 
+            moz:appearance-none`}
             maxLength={12}
             minLength={12}
             pattern="\d{12}"

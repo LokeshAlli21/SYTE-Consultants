@@ -224,6 +224,7 @@ isDisabled={disabled}
   <input
 disabled={disabled}
     type="number"
+          onWheel={(e) => e.target.blur()}
     name="promoter_id"
     value={formData.promoter_id}
     onChange={handleChange}
@@ -360,11 +361,15 @@ isDisabled={disabled}
   <input
 disabled={disabled}
     type='number'
+          onWheel={(e) => e.target.blur()}
     name="project_pincode"
     value={formData.project_pincode || ''}
     onChange={handleChange}
     onKeyDown={handleKeyDown}
-    className={commonInputStyles}
+    className={`${commonInputStyles} pr-10 appearance-none 
+            [&::-webkit-inner-spin-button]:appearance-none 
+            [&::-webkit-outer-spin-button]:appearance-none 
+            moz:appearance-none`}
     maxLength={6}
     minLength={6}
 />

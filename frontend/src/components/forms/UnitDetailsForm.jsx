@@ -257,9 +257,13 @@ function UnitDetailsForm({
                 disabled={disabled}
                 type="number"
                 name="carpet_area"
+          onWheel={(e) => e.target.blur()}
                 value={formData.carpet_area || ""}
                 onChange={handleChange}
-                className={commonInputStyles}
+                className={`${commonInputStyles} pr-10 appearance-none 
+            [&::-webkit-inner-spin-button]:appearance-none 
+            [&::-webkit-outer-spin-button]:appearance-none 
+            moz:appearance-none`}
               />
             </div>
 
@@ -327,6 +331,7 @@ function UnitDetailsForm({
                 <input
                   disabled={disabled}
                   type="number"
+          onWheel={(e) => e.target.blur()}
                   name="agreement_value"
                   value={formData.agreement_value || ""}
                   onChange={handleChange}
@@ -390,6 +395,7 @@ function UnitDetailsForm({
                           <input
                             disabled={disabled}
                             type="number"
+          onWheel={(e) => e.target.blur()}
                             name={`received_fy_${year}`}
                             value={formData[`received_fy_${year}`] || ""}
                             onChange={(e) => handleFyChange(e, year)}
@@ -418,6 +424,7 @@ function UnitDetailsForm({
                 <input
                   disabled={true}
                   type="number"
+          onWheel={(e) => e.target.blur()}
                   name="total_received"
                   value={formData.total_received || ""}
                   onChange={handleChange}
@@ -438,6 +445,7 @@ function UnitDetailsForm({
                 <input
                   disabled={true}
                   type="number"
+          onWheel={(e) => e.target.blur()}
                   name="balance_amount"
                   value={
                     formData.balance_amount >= 0 ? formData.balance_amount : 0

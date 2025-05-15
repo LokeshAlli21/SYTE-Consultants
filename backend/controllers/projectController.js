@@ -802,7 +802,7 @@ export const addBuildingProgress = async (req, res) => {
       return res.status(400).json({ message: 'No valid building progress data provided' });
     }
 
-    // const site_progress_id = await getOrCreateSiteProgressId(project_id);
+    const site_progress_id = await getOrCreateSiteProgressId(project_id);
 
     console.log('site_progress_id :',site_progress_id);
     
@@ -828,7 +828,9 @@ export const addBuildingProgress = async (req, res) => {
 
 export const addCommonAreasProgress = async (req, res) => {
   try {
-    const { project_id, ...commonData } = req.body;
+    const { project_id, updated_at, ...commonData } = req.body;
+    // console.log(req.body);
+    
 
     if (!project_id) {
       return res.status(400).json({ message: 'Missing project_id' });
@@ -846,10 +848,12 @@ export const addCommonAreasProgress = async (req, res) => {
     }
 
     const site_progress_id = await getOrCreateSiteProgressId(project_id);
+    console.log(filtered);
+    
 
     const { error } = await supabase
       .from('common_areas_progress')
-      .upsert([{ site_progress_id, ...filtered }], {
+      .upsert([{ site_progress_id, updated_at, ...filtered }], {
         onConflict: 'site_progress_id',
       });
 

@@ -163,8 +163,9 @@ const inputRefs = useRef({});
               </tr>
             </thead>
             <tbody>
-              {Object.entries(projectBuildingProgress)
-                .filter(([key]) => key !== 'project_id')
+              {
+              Object.entries(projectBuildingProgress)
+                .filter(([key]) => !['project_id', 'id', 'updated_at', 'site_progress_id', 'created_at'].includes(key))
                 .map(([key, value], index) => (
                   <tr key={key} className="even:bg-gray-50">
                     <td className="border border-gray-300 p-2 w-15 text-center">{index + 1}</td>
@@ -183,6 +184,7 @@ const inputRefs = useRef({});
                             handleBuildingChange(e);
                           }}
                           onKeyDown={handleKeyDown}
+          onWheel={(e) => e.target.blur()}
                           className={`${inputStyles} pr-10 appearance-none 
                             [&::-webkit-inner-spin-button]:appearance-none 
                             [&::-webkit-outer-spin-button]:appearance-none 
@@ -249,7 +251,7 @@ const inputRefs = useRef({});
         </thead>
         <tbody>
         {Object.entries(projectCommonAreasProgress)
-  .filter(([key]) => key !== 'project_id')
+  .filter(([key]) => !['project_id', 'id', 'updated_at', 'created_at'].includes(key))
   .map(([key, fields], index) => (
     <tr key={key} className="even:bg-gray-50">
       <td className="border border-gray-300 p-2  w-15 text-center">{index + 1}</td>
@@ -274,6 +276,7 @@ disabled={disabled}
           value={fields.percentage_of_work || ''}
           onChange={(e) => handleCommonAreaChange(e, key)}
           onKeyDown={handleKeyDown}
+          onWheel={(e) => e.target.blur()}
           min={0}
           max={100}
           className={`${inputStyles} pr-10 appearance-none 

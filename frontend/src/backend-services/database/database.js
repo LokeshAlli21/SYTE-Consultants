@@ -170,11 +170,11 @@ for (const key in formData) {
     }
 
     const result = await response.json();
-    toast.success("✅ Promoter data uploaded successfully!");
+    // toast.success("✅ Promoter data uploaded successfully!");
     return result;
   } catch (error) {
     console.error("❌ Error uploading promoter data:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -310,11 +310,11 @@ for (const key in formData) {
       }
 
       const data = await response.json();
-      toast.success("✅ Promoter updated successfully!");
+      // toast.success("✅ Promoter updated successfully!");
       return data;
     } catch (err) {
       console.error("❌ Error updating Promoter:", err);
-      toast.error(`❌ ${err.message}`);
+      // toast.error(`❌ ${err.message}`);
       throw err;
     }
   }
@@ -334,12 +334,12 @@ for (const key in formData) {
       const data = await response.json();
       console.log(data);
       
-      toast.success("✅ Promoter details fetched successfully!");
+      // toast.success("✅ Promoter details fetched successfully!");
       return data.promoter;
   
     } catch (error) {
       console.error("❌ Error fetching promoter details:", error);
-      toast.error(`❌ ${error.message}`);
+      // toast.error(`❌ ${error.message}`);
       throw error;
     }
   }
@@ -357,12 +357,12 @@ for (const key in formData) {
       }
   
       const data = await response.json();
-      toast.success("✅ Promoters fetched successfully!");
+      // toast.success("✅ Promoters fetched successfully!");
       return data.promoters;
   
     } catch (error) {
       console.error("❌ Error fetching promoters:", error);
-      toast.error(`❌ ${error.message}`);
+      // toast.error(`❌ ${error.message}`);
       throw error;
     }
   }
@@ -380,7 +380,7 @@ for (const key in formData) {
       }
   
       const data = await response.json();
-      toast.success("✅ Promoters fetched successfully!");
+      // toast.success("✅ Promoters fetched successfully!");
   
       // Map to label/value format for react-select or dropdowns
       const dropdownOptions = data.promoters.map((promoter) => ({
@@ -392,7 +392,7 @@ for (const key in formData) {
   
     } catch (error) {
       console.error("❌ Error fetching promoters:", error);
-      toast.error(`❌ ${error.message}`);
+      // toast.error(`❌ ${error.message}`);
       throw error;
     }
   }
@@ -409,12 +409,12 @@ for (const key in formData) {
         throw new Error(errorData.message || "Failed to delete promoter.");
       }
   
-      toast.success("✅ Promoter deleted successfully!");
+      // toast.success("✅ Promoter deleted successfully!");
       return true;
   
     } catch (error) {
       console.error("❌ Error deleting promoter:", error);
-      toast.error(`❌ ${error.message}`);
+      // toast.error(`❌ ${error.message}`);
       throw error;
     }
   }
@@ -499,12 +499,12 @@ for (const key in formData) {
       }
   
       const data = await response.json();
-      toast.success("✅ Project data uploaded successfully!");
+      // toast.success("✅ Project data uploaded successfully!");
       return data;
   
     } catch (error) {
       console.error("❌ Error uploading project data:", error);
-      toast.error(`❌ ${error.message}`);
+      // toast.error(`❌ ${error.message}`);
       throw error;
     }
   }
@@ -522,11 +522,11 @@ for (const key in formData) {
       }
   
       const data = await response.json();
-      toast.success("✅ Project details fetched successfully!");
+      // toast.success("✅ Project details fetched successfully!");
       return data.project;
     } catch (error) {
       console.error("❌ Error fetching project details:", error);
-      toast.error(`❌ ${error.message}`);
+      // toast.error(`❌ ${error.message}`);
       throw error;
     }
   }
@@ -605,12 +605,12 @@ for (const key in formData) {
       }
   
       const data = await response.json();
-      toast.success("✅ Project data updated successfully!");
+      // toast.success("✅ Project data updated successfully!");
       return data;
   
     } catch (error) {
       console.error("❌ Error updating project data:", error);
-      toast.error(`❌ ${error.message}`);
+      // toast.error(`❌ ${error.message}`);
       throw error;
     }
   }
@@ -627,12 +627,12 @@ for (const key in formData) {
         throw new Error(errorData.message || "Failed to delete project.");
       }
   
-      toast.success("✅ Project deleted successfully!");
+      // toast.success("✅ Project deleted successfully!");
       return true;
   
     } catch (error) {
       console.error("❌ Error deleting project:", error);
-      toast.error(`❌ ${error.message}`);
+      // toast.error(`❌ ${error.message}`);
       throw error;
     }
   }
@@ -661,12 +661,12 @@ for (const key in formData) {
     }
 
     const data = await response.json();
-    toast.success("✅ Project professional details uploaded successfully!");
+    // toast.success("✅ Project professional details uploaded successfully!");
     return data;
 
   } catch (error) {
     console.error("❌ Error uploading professional details:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -791,12 +791,12 @@ async getProjectProfessionalData(projectId) {
     }
 
     const data = await response.json();
-    toast.success("✅ Project professional data fetched successfully!");
+    // toast.success("✅ Project professional data fetched successfully!");
     return data.professionalData;
 
   } catch (error) {
     console.error("❌ Error fetching project professional data:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -814,12 +814,12 @@ async getAllEngineers() {
     }
 
     const data = await response.json();
-    // toast.success("✅ Engineers fetched successfully!");
+    // // toast.success("✅ Engineers fetched successfully!");
     return data.engineers;
 
   } catch (error) {
     console.error("❌ Error fetching engineers:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -837,12 +837,12 @@ async getAllArchitects() {
     }
 
     const data = await response.json();
-    // toast.success("✅ Architects fetched successfully!");
+    // // toast.success("✅ Architects fetched successfully!");
     return data.architects;
 
   } catch (error) {
     console.error("❌ Error fetching architects:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -860,12 +860,12 @@ async getAllCAs() {
     }
 
     const data = await response.json();
-    // toast.success("✅ CAs fetched successfully!");
+    // // toast.success("✅ CAs fetched successfully!");
     return data.cas;
 
   } catch (error) {
     console.error("❌ Error fetching CAs:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -932,11 +932,11 @@ async uploadProjectUnitDetails(formData) {
     }
 
     const data = await response.json();
-    toast.success("✅ Project unit details uploaded successfully!");
+    // toast.success("✅ Project unit details uploaded successfully!");
     return data;
   } catch (err) {
     console.error("❌ Error uploading unit details:", err);
-    toast.error(`❌ ${err.message}`);
+    // toast.error(`❌ ${err.message}`);
     throw err;
   }
 }
@@ -998,11 +998,11 @@ async updateProjectUnitDetails(id, formData) {
     }
 
     const data = await response.json();
-    toast.success("✅ Project unit details updated successfully!");
+    // toast.success("✅ Project unit details updated successfully!");
     return data;
   } catch (err) {
     console.error("❌ Error updating unit details:", err);
-    toast.error(`❌ ${err.message}`);
+    // toast.error(`❌ ${err.message}`);
     throw err;
   }
 }
@@ -1020,11 +1020,11 @@ async getUnitById(id) {
     }
 
     const data = await response.json();
-    toast.success("✅ Unit details fetched successfully!");
+    // toast.success("✅ Unit details fetched successfully!");
     return data.unit;
   } catch (error) {
     console.error("❌ Error fetching unit details:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1042,12 +1042,12 @@ async getAllUnitsForProject(projectId) {
     }
 
     const data = await response.json();
-    toast.success("✅ Units fetched successfully!");
+    // toast.success("✅ Units fetched successfully!");
     return data.units;
 
   } catch (error) {
     console.error("❌ Error fetching units:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1064,12 +1064,12 @@ async deleteProjectUnitById(id) {
       throw new Error(errorData.message || "Failed to delete unit.");
     }
   
-    toast.success("✅ Unit deleted successfully!");
+    // toast.success("✅ Unit deleted successfully!");
     return true;
   
   } catch (error) {
     console.error("❌ Error deleting unit:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
   }
@@ -1136,11 +1136,11 @@ async uploadProjectDocuments(formData) {
     }
 
     const data = await response.json();
-    toast.success("✅ Project documents uploaded successfully!");
+    // toast.success("✅ Project documents uploaded successfully!");
     return data;
   } catch (err) {
     console.error("❌ Error uploading documents:", err);
-    toast.error(`❌ ${err.message}`);
+    // toast.error(`❌ ${err.message}`);
     throw err;
   }
 }
@@ -1164,7 +1164,7 @@ async getProjectDocuments(projectId) {
     }
 
     const data = await response.json();
-    // toast.success("✅ Project documents fetched successfully!");
+    // // toast.success("✅ Project documents fetched successfully!");
     return data.documents;
 
   } catch (error) {
@@ -1172,9 +1172,9 @@ async getProjectDocuments(projectId) {
 
     // Show user-friendly error message
     if (error.message === "No documents found for this project.") {
-      // toast.error("❌ No documents found for this project.");
+      // // toast.error("❌ No documents found for this project.");
     } else {
-      // toast.error(`❌ ${error.message}`);
+      // // toast.error(`❌ ${error.message}`);
     }
 
     // throw error; // Re-throw error for further handling
@@ -1207,11 +1207,11 @@ async uploadProjectBuildingProgress(formData) {
     }
 
     const data = await response.json();
-    toast.success("✅ Project building progress uploaded successfully!");
+    // toast.success("✅ Project building progress uploaded successfully!");
     return data;
   } catch (err) {
     console.error("❌ Error uploading building progress:", err);
-    toast.error(`❌ ${err.message}`);
+    // toast.error(`❌ ${err.message}`);
     throw err;
   }
 }
@@ -1233,11 +1233,11 @@ async uploadProjectCommonAreasProgress(formData) {
     }
 
     const data = await response.json();
-    toast.success("✅ Project common areas progress uploaded successfully!");
+    // toast.success("✅ Project common areas progress uploaded successfully!");
     return data;
   } catch (err) {
     console.error("❌ Error uploading common areas progress:", err);
-    toast.error(`❌ ${err.message}`);
+    // toast.error(`❌ ${err.message}`);
     throw err;
   }
 }
@@ -1256,7 +1256,7 @@ async getProjectSiteProgress(projectId) {
 
     const data = await response.json();
 
-    toast.success("✅ Project site progress fetched successfully!");
+    // toast.success("✅ Project site progress fetched successfully!");
 
     // Return the full structure with all components
     return {
@@ -1266,7 +1266,7 @@ async getProjectSiteProgress(projectId) {
     };
   } catch (error) {
     console.error("❌ Error fetching site progress:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1284,12 +1284,12 @@ async getAllProjects() {
     }
 
     const data = await response.json();
-    toast.success("✅ Projects fetched successfully!");
+    // toast.success("✅ Projects fetched successfully!");
     return data.projects;
 
   } catch (error) {
     console.error("❌ Error fetching promoters:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1307,7 +1307,7 @@ async getAllProjectsForDropdown() {
     }
 
     const data = await response.json();
-    toast.success("✅ Projects fetched successfully!");
+    // toast.success("✅ Projects fetched successfully!");
 
     // Map to label/value format for react-select
     const dropdownOptions = data.projects.map((project) => ({
@@ -1319,7 +1319,7 @@ async getAllProjectsForDropdown() {
 
   } catch (error) {
     console.error("❌ Error fetching projects:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1346,11 +1346,11 @@ async createChannelPartner(formData) {
     }
 
     const data = await response.json();
-    toast.success("✅ Channel Partner created successfully!");
+    // toast.success("✅ Channel Partner created successfully!");
     return data;
   } catch (err) {
     console.error("❌ Error creating Channel Partner:", err);
-    toast.error(`❌ ${err.message}`);
+    // toast.error(`❌ ${err.message}`);
     throw err;
   }
 }
@@ -1371,11 +1371,11 @@ async updateChannelPartner( id, formData) {
     }
 
     const data = await response.json();
-    toast.success("✅ Channel Partner updated successfully!");
+    // toast.success("✅ Channel Partner updated successfully!");
     return data;
   } catch (err) {
     console.error("❌ Error updating Channel Partner:", err);
-    toast.error(`❌ ${err.message}`);
+    // toast.error(`❌ ${err.message}`);
     throw err;
   }
 }
@@ -1395,12 +1395,12 @@ async getAllChannelPartners() {
     // console.log(response);
     
     const data = await response.json();
-    toast.success("✅ Channel partners fetched successfully!");
+    // toast.success("✅ Channel partners fetched successfully!");
     return data.channelPartners;
 
   } catch (error) {
     console.error("❌ Error fetching channel partners:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1420,12 +1420,12 @@ async getChannelPartnerById(id) {
     
     const data = await response.json();
     // console.log(data);
-    toast.success("✅ Channel Partner details fetched successfully!");
+    // toast.success("✅ Channel Partner details fetched successfully!");
     return data.channelPartner; // assuming your API returns { channel_partner: {...} }
 
   } catch (error) {
     console.error("❌ Error fetching channel partner details:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1444,7 +1444,7 @@ async getAllChannelPartnersForDropdown() {
     }
 
     const data = await response.json();
-    toast.success("✅ Channel partners fetched successfully!");
+    // toast.success("✅ Channel partners fetched successfully!");
 
     // Map to label/value format for react-select
     const dropdownOptions = data.channelPartners.map((partner) => ({
@@ -1456,7 +1456,7 @@ async getAllChannelPartnersForDropdown() {
 
   } catch (error) {
     console.error("❌ Error fetching channel partners:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1473,12 +1473,12 @@ async deleteChannelPartnerById(id) {
       throw new Error(errorData.message || "Failed to delete channel partner.");
     }
 
-    toast.success("✅ Channel Partner deleted successfully!");
+    // toast.success("✅ Channel Partner deleted successfully!");
     return true;
 
   } catch (error) {
     console.error("❌ Error deleting channel partner:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1505,11 +1505,11 @@ async createNewAssignment(formData) {
     }
 
     const data = await response.json();
-    toast.success("✅ Assignment created successfully!");
+    // toast.success("✅ Assignment created successfully!");
     return data;
   } catch (err) {
     console.error("❌ Error creating assignment:", err);
-    toast.error(`❌ ${err.message}`);
+    // toast.error(`❌ ${err.message}`);
     throw err;
   }
 }
@@ -1529,12 +1529,12 @@ async getAssignmentById(id) {
     const data = await response.json();
     // console.log(data);
     
-    toast.success("✅ Assignment details fetched successfully!");
+    // toast.success("✅ Assignment details fetched successfully!");
     return data.assignment; // assuming your API returns { assignment: {...} }
 
   } catch (error) {
     console.error("❌ Error fetching assignment details:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1551,12 +1551,12 @@ async getAllAssignments() {
     }
 
     const data = await response.json();
-    toast.success("✅ Assignments fetched successfully!");
+    // toast.success("✅ Assignments fetched successfully!");
     return data.assignments;
 
   } catch (error) {
     console.error("❌ Error fetching assignments:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -1578,11 +1578,11 @@ async updateAssignment(id, formData) {
     }
 
     const data = await response.json();
-    toast.success("✅ Assignment updated successfully!");
+    // toast.success("✅ Assignment updated successfully!");
     return data;
   } catch (err) {
     console.error("❌ Error updating Assignment:", err);
-    toast.error(`❌ ${err.message}`);
+    // toast.error(`❌ ${err.message}`);
     throw err;
   }
 }
@@ -1598,12 +1598,12 @@ async deleteAssignmentById(id) {
       throw new Error(errorData.message || "Failed to delete assignment.");
     }
 
-    toast.success("✅ Assignment deleted successfully!");
+    // toast.success("✅ Assignment deleted successfully!");
     return true;
 
   } catch (error) {
     console.error("❌ Error deleting assignment:", error);
-    toast.error(`❌ ${error.message}`);
+    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }

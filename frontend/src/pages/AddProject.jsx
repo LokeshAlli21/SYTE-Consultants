@@ -11,6 +11,7 @@ import {
   } from '../components/index.js';
 import databaseService from '../backend-services/database/database'
 import { toast } from 'react-toastify';
+import { FaSpinner } from "react-icons/fa";
 
 const tabs = [
   "Project Details",
@@ -23,6 +24,8 @@ const tabs = [
 const AddProject = ({forUpdate = false, viewOnly=false}) => {
 
   const {id} = useParams()
+
+  const [loading, setLoading] = useState(false)
 
   const [isUnitDetailsFormActive, setIsUnitDetailsFormActive] = useState(false)
 
@@ -413,7 +416,7 @@ const AddProject = ({forUpdate = false, viewOnly=false}) => {
 
     const handleSubmitProjectDetails = async () => {
       console.log("Form Data Submitted:", projectDetails);
-      // setLoading(true);
+      setLoading(true);
 
       function validateProjectDetails(projectDetails) {
         const errors = [];
@@ -472,13 +475,13 @@ if (!isValid) return; // Stop form submission
         console.error("❌ Error submitting/updating project details:", error);
         toast.error(`❌ Failed: ${error.message}`);
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     };    
     
     const handleSubmitProjectProfessionalDetails = async () => {
       console.log("Form Data Submitted:", projectProfessionalDetails);
-      // setLoading(true);
+      setLoading(true);
       try {
         const response = await databaseService.uploadProjectProfessionalDetails({...projectProfessionalDetails, project_id: projectId});
         console.log("✅ Project professional details uploaded:", response);
@@ -489,11 +492,12 @@ if (!isValid) return; // Stop form submission
         console.error("❌ Error submitting project professional details:", error);
         toast.error(`❌ Failed to submit professional details: ${error.message}`);
       } finally {
-        // setLoading(false);
+        setLoading(false);
       }
     }; 
 
     const handleSubmitEngineer = async () => {
+            setLoading(true);
       console.log("Engineer Data Submitted:", engineerData);
       try {
         const response = await databaseService.addEngineer(engineerData);
@@ -505,10 +509,13 @@ if (!isValid) return; // Stop form submission
         console.error("❌ Error submitting engineer details:", error);
         toast.error(`❌ Failed to submit engineer details: ${error.message}`);
         return false
+      } finally{
+              setLoading(false);
       }
     };
     
     const handleSubmitArchitect = async () => {
+              setLoading(true);
       console.log("Architect Data Submitted:", architectData);
       try {
         const response = await databaseService.addArchitect(architectData);
@@ -520,10 +527,13 @@ if (!isValid) return; // Stop form submission
         console.error("❌ Error submitting architect details:", error);
         toast.error(`❌ Failed to submit architect details: ${error.message}`);
         return false
+      } finally{
+         setLoading(false);
       }
     };
     
     const handleSubmitCA = async () => {
+       setLoading(true);
       console.log("CA Data Submitted:", caData);
       try {
         const response = await databaseService.addCA(caData);
@@ -535,13 +545,15 @@ if (!isValid) return; // Stop form submission
         console.error("❌ Error submitting CA details:", error);
         toast.error(`❌ Failed to submit CA details: ${error.message}`);
         return false
+      } finally{
+         setLoading(false);
       }
     };
     
      
     const handleSubmitProjectUnit = async () => {
       console.log(projectUnit);
-      
+       setLoading(true);
       try {
         const response = await databaseService.uploadProjectUnitDetails(projectUnit);
         console.log("✅ Project unit details uploaded:", response);
@@ -551,13 +563,15 @@ if (!isValid) return; // Stop form submission
       } catch (error) {
         console.error("❌ Error submitting unit details:", error);
         toast.error(`❌ Failed to submit unit details: ${error.message}`);
+      }finally{
+         setLoading(false);
       }
     };
 
     const handleUpdateProjectUnit = async (id) => {
       console.log("🔄 Updating unit with ID:", id);
       console.log(projectUnit);
-    
+     setLoading(true);
       try {
         const response = await databaseService.updateProjectUnitDetails(id, projectUnit);
         console.log("✅ Project unit details updated:", response);
@@ -570,11 +584,14 @@ if (!isValid) return; // Stop form submission
         console.error("❌ Error updating unit details:", error);
         toast.error(`❌ Failed to update unit details: ${error.message}`);
         return false
+      } finally{
+         setLoading(false);
       }
     };
     
     
     const handleSubmitProjectDocuments = async () => {
+       setLoading(true);
       try {
         const response = await databaseService.uploadProjectDocuments(projectDocuments);
         console.log("✅ Project documents uploaded:", response);
@@ -584,11 +601,22 @@ if (!isValid) return; // Stop form submission
       } catch (error) {
         console.error("❌ Error submitting documents:", error);
         toast.error(`❌ Failed to submit documents: ${error.message}`);
+      } finally{
+         setLoading(false);
       }
     };
     
     const handleSubmitProjectBuildingProgress = async () => {
+      console.log(projectBuildingProgress);
+      
+       setLoading(true);
       try {
+        const date = new Date();
+        const isoWithIST = new Date(date.getTime() + 5.5 * 60 * 60 * 1000).toISOString().replace('Z', '+05:30');
+        projectBuildingProgress.updated_at = isoWithIST;
+
+        console.log(projectBuildingProgress.updated_at);
+        
         const response = await databaseService.uploadProjectBuildingProgress(projectBuildingProgress);
         console.log("✅ Building progress uploaded:", response);
         toast.success("✅ Building progress submitted successfully!");
@@ -598,11 +626,21 @@ if (!isValid) return; // Stop form submission
         console.error("❌ Error submitting building progress:", error);
         toast.error(`❌ Failed to submit building progress: ${error.message}`);
         return false
+      }finally{
+         setLoading(false);
       }
     };
     
     const handleSubmitProjectCommonAreasProgresss = async () => {
+       setLoading(true);
       try {
+         const date = new Date();
+        const isoWithIST = new Date(date.getTime() + 5.5 * 60 * 60 * 1000).toISOString().replace('Z', '+05:30');
+        projectCommonAreasProgress.updated_at = isoWithIST;
+
+        console.log(projectCommonAreasProgress.updated_at);
+        console.log(projectCommonAreasProgress);
+        
         const response = await databaseService.uploadProjectCommonAreasProgress(projectCommonAreasProgress);
         console.log("✅ Common areas progress uploaded:", response);
         toast.success("✅ Common areas progress submitted successfully!");
@@ -612,6 +650,8 @@ if (!isValid) return; // Stop form submission
         console.error("❌ Error submitting common areas progress:", error);
         toast.error(`❌ Failed to submit common areas progress: ${error.message}`);
         return false
+      } finally{
+         setLoading(false);
       }
     };    
 
@@ -774,6 +814,15 @@ if (!isValid) return; // Stop form submission
           )}</>
     );
   };
+
+  if(loading){
+            return <div className="fixed inset-0 min-h-screen bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
+              <div className="flex items-center space-x-2 text-white">
+                <FaSpinner className="animate-spin text-4xl" />
+                <span className="text-xl">Loading...</span>
+              </div>
+            </div>
+  }
 
   return (
     <div className="min-h-screen p-8 pt-3">
