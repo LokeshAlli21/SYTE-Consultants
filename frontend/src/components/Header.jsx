@@ -6,7 +6,7 @@ const Header = () => {
   return (
     <div className="flex items-center justify-between mb-6 pl-6">
       <div className="flex items-center gap-2">
-        <FaArrowLeft className="text-[#2F4C92] text-3xl" onClick={() => {navigate(-1)}}/>
+        <FaArrowLeft className="text-[#2F4C92] text-3xl cursor-pointer" onClick={() => {navigate(-1)}}/>
         <h1 className="text-[24px] font-bold text-[#2F4C92]">Promoters</h1>
       </div>
 
