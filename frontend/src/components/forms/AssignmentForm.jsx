@@ -18,7 +18,7 @@ function AssignmentForm({disabled, formData, setFormData, handleSubmitAssignment
   useEffect(() => {
     const fetchProjects = async () => {
       try {
-        const data = await databaseService.getAllProjectsForDropdown();
+        const data = await databaseService.getAllProjectsForAssignmentDropdown();
         console.log(data);
         setProjectsForDropdown(data);
       } catch (error) {
@@ -107,22 +107,33 @@ function AssignmentForm({disabled, formData, setFormData, handleSubmitAssignment
 
       <div className=" p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
 
-      <div className="flex flex-col w-full">
+<div className="flex flex-col w-full">
   <label className="mb-2 font-medium text-gray-700">Select Project *</label>
   <Select
     options={projectsForDropdown}
-    isDisabled={disabled} 
-    value={projectsForDropdown.find(opt => opt.value === formData.project_id)}
+    isDisabled={disabled}
+    value={projectsForDropdown.find(opt => opt.value.id === formData.project_id)}
     required={true}
     onChange={(selectedOption) => {
       setFormData((prev) => ({
         ...prev,
-        project_id: selectedOption ? selectedOption.value : '',
+        project_id: selectedOption ? selectedOption.value.id : '',
       }));
     }}
     isSearchable={true}
     ref={selectRef}
     placeholder="Select a project"
+    getOptionLabel={(e) =>
+      (
+  <div className="flex flex-row w-full items-center justify-between ">
+    <div className='flex items-center gap-2'>
+      <span className="text-xs text-gray-600">(ID: {e.label.id})</span>
+      <span className="font-semibold  text-gray-900">{e.label.name}</span>
+    </div>
+    <span className="text-md self-end-safe text-gray-500">~ {e.label.promtoer_name}</span>
+  </div>
+)
+    }
     styles={{
       control: (base, state) => ({
         ...base,

@@ -86,12 +86,15 @@ const ChannelPartners = () => {
   const handleEdit = (id) => navigate(`/channel-partners/edit/${id}`);
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure?")) return;
+    setLoading(true)
     try {
       await databaseService.deleteChannelPartnerById(id);
       setPartners(prev => prev.filter(p => p.id !== id));
       toast.success("✅ Deleted successfully");
     } catch (err) {
       toast.error("❌ Deletion failed");
+    }finally{
+      setLoading(false)
     }
   };
 

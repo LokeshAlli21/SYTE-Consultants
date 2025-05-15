@@ -109,12 +109,15 @@ const PromotersPage = () => {
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(`Are you sure you want to delete "${name}"?`)) return;
+    setLoading(true)
     try {
       await databaseService.deletePromoterById(id);
       setPromoters((prev) => prev.filter((p) => p.id !== id));
       toast.success(`✅ "${name}" deleted.`);
     } catch (error) {
       toast.error("❌ Failed to delete promoter.");
+    } finally{
+      setLoading(false)
     }
   };
 

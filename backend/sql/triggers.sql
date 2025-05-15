@@ -193,3 +193,22 @@ BEGIN
    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+-- trigger and function to autoset promoter_name
+CREATE OR REPLACE FUNCTION set_promoter_name()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Set promoter_name from promoters table
+  SELECT promoter_name INTO NEW.promoter_name
+  FROM promoters
+  WHERE id = NEW.promoter_id;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+CREATE TRIGGER trg_set_promoter_name
+BEFORE INSERT OR UPDATE ON projects
+FOR EACH ROW
+WHEN (NEW.promoter_id IS NOT NULL)
+EXECUTE FUNCTION set_promoter_name();

@@ -118,13 +118,15 @@ const ProjectsPage = () => {
   const handleDelete = async (id, name) => {
     const confirmDelete = window.confirm(`Are you sure you want to delete project "${name}"?`);
     if (!confirmDelete) return;
-
+setLoading(true)
     try {
       await databaseService.deleteProjectById(id);
       setProjects(prev => prev.filter(project => project.id !== id));
       toast.success(`✅ Project "${name}" deleted successfully.`);
     } catch (error) {
       toast.error("❌ Failed to delete project.");
+    }finally{
+      setLoading(false)
     }
   };
 

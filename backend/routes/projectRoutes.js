@@ -26,7 +26,7 @@ import { uploadProjectFiles,
     updateProjectUnits,
     addEngineer,
     addArchitect,
-    addCA
+    addCA,
 } from '../controllers/projectController.js';
 import {upload} from '../supabase/supabaseClient.js'
 

@@ -47,13 +47,15 @@ const Assignments = () => {
   const handleDelete = async (id) => {
     const confirmDelete = window.confirm(`Are you sure you want to delete this assignment?`);
     if (!confirmDelete) return;
-
+setLoading(true)
     try {
       await databaseService.deleteAssignmentById(id);
       setAssignments(prev => prev.filter(a => a.id !== id));
       toast.success(`✅ Assignment deleted successfully.`);
     } catch (error) {
       toast.error("❌ Failed to delete assignment.");
+    }finally{
+      setLoading(false)
     }
   };
 

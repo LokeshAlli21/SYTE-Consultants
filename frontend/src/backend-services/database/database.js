@@ -1324,6 +1324,39 @@ async getAllProjectsForDropdown() {
   }
 }
 
+async getAllProjectsForAssignmentDropdown() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/get-all`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch projects for assignment.");
+    }
+
+    const data = await response.json();
+    // console.log(data);
+    
+
+    // Format for dropdown: label = project name, value = full project object
+    const dropdownOptions = data.projects.map((project) => ({
+      label: {
+        name:project?.project_name,
+        id: project?.id,
+        promtoer_name: project?.promoter_name,
+      },
+      value: project, // full project object
+    }));
+
+    return dropdownOptions;
+
+  } catch (error) {
+    console.error("❌ Error fetching projects for assignment:", error);
+    throw error;
+  }
+}
 
 
 
