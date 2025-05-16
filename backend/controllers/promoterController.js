@@ -218,7 +218,7 @@ export const getAllPromoters = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('promoters')
-      .select('id, promoter_name, contact_number, email_id, district, city')
+      .select('id, promoter_name, contact_number, email_id, district, city, created_at, updated_at, promoter_type')
       .eq('status_for_delete','active');
 
     if (error) {

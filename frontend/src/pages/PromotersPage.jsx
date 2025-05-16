@@ -90,7 +90,6 @@ const PromotersPage = () => {
       
       setStats({
         total: data.length,
-        active: data.filter(p => p.status === "active").length || Math.floor(data.length * 0.8),
         newThisMonth: data.filter(p => {
           if (!p.created_at) return false;
           const createdDate = new Date(p.created_at);
@@ -140,7 +139,7 @@ const PromotersPage = () => {
     if (selectedIds.length === currentPromoters.length) {
       setSelectedIds([]);
     } else {
-      // console.log(currentPromoters);
+      console.log(currentPromoters);
       
       setSelectedIds(currentPromoters.map((p) => p.id));
     }
@@ -693,10 +692,10 @@ const PromotersPage = () => {
                         )}
                       </div>
                     </th>
-                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("email")}>
+                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("email_id")}>
                       <div className="flex items-center">
                         Email
-                        {sortConfig.key === "email" ? (
+                        {sortConfig.key === "email_id" ? (
                           sortConfig.direction === "ascending" ? (
                             <FaSortUp className="ml-1 text-[#5CAAAB]" />
                           ) : (
@@ -707,10 +706,10 @@ const PromotersPage = () => {
                         )}
                       </div>
                     </th>
-                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("status")}>
+                    <th className="p-3 cursor-pointer group"  onClick={() => requestSort("contact_number")}>
                       <div className="flex items-center">
-                        Status
-                        {sortConfig.key === "status" ? (
+                        Phone Number
+                         {sortConfig.key === "contact_number" ? (
                           sortConfig.direction === "ascending" ? (
                             <FaSortUp className="ml-1 text-[#5CAAAB]" />
                           ) : (
@@ -721,10 +720,10 @@ const PromotersPage = () => {
                         )}
                       </div>
                     </th>
-                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("campaigns")}>
+                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("district")}>
                       <div className="flex items-center">
-                        Campaigns
-                        {sortConfig.key === "campaigns" ? (
+                        District
+                        {sortConfig.key === "district" ? (
                           sortConfig.direction === "ascending" ? (
                             <FaSortUp className="ml-1 text-[#5CAAAB]" />
                           ) : (
@@ -735,10 +734,10 @@ const PromotersPage = () => {
                         )}
                       </div>
                     </th>
-                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("last_active")}>
+                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("city")}>
                       <div className="flex items-center">
-                        Last Active
-                        {sortConfig.key === "last_active" ? (
+                        City
+                        {sortConfig.key === "city" ? (
                           sortConfig.direction === "ascending" ? (
                             <FaSortUp className="ml-1 text-[#5CAAAB]" />
                           ) : (
@@ -774,43 +773,14 @@ const PromotersPage = () => {
                           </div>
                           <div>
                             <div className="font-medium text-gray-800">{promoter.promoter_name}</div>
-                            <div className="text-xs text-gray-500">{promoter.company || 'Individual'}</div>
+                            <div className="text-xs text-gray-500">{promoter.promoter_type || 'Individual'}</div>
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 text-gray-600">{promoter.email}</td>
-                      <td className="p-3">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                          promoter.status === 'active'
-                            ? 'bg-green-100 text-green-800'
-                            : promoter.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {promoter?.status?.charAt(0).toUpperCase() + promoter?.status?.slice(1)}
-                        </span>
-                      </td>
-                      <td className="p-3 text-gray-600">
-                        {promoter.campaigns > 0 ? (
-                          <Link 
-                            to={`/campaigns?promoter=${promoter.id}`}
-                            className="text-blue-600 hover:underline"
-                          >
-                            {promoter.campaigns} {promoter.campaigns === 1 ? 'campaign' : 'campaigns'}
-                          </Link>
-                        ) : (
-                          <span className="text-gray-400">No campaigns</span>
-                        )}
-                      </td>
-                      <td className="p-3 text-gray-600">
-                        {promoter.last_active ? (
-                          <span title={new Date(promoter.last_active).toLocaleString()}>
-                            {formatDistanceToNow(new Date(promoter.last_active), { addSuffix: true })}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400">Never</span>
-                        )}
-                      </td>
+                      <td className="p-3 text-gray-600">{promoter.email_id}</td>
+                      <td className="p-3 text-gray-600">{promoter.contact_number}</td>
+                      <td className="p-3 text-gray-600">{promoter.district}</td>
+                      <td className="p-3 text-gray-600">{promoter.city}</td>
                       <td className="p-3 text-right space-x-2">
                         <button
                           onClick={() => handleView(promoter.id)}
