@@ -1250,6 +1250,11 @@ async getProjectSiteProgress(projectId) {
     });
 
     if (!response.ok) {
+      console.log(response);
+      if(response.status === 404) {
+        toast('Site Progress Data is not availible!')
+        return
+      }
       const errorData = await response.json();
       throw new Error(errorData.message || "Failed to fetch site progress.");
     }

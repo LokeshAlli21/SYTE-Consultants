@@ -398,7 +398,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
         // toast.success("✅ Site progress loaded!");
       } catch (error) {
         console.error("❌ Error loading site progress:", error);
-        toast.error(`❌ Failed to load site progress: ${error.message}`);
+        // toast.error(`❌ Failed to load site progress: ${error.message}`);
       }
     };
 

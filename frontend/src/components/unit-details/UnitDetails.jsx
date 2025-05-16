@@ -268,14 +268,14 @@ disabled={disabled}
                       />
                     </td>
                     <td className="p-3">{idx + 1}</td>
-                    <td className="p-3 font-medium text-gray-900">{u.unit_name}</td>
-                    <td className="p-3">{u.unit_type}</td>
-                    <td className="p-3">{u.carpet_area}</td>
-                    <td className="p-3">{u.unit_status}</td>
-                    <td className="p-3">{u.customer_name}</td>
-                    <td className="p-3">{u.agreement_value}</td>
-                    <td className="p-3">{u.total_received}</td>
-                    <td className="p-3">{u.balance_amount}</td>
+                    <td className="p-3 font-medium text-gray-900">{(u.unit_name)? u.unit_name : 'NA'}</td>
+                    <td className="p-3">{(u.unit_type)? u.unit_type : 'NA'}</td>
+                    <td className="p-3">{(u.carpet_area)? u.carpet_area : 'NA'}</td>
+                    <td className="p-3">{(u.unit_status)? u.unit_status : 'NA'}</td>
+                    <td className="p-3">{(u.customer_name)? u.customer_name : 'NA'}</td>
+                    <td className="p-3">{(u.agreement_value)? u.agreement_value : 'NA'}</td>
+                    <td className="p-3">{(u.total_received)? u.total_received : 'NA'}</td>
+                    <td className="p-3">{(u.balance_amount)? u.balance_amount : 'NA'}</td>
                     <td className="p-3">
                       <div className="flex items-center justify-center gap-3 text-[15px]">
                         <button title="View" onClick={() => handleView(u.id)} className="text-blue-400 hover:text-blue-800">

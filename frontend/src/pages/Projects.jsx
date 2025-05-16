@@ -376,13 +376,13 @@ setLoading(true)
             />
           </td>
           <td className="p-3">{idx + 1}</td>
-          <td className="p-3 font-medium text-gray-900">{p.project_name}</td>
-          <td className="p-3">{p.promoter_name}</td>
-          <td className="p-3">{p.rera_number}</td>
-          <td className="p-3">{p.district}</td>
-          <td className="p-3">{p.city}</td>
-          <td className="p-3">{p.registration_date}</td>
-          <td className="p-3">{p.expiry_date}</td>
+          <td className="p-3 font-medium text-gray-900">{p.project_name?? 'NA'}</td>
+          <td className="p-3">{p.promoter_name?? 'NA'}</td>
+          <td className="p-3">{p.rera_number?? 'NA'}</td>
+          <td className="p-3">{(p.district)? p.district : 'NA'}</td>
+          <td className="p-3">{(p.city)? p.city : 'NA'}</td>
+          <td className="p-3">{p.registration_date?? 'NA'}</td>
+          <td className="p-3">{p.expiry_date?? 'NA'}</td>
           <td className="p-3">
             <div className="flex items-center justify-center gap-3 text-[15px]">
               <button title="View" onClick={() => handleView(p.id)} className="text-blue-400 hover:text-blue-800">
