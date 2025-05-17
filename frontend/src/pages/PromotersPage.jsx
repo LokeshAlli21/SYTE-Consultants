@@ -576,7 +576,7 @@ const PromotersPage = () => {
                   value={filters.contact_number}
                   onChange={(e) => handleFilterChange("contact_number", e.target.value)}
                   placeholder="Search by phone"
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
                 />
               </div>
               
@@ -587,7 +587,7 @@ const PromotersPage = () => {
                   value={filters.email_id}
                   onChange={(e) => handleFilterChange("email_id", e.target.value)}
                   placeholder="Search by email"
-                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
                 />
               </div>
               

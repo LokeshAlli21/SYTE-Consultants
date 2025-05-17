@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { FaArrowLeft } from "react-icons/fa6";
-import { FaFilePdf, FaTimes } from "react-icons/fa";
+import { FaArrowLeft, FaFilePdf, FaTimes, FaSpinner } from "react-icons/fa";
 import {
   ProjectDetailsForm,
   ProjectProfessionalDetailsForm,
@@ -11,7 +11,6 @@ import {
 } from "../components/index.js";
 import databaseService from "../backend-services/database/database";
 import { toast } from "react-toastify";
-import { FaSpinner } from "react-icons/fa";
 import { validateFormDataForProject } from "../components/forms/validateFormDataForProject.jsx";
 
 const tabs = [
@@ -24,16 +23,14 @@ const tabs = [
 
 const AddProject = ({ forUpdate = false, viewOnly = false }) => {
   const { id } = useParams();
-
-  const [loading, setLoading] = useState(false);
-
-  const [isUnitDetailsFormActive, setIsUnitDetailsFormActive] = useState(false);
-
-  const [projectId, setProjectId] = useState(id || null);
-  console.log(projectId);
-
   const navigate = useNavigate();
+  
+  const [loading, setLoading] = useState(false);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
+  const [isUnitDetailsFormActive, setIsUnitDetailsFormActive] = useState(false);
+  const [projectId, setProjectId] = useState(id || null);
+  
+  // Form states
   const [projectDetails, setProjectDetails] = useState({
     channel_partner_id: null,
     promoter_id: "",
@@ -51,6 +48,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     registration_date: "",
     expiry_date: "",
   });
+  
   const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
     project_id: projectId,
     engineer_id: "",
@@ -100,19 +98,16 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
   const [projectUnit, setProjectUnit] = useState({
     id: 1,
     project_id: projectId,
-
     // Unit Details
     unit_name: "",
     unit_type: "",
     carpet_area: "",
     unit_status: "",
-
     // Customer Details
     customer_name: "",
     agreement_value: "",
     agreement_for_sale_date: "",
     sale_deed_date: "",
-
     // Financial Year Received Amounts
     received_fy_2018_19: "",
     received_fy_2019_20: "",
@@ -126,20 +121,16 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     received_fy_2027_28: "",
     received_fy_2028_29: "",
     received_fy_2029_30: "",
-
     // Aggregated Financials
     total_received: "",
-    balance_amount: "", // Example: agreement_value - total_received
-
+    balance_amount: "",
     // Documents
     afs_uploaded_url: "",
     sale_deed_uploaded_url: "",
   });
 
   const [projectDocuments, setProjectDocuments] = useState({
-    project_id: projectId, // must match a valid project ID
-
-    // Document URLs
+    project_id: projectId,
     cc_uploaded_url: "",
     plan_uploaded_url: "",
     search_report_uploaded_url: "",
@@ -152,7 +143,6 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
 
   const [projectBuildingProgress, setProjectBuildingProgress] = useState({
     project_id: projectId,
-
     excavation: "",
     basement: "",
     podium: "",
@@ -164,552 +154,42 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     common_infrastructure: "",
     external_works: "",
     final_installations: "",
-
     updated_at: "",
   });
+
+  const initialCommonAreaItem = {
+    proposed: false,
+    percentage_of_work: "",
+    details: "",
+  };
 
   const [projectCommonAreasProgress, setProjectCommonAreasProgress] = useState({
     project_id: projectId,
     updated_at: "",
-    internal_roads_footpaths: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    water_supply: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    sewerage: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    storm_water_drains: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    landscaping_tree_planting: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    street_lighting: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    community_buildings: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    sewage_treatment: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    solid_waste_management: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    rain_water_harvesting: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    energy_management: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    fire_safety: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
-    electrical_metering: {
-      proposed: false,
-      percentage_of_work: "",
-      details: "",
-    },
+    internal_roads_footpaths: {...initialCommonAreaItem},
+    water_supply: {...initialCommonAreaItem},
+    sewerage: {...initialCommonAreaItem},
+    storm_water_drains: {...initialCommonAreaItem},
+    landscaping_tree_planting: {...initialCommonAreaItem},
+    street_lighting: {...initialCommonAreaItem},
+    community_buildings: {...initialCommonAreaItem},
+    sewage_treatment: {...initialCommonAreaItem},
+    solid_waste_management: {...initialCommonAreaItem},
+    rain_water_harvesting: {...initialCommonAreaItem},
+    energy_management: {...initialCommonAreaItem},
+    fire_safety: {...initialCommonAreaItem},
+    electrical_metering: {...initialCommonAreaItem},
   });
-
-  useEffect(() => {
-    const fetchAllProjectData = async () => {
-      if (!id) return;
-
-      // 1. Project Details
-      try {
-        const project = await databaseService.getProjectById(id);
-        console.log("✅ Project Response:", project);
-        setProjectDetails(project);
-        // toast.success("✅ Project details loaded!");
-      } catch (error) {
-        console.error("❌ Error loading project details:", error);
-        toast.error(`❌ Failed to load project details: ${error.message}`);
-      }
-
-      // 2. Project Professionals
-      try {
-        const professionals = await databaseService.getProjectProfessionalData(
-          id
-        );
-        console.log("✅ Professional Data Response:", professionals);
-
-        // Set IDs only in projectProfessionalDetails
-        setProjectProfessionalDetails({
-          project_id: professionals.project_id,
-          engineer_id: professionals.engineer_id,
-          architect_id: professionals.architect_id,
-          ca_id: professionals.ca_id,
-        });
-
-        if (viewOnly) {
-          console.log("viewOnly: ", viewOnly);
-          // Set individual role data
-          if (professionals.engineers) {
-            setEngineerData({
-              name: professionals.engineers.name,
-              contact_number: professionals.engineers.contact_number,
-              email_id: professionals.engineers.email_id,
-              office_address: professionals.engineers.office_address,
-              licence_number: professionals.engineers.licence_number,
-              licence_uploaded_url:
-                professionals.engineers.licence_uploaded_url,
-              pan_number: professionals.engineers.pan_number,
-              pan_uploaded_url: professionals.engineers.pan_uploaded_url,
-              letter_head_uploaded_url:
-                professionals.engineers.letter_head_uploaded_url,
-              sign_stamp_uploaded_url:
-                professionals.engineers.sign_stamp_uploaded_url,
-            });
-            // console.log('Engineer: ', engineerData);
-          }
-
-          if (professionals.architects) {
-            setArchitectData({
-              name: professionals.architects.name,
-              contact_number: professionals.architects.contact_number,
-              email_id: professionals.architects.email_id,
-              office_address: professionals.architects.office_address,
-              licence_number: professionals.architects.licence_number,
-              licence_uploaded_url:
-                professionals.architects.licence_uploaded_url,
-              pan_number: professionals.architects.pan_number,
-              pan_uploaded_url: professionals.architects.pan_uploaded_url,
-              letter_head_uploaded_url:
-                professionals.architects.letter_head_uploaded_url,
-              sign_stamp_uploaded_url:
-                professionals.architects.sign_stamp_uploaded_url,
-            });
-            // console.log('Architect: ', architectData);
-          }
-
-          if (professionals.cas) {
-            setCAData({
-              name: professionals.cas.name,
-              contact_number: professionals.cas.contact_number,
-              email_id: professionals.cas.email_id,
-              office_address: professionals.cas.office_address,
-              licence_number: professionals.cas.licence_number,
-              licence_uploaded_url: professionals.cas.licence_uploaded_url,
-              pan_number: professionals.cas.pan_number,
-              pan_uploaded_url: professionals.cas.pan_uploaded_url,
-              letter_head_uploaded_url:
-                professionals.cas.letter_head_uploaded_url,
-              sign_stamp_uploaded_url:
-                professionals.cas.sign_stamp_uploaded_url,
-            });
-            // console.log('CA: ', caData);
-          }
-        }
-
-        // toast.success("✅ Project professionals loaded!");
-      } catch (error) {
-        console.error("❌ Error loading project professionals:", error);
-        toast.error(
-          `❌ Failed to load project professionals: ${error.message}`
-        );
-      }
-
-      // 3. Project Documents
-      try {
-        const documents = await databaseService.getProjectDocuments(id);
-        console.log("✅ Documents Response:", documents);
-        setProjectDocuments({
-          project_id: documents.project_id, // Set project_id from the fetched data
-          cc_uploaded_url: documents.cc_uploaded_url,
-          plan_uploaded_url: documents.plan_uploaded_url,
-          search_report_uploaded_url: documents.search_report_uploaded_url,
-          da_uploaded_url: documents.da_uploaded_url,
-          pa_uploaded_url: documents.pa_uploaded_url,
-          satbara_uploaded_url: documents.satbara_uploaded_url,
-          promoter_letter_head_uploaded_url:
-            documents.promoter_letter_head_uploaded_url,
-          promoter_sign_stamp_uploaded_url:
-            documents.promoter_sign_stamp_uploaded_url,
-        });
-        // toast.success("✅ Project documents loaded!");
-      } catch (error) {
-        // console.error("❌ Error loading project documents:", error);
-        // toast.error(`❌ Failed to load project documents: ${error.message}`);
-      }
-
-      // 4. Site Progress
-      try {
-        const progress = await databaseService.getProjectSiteProgress(id);
-        console.log("✅ Site Progress Response:", progress);
-
-        // Set Building Progress (if available)
-        if (progress.buildingProgress) {
-          setProjectBuildingProgress((prevState) => ({
-            ...prevState,
-            ...progress.buildingProgress,
-          }));
-        }
-
-        // Set Common Area Progress (if available)
-        if (progress.commonAreasProgress) {
-          setProjectCommonAreasProgress((prevState) => {
-            const updatedProgress = {
-              project_id: prevState.project_id,
-              updated_at: progress.commonAreasProgress.updated_at || "",
-            };
-
-            Object.keys(prevState).forEach((key) => {
-              if (key !== "project_id" && key !== "updated_at") {
-                const areaData = progress.commonAreasProgress[key];
-                updatedProgress[key] = {
-                  proposed: areaData?.proposed ?? false,
-                  percentage_of_work: areaData?.percentage_of_work ?? "",
-                  details: areaData?.details ?? "",
-                };
-              }
-            });
-
-            return updatedProgress;
-          });
-        }
-
-        // toast.success("✅ Site progress loaded!");
-      } catch (error) {
-        console.error("❌ Error loading site progress:", error);
-        // toast.error(`❌ Failed to load site progress: ${error.message}`);
-      }
-    };
-
-    fetchAllProjectData();
-  }, [id]);
-
-  useEffect(() => {
-    setProjectCommonAreasProgress((prev) => ({
-      ...prev,
-      project_id: projectId,
-    }));
-
-    setProjectBuildingProgress((prev) => ({
-      ...prev,
-      project_id: projectId,
-    }));
-
-    setProjectDocuments((prev) => ({
-      ...prev,
-      project_id: projectId,
-    }));
-
-    setProjectUnit((prev) => ({
-      ...prev,
-      project_id: projectId,
-    }));
-
-    setProjectProfessionalDetails((prev) => ({
-      ...prev,
-      project_id: projectId,
-    }));
-  }, [projectId, id]);
 
   const [engineerOptions, setEngineerOptions] = useState([]);
   const [architectOptions, setArchitectOptions] = useState([]);
   const [casOptions, setCAsOptions] = useState([]);
 
-  const handleBack = () => {
-    if (activeTabIndex < 1) {
-      navigate(-1);
-      return;
-    }
-    setActiveTabIndex((p) => p - 1);
-  };
-
-  const handleSubmitProjectDetails = async () => {
-    console.log("Form Data Submitted:", projectDetails);
-
-    setLoading(true);
-
-    const isValid = validateFormDataForProject(projectDetails);
-    if (!isValid) {
-      setLoading(false);
-      return;
-    }
-
-    try {
-      if (forUpdate && id) {
-        const response = await databaseService.updateProjectDetails(
-          id,
-          projectDetails
-        );
-        console.log("✏️ Project details updated:", response);
-
-        toast.success("✅ Project details updated successfully!");
-      } else {
-        const response = await databaseService.uploadProjectDetails(
-          projectDetails
-        );
-        console.log("✅ Project details uploaded:", response);
-
-        // Extract and set project ID
-        const newProjectId = response?.data?.[0]?.id;
-        if (newProjectId) {
-          setProjectId(newProjectId);
-          console.log("🆔 Project ID set to:", newProjectId);
-        }
-
-        toast.success("✅ Project details submitted successfully!");
-      }
-
-      // Common reset after submission
-      setProjectDetails((prev) => resetObjectData(prev));
-      setActiveTabIndex(1);
-    } catch (error) {
-      console.error("❌ Error submitting/updating project details:", error);
-      toast.error(`❌ Failed: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitProjectProfessionalDetails = async () => {
-    console.log("Form Data Submitted:", projectProfessionalDetails);
-    setLoading(true);
-    const isValid = validateFormDataForProject(projectProfessionalDetails);
-    if (!isValid) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const response = await databaseService.uploadProjectProfessionalDetails({
-        ...projectProfessionalDetails,
-        project_id: projectId,
-      });
-      console.log("✅ Project professional details uploaded:", response);
-      toast.success("✅ Project professional details submitted successfully!");
-      setProjectProfessionalDetails((prev) => resetObjectData(prev));
-      setActiveTabIndex((p) => p + 1);
-    } catch (error) {
-      console.error("❌ Error submitting project professional details:", error);
-      toast.error(`❌ Failed to submit professional details: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitEngineer = async () => {
-    setLoading(true);
-    console.log("Engineer Data Submitted:", engineerData);
-    const isValid = validateFormDataForProject(engineerData);
-    if (!isValid) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const response = await databaseService.addEngineer(engineerData);
-      console.log("✅ Engineer details uploaded:", response);
-      toast.success("✅ Engineer details submitted successfully!");
-      setEngineerData((prev) => resetObjectData(prev));
-      return true;
-    } catch (error) {
-      console.error("❌ Error submitting engineer details:", error);
-      toast.error(`❌ Failed to submit engineer details: ${error.message}`);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitArchitect = async () => {
-    setLoading(true);
-    console.log("Architect Data Submitted:", architectData);
-    const isValid = validateFormDataForProject(architectData);
-    if (!isValid) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const response = await databaseService.addArchitect(architectData);
-      console.log("✅ Architect details uploaded:", response);
-      toast.success("✅ Architect details submitted successfully!");
-      setArchitectData((prev) => resetObjectData(prev));
-      return true;
-    } catch (error) {
-      console.error("❌ Error submitting architect details:", error);
-      toast.error(`❌ Failed to submit architect details: ${error.message}`);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitCA = async () => {
-    setLoading(true);
-    console.log("CA Data Submitted:", caData);
-    const isValid = validateFormDataForProject(caData);
-    if (!isValid) {
-      setLoading(false);
-      return;
-    }
-    try {
-      const response = await databaseService.addCA(caData);
-      console.log("✅ CA details uploaded:", response);
-      toast.success("✅ CA details submitted successfully!");
-      setCAData((prev) => resetObjectData(prev));
-      return true;
-    } catch (error) {
-      console.error("❌ Error submitting CA details:", error);
-      toast.error(`❌ Failed to submit CA details: ${error.message}`);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitProjectUnit = async () => {
-    console.log(projectUnit);
-    setLoading(true);
-    try {
-      const response = await databaseService.uploadProjectUnitDetails(
-        projectUnit
-      );
-      console.log("✅ Project unit details uploaded:", response);
-      toast.success("✅ Unit details submitted successfully!");
-      setProjectUnit((prev) => resetObjectData(prev));
-      setIsUnitDetailsFormActive(false); // Optional: disable unit form after submission
-    } catch (error) {
-      console.error("❌ Error submitting unit details:", error);
-      toast.error(`❌ Failed to submit unit details: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleUpdateProjectUnit = async (id) => {
-    console.log("🔄 Updating unit with ID:", id);
-    console.log(projectUnit);
-    setLoading(true);
-    try {
-      const response = await databaseService.updateProjectUnitDetails(
-        id,
-        projectUnit
-      );
-      console.log("✅ Project unit details updated:", response);
-      toast.success("✅ Unit details updated successfully!");
-      setProjectUnit((prev) => resetObjectData(prev));
-      setIsUnitDetailsFormActive(false); // Optional: hide the form after update
-
-      return true;
-    } catch (error) {
-      console.error("❌ Error updating unit details:", error);
-      toast.error(`❌ Failed to update unit details: ${error.message}`);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitProjectDocuments = async () => {
-    setLoading(true);
-    try {
-      const response = await databaseService.uploadProjectDocuments(
-        projectDocuments
-      );
-      console.log("✅ Project documents uploaded:", response);
-      toast.success("✅ Documents submitted successfully!");
-      // setProjectDocuments(prev => resetObjectData(prev));
-      setActiveTabIndex((p) => p + 1);
-    } catch (error) {
-      console.error("❌ Error submitting documents:", error);
-      toast.error(`❌ Failed to submit documents: ${error.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitProjectBuildingProgress = async () => {
-    console.log(projectBuildingProgress);
-
-    setLoading(true);
-    try {
-      const date = new Date();
-      const isoWithIST = new Date(date.getTime() + 5.5 * 60 * 60 * 1000)
-        .toISOString()
-        .replace("Z", "+05:30");
-      projectBuildingProgress.updated_at = isoWithIST;
-
-      console.log(projectBuildingProgress.updated_at);
-
-      const response = await databaseService.uploadProjectBuildingProgress(
-        projectBuildingProgress
-      );
-      console.log("✅ Building progress uploaded:", response);
-      toast.success("✅ Building progress submitted successfully!");
-      return true;
-      // setProjectBuildingProgress(prev => resetObjectData(prev));
-    } catch (error) {
-      console.error("❌ Error submitting building progress:", error);
-      toast.error(`❌ Failed to submit building progress: ${error.message}`);
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSubmitProjectCommonAreasProgresss = async () => {
-    setLoading(true);
-    try {
-      const date = new Date();
-      const isoWithIST = new Date(date.getTime() + 5.5 * 60 * 60 * 1000)
-        .toISOString()
-        .replace("Z", "+05:30");
-      projectCommonAreasProgress.updated_at = isoWithIST;
-
-      console.log(projectCommonAreasProgress.updated_at);
-      console.log(projectCommonAreasProgress);
-
-      const response = await databaseService.uploadProjectCommonAreasProgress(
-        projectCommonAreasProgress
-      );
-      console.log("✅ Common areas progress uploaded:", response);
-      toast.success("✅ Common areas progress submitted successfully!");
-      return true;
-      // setProjectCommonAreasProgress(prev => resetObjectData(prev));
-    } catch (error) {
-      console.error("❌ Error submitting common areas progress:", error);
-      toast.error(
-        `❌ Failed to submit common areas progress: ${error.message}`
-      );
-      return false;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  function resetObjectData(obj) {
+  // Helper function to reset object data
+  const resetObjectData = useCallback((obj) => {
     if (Array.isArray(obj)) return [];
 
     const clearedObj = {};
-
     for (const key in obj) {
       const value = obj[key];
 
@@ -735,52 +215,321 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     }
 
     return clearedObj;
-  }
+  }, []);
 
+  // Helper to get current timestamp in IST
+  const getCurrentISTTimestamp = () => {
+    const date = new Date();
+    return new Date(date.getTime() + 5.5 * 60 * 60 * 1000)
+      .toISOString()
+      .replace("Z", "+05:30");
+  };
+
+  // Update project IDs when projectId changes
   useEffect(() => {
-    if (!viewOnly) {
-      const mapToOptions = (data) =>
-        data.map((item) => ({
-          label: item.name || `ID ${item.id}`,
-          value: item.id,
-        }));
+    if (projectId) {
+      const updateProjectId = (setter) => {
+        setter(prev => ({...prev, project_id: projectId}));
+      };
+      
+      updateProjectId(setProjectCommonAreasProgress);
+      updateProjectId(setProjectBuildingProgress);
+      updateProjectId(setProjectDocuments);
+      updateProjectId(setProjectUnit);
+      updateProjectId(setProjectProfessionalDetails);
+    }
+  }, [projectId]);
 
-      async function fetchOptions() {
-        try {
-          const engineers = await databaseService.getAllEngineers();
-          setEngineerOptions(mapToOptions(engineers));
-        } catch (error) {
-          console.error("Error fetching engineers:", error);
-        }
+  // Fetch project data when id changes
+  useEffect(() => {
+    if (!id) return;
 
-        try {
-          const architects = await databaseService.getAllArchitects();
-          setArchitectOptions(mapToOptions(architects));
-        } catch (error) {
-          console.error("Error fetching architects:", error);
-        }
-
-        try {
-          const cas = await databaseService.getAllCAs();
-          setCAsOptions(mapToOptions(cas));
-        } catch (error) {
-          console.error("Error fetching CAs:", error);
-        }
+    const fetchAllProjectData = async () => {
+      // 1. Project Details
+      try {
+        const project = await databaseService.getProjectById(id);
+        setProjectDetails(project);
+      } catch (error) {
+        console.error("❌ Error loading project details:", error);
+        toast.error(`❌ Failed to load project details: ${error.message}`);
       }
 
-      fetchOptions();
+      // 2. Project Professionals
+      try {
+        const professionals = await databaseService.getProjectProfessionalData(id);
+        
+        setProjectProfessionalDetails({
+          project_id: professionals.project_id,
+          engineer_id: professionals.engineer_id,
+          architect_id: professionals.architect_id,
+          ca_id: professionals.ca_id,
+        });
+
+        if (viewOnly && professionals) {
+          if (professionals.engineers) {
+            setEngineerData(professionals.engineers);
+          }
+          if (professionals.architects) {
+            setArchitectData(professionals.architects);
+          }
+          if (professionals.cas) {
+            setCAData(professionals.cas);
+          }
+        }
+      } catch (error) {
+        console.error("❌ Error loading project professionals:", error);
+        toast.error(`❌ Failed to load project professionals: ${error.message}`);
+      }
+
+      // 3. Project Documents
+      try {
+        const documents = await databaseService.getProjectDocuments(id);
+        setProjectDocuments({
+          project_id: documents.project_id,
+          cc_uploaded_url: documents.cc_uploaded_url,
+          plan_uploaded_url: documents.plan_uploaded_url,
+          search_report_uploaded_url: documents.search_report_uploaded_url,
+          da_uploaded_url: documents.da_uploaded_url,
+          pa_uploaded_url: documents.pa_uploaded_url,
+          satbara_uploaded_url: documents.satbara_uploaded_url,
+          promoter_letter_head_uploaded_url: documents.promoter_letter_head_uploaded_url,
+          promoter_sign_stamp_uploaded_url: documents.promoter_sign_stamp_uploaded_url,
+        });
+      } catch (error) {
+        console.error("❌ Error loading project documents:", error);
+      }
+
+      // 4. Site Progress
+      try {
+        const progress = await databaseService.getProjectSiteProgress(id);
+        
+        // Set Building Progress (if available)
+        if (progress.buildingProgress) {
+          setProjectBuildingProgress(prev => ({...prev, ...progress.buildingProgress}));
+        }
+
+        // Set Common Area Progress (if available)
+        if (progress.commonAreasProgress) {
+          setProjectCommonAreasProgress(prev => {
+            const updatedProgress = {
+              project_id: prev.project_id,
+              updated_at: progress.commonAreasProgress.updated_at || "",
+            };
+
+            Object.keys(prev).forEach(key => {
+              if (key !== "project_id" && key !== "updated_at") {
+                const areaData = progress.commonAreasProgress[key];
+                updatedProgress[key] = {
+                  proposed: areaData?.proposed ?? false,
+                  percentage_of_work: areaData?.percentage_of_work ?? "",
+                  details: areaData?.details ?? "",
+                };
+              }
+            });
+
+            return updatedProgress;
+          });
+        }
+      } catch (error) {
+        console.error("❌ Error loading site progress:", error);
+      }
+    };
+
+    fetchAllProjectData();
+  }, [id, viewOnly]);
+
+  // Fetch professional options
+  useEffect(() => {
+    if (viewOnly) return;
+
+    const mapToOptions = data => data.map(item => ({
+      label: item.name || `ID ${item.id}`,
+      value: item.id,
+    }));
+
+    const fetchOptions = async () => {
+      try {
+        setEngineerOptions(mapToOptions(await databaseService.getAllEngineers()));
+        setArchitectOptions(mapToOptions(await databaseService.getAllArchitects()));
+        setCAsOptions(mapToOptions(await databaseService.getAllCAs()));
+      } catch (error) {
+        console.error("Error fetching professional options:", error);
+      }
+    };
+
+    fetchOptions();
+  }, [viewOnly]);
+
+  // Form submission handlers
+  const handleBack = () => {
+    if (activeTabIndex < 1) {
+      navigate(-1);
+      return;
     }
-  }, [id]);
+    setActiveTabIndex(prev => prev - 1);
+  };
 
-  const commonInputStyles =
-    "w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab]";
+  const handleSubmitWithValidation = async (data, submitFn, successMsg, resetFn = null) => {
+    setLoading(true);
 
+    try {
+      const isValid = validateFormDataForProject(data);
+      if (!isValid) {
+        setLoading(false);
+        return false;
+      }
+
+      const response = await submitFn();
+      toast.success(successMsg);
+      
+      if (resetFn) resetFn();
+      return true;
+    } catch (error) {
+      console.error(`❌ Error: ${error}`);
+      toast.error(`❌ Failed: ${error.message}`);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitProjectDetails = async () => {
+    return handleSubmitWithValidation(
+      projectDetails,
+      async () => {
+        if (forUpdate && id) {
+          const response = await databaseService.updateProjectDetails(id, projectDetails);
+          return response;
+        } else {
+          const response = await databaseService.uploadProjectDetails(projectDetails);
+          const newProjectId = response?.data?.[0]?.id;
+          if (newProjectId) {
+            setProjectId(newProjectId);
+          }
+          return response;
+        }
+      },
+      forUpdate ? "✅ Project details updated successfully!" : "✅ Project details submitted successfully!",
+      () => {
+        setProjectDetails(prev => resetObjectData(prev));
+        setActiveTabIndex(1);
+      }
+    );
+  };
+
+  const handleSubmitProjectProfessionalDetails = async () => {
+    return handleSubmitWithValidation(
+      projectProfessionalDetails,
+      async () => {
+        const response = await databaseService.uploadProjectProfessionalDetails({
+          ...projectProfessionalDetails,
+          project_id: projectId,
+        });
+        return response;
+      },
+      "✅ Project professional details submitted successfully!",
+      () => {
+        setProjectProfessionalDetails(prev => resetObjectData(prev));
+        setActiveTabIndex(prev => prev + 1);
+      }
+    );
+  };
+
+  const handleSubmitEngineer = async () => {
+    return handleSubmitWithValidation(
+      engineerData,
+      async () => await databaseService.addEngineer(engineerData),
+      "✅ Engineer details submitted successfully!",
+      () => setEngineerData(prev => resetObjectData(prev))
+    );
+  };
+
+  const handleSubmitArchitect = async () => {
+    return handleSubmitWithValidation(
+      architectData,
+      async () => await databaseService.addArchitect(architectData),
+      "✅ Architect details submitted successfully!",
+      () => setArchitectData(prev => resetObjectData(prev))
+    );
+  };
+
+  const handleSubmitCA = async () => {
+    return handleSubmitWithValidation(
+      caData,
+      async () => await databaseService.addCA(caData),
+      "✅ CA details submitted successfully!",
+      () => setCAData(prev => resetObjectData(prev))
+    );
+  };
+
+  const handleSubmitProjectUnit = async () => {
+    return handleSubmitWithValidation(
+      projectUnit,
+      async () => await databaseService.uploadProjectUnitDetails(projectUnit),
+      "✅ Unit details submitted successfully!",
+      () => {
+        setProjectUnit(prev => resetObjectData(prev));
+        setIsUnitDetailsFormActive(false);
+      }
+    );
+  };
+
+  const handleUpdateProjectUnit = async (id) => {
+    return handleSubmitWithValidation(
+      projectUnit,
+      async () => await databaseService.updateProjectUnitDetails(id, projectUnit),
+      "✅ Unit details updated successfully!",
+      () => {
+        setProjectUnit(prev => resetObjectData(prev));
+        setIsUnitDetailsFormActive(false);
+      }
+    );
+  };
+
+  const handleSubmitProjectDocuments = async () => {
+    return handleSubmitWithValidation(
+      projectDocuments,
+      async () => await databaseService.uploadProjectDocuments(projectDocuments),
+      "✅ Documents submitted successfully!",
+      () => setActiveTabIndex(prev => prev + 1)
+    );
+  };
+
+  const handleSubmitProjectBuildingProgress = async () => {
+    const dataWithTimestamp = {
+      ...projectBuildingProgress,
+      updated_at: getCurrentISTTimestamp()
+    };
+    setProjectBuildingProgress(dataWithTimestamp);
+    
+    return handleSubmitWithValidation(
+      dataWithTimestamp,
+      async () => await databaseService.uploadProjectBuildingProgress(dataWithTimestamp),
+      "✅ Building progress submitted successfully!"
+    );
+  };
+
+  const handleSubmitProjectCommonAreasProgresss = async () => {
+    const dataWithTimestamp = {
+      ...projectCommonAreasProgress,
+      updated_at: getCurrentISTTimestamp()
+    };
+    setProjectCommonAreasProgress(dataWithTimestamp);
+    
+    return handleSubmitWithValidation(
+      dataWithTimestamp,
+      async () => await databaseService.uploadProjectCommonAreasProgress(dataWithTimestamp),
+      "✅ Common areas progress submitted successfully!"
+    );
+  };
+
+  // Render active form
   const renderForm = () => {
     const activeTab = tabs[activeTabIndex];
 
-    return (
-      <>
-        {activeTab === "Project Details" && (
+    switch (activeTab) {
+      case "Project Details":
+        return (
           <ProjectDetailsForm
             formData={projectDetails}
             setFormData={setProjectDetails}
@@ -789,18 +538,16 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
             disabled={viewOnly}
             handleSubmitProjectDetails={handleSubmitProjectDetails}
           />
-        )}
-
-        {activeTab === "Professional Details" && (
+        );
+      case "Professional Details":
+        return (
           <ProjectProfessionalDetailsForm
             formData={projectProfessionalDetails}
             setFormData={setProjectProfessionalDetails}
             activeTab={activeTab}
             projectId={projectId}
             disabled={viewOnly}
-            handleSubmitProjectProfessionalDetails={
-              handleSubmitProjectProfessionalDetails
-            }
+            handleSubmitProjectProfessionalDetails={handleSubmitProjectProfessionalDetails}
             engineerData={engineerData}
             setEngineerData={setEngineerData}
             handleSubmitEngineer={handleSubmitEngineer}
@@ -817,9 +564,9 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
             casOptions={casOptions}
             setCAsOptions={setCAsOptions}
           />
-        )}
-
-        {activeTab === "Unit Details" && (
+        );
+      case "Unit Details":
+        return (
           <UnitDetails
             isUnitDetailsFormActive={isUnitDetailsFormActive}
             setIsUnitDetailsFormActive={setIsUnitDetailsFormActive}
@@ -831,9 +578,9 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
             handleSubmitProjectUnit={handleSubmitProjectUnit}
             handleUpdateProjectUnit={handleUpdateProjectUnit}
           />
-        )}
-
-        {activeTab === "Documents" && (
+        );
+      case "Documents":
+        return (
           <ProjectDocumentForm
             formData={projectDocuments}
             setFormData={setProjectDocuments}
@@ -842,9 +589,9 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
             disabled={viewOnly}
             handleSubmitProjectDocuments={handleSubmitProjectDocuments}
           />
-        )}
-
-        {activeTab === "Project Progress" && (
+        );
+      case "Project Progress":
+        return (
           <ProjectProgresssForm
             projectBuildingProgress={projectBuildingProgress}
             projectCommonAreasProgress={projectCommonAreasProgress}
@@ -853,16 +600,13 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
             activeTab={activeTab}
             projectId={projectId}
             disabled={viewOnly}
-            handleSubmitProjectBuildingProgress={
-              handleSubmitProjectBuildingProgress
-            }
-            handleSubmitProjectCommonAreasProgresss={
-              handleSubmitProjectCommonAreasProgresss
-            }
+            handleSubmitProjectBuildingProgress={handleSubmitProjectBuildingProgress}
+            handleSubmitProjectCommonAreasProgresss={handleSubmitProjectCommonAreasProgresss}
           />
-        )}
-      </>
-    );
+        );
+      default:
+        return null;
+    }
   };
 
   if (loading) {
