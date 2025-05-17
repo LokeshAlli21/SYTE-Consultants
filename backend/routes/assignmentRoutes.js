@@ -5,6 +5,7 @@ import { createNewAssignment,
   softDeleteAssignmentById,
   getAssignmentById,
   updateAssignment,
+  updateAssignmentStatus,
 } from '../controllers/assignmentController.js';
 
 const router = express.Router();
@@ -19,6 +20,12 @@ router.post(
       '/update/:id',
       protect,
       updateAssignment
+    );
+
+    router.put(
+      '/update-status/:id',
+      protect,
+      updateAssignmentStatus
     );
 
   router.get('/get-all', protect, getAllAssignments);

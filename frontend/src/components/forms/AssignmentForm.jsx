@@ -5,8 +5,18 @@ import databaseService from "../../backend-services/database/database";
 const assignmentOptions = [
   { value: 'registration', label: 'Registration' },
   { value: 'extension', label: 'Extension' },
-  { value: 'bank_account_change', label: 'Bank Account Change' },
+  // { value: 'bank_account_change', label: 'Bank Account Change' },
   { value: 'correction', label: 'Correction' },
+  { value: 'change', label: 'Change' },
+  { value: 'deregister', label: 'Deregister' },
+  { value: 'abeyance', label: 'Abeyance' },
+  { value: 'lapsed', label: 'Lapsed' },
+  { value: 'closure', label: 'Closure' },
+  { value: 'general_update', label: 'General Update' },
+  { value: 'qpr_notice', label: 'QPR Notice' },
+  { value: 'advertisement_notice', label: 'Advertisement Notice' },
+  { value: 'other_notice', label: 'Other Notice' },
+  { value: 'login_id_retrieval', label: 'Login Id Retrieval' },
 ];
 
 function AssignmentForm({disabled, formData, setFormData, handleSubmitAssignment, activeTab = "Assignment Details" }) {

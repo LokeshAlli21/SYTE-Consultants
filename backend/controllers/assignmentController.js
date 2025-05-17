@@ -65,6 +65,7 @@ export const createNewAssignment = async (req, res) => {
         .select(`
           id,
           project_id,
+          assignment_status,
           assignment_type,
           payment_date,
           application_number,
@@ -124,6 +125,7 @@ export const createNewAssignment = async (req, res) => {
         .select(`
           project_id,
           assignment_type,
+          assignment_status,
           payment_date,
           application_number,
           consultation_charges,
@@ -220,4 +222,39 @@ export const createNewAssignment = async (req, res) => {
     }
   };
   
+  export const updateAssignmentStatus = async (req, res) => {
+  const { id } = req.params;
+  const { assignment_status } = req.body;
+
+  console.log('Updating assignment status for ID:', id);
+  console.log('New Status:', assignment_status);
+
+  try {
+    // Validate required field
+    if (!assignment_status) {
+      return res.status(400).json({ error: "❌ assignment_status is required" });
+    }
+
+    // Update only the assignment_status field
+    const { data, error } = await supabase
+      .from('assignments')
+      .update({ assignment_status })
+      .eq('id', id);
+
+    console.log('Executed Supabase Query');
+    console.log('Returned Data:', data);
+    console.log('Error:', error);
+
+    if (error) {
+      console.error(`❌ Error updating status for assignment ID ${id}:`, error);
+      return res.status(500).json({ error: 'Failed to update assignment status', details: error });
+    }
+
+    res.status(200).json({ message: '✅ Assignment status updated successfully', data });
+  } catch (err) {
+    console.error('❌ Unexpected error in updateAssignmentStatus:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
   

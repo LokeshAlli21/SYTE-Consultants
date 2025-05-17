@@ -466,7 +466,7 @@ CREATE TABLE assignments (
         REFERENCES projects(id)
         ON DELETE CASCADE,
 
-    assignment_status VARCHAR(20),
+    assignment_status VARCHAR(20) DEFAULT 'new',
     status_for_delete VARCHAR(20) DEFAULT 'active',
 
     assignment_type VARCHAR(100),  -- Type of Assignment (e.g., Registration, Compliance, etc.)

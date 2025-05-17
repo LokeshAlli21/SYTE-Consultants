@@ -5,7 +5,7 @@ import databaseService from '../../backend-services/database/database';
 import {UnitDetailsForm} from '../index.js';
 import { IoClose } from "react-icons/io5"
 
-function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDetailsFormActive,formData,setFormData,activeTab,handleSubmitProjectUnit, handleUpdateProjectUnit}) {
+function UnitDetails({disabled, projectId , setIsUnitDetailsFormActive, isUnitDetailsFormActive,formData,setFormData,handleSubmitProjectUnit, handleUpdateProjectUnit}) {
 
   const [isDisabled, setIsDesabled] = useState(false)
   

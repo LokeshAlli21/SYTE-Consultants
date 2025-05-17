@@ -1624,6 +1624,33 @@ async updateAssignment(id, formData) {
     throw err;
   }
 }
+
+async updateAssignmentStatus(assignmentId, newStatus) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/update-status/${assignmentId}`, {
+      method: "PUT",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ assignment_status: newStatus })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Assignment status update failed.");
+    }
+
+    const data = await response.json();
+    // toast.success("✅ Assignment status updated successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error updating assignment status:", err);
+    // toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
 async deleteAssignmentById(id) {
   try {
     const response = await fetch(`${this.baseUrl}/api/assignments/delete/${id}`, {
