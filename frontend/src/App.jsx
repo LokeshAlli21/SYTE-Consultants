@@ -23,10 +23,10 @@ function App() {
   }, [])
 
   return (
-    <div className="flex min-h-screen max-w-[1575px] bg-[#F3F4FF]">
+    <div className="flex  max-w-screen w-full  bg-[#F3F4FF]">
       <SideBar />
       <ToastContainer position='top-right' />
-      <div className=" flex-1">
+      <div className=" flex-1 flex-grow mx-auto">
         <Outlet />
       </div>
     </div>

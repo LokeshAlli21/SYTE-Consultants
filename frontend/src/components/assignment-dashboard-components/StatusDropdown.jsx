@@ -344,8 +344,6 @@ export default function StatusDropdown({
   showIcon = true,
   placeholder = "Select Status",
   maxHeight = "max-h-60",
-  label = "Status",
-  required = false,
   clearable = false
 }) {
   const [isOpen, setIsOpen] = useState(false);

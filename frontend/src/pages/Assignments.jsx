@@ -1,19 +1,19 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
-import React from 'react'
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
-import { FaPlus, FaSearch, FaEye, FaEdit, FaTrash, FaSort } from "react-icons/fa";
+import {
+  FaPlus, FaSearch, FaEye, FaEdit, FaTrash,
+  FaSort, FaChartBar, FaListAlt, FaFilter
+} from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
-import databaseService from "../backend-services/database/database";
-import StatusDropdown from "../components/assignment-dashboard-components/StatusDropdown";
+import databaseService from "../backend-services/database/database"; // Corrected import path
+import StatusDropdown from "../components/assignment-dashboard-components/StatusDropdown"; // Corrected import path
+import NoteCell from "../components/assignment-dashboard-components/NoteCell";     // Corrected import path
 
-// Moved to separate files/constants for better organization
-// import { assignmentOptions, statusOptionsByType, statusColorMap, colorPalette } from "./assignmentConstants";
-
-const assignmentOptions = [
+// Constants
+const ASSIGNMENT_TYPES = [
   { value: 'registration', label: 'Registration' },
   { value: 'extension', label: 'Extension' },
-  // { value: 'bank_account_change', label: 'Bank Account Change' },
   { value: 'correction', label: 'Correction' },
   { value: 'change', label: 'Change' },
   { value: 'deregister', label: 'Deregister' },
@@ -27,74 +27,90 @@ const assignmentOptions = [
   { value: 'login_id_retrieval', label: 'Login Id Retrieval' },
 ];
 
- const colorPalette = [
+const COLOR_PALETTE = [
   "#5CAAAB", "#4CAF50", "#FFA500", "#9C27B0", "#E91E63", "#3F51B5", "#FF5722",
   "#607D8B", "#795548", "#CDDC39", "#00BCD4", "#8BC34A", "#FFC107", "#F44336"
 ];
 
-function Assignments(){
+function Assignments() {
   const navigate = useNavigate();
+  const [viewMode, setViewMode] = useState("table"); // "table" or "cards"
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState("id");
   const [sortDirection, setSortDirection] = useState("asc");
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [stats, setStats] = useState({ total: 0, statusCounts: {} });
+  const [filters, setFilters] = useState({
+    type: "",
+    status: ""
+  });
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   // Fetch assignments data
   useEffect(() => {
     const fetchAssignments = async () => {
       try {
+        setLoading(true);
         const data = await databaseService.getAllAssignments();
         setAssignments(data);
-        
+
         // Calculate statistics
         const statusCounts = {};
-        assignmentOptions.forEach(option => {
+        ASSIGNMENT_TYPES.forEach(option => {
           statusCounts[option.value] = data.filter(
             a => a.assignment_type === option.value
           ).length;
         });
-
-        // console.log(data);
-        // console.log(assignmentOptions);
-        
-        
 
         setStats({
           total: data.length,
           statusCounts
         });
       } catch (error) {
-        toast.error("❌ Failed to load assignments");
+        toast.error("Failed to load assignments");
+        console.error("Error fetching assignments:", error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchAssignments();
   }, []);
 
-  // Memoize filtered assignments for performance
+  // Apply filters and search
   const filteredAssignments = useMemo(() => {
-    if (!searchQuery.trim()) return assignments;
-    
-    const query = searchQuery.toLowerCase();
-    return assignments.filter(a =>
-      a.assignment_type?.toLowerCase().includes(query) ||
-      a.application_number?.toLowerCase().includes(query) ||
-      a.project_name?.toLowerCase().includes(query) ||
-      a.login_id?.toLowerCase().includes(query)
-    );
-  }, [assignments, searchQuery]);
+    return assignments.filter(a => {
+      // Apply type filter
+      if (filters.type && a.assignment_type !== filters.type) return false;
 
-  // Memoize sorted assignments to prevent unnecessary re-renders
+      // Apply status filter
+      if (filters.status && a.assignment_status !== filters.status) return false;
+
+      // Apply search
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        return (
+          a.assignment_type?.toLowerCase().includes(query) ||
+          a.application_number?.toLowerCase().includes(query) ||
+          a.project_name?.toLowerCase().includes(query) ||
+          a.login_id?.toLowerCase().includes(query)
+        );
+      }
+
+      return true;
+    });
+  }, [assignments, searchQuery, filters]);
+
+  // Sort filtered assignments
   const sortedAssignments = useMemo(() => {
     return [...filteredAssignments].sort((a, b) => {
       const aValue = a[sortField] || "";
       const bValue = b[sortField] || "";
-      
+
       if (sortDirection === "asc") {
         return aValue.toString().localeCompare(bValue.toString());
       } else {
@@ -103,13 +119,13 @@ function Assignments(){
     });
   }, [filteredAssignments, sortField, sortDirection]);
 
-  // Calculate pagination values
+  // Pagination calculations
   const totalPages = Math.ceil(sortedAssignments.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = sortedAssignments.slice(indexOfFirstItem, indexOfLastItem);
 
-  // Handle sorting - moved to useCallback to prevent recreation on each render
+  // Handlers
   const handleSort = useCallback((field) => {
     setSortField(prev => {
       if (prev === field) {
@@ -122,53 +138,107 @@ function Assignments(){
     });
   }, []);
 
-  // Handle search
+  const toggleSelectAll = () => {
+  if (selectedIds.length === currentItems.length) {
+    setSelectedIds([]);
+  } else {
+    setSelectedIds(currentItems.map((a) => a.id));
+  }
+};
+
+const toggleSelect = (id) => {
+  setSelectedIds((prev) =>
+    prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+  );
+};
+
+const goToPage = useCallback((page) => {
+  setCurrentPage(page);
+  setSelectedIds([]); // Clear selection on page change
+}, []);
+
+const handleBulkDelete = async () => {
+  if (selectedIds.length === 0) {
+    toast.info("Please select assignments first");
+    return;
+  }
+
+  if (!window.confirm(`Are you sure you want to delete ${selectedIds.length} assignments?`)) return;
+
+  try {
+    for (const id of selectedIds) {
+      await databaseService.deleteAssignmentById(id);
+    }
+
+    setAssignments(prev => prev.filter(a => !selectedIds.includes(a.id)));
+    setSelectedIds([]);
+    toast.success(`${selectedIds.length} assignments deleted.`);
+  } catch (error) {
+    toast.error("Failed to delete some assignments");
+  }
+};
+
   const handleSearchChange = useCallback((e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
+    setCurrentPage(1);
   }, []);
 
-  // Handle actions
+  const handleFilterChange = useCallback((filterType, value) => {
+    setFilters(prev => ({ ...prev, [filterType]: value }));
+    setCurrentPage(1);
+  }, []);
+
+  const clearFilters = useCallback(() => {
+    setFilters({ type: "", status: "" });
+    setSearchQuery("");
+    setCurrentPage(1);
+  }, []);
+
   const handleView = useCallback((id) => navigate(`/assignments/view/${id}`), [navigate]);
   const handleEdit = useCallback((id) => navigate(`/assignments/edit/${id}`), [navigate]);
-  
+
   const handleDelete = useCallback(async (id) => {
     if (!window.confirm("Are you sure you want to delete this assignment?")) return;
-    setLoading(true);
     try {
       await databaseService.deleteAssignmentById(id);
       setAssignments(prev => prev.filter(a => a.id !== id));
-      toast.success("Assignment deleted successfully.");
+      toast.success("Assignment deleted successfully");
     } catch (error) {
-      toast.error("❌ Failed to delete assignment.");
-    } finally {
-      setLoading(false);
+      toast.error("Failed to delete assignment");
+      console.error("Error deleting assignment:", error);
     }
   }, []);
 
-const handleStatusChange = useCallback(async (assignmentId, newStatus) => {
-  console.log("🔄 Updating status:", newStatus, "for Assignment ID:", assignmentId);
+  const handleStatusChange = useCallback(async (assignmentId, newStatus) => {
+    try {
+      await databaseService.updateAssignmentStatus(assignmentId, newStatus);
+      setAssignments(prev =>
+        prev.map(item =>
+          item.id === assignmentId ? { ...item, assignment_status: newStatus } : item
+        )
+      );
+      toast.success("Status updated successfully");
+    } catch (err) {
+      toast.error("Failed to update status");
+      console.error("Error updating status:", err);
+    }
+  }, []);
 
-  try {
-    await databaseService.updateAssignmentStatus(assignmentId, newStatus);
+  const handleNoteChange = useCallback(async (assignmentId, newNote) => {
+    try {
+      // Uncomment and use this when the backend service is ready
+      // await databaseService.updateAssignmentNote(assignmentId, newNote);
 
-    setAssignments(prev =>
-      prev.map(item =>
-        item.id === assignmentId ? { ...item, assignment_status: newStatus } : item
-      )
-    );
-
-    toast.success("Status updated successfully!");
-    console.log("Status updated successfully");
-  } catch (err) {
-    console.error("❌ Failed to update status:", err.message);
-    // toast.error(`❌ Failed to update status: ${err.message}`);
-  }
-}, []);
-
-  // Handle page changes
-  const goToPage = useCallback((page) => {
-    setCurrentPage(page);
+      setAssignments(prev =>
+        prev.map(item =>
+          item.id === assignmentId ? { ...item, remarks: newNote } : item
+        )
+      );
+      toast.success("Note updated successfully");
+    } catch (err) {
+      toast.error("Failed to update note");
+      console.error("Error updating note:", err);
+    }
   }, []);
 
   const goToPreviousPage = useCallback(() => {
@@ -179,113 +249,214 @@ const handleStatusChange = useCallback(async (assignmentId, newStatus) => {
     setCurrentPage(prev => Math.min(prev + 1, totalPages));
   }, [totalPages]);
 
-  return (
-    <div className="p-4 md:p-6 lg:p-8 pt-3">
-      {/* Header with Stats Cards */}
-      <DashboardHeader stats={stats} />
+ return (
+  <div className="p-4 md:p-6  lg:p-8 pt-3 min-h-screen max-w-full overflow-x-auto">
+    {/* Dashboard Header with Stats */}
+    <DashboardHeader
+      stats={stats}
+      viewMode={viewMode}
+      setViewMode={setViewMode}
+    />
 
-      {/* Search + New Button */}
-      <div className="flex flex-wrap gap-4 mb-6 items-center">
-        <SearchBox 
-          searchQuery={searchQuery} 
-          onChange={handleSearchChange} 
-          onClear={() => setSearchQuery("")} 
+    {/* Action Bar - Search, Filters, New Button */}
+    <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
+      <div className="flex flex-wrap gap-4 items-center">
+        <SearchBox
+          searchQuery={searchQuery}
+          onChange={handleSearchChange}
+          onClear={() => setSearchQuery("")}
+          selectedIds={selectedIds}
+          handleBulkDelete={handleBulkDelete}
         />
-        
+
+        <button
+          onClick={() => setIsFilterVisible(!isFilterVisible)}
+          className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-50 transition"
+        >
+          <FaFilter />
+          Filters
+          {Object.values(filters).some((f) => f) && (
+            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+          )}
+        </button>
+
+        {Object.values(filters).some((f) => f) && (
+          <button
+            onClick={clearFilters}
+            className="flex items-center gap-1 px-3 py-2.5 border border-gray-300 rounded-full text-red-500 hover:bg-gray-50 transition"
+          >
+            <IoClose />
+            Clear
+          </button>
+        )}
+
         <button
           onClick={() => navigate("/assignments/add")}
-          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-xl transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
+          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-md transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
         >
           <FaPlus className="text-base" />
           New Assignment
         </button>
       </div>
 
-      {/* Main Table Section */}
-      <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-        <TableHeader 
-          itemsPerPage={itemsPerPage} 
-          setItemsPerPage={(value) => {
-            setItemsPerPage(value);
-            setCurrentPage(1);
-          }}
-          totalItems={filteredAssignments.length}
+      {/* Conditionally Render Filter Panel */}
+      {isFilterVisible && (
+        <FilterPanel
+          filters={filters}
+          onChange={handleFilterChange}
+          onClear={clearFilters}
+          assignmentTypes={ASSIGNMENT_TYPES}
         />
+      )}
+    </div>
 
-        {loading ? (
-          <LoadingState />
-        ) : filteredAssignments.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <>
-            <div className="overflow-auto min-h-max">
-              <table className="w-full table-auto border-collapse text-sm">
-                <TableHead 
-                  sortField={sortField} 
-                  sortDirection={sortDirection} 
-                  onSort={handleSort} 
-                />
-                <tbody>
-                  {currentItems.map((assignment, idx) => (
-                    <TableRow 
-                      key={assignment.id}
-                      assignment={assignment}
-                      index={indexOfFirstItem + idx + 1}
-                      onView={handleView}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onStatusChange={handleStatusChange}
-                    />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+    {/* Main Content Area */}
+    <div className="bg-white rounded-xl shadow-lg ">
+      <TableHeader
+        itemsPerPage={itemsPerPage}
+        setItemsPerPage={(value) => {
+          setItemsPerPage(value);
+          setCurrentPage(1);
+        }}
+        totalItems={filteredAssignments.length}
+      />
 
-            <Pagination 
-              currentPage={currentPage}
-              totalPages={totalPages}
-              goToPage={goToPage}
-              goToPreviousPage={goToPreviousPage}
-              goToNextPage={goToNextPage}
-              indexOfFirstItem={indexOfFirstItem}
-              indexOfLastItem={indexOfLastItem}
-              totalItems={filteredAssignments.length}
-            />
-          </>
-        )}
+      {loading ? (
+        <LoadingState />
+      ) : filteredAssignments.length === 0 ? (
+        <EmptyState
+          clearFilters={clearFilters}
+          hasFilters={Object.values(filters).some((f) => f)}
+        />
+      ) : viewMode === "table" ? (
+        <>
+          <div className="overflow-auto w-full">
+            <table className=" table-auto border-collapse w-full text-sm">
+              <TableHead
+                sortField={sortField}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+                toggleSelectAll={toggleSelectAll}
+                selectedIds={selectedIds}
+                currentItems={currentItems}
+              />
+              <tbody>
+                {currentItems.map((assignment, idx) => (
+                  <TableRow
+                    key={assignment.id}
+                    assignment={assignment}
+                    index={indexOfFirstItem + idx + 1}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onStatusChange={handleStatusChange}
+                    onNoteChange={handleNoteChange}
+                    selectedIds={selectedIds}
+                    toggleSelect={toggleSelect}
+                    assignmentTypes={ASSIGNMENT_TYPES}
+                  />
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            goToPage={goToPage}
+            goToPreviousPage={goToPreviousPage}
+            goToNextPage={goToNextPage}
+            indexOfFirstItem={indexOfFirstItem}
+            indexOfLastItem={indexOfLastItem}
+            totalItems={filteredAssignments.length}
+          />
+        </>
+      ) : (
+        <CardView
+          assignments={currentItems}
+          assignmentTypes={ASSIGNMENT_TYPES}
+          onView={handleView}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onStatusChange={handleStatusChange}
+          pagination={{
+            currentPage,
+            totalPages,
+            goToPage,
+            goToPreviousPage,
+            goToNextPage,
+            indexOfFirstItem,
+            indexOfLastItem,
+            totalItems: filteredAssignments.length,
+          }}
+        />
+      )}
+    </div>
+  </div>
+);
+}
+
+// Component for dashboard header with stats and view toggle
+const DashboardHeader = ({ stats, viewMode, setViewMode }) => (
+  <div className="mb-8">
+    <div className="flex items-center justify-between mb-6 pl-2">
+      <div>
+        <h1 className="text-3xl font-bold text-[#2F4C92]">Assignments Dashboard</h1>
+        <p className="text-gray-500 mt-1">Manage and track all assignment activities</p>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <div className="bg-white rounded-lg p-1 shadow-sm border">
+          <button
+            onClick={() => setViewMode("table")}
+            className={`px-3 py-1.5 rounded ${
+              viewMode === "table"
+                ? "bg-blue-50 text-blue-600"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <FaListAlt className="text-lg" />
+          </button>
+          <button
+            onClick={() => setViewMode("cards")}
+            className={`px-3 py-1.5 rounded ${
+              viewMode === "cards"
+                ? "bg-blue-50 text-blue-600"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+          >
+            <FaChartBar className="text-lg" />
+          </button>
+        </div>
+
+        <div className="w-10 h-10 bg-[#C2C2FF] rounded-full flex items-center justify-center">
+          <span className="text-white font-bold">
+            {stats.total > 99 ? "99+" : stats.total}
+          </span>
+        </div>
       </div>
     </div>
-  );
-};
 
-// Extracted Components for better organization and reusability
-
-const DashboardHeader = ({ stats }) => (
-  <div className="mb-6">
-    <div className="flex items-center justify-between mb-4 pl-2">
-      <h1 className="text-2xl font-bold text-[#2F4C92]">Assignments Dashboard</h1>
-      <div className="w-10 h-10 bg-[#C2C2FF] rounded-full" />
-    </div>
-
-    <div className="overflow-x-auto">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 pb-4 px-2 m-w-full">
+    <div className="overflow-x-auto pb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-2 px-2 w-full">
         <div className="min-w-[200px]">
           <StatCard
             title="Total Assignments"
             value={stats.total}
             color="#2F4C92"
+            icon={<FaListAlt className="text-2xl" />}
           />
         </div>
-        {assignmentOptions.map((option, index) => {
+        {ASSIGNMENT_TYPES.map((option, index) => {
           const count = stats.statusCounts[option.value] || 0;
           if (!count) return null;
-          
+
           return (
             <div key={option.value} className="min-w-[200px]">
               <StatCard
                 title={option.label}
                 value={count}
-                color={colorPalette[index % colorPalette.length]}
+                color={COLOR_PALETTE[index % COLOR_PALETTE.length]}
               />
             </div>
           );
@@ -295,11 +466,13 @@ const DashboardHeader = ({ stats }) => (
   </div>
 );
 
-const SearchBox = ({ searchQuery, onChange, onClear }) => (
-  <div className="relative w-full max-w-sm shadow-md rounded-full">
+// SearchBox Component (updated styling)
+const SearchBox = ({ searchQuery, onChange, onClear ,selectedIds, handleBulkDelete  }) => (
+  <>
+  <div className="relative flex-1 max-w-[250px]">
     <input
       type="text"
-      placeholder="Search here..."
+      placeholder="Search assignments..."
       value={searchQuery}
       onChange={onChange}
       className="w-full pl-10 pr-10 py-2.5 rounded-full border border-[#5CAAAB] font-medium text-zinc-500 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5CAAAB] transition duration-200"
@@ -315,98 +488,172 @@ const SearchBox = ({ searchQuery, onChange, onClear }) => (
       </button>
     )}
   </div>
+
+  {selectedIds.length > 0 && (
+                <button
+                  onClick={handleBulkDelete}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-red-100 rounded-full text-red-600 hover:bg-red-200 transition"
+                >
+                  <FaTrash />
+                  Delete Selected {selectedIds.length}
+                </button>
+)}
+</>
+  
 );
 
+// FilterPanel Component (minimal & clean style)
+const FilterPanel = ({ filters, onChange, onClear, assignmentTypes }) => (
+  <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div className="flex flex-col">
+      <label className="text-sm text-gray-500 mb-1">Assignment Type</label>
+      <select
+        value={filters.type}
+        onChange={(e) => onChange("type", e.target.value)}
+        className="rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
+      >
+        <option value="">All Types</option>
+        {assignmentTypes.map(type => (
+          <option key={type.value} value={type.value}>{type.label}</option>
+        ))}
+      </select>
+    </div>
+
+    <div className="flex flex-col">
+      <label className="text-sm text-gray-500 mb-1">Status</label>
+      <select
+        value={filters.status}
+        onChange={(e) => onChange("status", e.target.value)}
+        className="rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
+      >
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="in_progress">In Progress</option>
+        <option value="completed">Completed</option>
+        <option value="on_hold">On Hold</option>
+        <option value="rejected">Rejected</option>
+      </select>
+    </div>
+
+    <div className="flex items-end">
+      <button
+        onClick={onClear}
+        className="px-4 py-2 rounded-full text-sm text-gray-600 border border-gray-300 hover:bg-gray-100 transition"
+      >
+        Reset Filters
+      </button>
+    </div>
+  </div>
+);
+
+// Table header component
 const TableHeader = ({ itemsPerPage, setItemsPerPage, totalItems }) => (
-  <div className="flex mx-6 items-center justify-between my-4 pt-4">
+  <div className="flex flex-wrap gap-3 px-6 items-center justify-between my-4 pt-4">
     <h2 className="text-xl font-semibold text-gray-800">Assignment List</h2>
     <div className="flex items-center gap-4">
-      <select 
+      <select
         value={itemsPerPage}
         onChange={(e) => setItemsPerPage(Number(e.target.value))}
-        className="border rounded p-1 text-sm"
+        className="border rounded-md p-1.5 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       >
         <option value={5}>5 per page</option>
         <option value={10}>10 per page</option>
         <option value={20}>20 per page</option>
+        <option value={50}>50 per page</option>
       </select>
-      <span className="text-sm text-gray-500">
+      <span className="text-sm text-gray-500 whitespace-nowrap">
         {totalItems} assignments found
       </span>
     </div>
   </div>
 );
 
+// Loading state component
 const LoadingState = () => (
-  <div className="py-10 text-center text-gray-400 animate-pulse">
-    Fetching assignment data...
+  <div className="py-24 text-center flex flex-col items-center">
+    <div className="w-12 h-12 border-4 border-t-[#5CAAAB] border-b-[#5CAAAB] border-l-gray-200 border-r-gray-200 rounded-full animate-spin mb-4"></div>
+    <p className="text-gray-500 text-lg">Loading assignments...</p>
   </div>
 );
 
-const EmptyState = () => (
-  <div className="py-10 text-center text-gray-400">
-    No assignment data available.
+// Empty state component
+const EmptyState = ({ clearFilters, hasFilters }) => (
+  <div className="py-24 text-center">
+    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4">
+      <FaListAlt className="text-gray-400 text-2xl" />
+    </div>
+    <p className="text-gray-500 text-lg mb-2">No assignments found</p>
+    {hasFilters && (
+      <button
+        onClick={clearFilters}
+        className="text-blue-500 hover:text-blue-700 font-medium"
+      >
+        Clear filters and try again
+      </button>
+    )}
   </div>
 );
 
-const TableHead = ({ sortField, sortDirection, onSort }) => (
-  <thead className="bg-gray-50">
-    <tr className="text-left text-gray-600 font-semibold">
-      <th className="p-3">Sr No.</th>
-      <SortableHeader 
-        field="assignment_type" 
-        title="Assignment Type" 
-        currentSort={sortField} 
-        direction={sortDirection} 
-        onSort={onSort} 
-      />
-      <SortableHeader 
-        field="application_number" 
-        title="Application Number" 
-        currentSort={sortField} 
-        direction={sortDirection} 
-        onSort={onSort} 
-      />
-      <SortableHeader 
-        field="project_name" 
-        title="Project Name" 
-        currentSort={sortField} 
-        direction={sortDirection} 
-        onSort={onSort} 
-      />
-      <SortableHeader 
-        field="login_id" 
-        title="Login ID" 
-        currentSort={sortField} 
-        direction={sortDirection} 
-        onSort={onSort} 
-      />
-      <th className="p-3">Last Action</th>
-      <SortableHeader 
-        field="assignment_status" 
-        title="Status" 
-        currentSort={sortField} 
-        direction={sortDirection} 
-        onSort={onSort} 
-      />
-      <th className="p-3 text-center">Action</th>
+// Table head component
+const TableHead = ({ sortField, sortDirection, onSort , toggleSelectAll,selectedIds,currentItems }) => (
+  <thead className="bg-gray-50 text-left text-gray-600">
+    <tr>
+<th className="p-3 border-y font-semibold">
+        <input
+    type="checkbox"
+    onChange={toggleSelectAll}
+    checked={
+      selectedIds.length === currentItems.length &&
+      currentItems.length !== 0
+    }
+    className="w-4 h-4 accent-[#5CAAAB] cursor-pointer"
+  />
+</th>
+      <th className="p-3 border-y font-semibold">Sr No.</th>
+
+      <SortableHeader field="assignment_type" title="Assignment Type" currentSort={sortField} direction={sortDirection} onSort={onSort} />
+      <SortableHeader field="application_number" title="Application Number" currentSort={sortField} direction={sortDirection} onSort={onSort} />
+      <SortableHeader field="project_name" title="Project Name" currentSort={sortField} direction={sortDirection} onSort={onSort} />
+      <SortableHeader field="login_id" title="Login ID" currentSort={sortField} direction={sortDirection} onSort={onSort} />
+      <SortableHeader field="assignment_status" title="Status" currentSort={sortField} direction={sortDirection} onSort={onSort} />
+      <SortableHeader field="note" title="Note" currentSort={sortField} direction={sortDirection} onSort={onSort} />
+      <th className="p-3 border-y font-semibold text-center">Actions</th>
     </tr>
   </thead>
 );
 
-const TableRow = ({ assignment, index, onView, onEdit, onDelete, onStatusChange, }) => (
-  <tr className="border-b hover:bg-gray-50">
-    <td className="p-3">{index}</td>
+// Table row component
+const TableRow = ({
+  assignment,
+  index,
+  onView,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  onNoteChange,
+  assignmentTypes,
+  selectedIds,
+  toggleSelect
+}) => (
+  <tr className="border-b hover:bg-gray-50 transition-colors">
+<td  className="p-3">
+      <input
+  type="checkbox"
+  checked={selectedIds.includes(assignment.id)}
+  onChange={() => toggleSelect(assignment.id)}
+  className="w-4 h-4 accent-[#5CAAAB] cursor-pointer"
+/>
+</td>
 
+    <td className="p-3 text-gray-700">{index}</td>
     <td className="p-3">
-      {assignmentOptions?.find(option => option.value === assignment.assignment_type)?.label ?? "NA"}
+      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+        {assignmentTypes?.find(option => option.value === assignment.assignment_type)?.label ?? "NA"}
+      </span>
     </td>
-
-    <td className="p-3">{assignment.application_number ?? "NA"}</td>
-    <td className="p-3">{assignment.project_name ?? "NA"}</td>
-    <td className="p-3">{assignment.login_id ?? "NA"}</td>
-    <td className="p-3">{assignment.last_action ?? "NA"}</td>
-
+    <td className="p-3 font-medium text-gray-800">{assignment.application_number ?? "NA"}</td>
+    <td className="p-3 text-gray-700">{assignment.project_name ?? "NA"}</td>
+    <td className="p-3 text-gray-700">{assignment.login_id ?? "NA"}</td>
     <td className="p-3">
       <StatusDropdown
         currentStatus={assignment.assignment_status}
@@ -414,120 +661,207 @@ const TableRow = ({ assignment, index, onView, onEdit, onDelete, onStatusChange,
         onChange={(newStatus) => onStatusChange(assignment.id, newStatus)}
       />
     </td>
-
-    <td className="p-3 text-center">
+    <td className="p-3">
+      <NoteCell
+        currentNote={assignment.note}
+        onChange={(newNote) => onNoteChange(assignment.id, newNote)}
+      />
+    </td>
+    <td className="p-3">
       <div className="flex items-center justify-center gap-3 text-[15px]">
-        <button
-          title="View"
-          onClick={() => onView(assignment.id)}
-          className="text-blue-400 hover:text-blue-800"
-        >
-          <FaEye />
-        </button>
-        <button
-          title="Edit"
-          onClick={() => onEdit(assignment.id)}
-          className="text-yellow-500 hover:text-yellow-600"
-        >
-          <FaEdit />
-        </button>
-        <button
-          title="Delete"
-          onClick={() => onDelete(assignment.id)}
-          className="text-red-400 hover:text-red-600"
-        >
-          <FaTrash />
-        </button>
+        <button title="View Details" onClick={() => onView(assignment.id)} className="p-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"><FaEye /></button>
+        <button title="Edit Assignment" onClick={() => onEdit(assignment.id)} className="p-1.5 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 transition-colors"><FaEdit /></button>
+        <button title="Delete Assignment" onClick={() => onDelete(assignment.id)} className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors"><FaTrash /></button>
       </div>
     </td>
   </tr>
 );
 
-
-const Pagination = ({ 
-  currentPage, 
-  totalPages, 
-  goToPage, 
-  goToPreviousPage, 
-  goToNextPage, 
-  indexOfFirstItem, 
-  indexOfLastItem, 
-  totalItems 
+// Card view component
+const CardView = ({
+  assignments,
+  assignmentTypes,
+  onView,
+  onEdit,
+  onDelete,
+  onStatusChange,
+  pagination
 }) => (
-  <div className="flex items-center justify-between px-6 py-4">
-    <div className="text-sm text-gray-500">
-      Showing {indexOfFirstItem + 1} to {Math.min(indexOfLastItem, totalItems)} of {totalItems} entries
+  <div>
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+      {assignments.map((assignment) => (
+        <div key={assignment.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+          <div className="p-4 border-b bg-gray-50">
+            <div className="flex justify-between items-start mb-2">
+              <h3 className="font-semibold text-gray-800 truncate">
+                {assignment.project_name || "Unnamed Project"}
+              </h3>
+              <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                {assignmentTypes?.find(option => option.value === assignment.assignment_type)?.label ?? "NA"}
+              </span>
+            </div>
+            <p className="text-sm text-gray-500">ID: {assignment.login_id ?? "NA"}</p>
+          </div>
+
+          <div className="p-4">
+            <div className="flex flex-col gap-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Application:</span>
+                <span className="font-medium text-gray-800">{assignment.application_number ?? "NA"}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">Status:</span>
+                <StatusDropdown
+                  currentStatus={assignment.assignment_status}
+                  assignmentType={assignment.assignment_type}
+                  onChange={(newStatus) => onStatusChange(assignment.id, newStatus)}
+                />
+              </div>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex gap-2">
+                  <button onClick={() => onView(assignment.id)} className="p-2 rounded-md text-blue-600 hover:bg-blue-50" title="View Details"><FaEye /></button>
+                  <button onClick={() => onEdit(assignment.id)} className="p-2 rounded-md text-yellow-600 hover:bg-yellow-50" title="Edit Assignment"><FaEdit /></button>
+                  <button onClick={() => onDelete(assignment.id)} className="p-2 rounded-md text-red-600 hover:bg-red-50" title="Delete Assignment"><FaTrash /></button>
+                </div>
+                <div className="text-xs text-gray-500">ID: {assignment.id}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
-    <div className="flex gap-2">
-      <button
-        onClick={goToPreviousPage}
-        disabled={currentPage === 1}
-        className={`px-3 py-1 rounded border ${
-          currentPage === 1
-            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-            : "bg-white text-blue-500 hover:bg-blue-50"
-        }`}
-      >
-        Previous
-      </button>
-      {generatePaginationButtons(currentPage, totalPages, goToPage)}
-      <button
-        onClick={goToNextPage}
-        disabled={currentPage === totalPages}
-        className={`px-3 py-1 rounded border ${
-          currentPage === totalPages
-            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-            : "bg-white text-blue-500 hover:bg-blue-50"
-        }`}
-      >
-        Next
-      </button>
-    </div>
+
+    <Pagination
+      currentPage={pagination.currentPage}
+      totalPages={pagination.totalPages}
+      goToPage={pagination.goToPage}
+      goToPreviousPage={pagination.goToPreviousPage}
+      goToNextPage={pagination.goToNextPage}
+      indexOfFirstItem={pagination.indexOfFirstItem}
+      indexOfLastItem={pagination.indexOfLastItem}
+      totalItems={pagination.totalItems}
+    />
   </div>
 );
 
-// Helper function for pagination buttons
-const generatePaginationButtons = (currentPage, totalPages, goToPage) => {
-  const pages = [];
-  const pagesToShow = [1]; // Always show first page
-  
-  // Add current page and surrounding pages
-  for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
-    pagesToShow.push(i);
-  }
-  
-  if (totalPages > 1) pagesToShow.push(totalPages); // Always show last page
-  
-  // Sort and remove duplicates
-  const uniquePages = [...new Set(pagesToShow)].sort((a, b) => a - b);
-  
-  let prevPage = 0;
-  uniquePages.forEach(page => {
-    if (page - prevPage > 1) {
-      pages.push(<span key={`ellipsis-${prevPage}`} className="px-3 py-1">...</span>);
+// Pagination
+
+const Pagination = ({
+  currentPage,
+  totalPages,
+  totalItems,
+  indexOfFirstItem,
+  indexOfLastItem,
+  goToPage,
+  goToPreviousPage,
+  goToNextPage,
+}) => {
+  // Helper to get page numbers (with ellipsis for long ranges)
+  const getPageNumbers = () => {
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 4) {
+        pages.push(1, 2, 3, 4, 5, "...", totalPages);
+      } else if (currentPage >= totalPages - 3) {
+        pages.push(1, "...", totalPages - 4, totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, "...", currentPage - 1, currentPage, currentPage + 1, "...", totalPages);
+      }
     }
-    pages.push(
-      <button
-        key={page}
-        onClick={() => goToPage(page)}
-        className={`px-3 py-1 rounded border ${
-          currentPage === page
-            ? "bg-blue-500 text-white"
-            : "bg-white text-blue-500 hover:bg-blue-50"
-        }`}
+    return pages;
+  };
+
+  return (
+    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6 rounded-md shadow-sm mt-4 flex-wrap gap-2">
+      {/* Info */}
+      <div className="text-sm text-gray-600">
+        Showing{" "}
+        <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
+        <span className="font-medium">{Math.min(indexOfLastItem, totalItems)}</span> of{" "}
+        <span className="font-medium">{totalItems}</span> entries
+      </div>
+
+      {/* Pagination Controls */}
+      <div className="flex items-center space-x-2">
+        {/* Previous */}
+        <button
+          onClick={goToPreviousPage}
+          disabled={currentPage === 1}
+          className={`px-4 py-2 text-sm font-medium rounded-md border border-gray-300 ${
+            currentPage === 1
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          Previous
+        </button>
+
+        {/* Page Numbers */}
+        {getPageNumbers().map((page, index) =>
+          page === "..." ? (
+            <span key={index} className="px-2 text-gray-500 select-none">
+              ...
+            </span>
+          ) : (
+            <button
+              key={index}
+              onClick={() => goToPage(page)}
+              disabled={page === currentPage}
+              className={`px-3 py-1 text-sm font-medium rounded-md border ${
+                page === currentPage
+                  ? "bg-blue-600 text-white border-blue-600 cursor-default"
+                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+              }`}
+            >
+              {page}
+            </button>
+          )
+        )}
+
+        {/* Next */}
+        <button
+          onClick={goToNextPage}
+          disabled={currentPage === totalPages}
+          className={`px-4 py-2 text-sm font-medium rounded-md border border-gray-300 ${
+            currentPage === totalPages
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+              : "bg-white text-gray-700 hover:bg-gray-50"
+          }`}
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const StatCard = ({ title, value, icon, color }) => {
+  return (
+    <div className="flex items-center justify-between p-4 rounded-lg shadow-md bg-white border border-gray-200">
+      {/* Left: Icon with colored background */}
+      <div
+        className="w-12 h-12 flex items-center justify-center rounded-full text-white"
+        style={{ backgroundColor: color }}
       >
-        {page}
-      </button>
-    );
-    prevPage = page;
-  });
-  
-  return pages;
+        {icon}
+      </div>
+
+      {/* Right: Title and Value */}
+      <div className="flex-1 ml-4 text-right">
+        <div className="text-sm text-gray-500">{title}</div>
+        <div className="text-xl font-semibold text-gray-800">{value}</div>
+      </div>
+    </div>
+  );
 };
 
 // Component for sortable table headers
 const SortableHeader = ({ field, title, currentSort, direction, onSort }) => (
-  <th 
+  <th
     className="p-3 cursor-pointer hover:bg-gray-100"
     onClick={() => onSort(field)}
   >
@@ -538,17 +872,6 @@ const SortableHeader = ({ field, title, currentSort, direction, onSort }) => (
       )}
     </div>
   </th>
-);
-
-// Stats card component
-const StatCard = ({ title, value, color }) => (
-  <div
-    className="rounded-xl shadow-md px-4 py-5 text-white w-full h-full"
-    style={{ backgroundColor: color }}
-  >
-    <h3 className="text-base font-semibold truncate">{title}</h3>
-    <p className="text-2xl font-bold mt-2">{value}</p>
-  </div>
 );
 
 export default Assignments;

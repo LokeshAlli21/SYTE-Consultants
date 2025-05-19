@@ -466,7 +466,6 @@ CREATE TABLE assignments (
         REFERENCES projects(id)
         ON DELETE CASCADE,
 
-    assignment_status VARCHAR(20) DEFAULT 'new',
     status_for_delete VARCHAR(20) DEFAULT 'active',
 
     assignment_type VARCHAR(100),  -- Type of Assignment (e.g., Registration, Compliance, etc.)
@@ -484,4 +483,22 @@ CREATE TABLE assignments (
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+);
+
+CREATE TABLE assignment_timeline (
+    id SERIAL PRIMARY KEY,
+
+    assignment_id INT NOT NULL,
+    CONSTRAINT fk_assignment
+        FOREIGN KEY (assignment_id)
+        REFERENCES assignments(id)
+        ON DELETE CASCADE,
+
+    event_type VARCHAR(100) NOT NULL,  -- e.g., 'status_changed', 'payment_updated', etc.
+
+    assignment_status VARCHAR(20) DEFAULT 'new',
+    note_type VARCHAR(20),
+    note TEXT,                      -- Optional comment about the change
+    
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
 );
