@@ -1588,7 +1588,9 @@ async getAllAssignments() {
       throw new Error(errorData.message || "Failed to fetch assignments.");
     }
 
+    
     const data = await response.json();
+    // console.log(data);
     // toast.success("✅ Assignments fetched successfully!");
     return data.assignments;
 
@@ -1646,6 +1648,33 @@ async updateAssignmentStatus(assignmentId, newStatus) {
     return data;
   } catch (err) {
     console.error("❌ Error updating assignment status:", err);
+    // toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
+async addAssignmentNote(assignmentId, notePayload) {
+      console.log("assignmentId:", assignmentId, "notePayload:", notePayload);
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/add-note/${assignmentId}`, {
+      method: "PUT",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(notePayload)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Adding note failed.");
+    }
+
+    const data = await response.json();
+    // toast.success("✅ Note added successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error adding assignment note:", err);
     // toast.error(`❌ ${err.message}`);
     throw err;
   }

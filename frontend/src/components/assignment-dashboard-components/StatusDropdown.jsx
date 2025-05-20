@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Check, ChevronDown, X } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 // Status configuration with color schemes and available options by type
 const statusOptionsByType = {
@@ -478,6 +479,10 @@ export default function StatusDropdown({
                       transition-all duration-150 ${optionColors.hover} 
                       ${isSelected ? 'ring-2 ring-offset-1 ring-[#42dbdb]' : ''}`}
                     onClick={() => {
+                      if(option.value === currentStatus) {
+                        toast.info("No changes detected in status.");
+                        return
+                      }
                       onChange(option.value);
                       setIsOpen(false);
                     }}

@@ -49,37 +49,60 @@ function Assignments() {
     status: ""
   });
   const [isFilterVisible, setIsFilterVisible] = useState(false);
-
+        // console.log(assignments);
   // Fetch assignments data
-  useEffect(() => {
-    const fetchAssignments = async () => {
-      try {
-        setLoading(true);
-        const data = await databaseService.getAllAssignments();
-        setAssignments(data);
+useEffect(() => {
+  const fetchAssignments = async () => {
+    try {
+      setLoading(true);
+      const data = await databaseService.getAllAssignments();
+      console.log('Fetched data:', data);
 
-        // Calculate statistics
-        const statusCounts = {};
-        ASSIGNMENT_TYPES.forEach(option => {
-          statusCounts[option.value] = data.filter(
-            a => a.assignment_type === option.value
-          ).length;
-        });
-
-        setStats({
-          total: data.length,
-          statusCounts
-        });
-      } catch (error) {
-        toast.error("Failed to load assignments");
-        console.error("Error fetching assignments:", error);
-      } finally {
-        setLoading(false);
+      // If data is an array itself, use this check:
+      if (!Array.isArray(data)) {
+        throw new Error('Expected data to be an array');
       }
-    };
 
-    fetchAssignments();
-  }, []);
+      const flatAssignments = data?.map((assignment) => {
+        const timeline = assignment?.timeline || {};
+        return {
+          ...assignment,
+          assignment_status: timeline?.assignment_status || null,
+          event_type: timeline?.event_type || null,
+          last_action: timeline?.created_at || null,
+          note: {
+            type: timeline.note_type || [],
+            msg: timeline.note || '',
+            reminder_date: timeline.reminder_date || ''
+          }
+        };
+      });
+
+      console.log('formed: ',flatAssignments);
+      setAssignments(flatAssignments);
+
+      // Calculate statistics
+      const statusCounts = {};
+      ASSIGNMENT_TYPES.forEach(option => {
+        statusCounts[option.value] = flatAssignments.filter(
+          a => a.assignment_type === option.value
+        ).length;
+      });
+
+      setStats({
+        total: flatAssignments.length,
+        statusCounts
+      });
+    } catch (error) {
+      toast.error("Failed to load assignments");
+      console.error("Error fetching assignments:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchAssignments();
+}, []);
 
   // Apply filters and search
   const filteredAssignments = useMemo(() => {
@@ -117,7 +140,7 @@ function Assignments() {
         return bValue.toString().localeCompare(aValue.toString());
       }
     });
-  }, [filteredAssignments, sortField, sortDirection]);
+  }, [filteredAssignments, sortField, sortDirection, assignments]);
 
   // Pagination calculations
   const totalPages = Math.ceil(sortedAssignments.length / itemsPerPage);
@@ -209,37 +232,75 @@ const handleBulkDelete = async () => {
     }
   }, []);
 
-  const handleStatusChange = useCallback(async (assignmentId, newStatus) => {
+const handleStatusChange = useCallback(async (assignmentId, newStatus) => {
+
+  console.log(assignmentId, newStatus);
+  
+  if (!assignmentId) {
+    toast.error("Assignment ID not found");
+    return;
+  }
+
+  try {
+    await databaseService.updateAssignmentStatus(assignmentId, newStatus);
+    setAssignments(prev =>
+      prev.map(item =>
+        item.id === assignmentId ? { ...item, assignment_status: newStatus } : item
+      )
+    );
+    toast.success("Status updated successfully");
+  } catch (err) {
+    toast.error("Failed to update status");
+    console.error("Error updating status:", err);
+  }
+}, []);
+
+  const getCurrentISTTimestamp = () => {
+    const date = new Date();
+    return new Date(date.getTime() + 5.5 * 60 * 60 * 1000)
+      .toISOString()
+      .replace("Z", "+05:30");
+  };
+
+const handleNoteChange = useCallback(
+  async (assignmentId, notePayload) => {
+    console.log("assignmentId:", assignmentId, "notePayload:", notePayload);
+
+    // Expected payload format:
+    // {
+    //   type: ['it_note', 'finance_note', 'reminder'],
+    //   msg: 'some message',
+    //   reminder_date: '2025-05-20T16:50'
+    // }
+
     try {
-      await databaseService.updateAssignmentStatus(assignmentId, newStatus);
+      if (
+        !notePayload ||
+        !Array.isArray(notePayload.type) ||
+        notePayload.type.length === 0 ||
+        !notePayload.msg?.trim()
+      ) {
+        toast.error("❌ Invalid note payload.");
+        return;
+      }
+
+      await databaseService.addAssignmentNote(assignmentId, notePayload);
+
+      // Update local state if needed
       setAssignments(prev =>
         prev.map(item =>
-          item.id === assignmentId ? { ...item, assignment_status: newStatus } : item
+          item.id === assignmentId ? { ...item, note: notePayload.msg } : item
         )
       );
-      toast.success("Status updated successfully");
-    } catch (err) {
-      toast.error("Failed to update status");
-      console.error("Error updating status:", err);
-    }
-  }, []);
 
-  const handleNoteChange = useCallback(async (assignmentId, newNote) => {
-    try {
-      // Uncomment and use this when the backend service is ready
-      // await databaseService.updateAssignmentNote(assignmentId, newNote);
-
-      setAssignments(prev =>
-        prev.map(item =>
-          item.id === assignmentId ? { ...item, remarks: newNote } : item
-        )
-      );
-      toast.success("Note updated successfully");
+      toast.success("✅ Note added successfully");
     } catch (err) {
-      toast.error("Failed to update note");
-      console.error("Error updating note:", err);
+      console.error("❌ Error updating note:", err);
+      toast.error("❌ Failed to update note");
     }
-  }, []);
+  },
+  []
+);
 
   const goToPreviousPage = useCallback(() => {
     setCurrentPage(prev => Math.max(prev - 1, 1));
@@ -637,6 +698,7 @@ const TableRow = ({
 }) => (
   <tr className="border-b hover:bg-gray-50 transition-colors">
 <td  className="p-3">
+  {/* {console.log(assignment)} */}
       <input
   type="checkbox"
   checked={selectedIds.includes(assignment.id)}
@@ -663,7 +725,7 @@ const TableRow = ({
     </td>
     <td className="p-3">
       <NoteCell
-        currentNote={assignment.note}
+        currentNote={assignment?.note}
         onChange={(newNote) => onNoteChange(assignment.id, newNote)}
       />
     </td>

@@ -494,11 +494,12 @@ CREATE TABLE assignment_timeline (
         REFERENCES assignments(id)
         ON DELETE CASCADE,
 
-    event_type VARCHAR(100) NOT NULL,  -- e.g., 'status_changed', 'payment_updated', etc.
+    event_type VARCHAR(100) NOT NULL,  -- e.g., 'status_changed', 'payment_updated', 'note_changed', etc.
 
     assignment_status VARCHAR(20) DEFAULT 'new',
-    note_type VARCHAR(20),
-    note TEXT,                      -- Optional comment about the change
-    
+    note_type TEXT[],                  -- Now supports an array of note types
+    note TEXT,                         -- Optional comment about the change
+    reminder_date TIMESTAMP,          -- Field to store reminder date and time
+
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
 );

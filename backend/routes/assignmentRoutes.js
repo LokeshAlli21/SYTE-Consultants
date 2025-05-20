@@ -6,6 +6,7 @@ import { createNewAssignment,
   getAssignmentById,
   updateAssignment,
   updateAssignmentStatus,
+  addAssignmentNote,
 } from '../controllers/assignmentController.js';
 
 const router = express.Router();
@@ -26,6 +27,12 @@ router.post(
       '/update-status/:id',
       protect,
       updateAssignmentStatus
+    );
+
+    router.put(
+      '/add-note/:id',
+      protect,
+      addAssignmentNote
     );
 
   router.get('/get-all', protect, getAllAssignments);
