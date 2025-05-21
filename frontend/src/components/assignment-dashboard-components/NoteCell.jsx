@@ -3,18 +3,16 @@ import { IoClose } from 'react-icons/io5';
 import { Check } from 'lucide-react';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { toast } from 'react-toastify';
-import { FaBell } from 'react-icons/fa';
 
-export default function NoteCellWithModal({
-  currentNote = {
-           type: [], msg: '', reminder_date: '' 
-        },
-  onChange,
-}) {
+export default function NoteCellWithModal({ currentNote = {}, onChange }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState(
+    Object.keys(currentNote).filter((key) =>
+      ['finance_note', 'technical_note', 'legal_note', 'it_note', 'general_note'].includes(key)
+    )
+  );
   const [note, setNote] = useState(currentNote);
   const [isOpen, setIsOpen] = useState(false);
-console.log(currentNote);
 
   const noteTypeOptions = [
     { label: 'Finance Note', value: 'finance_note' },
@@ -22,75 +20,89 @@ console.log(currentNote);
     { label: 'Legal Note', value: 'legal_note' },
     { label: 'IT Note', value: 'it_note' },
     { label: 'General Note', value: 'general_note' },
-    { label: 'Reminder (If Any)', value: 'reminder' },
   ];
 
   const toggleSelection = (value) => {
-    setNote((prev) => ({
-      ...prev,
-      type: prev.type.includes(value)
-        ? prev.type.filter((v) => v !== value)
-        : [...prev.type, value],
-    }));
+    if (selectedTypes.includes(value)) {
+      setSelectedTypes(selectedTypes.filter((v) => v !== value));
+      const updatedNote = { ...note };
+      delete updatedNote[value];
+      setNote(updatedNote);
+    } else {
+      setSelectedTypes([...selectedTypes, value]);
+    }
   };
 
-  const handleChange = (e) => {
+  const handleNoteChange = (e) => {
     const { name, value } = e.target;
     setNote((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = (e) => {
+    e.preventDefault();
 
-    if (note.type.includes("reminder") && !note.reminder_date) {
-      toast.error("Please select a reminder date.");
+    const validNotes = selectedTypes.filter((type) => note[type]?.trim());
+
+    if (validNotes.length === 0) {
+      toast.info('Please enter at least one note.');
       return;
     }
 
-    e.preventDefault();
-
     const isSameNote = JSON.stringify(note) === JSON.stringify(currentNote);
-
     if (isSameNote) {
-      toast.info("No changes detected in the note.");
-    } else {
-      onChange(note);
+      toast.info('No changes detected in the note.');
+      return;
     }
 
+    console.log(note);
+    
+    onChange(note);
     setIsModalOpen(false);
   };
 
   return (
-    <div className="relative">
+    <div className="relative overflow-visible">
       {/* Trigger */}
       <div
         onClick={() => setIsModalOpen(true)}
-        className={`cursor-pointer relative p-2 ${!note.type?.length && 'py-4 px-8'} bg-gradient-to-r from-[#3daaaa41] to-white border border-indigo-100 hover:shadow-lg transition-all duration-300 rounded-lg`}
+        className={`group cursor-pointer relative overflow-visible p-2 ${
+          selectedTypes.length === 0 ? 'py-4 px-8' : ''
+        } bg-gradient-to-r from-[#3daaaa41] to-white border border-indigo-100 hover:shadow-lg transition-all duration-300 rounded-lg max-w-[150px] `}
       >
-        {note.type?.length ? (
-<div>
-  {/* Note Types */}
-  <h3 className="text-base font-semibold text-indigo-700">
-    {(() => {
-      const labels = note.type
-        ?.map((t) => noteTypeOptions.find((n) => n.value === t)?.label)
-        .join(', ');
-      return labels?.length > 20 ? labels.slice(0, 20) + '...' : labels;
-    })()}
-  </h3>
+        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-xs px-4 py-2 text-sm text-white bg-gray-900 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50">
+          <div className="flex flex-col gap-1">
+            {selectedTypes.length > 0 ? (
+  selectedTypes.map((typeKey) => {
+    const label = noteTypeOptions.find((n) => n.value === typeKey)?.label;
+    const value = note[typeKey];
+    return (
+      <p key={typeKey}>
+        <span className="font-semibold text-teal-300">{label}:</span>{' '}
+        {value || 'N/A'}
+      </p>
+    );
+  })
+) : (
+  <p className="italic text-gray-300">No notes available.</p>
+)}
 
-  {/* Note Message */}
-  <p className="text-sm text-gray-700 font-medium whitespace-nowrap">
-    {note.msg.length > 20 ? note.msg.slice(0, 20) + '...' : note.msg}
-  </p>
+          </div>
+        </div>
 
-  {/* Reminder Display */}
-  {note.reminder_date && (
-    <div className="flex items-center gap-1 mt-[2px] text-sm text-gray-500">
-      <FaBell className="text-[#5caaab]  mt-[2px]" />
-      <span>{new Date(note.reminder_date).toLocaleString()}</span>
-    </div>
-  )}
-</div>
+        {selectedTypes.length ? (
+          <div className='whitespace-nowrap'>
+            <h3 className="text-base font-semibold  text-indigo-700">
+              {selectedTypes
+                .map((t) => noteTypeOptions.find((n) => n.value === t)?.label)
+                .join(', ')
+                .slice(0, 16)}
+              {selectedTypes.join(', ').length > 16 ? '...' : ''}
+            </h3>
+            <p className="text-sm text-gray-700 font-medium whitespace-nowrap">
+              {selectedTypes.map((t) => note[t]).join(', ').slice(0, 17)}
+              {selectedTypes.map((t) => note[t]).join(', ').length > 17 ? '...' : ''}
+            </p>
+          </div>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center whitespace-nowrap">
             <span className="text-base font-medium text-gray-400 italic">Add Note</span>
@@ -100,10 +112,10 @@ console.log(currentNote);
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 overflow-auto min-h-screen">
           <form
             onSubmit={handleSubmit}
-            className="w-full max-w-md bg-white p-6 rounded-xl shadow-2xl space-y-5 relative"
+            className="w-full max-w-md bg-white p-6 my-20 rounded-xl shadow-2xl space-y-5 absolute top-10 "
           >
             <button
               type="button"
@@ -116,7 +128,7 @@ console.log(currentNote);
 
             <h2 className="text-2xl font-bold text-center text-gray-800">Add a Note</h2>
 
-            {/* Custom Multi-select Dropdown */}
+            {/* Note Type Dropdown */}
             <div className="relative">
               <label className="block text-sm font-medium text-gray-700 mb-1">Note Types</label>
               <div
@@ -124,14 +136,15 @@ console.log(currentNote);
                 className="cursor-pointer w-full p-3 border border-gray-300 rounded-lg bg-white flex justify-between items-center"
               >
                 <div className="flex flex-wrap gap-2 max-h-20 overflow-y-auto">
-                  {note.type.length ? (
-                    note.type.map((t) => {
+                  {selectedTypes.length ? (
+                    selectedTypes.map((t) => {
                       const label = noteTypeOptions.find((n) => n.value === t)?.label;
                       return (
                         <span
                           key={t}
-                          className="bg-[#61c1c151] text-xs font-semibold px-3 py-1 rounded-full truncate max-w-[140px]"
+                          className="bg-[#61c1c151] text-xs font-semibold px-3 py-1 rounded-full truncate hover:bg-red-300 max-w-[140px]"
                           title={label}
+                          onClick={() => toggleSelection(t)}
                         >
                           {label}
                         </span>
@@ -141,7 +154,6 @@ console.log(currentNote);
                     <span className="text-gray-400 italic text-sm">-- Select Note Types --</span>
                   )}
                 </div>
-
                 {isOpen ? <FaChevronUp className="text-gray-400" /> : <FaChevronDown className="text-gray-400" />}
               </div>
 
@@ -149,7 +161,7 @@ console.log(currentNote);
                 <div className="absolute z-30 w-full mt-1 bg-white rounded-md shadow-lg overflow-hidden border border-gray-200">
                   <ul className="py-1 max-h-48 overflow-auto flex flex-col gap-1 px-1" tabIndex={-1}>
                     {noteTypeOptions.map((option) => {
-                      const isSelected = note.type.includes(option.value);
+                      const isSelected = selectedTypes.includes(option.value);
                       return (
                         <li
                           key={option.value}
@@ -170,34 +182,24 @@ console.log(currentNote);
               )}
             </div>
 
-            {/* Message Textarea */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-              <textarea
-                name="msg"
-                value={note.msg}
-                onChange={handleChange}
-                required
-                rows={4}
-                placeholder="Write your note..."
-                className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#5caaab]"
-              />
-            {note.type.includes("reminder") && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Reminder Date & Time</label>
-                <input
-                  type="datetime-local"
-                  name="reminder_date"
-                  value={note.reminder_date}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab]"
+            {/* Note Inputs */}
+            {selectedTypes.map((type) => (
+              <div key={type}>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  {noteTypeOptions.find((n) => n.value === type)?.label}
+                </label>
+                <textarea
+                  name={type}
+                  value={note[type] || ''}
+                  onChange={handleNoteChange}
                   required
+                  rows={3}
+                  placeholder="Write your note..."
+                  className="w-full p-3 border border-gray-300 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#5caaab]"
                 />
               </div>
-            )}
-            </div>
+            ))}
 
-            {/* Submit Button */}
             <button
               type="submit"
               className="w-full bg-[#5caaab] text-white font-semibold py-3 rounded-lg hover:bg-[#4c9a9a] transition-all"

@@ -212,3 +212,68 @@ BEFORE INSERT OR UPDATE ON projects
 FOR EACH ROW
 WHEN (NEW.promoter_id IS NOT NULL)
 EXECUTE FUNCTION set_promoter_name();
+
+
+-- auto create first timeline with status new
+CREATE OR REPLACE FUNCTION insert_assignment_timeline()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO assignment_timeline (
+    assignment_id,
+    event_type,
+    assignment_status,
+    note_type,
+    note,
+    reminder_date,
+    created_at
+  )
+  VALUES (
+    NEW.id,
+    'assignment_created',  -- Change this event_type if needed
+    'new',                 -- The default status value
+    NULL,                  -- You can set default note_type if needed; here we use NULL
+    NULL,                  -- Default note is NULL
+    NULL,                  -- No reminder date at creation
+    CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_insert_assignment_timeline
+AFTER INSERT ON assignments
+FOR EACH ROW
+EXECUTE FUNCTION insert_assignment_timeline();
+
+-- auto set assignment status when from its previous timeline if doesnt exists
+
+CREATE OR REPLACE FUNCTION set_default_assignment_status()
+RETURNS TRIGGER AS $$
+DECLARE
+  previous_status VARCHAR(25);
+BEGIN
+  -- Only auto-set if assignment_status is NULL or empty
+  IF NEW.assignment_status IS NULL OR NEW.assignment_status = '' THEN
+    SELECT assignment_status
+    INTO previous_status
+    FROM assignment_timeline
+    WHERE assignment_id = NEW.assignment_id
+    ORDER BY id DESC  -- changed from created_at to id
+    LIMIT 1;
+
+    -- If a previous record exists, use its status
+    IF FOUND THEN
+      NEW.assignment_status := previous_status;
+    ELSE
+      NEW.assignment_status := 'new';  -- fallback default
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_default_assignment_status
+BEFORE INSERT ON assignment_timeline
+FOR EACH ROW
+EXECUTE FUNCTION set_default_assignment_status();

@@ -60,64 +60,16 @@ export const createNewAssignment = async (req, res) => {
   
 export const getAllAssignments = async (req, res) => {
   try {
-    // Step 1: Fetch all active assignments
-    const { data: assignments, error } = await supabase
-      .from('assignments')
-      .select(`
-        id,
-        project_id,
-        assignment_type,
-        payment_date,
-        application_number,
-        consultation_charges,
-        govt_fees,
-        ca_fees,
-        engineer_fees,
-        arch_fees,
-        liasioning_fees,
-        remarks,
-        created_at,
-        updated_at
-      `)
-      .eq('status_for_delete', 'active');
+    const { data: assignmentsWithTimeline, error } = await supabase
+      .from('vw_assignments_with_latest_timeline') 
+      .select('*');
 
     if (error) {
       console.error('❌ Error fetching assignments:', error);
       return res.status(500).json({ error: 'Failed to fetch assignments', details: error });
     }
 
-    // Step 2: For each assignment, fetch the latest timeline
-    const assignmentsWithTimeline = await Promise.all(
-      assignments.map(async (assignment) => {
-        const { data: timeline, error: timelineError } = await supabase
-          .from('assignment_timeline')
-          .select(`
-            id,
-            event_type,
-            assignment_status,
-            note_type,
-            note,
-            reminder_date,
-            created_at
-          `)
-          .eq('assignment_id', assignment.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single(); // fetch latest only
-
-        if (timelineError && timelineError.code !== 'PGRST116') {
-          console.warn(`⚠️ Timeline fetch failed for assignment ${assignment.id}:`, timelineError);
-        }
-
-        return {
-          ...assignment,
-          timeline: timeline || null // Attach the timeline
-        };
-      })
-    );
-
     res.status(200).json({ assignments: assignmentsWithTimeline });
-
   } catch (err) {
     console.error('❌ Unexpected error in getAllAssignments:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -291,38 +243,28 @@ export const updateAssignmentStatus = async (req, res) => {
 };
 
 export const addAssignmentNote = async (req, res) => {
-  const { id } = req.params;
-  const { type, msg, reminder_date } = req.body;
+  const { id } = req.params; // assignment_id
+  const notePayload = req.body;
 
-  const note_type = type; // alias for clarity
-  const note = msg;
-
-  console.log(req.body);
-
-  console.log('Adding note to assignment ID:', id);
-  console.log('Note Type:', note_type);
-  console.log('Note:', note);
-  console.log('Reminder Date:', reminder_date);
+  // console.log('Incoming note payload:', notePayload);
 
   try {
-    if (!note_type || !note) {
-      return res.status(400).json({ error: "❌ note_type and note are required" });
+    // ✅ Validate: at least one note must be provided
+    if (Object.keys(notePayload).length === 0) {
+      return res.status(400).json({ error: '❌ At least one note must be provided' });
     }
 
+    // Insert timeline entry with JSONB notes
     const { data, error } = await supabase
       .from('assignment_timeline')
       .insert([{
         assignment_id: id,
         event_type: 'note_added',
-        note_type,
-        note,
-        reminder_date: reminder_date || null,
+        note: notePayload, // stored as JSONB
       }]);
 
-    console.log('Supabase Insert Result:', data);
-    console.log('Supabase Insert Error:', error);
-
     if (error) {
+      console.error('❌ Supabase insert error:', error);
       return res.status(500).json({ error: '❌ Failed to add assignment note', details: error });
     }
 

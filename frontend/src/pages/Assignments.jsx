@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
   FaPlus, FaSearch, FaEye, FaEdit, FaTrash,
-  FaSort, FaChartBar, FaListAlt, FaFilter
+  FaSort, FaChartBar, FaListAlt, FaFilter, FaBell, FaRegClock
 } from "react-icons/fa";
 import { IoClose } from "react-icons/io5";
 import databaseService from "../backend-services/database/database"; // Corrected import path
@@ -70,11 +70,7 @@ useEffect(() => {
           assignment_status: timeline?.assignment_status || null,
           event_type: timeline?.event_type || null,
           last_action: timeline?.created_at || null,
-          note: {
-            type: timeline.note_type || [],
-            msg: timeline.note || '',
-            reminder_date: timeline.reminder_date || ''
-          }
+          note: timeline?.note || {},
         };
       });
 
@@ -268,17 +264,17 @@ const handleNoteChange = useCallback(
 
     // Expected payload format:
     // {
-    //   type: ['it_note', 'finance_note', 'reminder'],
-    //   msg: 'some message',
-    //   reminder_date: '2025-05-20T16:50'
+    //     "finance_note": "",
+    //     "technical_note": "",
+    //     "legal_note": "",
+    //     "it_note": "",
+    //     "general_note": ""
     // }
 
     try {
       if (
         !notePayload ||
-        !Array.isArray(notePayload.type) ||
-        notePayload.type.length === 0 ||
-        !notePayload.msg?.trim()
+        Object.keys(notePayload).length === 0 
       ) {
         toast.error("❌ Invalid note payload.");
         return;
@@ -391,7 +387,7 @@ const handleNoteChange = useCallback(
         />
       ) : viewMode === "table" ? (
         <>
-          <div className="overflow-auto w-full">
+          <div className=" w-full overflow-visible">
             <table className=" table-auto border-collapse w-full text-sm">
               <TableHead
                 sortField={sortField}
@@ -730,11 +726,52 @@ const TableRow = ({
       />
     </td>
     <td className="p-3">
-      <div className="flex items-center justify-center gap-3 text-[15px]">
-        <button title="View Details" onClick={() => onView(assignment.id)} className="p-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"><FaEye /></button>
-        <button title="Edit Assignment" onClick={() => onEdit(assignment.id)} className="p-1.5 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 transition-colors"><FaEdit /></button>
-        <button title="Delete Assignment" onClick={() => onDelete(assignment.id)} className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors"><FaTrash /></button>
-      </div>
+<div className="inline-flex items-center gap-1 px-3 py-2 rounded-full border-2 border-[#53d9d9cc] bg-white shadow-sm hover:shadow-lg">
+  {/* View */}
+  <button
+    title="View Details"
+    onClick={() => onView(assignment.id)}
+    className="p-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer"
+  >
+    <FaEye />
+  </button>
+
+  {/* Edit */}
+  <button
+    title="Edit Assignment"
+    onClick={() => onEdit(assignment.id)}
+    className="p-1.5 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 transition-colors cursor-pointer"
+  >
+    <FaEdit />
+  </button>
+
+  {/* Delete */}
+  <button
+    title="Delete Assignment"
+    onClick={() => onDelete(assignment.id)}
+    className="p-1.5 rounded-full bg-red-50 text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
+  >
+    <FaTrash />
+  </button>
+
+  {/* Reminder */}
+  <button
+    title="Set Reminder"
+    onClick={() => onReminder(assignment.id)}
+    className="p-1.5 rounded-full bg-orange-50 text-orange-400 hover:bg-orange-100 transition-colors cursor-pointer"
+  >
+    <FaBell />
+  </button>
+
+  {/* Timeline */}
+  <button
+    title="View Timeline"
+    onClick={() => onTimeline(assignment.id)}
+    className="p-1.5 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
+  >
+    <FaRegClock />
+  </button>
+</div>
     </td>
   </tr>
 );
