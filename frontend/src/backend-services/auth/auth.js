@@ -36,7 +36,7 @@ class AuthService {
         throw new Error("Invalid credentials");
       }
 
-      localStorage.setItem("authToken", data?.session?.access_token);
+      localStorage.setItem("authToken", data?.user?.token);
       toast.success(`Welcome back! Logged in successfully.`);
       return data;
 
@@ -64,7 +64,7 @@ class AuthService {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("called 📢 GET /api/auth/user");
+      // console.log("called 📢 GET /api/auth/user");
       // console.log(response);
       
 
