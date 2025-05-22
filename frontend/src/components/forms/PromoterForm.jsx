@@ -21,15 +21,20 @@ import {
 } from "./promoter-form-components/index.js";
 
 import { validateFormData } from "./promoter-form-components/validateFormData.jsx";
+import { useSelector } from "react-redux";
 
 const PromoterForm = ({ id, disabled }) => {
   const selectRef = useRef(null);
+
+  const userData =useSelector((state) => state.auth.userData)
 
   const [cityOptions, setCityOptions] = useState([]);
   const [districtOptions, setDistrictOptions] = useState([]);
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const [prevData, setPrevData] = useState({})
 
   const [formData, setFormData] = useState({
     promoter_name: "", // from promoters table (not shown but assumed)
@@ -245,19 +250,62 @@ const PromoterForm = ({ id, disabled }) => {
     return;
   }
 
-  try {
-    let response;
+    try {
 
-    if (id) {
-      response = await databaseService.updatePromoter(id, {
-        commonData: formData,
-        formData: typeFormData,
-        promoterType: formData.promoter_type,
-      });
-      console.log("✅ Promoter updated:", response);
-      toast.success("✅ Promoter updated successfully!");
-    } else {
+      if(!userData){
+        console.log("userData: ", userData);
+      }
+
+      let response;
+
+      if (id) {
+    let update_action = null;
+
+    if (prevData) {
+      const changedFields = [];
+
+      for (const key in formData) {
+        if (formData[key] !== prevData[key]) {
+          changedFields.push(key);
+        }
+      }
+
+      console.log(typeFormData);
+      console.log(prevData?.typeFormData);
+      
+for (const key in typeFormData) {
+  const current = typeFormData[key] ?? "";
+  const previous = prevData?.typeFormData?.[key] ?? "";
+
+  if (current !== previous) {
+    console.log("Changed Key:", key);
+    console.log("New:", current);
+    console.log("Old:", previous);
+    changedFields.push(key);
+  }
+}
+
+
+      if (changedFields.length === 0) {
+        toast.info("ℹ️ No changes detected.");
+      }
+
+      update_action = changedFields.join(', ');
+    }
+
+    const response = await databaseService.updatePromoter(id, {
+      userId: userData?.id || null,
+      commonData: formData,
+      formData: typeFormData,
+      promoterType: formData.promoter_type,
+      update_action
+    });
+
+    console.log("✅ Promoter updated:", response);
+    toast.success("✅ Promoter updated successfully!");
+  } else {
       response = await databaseService.uploadPromoterData({
+        userId: userData?.id || null,
         commonData: formData,
         formData: typeFormData,
         promoterType: formData.promoter_type,
@@ -328,8 +376,7 @@ const PromoterForm = ({ id, disabled }) => {
 const response = await databaseService.getPromoterDetailsById(id);
 console.log("✅ Promoter Response:", response);
 
-// Set formData (common data)
-setFormData({
+const commonFormValues = {
   promoter_name: response.promoter_name || "",
   contact_number: response.contact_number || "",
   email_id: response.email_id || "",
@@ -339,7 +386,13 @@ setFormData({
   promoter_photo_uploaded_url: response.promoter_details?.promoter_photo_uploaded_url || "",
   office_address: response.promoter_details?.office_address || "",
   contact_person_name: response.promoter_details?.contact_person_name || "",
-});
+  updated_at:response.updated_at,
+  updated_by:response.updated_by,
+  updated_user:response.updated_user,
+};
+
+setPrevData({...commonFormValues, typeFormData:response?.promoter_details?.[response.promoter_type]});
+setFormData(commonFormValues); // ✅ Safe to use immediately
 
 // Set promoter-type-specific form
 const promoterDetails = response.promoter_details || {};
@@ -599,9 +652,56 @@ switch (promoterType) {
         </div>
       ) : (
         <>
-          <h2 className="text-3xl font-bold text-[#5CAAAB] text-center mb-6">
-            Promoter Information
-          </h2>
+          <div className=' w-full flex flex-row items-center justify-around'>
+            <h2 className="text-3xl font-bold text-[#5CAAAB] text-center mb-6 flex-1">
+              Promoter Information
+            </h2>
+{
+  formData.updated_at && (() => {
+    const updatedDate = new Date(formData.updated_at);
+    const now = new Date();
+
+    const diffTime = now.getTime() - updatedDate.getTime();
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    let dateLabel = '';
+    if (diffDays === 0) {
+      dateLabel = 'Today';
+    } else if (diffDays === 1) {
+      dateLabel = 'Yesterday';
+    } else if (diffDays <= 6) {
+      dateLabel = `${diffDays} days ago`;
+    } else {
+      dateLabel = updatedDate.toLocaleDateString('en-IN', { dateStyle: 'medium' });
+    }
+
+    const timeLabel = updatedDate.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+
+    return (
+      <div className="bg-white border-l-4 border-[#5CAAAB] shadow rounded-xl animate-fade-in px-3 py-2 w-fit ">
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-[#5CAAAB]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <p className="text-gray-700">
+            <span className="text-[#5CAAAB] font-semibold">Last updated:</span>{' '}
+            <span className="text-gray-800 font-semibold">{dateLabel} at {timeLabel}</span>
+            {formData.updated_by && (
+              <span className="text-gray-400 font-medium"> by <span className="font-semibold text-gray-800">{formData?.updated_user?.name}</span></span>
+            )}
+          </p>
+        </div>
+      </div>
+    );
+  })()
+}
+
+
+
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             {/* Common Fields */}
@@ -720,7 +820,7 @@ switch (promoterType) {
               <input
                 type="text"
                 name="promoter_name"
-                value={formData.promoter_name}
+                value={formData.promoter_name || ''}
                 onChange={handleChange}
                 disabled={disabled}
                 placeholder="Enter Name"
@@ -860,7 +960,7 @@ switch (promoterType) {
               <input
                 type="text"
                 name="contact_person_name"
-                value={formData.contact_person_name}
+                value={formData.contact_person_name || ''}
                 onChange={handleChange}
                 disabled={disabled}
                 onKeyDown={handleKeyDown}

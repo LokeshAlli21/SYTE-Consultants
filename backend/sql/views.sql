@@ -113,3 +113,50 @@ LEFT JOIN projects p ON a.project_id = p.id
 LEFT JOIN assignment_reminders_grouped ar ON a.id = ar.assignment_id
 WHERE 
     a.status_for_delete = 'active';
+
+
+
+CREATE OR REPLACE VIEW view_promoter_full AS
+SELECT
+  p.id,
+  p.promoter_name,
+  p.contact_number,
+  p.email_id,
+  p.district,
+  p.city,
+  p.promoter_type,
+  p.status_for_delete,
+  p.created_by,
+  p.created_at,
+  p.updated_at,
+  p.updated_by,
+  p.update_action,
+  
+  -- Aggregate promoter_details as JSON array
+  COALESCE(
+    jsonb_agg(
+      jsonb_build_object(
+        'id', pd.id,
+        'office_address', pd.office_address,
+        'contact_person_name', pd.contact_person_name,
+        'promoter_photo_uploaded_url', pd.promoter_photo_uploaded_url
+      )
+    ) FILTER (WHERE pd.id IS NOT NULL),
+    '[]'::jsonb
+  ) AS promoter_details,
+
+  -- Build updated_user JSON object
+  jsonb_build_object(
+    'name', u.name,
+    'email', u.email,
+    'phone', u.phone
+  ) AS updated_user
+
+FROM promoters p
+LEFT JOIN promoter_details pd ON pd.promoter_id = p.id
+LEFT JOIN users u ON u.id = p.updated_by
+GROUP BY
+  p.id, p.promoter_name, p.contact_number, p.email_id, p.district, p.city,
+  p.promoter_type, p.status_for_delete, p.created_by, p.created_at,
+  p.updated_at, p.updated_by, p.update_action,
+  u.id, u.name, u.email, u.phone;

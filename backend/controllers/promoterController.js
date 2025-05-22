@@ -1,5 +1,6 @@
 // controllers/promoterController.js
 import { supabase } from '../supabase/supabaseClient.js';
+import getCurrentISTTimestamp from './timestampt.js'
 
 export const uploadPromoterData = async (req, res) => {
   try {
@@ -15,7 +16,15 @@ export const uploadPromoterData = async (req, res) => {
       contact_person_name,
       promoter_photo_uploaded_url,
       promoter_details,
+      userId,
     } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
 
     // Step 2: Insert into 'promoters' table
     const promoterInsertRes = await supabase
@@ -27,6 +36,8 @@ export const uploadPromoterData = async (req, res) => {
         district,
         city,
         promoter_type,
+        created_by:userId,
+        created_at: getCurrentISTTimestamp(),
       }])
       .select('id');
 
@@ -67,10 +78,15 @@ export const uploadPromoterData = async (req, res) => {
       }
     });
 
+    const insertData = {
+      ...filteredPromoterDetails,
+      created_by: userId,
+    };
+
     // Step 5: Insert into 'promoter_details' table
     const { data: detailsData, error: detailsError } = await supabase
       .from('promoter_details')
-      .insert([filteredPromoterDetails])
+      .insert([insertData])
       .select('id');
 
     if (detailsError) {
@@ -218,7 +234,7 @@ export const getAllPromoters = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('promoters')
-      .select('id, promoter_name, contact_number, email_id, district, city, created_at, updated_at, promoter_type')
+      .select('id, promoter_name, contact_number, email_id, district, city, created_at, updated_at, promoter_type, created_by, updated_by, update_action, created_at')
       .eq('status_for_delete','active');
 
     if (error) {
@@ -260,27 +276,11 @@ export const getPromoterById = async (req, res) => {
   try {
     // Fetch base promoter and promoter_details
     const { data: promoterData, error: promoterError } = await supabase
-      .from('promoters')
-      .select(
-        `
-        id,
-        promoter_name,
-        contact_number,
-        email_id,
-        district,
-        city,
-        promoter_type,
-        status_for_delete,
-        promoter_details (
-          id,
-          office_address,
-          contact_person_name,
-          promoter_photo_uploaded_url
-        )
-        `
-      )
+       .from('view_promoter_full')
+      .select('*')
       .eq('id', id)
       .single();
+      
 
     if (promoterError) {
       console.error(`❌ Error fetching promoter:`, promoterError);
@@ -369,8 +369,17 @@ export const updatePromoter = async (req, res) => {
       office_address,
       contact_person_name,
       promoter_photo_uploaded_url,
-      promoter_details
+      promoter_details,
+      userId,
+      update_action,
     } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
 
     // Step 1: Update 'promoters' table
     const { data: promoterData, error: promoterError } = await supabase
@@ -382,7 +391,8 @@ export const updatePromoter = async (req, res) => {
         district,
         city,
         promoter_type,
-        updated_at: new Date().toISOString()
+        updated_by:userId,
+        update_action,
       })
       .eq('id', id)
       .select('id');
@@ -424,9 +434,15 @@ export const updatePromoter = async (req, res) => {
       }
     });
 
+    const insertData = {
+      ...filteredDetails,
+      updated_by: userId,
+      update_action,
+    };
+    
     const { data: updatedDetails, error: detailsUpdateError } = await supabase
       .from('promoter_details')
-      .update(filteredDetails)
+      .update(insertData)
       .eq('id', promoterDetailsId)
       .select();
 

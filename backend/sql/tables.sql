@@ -1,4 +1,4 @@
-----------------------------------------------------TABLE Promoters-------------------------------------------------------------------------
+----------------------------------------------------TABLE users-------------------------------------------------------------------------
 
 CREATE TABLE users (
   id SERIAL PRIMARY KEY,
@@ -6,7 +6,7 @@ CREATE TABLE users (
   email VARCHAR(100) UNIQUE NOT NULL,
   phone VARCHAR(15),
   password VARCHAR(255) NOT NULL,
-  created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+  created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata') 
 );
 
 ----------------------------------------------------TABLE Promoters-------------------------------------------------------------------------
@@ -21,8 +21,12 @@ CREATE TABLE promoters (
     city VARCHAR(100) NOT NULL,  -- City where the promoter is located
     promoter_type VARCHAR(50) NOT NULL,  -- Type of the promoter
     status_for_delete VARCHAR(20) DEFAULT 'active',  -- Status of the promoter (default to 'active')
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Automatically stores the creation time in IST
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')  -- Automatically stores the update time in IST
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),  -- Automatically stores the creation time in IST
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 -- Creating the PromoteDetails table with foreign key to Promoters
@@ -32,12 +36,16 @@ CREATE TABLE promoter_details (
     promoter_photo_uploaded_url TEXT,
     office_address TEXT,
     contact_person_name VARCHAR(255),
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
     CONSTRAINT fk_promoter
         FOREIGN KEY (promoter_id) 
         REFERENCES promoters(id)
-        ON DELETE CASCADE
+        ON DELETE CASCADE,
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 -- Separate Detail Tables by promoter_type --
@@ -170,8 +178,12 @@ CREATE TABLE channel_partners (
 
     status_for_delete VARCHAR(20) DEFAULT 'active',
 
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 ----------------------------------------------------TABLE Projects-------------------------------------------------------------------------
@@ -209,8 +221,12 @@ CREATE TABLE projects (
     rera_certificate_uploaded_url TEXT,  -- URL where the RERA certificate is uploaded
     registration_date DATE,  -- Date when the project was registered
     expiry_date DATE,  -- Expiry date of the project
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Automatically stores creation time in IST
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')  -- Automatically stores update time in IST
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),  -- Automatically stores creation time in IST
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 ----------------------------------------------------TABLE ProjectProfessionalDetails-------------------------------------------------------------------------
@@ -226,7 +242,11 @@ CREATE TABLE engineers (
     pan_number VARCHAR(10),
     pan_uploaded_url TEXT,
     letter_head_uploaded_url TEXT,
-    sign_stamp_uploaded_url TEXT
+    sign_stamp_uploaded_url TEXT,
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 CREATE TABLE architects (
@@ -240,7 +260,11 @@ CREATE TABLE architects (
     pan_number VARCHAR(10),
     pan_uploaded_url TEXT,
     letter_head_uploaded_url TEXT,
-    sign_stamp_uploaded_url TEXT
+    sign_stamp_uploaded_url TEXT,
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 CREATE TABLE cas (
@@ -254,7 +278,11 @@ CREATE TABLE cas (
     pan_number VARCHAR(10),
     pan_uploaded_url TEXT,
     letter_head_uploaded_url TEXT,
-    sign_stamp_uploaded_url TEXT
+    sign_stamp_uploaded_url TEXT,
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 -- Creating the ProjectProfessionalDetails table
@@ -279,8 +307,12 @@ CREATE TABLE project_professional_details (
     -- CA (Chartered Accountant) Details
     ca_id INT REFERENCES cas(id),
 
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 ----------------------------------------------------TABLE ProjectUnits-------------------------------------------------------------------------
@@ -336,8 +368,12 @@ CREATE TABLE project_units (
     afs_uploaded_url TEXT,  -- Agreement for Sale uploaded document
     sale_deed_uploaded_url TEXT,
 
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 
 );
 
@@ -366,8 +402,12 @@ CREATE TABLE project_documents (
     promoter_letter_head_uploaded_url TEXT,  -- Promoter's Letter Head
     promoter_sign_stamp_uploaded_url TEXT,  -- Promoter's Sign & Stamp
 
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 
 );
 
@@ -427,10 +467,14 @@ CREATE TABLE building_progress (
     external_works NUMERIC(5,2) CHECK (external_works BETWEEN 0 AND 100),               -- 10. External work
     final_installations NUMERIC(5,2) CHECK (final_installations BETWEEN 0 AND 100),     -- 11. Final Installations
 
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Record creation timestamp
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Last update timestamp
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),  -- Record creation timestamp
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),  -- Last update timestamp
     -- Foreign Key referencing the 'site_progress' table, ensuring each entry is linked to a specific site progress record
-    FOREIGN KEY (site_progress_id) REFERENCES site_progress(id) ON DELETE CASCADE
+    FOREIGN KEY (site_progress_id) REFERENCES site_progress(id) ON DELETE CASCADE,
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 -- Table to store progress for common areas of the project
@@ -459,10 +503,14 @@ CREATE TABLE common_areas_progress (
     fire_safety JSONB,                    -- 12. Fire Safety Requirements	
     electrical_metering JSONB,            -- 13. Electrical Metering Infrastructure
 
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Record creation timestamp
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),  -- Last update timestamp
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),  -- Record creation timestamp
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),  -- Last update timestamp
     -- Foreign Key referencing the 'site_progress' table, ensuring each entry is linked to a specific site progress record
-    FOREIGN KEY (site_progress_id) REFERENCES site_progress(id) ON DELETE CASCADE
+    FOREIGN KEY (site_progress_id) REFERENCES site_progress(id) ON DELETE CASCADE,
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 ----------------------------------------------------TABLE assignments-------------------------------------------------------------------------
@@ -492,8 +540,12 @@ CREATE TABLE assignments (
 
     remarks TEXT,
 
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'),
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+
+    created_by INT NOT NULL,
+    updated_by INT,
+    update_action TEXT
 );
 
 CREATE TABLE assignment_timeline (
@@ -510,7 +562,7 @@ CREATE TABLE assignment_timeline (
     assignment_status VARCHAR(25),
     note JSONB,                         -- Optional comment about the change
 
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );
 
 CREATE TABLE assignment_reminders (
@@ -526,5 +578,5 @@ CREATE TABLE assignment_reminders (
     message TEXT NOT NULL,
     status VARCHAR(25),
 
-    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );

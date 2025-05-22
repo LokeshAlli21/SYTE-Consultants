@@ -38,7 +38,7 @@ class DatabaseService {
 
 
   // Promoter
-  async uploadPromoterData({ commonData, formData, promoterType }) {
+  async uploadPromoterData({ commonData, formData, promoterType, userId }) {
   try {
     console.log("📦 Original formData:", formData);
 
@@ -148,6 +148,7 @@ for (const key in formData) {
       ...commonData,
       promoter_type: promoterType,
       promoter_details: formData,
+      userId,
     });
 
     // 📨 Submit final data
@@ -161,6 +162,7 @@ for (const key in formData) {
         ...commonData,
         promoter_type: promoterType,
         promoter_details: formData,
+        userId,
       }),
     });
 
@@ -179,7 +181,7 @@ for (const key in formData) {
   }
 }
 
-  async updatePromoter(id, { commonData, formData, promoterType }) {
+  async updatePromoter(id, { commonData, formData, promoterType, userId, update_action }) {
     try {
       console.log("📝 Original formData for update:", formData);
 
@@ -290,6 +292,8 @@ for (const key in formData) {
         ...commonData,
         promoter_type: promoterType,
         promoter_details: formData,
+        userId,
+        update_action,
       };
 
       console.log("📤 Final Payload for update:", payload);

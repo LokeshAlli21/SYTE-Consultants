@@ -1,279 +1,128 @@
---------------------------------------------------------------------------------------------------------------------------------------------
--- Creating a trigger function to update the 'updated_at' column on row updates
-CREATE OR REPLACE FUNCTION update_promoter_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';  -- Set the updated_at to the current time in IST
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- ================================================
+-- Add `updated_at` timestamp update triggers
+-- ================================================
 
--- Creating the trigger to automatically update the 'updated_at' column when a row is updated
-CREATE TRIGGER update_promoter_updated_at
-BEFORE UPDATE ON promoters
-FOR EACH ROW
-EXECUTE FUNCTION update_promoter_timestamp();
+-- Add trigger to update `updated_at` before row update on `promoters`
+DROP TRIGGER IF EXISTS trigger_update_promoters_timestamp ON promoters;
+CREATE TRIGGER trigger_update_promoters_timestamp
+    BEFORE UPDATE ON promoters
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
---------------------------------------------------------------------------------------------------------------------------------------------
+-- Add trigger to update `updated_at` before row update on `promoter_details`
+DROP TRIGGER IF EXISTS trigger_update_promoter_details_timestamp ON promoter_details;
+CREATE TRIGGER trigger_update_promoter_details_timestamp
+    BEFORE UPDATE ON promoter_details
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
--- Function to update the 'updated_at' column
-CREATE OR REPLACE FUNCTION update_promoter_details_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Add trigger to update `updated_at` before row update on `channel_partners`
+DROP TRIGGER IF EXISTS trigger_update_channel_partners_timestamp ON channel_partners;
+CREATE TRIGGER trigger_update_channel_partners_timestamp
+    BEFORE UPDATE ON channel_partners
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
--- Trigger to call the function before each update
-CREATE TRIGGER update_promoter_details_updated_at
-BEFORE UPDATE ON promoter_details
-FOR EACH ROW
-EXECUTE FUNCTION update_promoter_details_timestamp();
+-- Add trigger to update `updated_at` before row update on `projects`
+DROP TRIGGER IF EXISTS trigger_update_projects_timestamp ON projects;
+CREATE TRIGGER trigger_update_projects_timestamp
+    BEFORE UPDATE ON projects
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
---------------------------------------------------------------------------------------------------------------------------------------------
+-- Add trigger to update `updated_at` before row update on `project_professional_details`
+DROP TRIGGER IF EXISTS trigger_update_project_professional_details_timestamp ON project_professional_details;
+CREATE TRIGGER trigger_update_project_professional_details_timestamp
+    BEFORE UPDATE ON project_professional_details
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
--- Creating a trigger function to update the 'updated_at' column on row updates
-CREATE OR REPLACE FUNCTION update_project_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';  -- Set the updated_at to the current time in IST
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Add trigger to update `updated_at` before row update on `project_units`
+DROP TRIGGER IF EXISTS trigger_update_project_units_timestamp ON project_units;
+CREATE TRIGGER trigger_update_project_units_timestamp
+    BEFORE UPDATE ON project_units
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
--- Creating the trigger to automatically update the 'updated_at' column when a row is updated
-CREATE TRIGGER update_project_updated_at
-BEFORE UPDATE ON projects
-FOR EACH ROW
-EXECUTE FUNCTION update_project_timestamp();
+-- Add trigger to update `updated_at` before row update on `project_documents`
+DROP TRIGGER IF EXISTS trigger_update_project_documents_timestamp ON project_documents;
+CREATE TRIGGER trigger_update_project_documents_timestamp
+    BEFORE UPDATE ON project_documents
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
---------------------------------------------------------------------------------------------------------------------------------------------
--- Trigger function to update the 'updated_at' column
-CREATE OR REPLACE FUNCTION update_project_professional_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Add trigger to update `updated_at` before row update on `building_progress`
+DROP TRIGGER IF EXISTS trigger_update_building_progress_timestamp ON building_progress;
+CREATE TRIGGER trigger_update_building_progress_timestamp
+    BEFORE UPDATE ON building_progress
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
--- Trigger to auto-update 'updated_at' on row updates
-CREATE TRIGGER update_project_professional_updated_at
-BEFORE UPDATE ON project_professional_details
-FOR EACH ROW
-EXECUTE FUNCTION update_project_professional_timestamp();
+-- Add trigger to update `updated_at` before row update on `common_areas_progress`
+DROP TRIGGER IF EXISTS trigger_update_common_areas_progress_timestamp ON common_areas_progress;
+CREATE TRIGGER trigger_update_common_areas_progress_timestamp
+    BEFORE UPDATE ON common_areas_progress
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
---------------------------------------------------------------------------------------------------------------------------------------------
+-- Add trigger to update `updated_at` before row update on `assignments`
+DROP TRIGGER IF EXISTS trigger_update_assignments_timestamp ON assignments;
+CREATE TRIGGER trigger_update_assignments_timestamp
+    BEFORE UPDATE ON assignments
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
 
--- Create trigger function to calculate total_received
-CREATE OR REPLACE FUNCTION update_total_received_and_balance_amount()
-RETURNS TRIGGER AS $$
-BEGIN
-    NEW.total_received := NEW.received_fy_2018_19 + NEW.received_fy_2019_20 + 
-                          NEW.received_fy_2020_21 + NEW.received_fy_2021_22 + 
-                          NEW.received_fy_2022_23 + NEW.received_fy_2023_24 + 
-                          NEW.received_fy_2024_25 + NEW.received_fy_2025_26 + 
-                          NEW.received_fy_2026_27 + NEW.received_fy_2027_28 + 
-                          NEW.received_fy_2028_29 + NEW.received_fy_2029_30;
+-- ================================================
+-- Constraints
+-- ================================================
 
-    NEW.balance_amount := NEW.agreement_value - NEW.total_received;
-    RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Ensure all received fiscal year amounts in `project_units` are non-negative
+ALTER TABLE project_units 
+DROP CONSTRAINT IF EXISTS chk_received_amounts_positive;
 
--- Trigger to auto-update 'total_received' and 'balance_amount' before insert or update
-CREATE TRIGGER update_project_unit_total_received_balance
-BEFORE INSERT OR UPDATE ON project_units
-FOR EACH ROW
-EXECUTE FUNCTION update_total_received_and_balance_amount();
+ALTER TABLE project_units 
+ADD CONSTRAINT chk_received_amounts_positive 
+CHECK (
+    COALESCE(received_fy_2018_19, 0) >= 0 AND
+    COALESCE(received_fy_2019_20, 0) >= 0 AND
+    COALESCE(received_fy_2020_21, 0) >= 0 AND
+    COALESCE(received_fy_2021_22, 0) >= 0 AND
+    COALESCE(received_fy_2022_23, 0) >= 0 AND
+    COALESCE(received_fy_2023_24, 0) >= 0 AND
+    COALESCE(received_fy_2024_25, 0) >= 0 AND
+    COALESCE(received_fy_2025_26, 0) >= 0 AND
+    COALESCE(received_fy_2026_27, 0) >= 0 AND
+    COALESCE(received_fy_2027_28, 0) >= 0 AND
+    COALESCE(received_fy_2028_29, 0) >= 0 AND
+    COALESCE(received_fy_2029_30, 0) >= 0
+);
 
---------------------------------------------------------------------------------------------------------------------------------------------
+-- ================================================
+-- Custom triggers for business logic
+-- ================================================
 
--- Trigger function to auto-update updated_at
-CREATE OR REPLACE FUNCTION update_project_unit_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Trigger to calculate totals in `project_units` before insert/update
+DROP TRIGGER IF EXISTS trigger_calculate_project_unit_totals ON project_units;
+CREATE TRIGGER trigger_calculate_project_unit_totals
+    BEFORE INSERT OR UPDATE ON project_units
+    FOR EACH ROW
+    EXECUTE FUNCTION calculate_project_unit_totals();
 
--- Trigger to auto-update 'updated_at' on update
-CREATE TRIGGER update_project_unit_updated_at
-BEFORE UPDATE ON project_units
-FOR EACH ROW
-EXECUTE FUNCTION update_project_unit_timestamp();
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
--- Trigger function to auto-update updated_at
-CREATE OR REPLACE FUNCTION update_project_documents_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to auto-update 'updated_at' on row updates
-CREATE TRIGGER update_project_documents_updated_at
-BEFORE UPDATE ON project_documents
-FOR EACH ROW
-EXECUTE FUNCTION update_project_documents_timestamp();
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
--- Trigger function to auto-update updated_at
--- Function to update 'updated_at' timestamp for common_areas_progress
-CREATE OR REPLACE FUNCTION update_common_areas_progress_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'; -- Set the updated_at to the current time in IST
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to auto-update 'updated_at' on row updates for common_areas_progress
-CREATE TRIGGER update_common_areas_progress_updated_at
-BEFORE UPDATE ON common_areas_progress
-FOR EACH ROW
-EXECUTE FUNCTION update_common_areas_progress_timestamp();
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
--- Function to update 'updated_at' timestamp for building_progress
-CREATE OR REPLACE FUNCTION update_building_progress_timestamp()
-RETURNS TRIGGER AS $$ 
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'; -- Set the updated_at to the current time in IST
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to auto-update 'updated_at' on row updates for building_progress
-CREATE TRIGGER update_building_progress_updated_at
-BEFORE UPDATE ON building_progress
-FOR EACH ROW
-EXECUTE FUNCTION update_building_progress_timestamp();
-
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
--- Function to update the `updated_at` timestamp on row update
-CREATE OR REPLACE FUNCTION update_assignments_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger to auto-update 'updated_at' on updates to the assignments table
-CREATE TRIGGER update_assignments_updated_at
-BEFORE UPDATE ON assignments
-FOR EACH ROW
-EXECUTE FUNCTION update_assignments_timestamp();
-
---------------------------------------------------------------------------------------------------------------------------------------------
-
-CREATE OR REPLACE FUNCTION update_channel_partners_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE OR REPLACE FUNCTION update_channel_partners_timestamp()
-RETURNS TRIGGER AS $$
-BEGIN
-   NEW.updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata';
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
---------------------------------------------------------------------------------------------------------------------------------------------
--- trigger and function to autoset promoter_name
-CREATE OR REPLACE FUNCTION set_promoter_name()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- Set promoter_name from promoters table
-  SELECT promoter_name INTO NEW.promoter_name
-  FROM promoters
-  WHERE id = NEW.promoter_id;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
+-- Trigger to automatically set promoter name in `projects` on insert/update
 CREATE TRIGGER trg_set_promoter_name
-BEFORE INSERT OR UPDATE ON projects
-FOR EACH ROW
-WHEN (NEW.promoter_id IS NOT NULL)
-EXECUTE FUNCTION set_promoter_name();
+    BEFORE INSERT OR UPDATE ON projects
+    FOR EACH ROW
+    WHEN (NEW.promoter_id IS NOT NULL)
+    EXECUTE FUNCTION set_promoter_name();
 
-
--- auto create first timeline with status new
-CREATE OR REPLACE FUNCTION insert_assignment_timeline()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO assignment_timeline (
-    assignment_id,
-    event_type,
-    assignment_status,
-    note_type,
-    note,
-    reminder_date,
-    created_at
-  )
-  VALUES (
-    NEW.id,
-    'assignment_created',  -- Change this event_type if needed
-    'new',                 -- The default status value
-    NULL,                  -- You can set default note_type if needed; here we use NULL
-    NULL,                  -- Default note is NULL
-    NULL,                  -- No reminder date at creation
-    CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata'
-  );
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
+-- Trigger to insert record in `assignment_timeline` after new assignment
 CREATE TRIGGER trg_insert_assignment_timeline
-AFTER INSERT ON assignments
-FOR EACH ROW
-EXECUTE FUNCTION insert_assignment_timeline();
+    AFTER INSERT ON assignments
+    FOR EACH ROW
+    EXECUTE FUNCTION insert_assignment_timeline();
 
--- auto set assignment status when from its previous timeline if doesnt exists
-
-CREATE OR REPLACE FUNCTION set_default_assignment_status()
-RETURNS TRIGGER AS $$
-DECLARE
-  previous_status VARCHAR(25);
-BEGIN
-  -- Only auto-set if assignment_status is NULL or empty
-  IF NEW.assignment_status IS NULL OR NEW.assignment_status = '' THEN
-    SELECT assignment_status
-    INTO previous_status
-    FROM assignment_timeline
-    WHERE assignment_id = NEW.assignment_id
-    ORDER BY id DESC  -- changed from created_at to id
-    LIMIT 1;
-
-    -- If a previous record exists, use its status
-    IF FOUND THEN
-      NEW.assignment_status := previous_status;
-    ELSE
-      NEW.assignment_status := 'new';  -- fallback default
-    END IF;
-  END IF;
-
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
+-- Trigger to set default status in `assignment_timeline` before insert
 CREATE TRIGGER trg_default_assignment_status
-BEFORE INSERT ON assignment_timeline
-FOR EACH ROW
-EXECUTE FUNCTION set_default_assignment_status();
+    BEFORE INSERT ON assignment_timeline
+    FOR EACH ROW
+    EXECUTE FUNCTION set_default_assignment_status();
