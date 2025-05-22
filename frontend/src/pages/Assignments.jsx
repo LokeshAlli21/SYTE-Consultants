@@ -813,21 +813,38 @@ const TableRow = ({
   </button>
 
   {/* Reminder */}
-  <div className="relative inline-block">
-    <button
-      title="Set Reminder"
-      onClick={() => onReminder(assignment.id)}
-      className="p-1.5 rounded-full bg-orange-50 text-orange-400 hover:bg-orange-100 transition-colors cursor-pointer"
-    >
-      <FaBell className="text-base" />
-    </button>
+<div className="relative group inline-block">
+  <button
+    onClick={() => onReminder(assignment.id)}
+    className="relative p-1.5 rounded-full bg-orange-50 text-orange-400 hover:bg-orange-100 transition-colors cursor-pointer"
+    title="Set Reminder"
+  >
+    <FaBell className="text-base" />
 
     {assignment.reminders?.length > 0 && (
       <span className="absolute -top-1.5 -right-1 bg-red-500 text-white text-[10px] leading-none font-semibold w-4 h-4 flex items-center justify-center rounded-full shadow-md">
         {assignment.reminders.length}
       </span>
     )}
-  </div>
+  </button>
+
+  {/* Tooltip */}
+  {assignment.reminders?.length > 0 && (
+    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-xs px-4 py-2 text-[11px] text-white bg-gray-900 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50">
+      <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
+        {assignment.reminders.map((reminder, index) => (
+          <p key={index} className="border-b border-gray-700 pb-1">
+            <span className="font-semibold text-orange-300">
+              {new Date(reminder.date_and_time).toLocaleString()}
+            </span>
+            <br />
+            <span>{reminder.message}</span>
+          </p>
+        ))}
+      </div>
+    </div>
+  )}
+</div>
 
     {showReminderForm && <ReminderForm 
     setShowReminderForm={setShowReminderForm}
