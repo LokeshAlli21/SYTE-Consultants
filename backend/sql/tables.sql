@@ -501,3 +501,19 @@ CREATE TABLE assignment_timeline (
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
 );
+
+CREATE TABLE assignment_reminders (
+    id SERIAL PRIMARY KEY,
+
+    assignment_id INT NOT NULL,
+    CONSTRAINT fk_assignment_reminder
+        FOREIGN KEY (assignment_id)
+        REFERENCES assignments(id)
+        ON DELETE CASCADE,
+
+    date_and_time TIMESTAMP NOT NULL,
+    message TEXT NOT NULL,
+    status VARCHAR(25),
+
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Kolkata')
+);

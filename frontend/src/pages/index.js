@@ -11,6 +11,7 @@ import PromotersPage from './PromotersPage'
 import AddProject from './AddProject'
 import AddAssignment from "./AddAssignment";
 import AddChannelPartner from "./AddChannelPartner";
+import AssignmentTimeLine from "./AssignmentTimeLine";
 
 export {
     Dashboard,
@@ -26,4 +27,5 @@ export {
     AddProject,
     AddAssignment,
     AddChannelPartner,
+    AssignmentTimeLine,
 }

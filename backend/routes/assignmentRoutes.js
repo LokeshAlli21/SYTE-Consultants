@@ -7,6 +7,7 @@ import { createNewAssignment,
   updateAssignment,
   updateAssignmentStatus,
   addAssignmentNote,
+  setAssignmentReminder,
 } from '../controllers/assignmentController.js';
 
 const router = express.Router();
@@ -33,6 +34,12 @@ router.post(
       '/add-note/:id',
       protect,
       addAssignmentNote
+    );
+
+    router.post(
+      '/set-reminder/:id',
+      protect,
+      setAssignmentReminder
     );
 
   router.get('/get-all', protect, getAllAssignments);

@@ -8,7 +8,9 @@ import {
 import { IoClose } from "react-icons/io5";
 import databaseService from "../backend-services/database/database"; // Corrected import path
 import StatusDropdown from "../components/assignment-dashboard-components/StatusDropdown"; // Corrected import path
+import ReminderForm from "../components/assignment-dashboard-components/ReminderForm";
 import NoteCell from "../components/assignment-dashboard-components/NoteCell";     // Corrected import path
+import { HiEye, HiEyeOff } from 'react-icons/hi'
 
 // Constants
 const ASSIGNMENT_TYPES = [
@@ -306,6 +308,10 @@ const handleNoteChange = useCallback(
     setCurrentPage(prev => Math.min(prev + 1, totalPages));
   }, [totalPages]);
 
+  const onTimeline = (id) => {
+    navigate(`/assignments/timeline/${id}`)
+  }
+
  return (
   <div className="p-4 md:p-6  lg:p-8 pt-3 min-h-screen max-w-full overflow-x-auto">
     {/* Dashboard Header with Stats */}
@@ -411,6 +417,7 @@ const handleNoteChange = useCallback(
                     selectedIds={selectedIds}
                     toggleSelect={toggleSelect}
                     assignmentTypes={ASSIGNMENT_TYPES}
+  onTimeline={onTimeline}
                   />
                 ))}
               </tbody>
@@ -607,21 +614,28 @@ const FilterPanel = ({ filters, onChange, onClear, assignmentTypes }) => (
 const TableHeader = ({ itemsPerPage, setItemsPerPage, totalItems }) => (
   <div className="flex flex-wrap gap-3 px-6 items-center justify-between my-4 pt-4">
     <h2 className="text-xl font-semibold text-gray-800">Assignment List</h2>
-    <div className="flex items-center gap-4">
-      <select
-        value={itemsPerPage}
-        onChange={(e) => setItemsPerPage(Number(e.target.value))}
-        className="border rounded-md p-1.5 text-sm bg-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-      >
-        <option value={5}>5 per page</option>
-        <option value={10}>10 per page</option>
-        <option value={20}>20 per page</option>
-        <option value={50}>50 per page</option>
-      </select>
-      <span className="text-sm text-gray-500 whitespace-nowrap">
-        {totalItems} assignments found
-      </span>
-    </div>
+<div className="flex items-center gap-6  ">
+  <div className="flex items-center gap-2">
+    <label htmlFor="itemsPerPage" className="text-sm font-medium text-gray-700">
+      Show
+    </label>
+    <select
+      id="itemsPerPage"
+      value={itemsPerPage}
+      onChange={(e) => setItemsPerPage(Number(e.target.value))}
+      className="border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
+    >
+      <option value={5}>5 per page</option>
+      <option value={10}>10 per page</option>
+      <option value={20}>20 per page</option>
+      <option value={50}>50 per page</option>
+    </select>
+  </div>
+  <span className="text-sm text-gray-600">
+    {totalItems} assignments found
+  </span>
+</div>
+
   </div>
 );
 
@@ -685,13 +699,23 @@ const TableRow = ({
   index,
   onView,
   onEdit,
+  onTimeline,
   onDelete,
   onStatusChange,
   onNoteChange,
   assignmentTypes,
   selectedIds,
   toggleSelect
-}) => (
+}) => {
+
+    const [showPassword, setShowPassword] = useState(false);
+    const [showReminderForm, setShowReminderForm] = useState(false);
+
+    const onReminder = (id) => {
+      setShowReminderForm(true)
+    }
+
+  return(
   <tr className="border-b hover:bg-gray-50 transition-colors">
 <td  className="p-3">
   {/* {console.log(assignment)} */}
@@ -705,13 +729,47 @@ const TableRow = ({
 
     <td className="p-3 text-gray-700">{index}</td>
     <td className="p-3">
-      <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+      <span className="px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-blue-50 text-blue-700">
         {assignmentTypes?.find(option => option.value === assignment.assignment_type)?.label ?? "NA"}
       </span>
     </td>
     <td className="p-3 font-medium text-gray-800">{assignment.application_number ?? "NA"}</td>
     <td className="p-3 text-gray-700">{assignment.project_name ?? "NA"}</td>
-    <td className="p-3 text-gray-700">{assignment.login_id ?? "NA"}</td>
+
+<td className="p-4 text-gray-900 align-top">
+  <div className="flex flex-col gap-1">
+    <h5 className="text-sm font-semibold text-primary tracking-wide">
+      {assignment.login_id ?? 'NA'}
+    </h5>
+
+    <div className="text-sm text-gray-600 font-mono flex items-center gap-2">
+      {assignment.password ? (
+          <div className="text-sm text-gray-600 font-mono flex items-center gap-2">
+            {assignment.password ? (
+              <div className="flex items-center">
+                <span className="tracking-wider">
+                  {showPassword ? assignment.password : '•'.repeat(assignment.password.length)}
+                </span>
+                <button
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="ml-2 text-gray-500 hover:text-blue-600 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <HiEyeOff size={16} /> : <HiEye size={16} />}
+                </button>
+              </div>
+            ) : (
+              'NA'
+            )}
+          </div>
+      ) : (
+        'NA'
+      )}
+    </div>
+  </div>
+</td>
+
+
     <td className="p-3">
       <StatusDropdown
         currentStatus={assignment.assignment_status}
@@ -755,13 +813,26 @@ const TableRow = ({
   </button>
 
   {/* Reminder */}
-  <button
-    title="Set Reminder"
-    onClick={() => onReminder(assignment.id)}
-    className="p-1.5 rounded-full bg-orange-50 text-orange-400 hover:bg-orange-100 transition-colors cursor-pointer"
-  >
-    <FaBell />
-  </button>
+  <div className="relative inline-block">
+    <button
+      title="Set Reminder"
+      onClick={() => onReminder(assignment.id)}
+      className="p-1.5 rounded-full bg-orange-50 text-orange-400 hover:bg-orange-100 transition-colors cursor-pointer"
+    >
+      <FaBell className="text-base" />
+    </button>
+
+    {assignment.reminders?.length > 0 && (
+      <span className="absolute -top-1.5 -right-1 bg-red-500 text-white text-[10px] leading-none font-semibold w-4 h-4 flex items-center justify-center rounded-full shadow-md">
+        {assignment.reminders.length}
+      </span>
+    )}
+  </div>
+
+    {showReminderForm && <ReminderForm 
+    setShowReminderForm={setShowReminderForm}
+    assignmentId={assignment.id}
+    />}
 
   {/* Timeline */}
   <button
@@ -774,7 +845,7 @@ const TableRow = ({
 </div>
     </td>
   </tr>
-);
+) }
 
 // Card view component
 const CardView = ({
@@ -784,66 +855,104 @@ const CardView = ({
   onEdit,
   onDelete,
   onStatusChange,
+  onNoteChange,
   pagination
-}) => (
-  <div>
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
-      {assignments.map((assignment) => (
-        <div key={assignment.id} className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden">
-          <div className="p-4 border-b bg-gray-50">
-            <div className="flex justify-between items-start mb-2">
-              <h3 className="font-semibold text-gray-800 truncate">
-                {assignment.project_name || "Unnamed Project"}
-              </h3>
-              <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                {assignmentTypes?.find(option => option.value === assignment.assignment_type)?.label ?? "NA"}
-              </span>
+}) => {
+  return (
+    <div className="card-view-container">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+        {assignments.map((assignment) => (
+          <div 
+            key={assignment.id} 
+            className="bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-shadow overflow-hidden"
+          >
+            <div className="p-4 border-b bg-gray-50">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="font-semibold text-gray-800 truncate">
+                  {assignment.project_name || "Unnamed Project"}
+                </h3>
+                <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {assignmentTypes?.find(option => option.value === assignment.assignment_type)?.label ?? "N/A"}
+                </span>
+              </div>
+              <p className="text-sm text-gray-500">ID: {assignment.login_id ?? "N/A"}</p>
             </div>
-            <p className="text-sm text-gray-500">ID: {assignment.login_id ?? "NA"}</p>
-          </div>
 
-          <div className="p-4">
-            <div className="flex flex-col gap-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Application:</span>
-                <span className="font-medium text-gray-800">{assignment.application_number ?? "NA"}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Status:</span>
-                <StatusDropdown
-                  currentStatus={assignment.assignment_status}
-                  assignmentType={assignment.assignment_type}
-                  onChange={(newStatus) => onStatusChange(assignment.id, newStatus)}
-                />
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex gap-2">
-                  <button onClick={() => onView(assignment.id)} className="p-2 rounded-md text-blue-600 hover:bg-blue-50" title="View Details"><FaEye /></button>
-                  <button onClick={() => onEdit(assignment.id)} className="p-2 rounded-md text-yellow-600 hover:bg-yellow-50" title="Edit Assignment"><FaEdit /></button>
-                  <button onClick={() => onDelete(assignment.id)} className="p-2 rounded-md text-red-600 hover:bg-red-50" title="Delete Assignment"><FaTrash /></button>
+            <div className="p-4">
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-600">Application:</span>
+                  <span className="font-medium text-gray-800">{assignment.application_number ?? "N/A"}</span>
                 </div>
-                <div className="text-xs text-gray-500">ID: {assignment.id}</div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-600">Status:</span>
+                  <StatusDropdown
+                    currentStatus={assignment.assignment_status}
+                    assignmentType={assignment.assignment_type}
+                    onChange={(newStatus) => onStatusChange(assignment.id, newStatus)}
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-600">Note:</span>
+                  <div className="flex-grow">
+                    <NoteCell
+                      currentNote={assignment?.note}
+                      onChange={(newNote) => onNoteChange(assignment.id, newNote)}
+                    />
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={() => onView(assignment.id)} 
+                      className="p-2 rounded-md text-blue-600 hover:bg-blue-50" 
+                      title="View Details"
+                    >
+                      <FaEye size={16} />
+                    </button>
+                    <button 
+                      onClick={() => onEdit(assignment.id)} 
+                      className="p-2 rounded-md text-yellow-600 hover:bg-yellow-50" 
+                      title="Edit Assignment"
+                    >
+                      <FaEdit size={16} />
+                    </button>
+                    <button 
+                      onClick={() => onDelete(assignment.id)} 
+                      className="p-2 rounded-md text-red-600 hover:bg-red-50" 
+                      title="Delete Assignment"
+                    >
+                      <FaTrash size={16} />
+                    </button>
+                  </div>
+                  <div className="text-xs text-gray-500">ID: {assignment.id}</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
 
-    <Pagination
-      currentPage={pagination.currentPage}
-      totalPages={pagination.totalPages}
-      goToPage={pagination.goToPage}
-      goToPreviousPage={pagination.goToPreviousPage}
-      goToNextPage={pagination.goToNextPage}
-      indexOfFirstItem={pagination.indexOfFirstItem}
-      indexOfLastItem={pagination.indexOfLastItem}
-      totalItems={pagination.totalItems}
-    />
-  </div>
-);
+      {pagination && (
+        <div className="mt-6">
+          <Pagination
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            goToPage={pagination.goToPage}
+            goToPreviousPage={pagination.goToPreviousPage}
+            goToNextPage={pagination.goToNextPage}
+            indexOfFirstItem={pagination.indexOfFirstItem}
+            indexOfLastItem={pagination.indexOfLastItem}
+            totalItems={pagination.totalItems}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
 
 // Pagination
 
@@ -875,7 +984,7 @@ const Pagination = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6 rounded-md shadow-sm mt-4 flex-wrap gap-2">
+    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6 rounded-xl shadow-sm mt-4 flex-wrap gap-2">
       {/* Info */}
       <div className="text-sm text-gray-600">
         Showing{" "}

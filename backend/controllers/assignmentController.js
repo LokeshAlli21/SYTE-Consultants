@@ -274,3 +274,40 @@ export const addAssignmentNote = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const setAssignmentReminder = async (req, res) => {
+  const { id } = req.params; // assignment_id
+  const { date_and_time, message, status = 'pending' } = req.body;
+
+  // console.log(req.body);
+  
+
+  try {
+    // ✅ Validate required fields
+    if (!date_and_time || !message || !message.trim()) {
+      return res.status(400).json({ error: '❌ date_and_time and message are required' });
+    }
+
+    // 🔄 Insert reminder into assignment_reminders table
+    const { data, error } = await supabase
+      .from('assignment_reminders')
+      .insert([
+        {
+          assignment_id: id,
+          date_and_time,
+          message,
+          status
+        }
+      ]);
+
+    if (error) {
+      console.error('❌ Supabase insert error:', error);
+      return res.status(500).json({ error: '❌ Failed to set assignment reminder', details: error });
+    }
+
+    res.status(200).json({ message: '✅ Reminder set successfully', data });
+  } catch (err) {
+    console.error('❌ Unexpected error in setAssignmentReminder:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

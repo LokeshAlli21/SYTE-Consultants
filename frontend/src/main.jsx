@@ -24,6 +24,7 @@ import {
   AddProject,
   AddAssignment,
   AddChannelPartner,
+  AssignmentTimeLine,
 } from './pages/index.js'
 
 const router = createBrowserRouter([
@@ -128,6 +129,13 @@ const router = createBrowserRouter([
         element: 
         <AuthLayout authentication>
           <AddAssignment  viewOnly={false}  />
+         </AuthLayout>,
+      },
+      {
+        path: "/assignments/timeline/:id",
+        element: 
+        <AuthLayout authentication>
+          <AssignmentTimeLine/>
          </AuthLayout>,
       },
       {

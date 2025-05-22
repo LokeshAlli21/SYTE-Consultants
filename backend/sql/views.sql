@@ -45,6 +45,23 @@ latest_timeline AS (
         assignment_timeline
     ORDER BY 
         assignment_id, created_at DESC
+),
+
+-- ✅ Get all reminders for each assignment as a JSON array
+assignment_reminders_grouped AS (
+    SELECT 
+        assignment_id,
+        json_agg(
+            json_build_object(
+                'id', id,
+                'date_and_time', date_and_time,
+                'message', message,
+                'status', status,
+                'created_at', created_at
+            ) ORDER BY date_and_time
+        ) AS reminders
+    FROM assignment_reminders
+    GROUP BY assignment_id
 )
 
 -- Main query that joins everything together and creates a nested JSON structure
@@ -64,6 +81,12 @@ SELECT
     a.remarks,
     a.created_at,
     a.updated_at,
+
+    -- Project fields
+    p.project_name,
+    p.login_id,
+    p.password,
+
     
     -- Create a nested timeline object as JSON
     CASE 
@@ -76,12 +99,17 @@ SELECT
                 'created_at', lt.created_at
             )
         ELSE NULL
-    END AS timeline
+    END AS timeline,
+
+    -- ✅ Reminders array JSON
+    ar.reminders
     
 FROM 
     assignments a
 LEFT JOIN latest_timeline lt ON a.id = lt.assignment_id
 LEFT JOIN latest_status ls ON a.id = ls.assignment_id
 LEFT JOIN latest_note ln ON a.id = ln.assignment_id
+LEFT JOIN projects p ON a.project_id = p.id
+LEFT JOIN assignment_reminders_grouped ar ON a.id = ar.assignment_id
 WHERE 
     a.status_for_delete = 'active';

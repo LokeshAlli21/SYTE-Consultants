@@ -1702,6 +1702,33 @@ async deleteAssignmentById(id) {
   }
 }
 
+async setAssignmentReminder(assignmentId, reminderData) {
+  console.log("assignmentId:", assignmentId, "reminderData:", reminderData);
+
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/set-reminder/${assignmentId}`, {
+      method: "POST", // or "PUT" if you're updating an existing reminder
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(reminderData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Setting reminder failed.");
+    }
+
+    const data = await response.json();
+    // toast.success("✅ Reminder set successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error setting assignment reminder:", err);
+    // toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
 
 
  

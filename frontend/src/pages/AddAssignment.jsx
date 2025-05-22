@@ -37,7 +37,7 @@ function AddAssignment({viewOnly}) {
               const response = await databaseService.getAssignmentById(id); // Use the appropriate service method
               console.log("✅ Assignment Response:", response);
               setAssignment(response); // Make sure you pass the fetched data
-              toast.success("✅ Assignment details loaded successfully!");
+              // toast.success("✅ Assignment details loaded successfully!");
             } catch (error) {
               console.error("❌ Error fetching assignment:", error);
               toast.error(`❌ Failed to load assignment: ${error.message}`);
