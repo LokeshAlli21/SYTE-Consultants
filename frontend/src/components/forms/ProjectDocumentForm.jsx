@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
+import UpdateInfoComponent from '../UpdateInfoComponent';
 
 function ProjectDocumentForm({
   disabled,
@@ -92,9 +93,10 @@ function ProjectDocumentForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="bg-white p-0 rounded-xl shadow-md">
-        <div className="py-2 px-6 bg-[#5CAAAB] rounded-t-xl">
-          <h1 className="text-2xl font-bold text-white">Upload {activeTab}</h1>
-        </div>
+<div className="py-2 px-6 bg-[#5CAAAB] rounded-t-xl flex flex-row items-center justify-around">
+  <h1 className="text-2xl font-bold text-white flex-1">{activeTab}</h1>
+  {formData.updated_by && <UpdateInfoComponent formData={formData} />}
+</div>
 
 <div className=' p-6'>
 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">

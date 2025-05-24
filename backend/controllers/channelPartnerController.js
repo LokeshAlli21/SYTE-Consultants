@@ -9,6 +9,7 @@ export const createChannelPartner = async (req, res) => {
         email_id,
         district,
         city,
+        userId,
       } = req.body;
   
       const { data, error } = await supabase
@@ -20,6 +21,7 @@ export const createChannelPartner = async (req, res) => {
           email_id: email_id || null,
           district: district || null,
           city: city || null,
+          created_by: userId,
         }]);
   
       if (error) {
@@ -46,6 +48,8 @@ export const createChannelPartner = async (req, res) => {
         email_id,
         district,
         city,
+        userId,
+        update_action,
       } = req.body;
   
       const { data, error } = await supabase
@@ -57,6 +61,8 @@ export const createChannelPartner = async (req, res) => {
           email_id: email_id || null,
           district: district || null,
           city: city || null,
+          updated_by: userId,
+          update_action,
         })
         .eq('id', id);
   
@@ -78,7 +84,7 @@ export const createChannelPartner = async (req, res) => {
     try {
       const { data, error } = await supabase
         .from('channel_partners')
-        .select(`id, full_name, contact_number, alternate_contact_number, email_id, district, city, created_at, updated_at`)
+        .select(`*`)
         .eq('status_for_delete','active');
   
       if (error) {
@@ -117,38 +123,29 @@ export const createChannelPartner = async (req, res) => {
     }
   }
   
-  export const getChannelPartnerById = async (req, res) => {
-    const { id } = req.params;
-  
-    try {
-      const { data, error } = await supabase
-        .from('channel_partners')
-        .select(`
-          id,
-          full_name,
-          contact_number,
-          alternate_contact_number,
-          email_id,
-          district,
-          city
-        `)
-        .eq('id', id)
-        .single();
-  
-      if (error) {
-        console.error(`❌ Error fetching channel partner with ID ${id}:`, error);
-        return res.status(500).json({ error: 'Failed to fetch channel partner', details: error });
-      }
-  
-      if (!data) {
-        return res.status(404).json({ error: 'Channel Partner not found or inactive' });
-      }
-  
-      res.status(200).json({ channelPartner: data });
-  
-    } catch (err) {
-      console.error('❌ Unexpected error in getChannelPartnerById:', err);
-      res.status(500).json({ error: 'Internal server error' });
+export const getChannelPartnerById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const { data, error } = await supabase
+      .from('view_channel_partners_with_updated_user')  // Use the view here
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error(`❌ Error fetching channel partner with ID ${id}:`, error);
+      return res.status(500).json({ error: 'Failed to fetch channel partner', details: error });
     }
-  };
-  
+
+    if (!data) {
+      return res.status(404).json({ error: 'Channel Partner not found or inactive' });
+    }
+
+    res.status(200).json({ channelPartner: data });
+
+  } catch (err) {
+    console.error('❌ Unexpected error in getChannelPartnerById:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

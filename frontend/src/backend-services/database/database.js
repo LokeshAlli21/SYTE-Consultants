@@ -428,7 +428,7 @@ for (const key in formData) {
 
   // Project
   
-  async uploadProjectDetails(formData) {
+  async uploadProjectDetails(formData, userId) {
     try {
       console.log('Original project formData:', formData);
   
@@ -494,7 +494,7 @@ for (const key in formData) {
           ...this.getAuthHeaders(),
           "Content-Type": "application/json"
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({...formData,userId})
       });
   
       if (!response.ok) {
@@ -1371,7 +1371,7 @@ async getAllProjectsForAssignmentDropdown() {
 
 // ChannelPartner
 
-async createChannelPartner(formData) {
+async createChannelPartner(formData,userId) {
   try {
     const response = await fetch(`${this.baseUrl}/api/channel-partners/add`, {
       method: "POST",
@@ -1379,7 +1379,7 @@ async createChannelPartner(formData) {
         ...this.getAuthHeaders(),
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(formData)
+      body: JSON.stringify({...formData,userId})
     });
 
     if (!response.ok) {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import FileInputWithPreview from './FileInputWithPreview ';
 import Select from 'react-select';
 import databaseService from '../../backend-services/database/database';
+import UpdateInfoComponent from '../UpdateInfoComponent';
 
 function ProjectProfessionalDetailsForm({
   disabled, 
@@ -52,6 +53,8 @@ function ProjectProfessionalDetailsForm({
       form.elements[index + 1]?.focus();
     }
   };
+  // console.log(formData);
+  
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -341,8 +344,9 @@ function ProjectProfessionalDetailsForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="py-2 px-6 bg-[#5CAAAB] rounded-xl">
-        <h1 className="text-2xl font-bold text-white">{activeTab}</h1>
+      <div className="py-2 px-6 bg-[#5CAAAB] rounded-t-xl flex flex-row items-center justify-around">
+        <h1 className="text-2xl font-bold text-white flex-1">{activeTab}</h1>
+        {formData.updated_by && <UpdateInfoComponent formData={formData} />}
       </div>
 
       {renderProfessionalSection('Engineer', 'engineer', 'engineer_id', engineerData, setEngineerData, handleSubmitEngineer, engineerOptions)}

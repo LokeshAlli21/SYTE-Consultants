@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import UpdateInfoComponent from '../UpdateInfoComponent';
 
 function ProjectProgressForm({
   disabled,
@@ -50,6 +51,8 @@ const inputRefs = useRef({});
     }
   }, [projectCommonAreasProgress, projectBuildingProgress]);
     
+  console.log('building',projectBuildingProgress,'\n',"cap: ",  projectCommonAreasProgress);
+  
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
@@ -135,23 +138,9 @@ const inputRefs = useRef({});
   const BuildingForm = () => (
     <form onSubmit={handleSubmitBuilding} className="flex flex-col gap-6">
       <div className={sectionBox}>
-        <div className='mb-4 flex flex-row items-center justify-between'>
-          <h2 className="text-xl font-bold text-[#4a9899] ">Building Progress</h2>
-          {projectBuildingProgress.updated_at && (
-            <div className="flex items-center space-x-2 text-lg text-gray-700">
-              <span className="font-medium">Last Updated:</span>
-              <span className="text-red-600 font-semibold">
-              {new Date(projectBuildingProgress.updated_at).toLocaleString('en-IN', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-              })}
-            </span>
-            </div>
-          )}
+        <div className='mb-4 flex flex-row items-center justify-around'>
+          <h2 className="text-xl font-bold text-[#4a9899] flex-1 ">Building Progress</h2>
+          {projectBuildingProgress.updated_by && <UpdateInfoComponent formData={projectBuildingProgress} />}
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full border border-gray-300 text-md">
@@ -165,7 +154,7 @@ const inputRefs = useRef({});
             <tbody>
               {
               Object.entries(projectBuildingProgress)
-                .filter(([key]) => !['project_id', 'id', 'updated_at', 'site_progress_id', 'created_at'].includes(key))
+                .filter(([key]) => !['project_id', 'id', 'updated_at', 'site_progress_id', 'created_at', 'updated_by', 'updated_user','update_action'].includes(key))
                 .map(([key, value], index) => (
                   <tr key={key} className="even:bg-gray-50">
                     <td className="border border-gray-300 p-2 w-15 text-center">{index + 1}</td>
@@ -220,23 +209,9 @@ const inputRefs = useRef({});
   const CommonAreaForm = () => (
     <form onSubmit={handleSubmitCommonAreas} className="flex flex-col gap-6">
         <div className={sectionBox}>
-        <div className='mb-4 flex flex-row items-center justify-between'>
-          <h2 className="text-xl font-bold text-[#4a9899] ">Building Progress</h2>
-          {projectCommonAreasProgress.updated_at && (
-            <div className="flex items-center space-x-2 text-lg text-gray-700">
-              <span className="font-medium">Last Updated:</span>
-              <span className="text-red-600 font-semibold">
-              {new Date(projectCommonAreasProgress.updated_at).toLocaleString('en-IN', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                hour12: true,
-              })}
-            </span>
-            </div>
-          )}
+        <div className='mb-4 flex flex-row items-center justify-around'>
+          <h2 className="text-xl font-bold text-[#4a9899] flex-1 ">Common Area Progress</h2>
+          {projectCommonAreasProgress.updated_by && <UpdateInfoComponent formData={projectCommonAreasProgress} />}
         </div>
     <div className="overflow-x-auto">
       <table className="min-w-full border border-gray-300 text-md">
@@ -251,7 +226,7 @@ const inputRefs = useRef({});
         </thead>
         <tbody>
         {Object.entries(projectCommonAreasProgress)
-  .filter(([key]) => !['project_id', 'id', 'updated_at', 'created_at'].includes(key))
+  .filter(([key]) => !['project_id', 'id', 'updated_at', 'created_at', 'updated_by', 'update_action', 'updated_user'].includes(key))
   .map(([key, fields], index) => (
     <tr key={key} className="even:bg-gray-50">
       <td className="border border-gray-300 p-2  w-15 text-center">{index + 1}</td>

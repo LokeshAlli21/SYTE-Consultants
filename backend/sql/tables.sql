@@ -243,10 +243,6 @@ CREATE TABLE engineers (
     pan_uploaded_url TEXT,
     letter_head_uploaded_url TEXT,
     sign_stamp_uploaded_url TEXT,
-
-    created_by INT NOT NULL,
-    updated_by INT,
-    update_action TEXT
 );
 
 CREATE TABLE architects (
@@ -261,10 +257,6 @@ CREATE TABLE architects (
     pan_uploaded_url TEXT,
     letter_head_uploaded_url TEXT,
     sign_stamp_uploaded_url TEXT,
-
-    created_by INT NOT NULL,
-    updated_by INT,
-    update_action TEXT
 );
 
 CREATE TABLE cas (
@@ -279,10 +271,6 @@ CREATE TABLE cas (
     pan_uploaded_url TEXT,
     letter_head_uploaded_url TEXT,
     sign_stamp_uploaded_url TEXT,
-
-    created_by INT NOT NULL,
-    updated_by INT,
-    update_action TEXT
 );
 
 -- Creating the ProjectProfessionalDetails table
@@ -310,7 +298,6 @@ CREATE TABLE project_professional_details (
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
 
-    created_by INT NOT NULL,
     updated_by INT,
     update_action TEXT
 );
@@ -405,7 +392,6 @@ CREATE TABLE project_documents (
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
 
-    created_by INT NOT NULL,
     updated_by INT,
     update_action TEXT
 
@@ -472,7 +458,6 @@ CREATE TABLE building_progress (
     -- Foreign Key referencing the 'site_progress' table, ensuring each entry is linked to a specific site progress record
     FOREIGN KEY (site_progress_id) REFERENCES site_progress(id) ON DELETE CASCADE,
 
-    created_by INT NOT NULL,
     updated_by INT,
     update_action TEXT
 );
@@ -508,7 +493,6 @@ CREATE TABLE common_areas_progress (
     -- Foreign Key referencing the 'site_progress' table, ensuring each entry is linked to a specific site progress record
     FOREIGN KEY (site_progress_id) REFERENCES site_progress(id) ON DELETE CASCADE,
 
-    created_by INT NOT NULL,
     updated_by INT,
     update_action TEXT
 );

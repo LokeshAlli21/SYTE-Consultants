@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Select from 'react-select';
 import databaseService from '../../backend-services/database/database';
+import UpdateInfoComponent from '../UpdateInfoComponent';
 
 function ChannelPartnerForm({disabled, formData, setFormData, handleSubmitChannelPartner, activeTab = "Channel Partner Details" }) {
 
@@ -39,7 +40,7 @@ function ChannelPartnerForm({disabled, formData, setFormData, handleSubmitChanne
     useEffect(() => {
     if (formData.district) {
       setCityOptions(districtCityMap[formData.district] || []);
-      console.log(districtCityMap[formData.district]|| []);
+      // console.log(districtCityMap[formData.district]|| []);
       
     }
   }, [formData.district]);
@@ -82,8 +83,9 @@ function ChannelPartnerForm({disabled, formData, setFormData, handleSubmitChanne
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="bg-white rounded-xl">
-        <div className="py-2 px-6 bg-[#5CAAAB] rounded-t-xl">
-          <h1 className="text-2xl font-bold text-white">{activeTab}</h1>
+        <div className="py-2 px-6 bg-[#5CAAAB] rounded-t-xl flex flex-row items-center justify-around">
+          <h1 className="text-2xl font-bold text-white flex-1">{activeTab}</h1>
+          {formData.updated_by && <UpdateInfoComponent formData={formData} />}
         </div>
 
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">

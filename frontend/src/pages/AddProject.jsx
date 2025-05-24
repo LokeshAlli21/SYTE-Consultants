@@ -12,6 +12,7 @@ import {
 import databaseService from "../backend-services/database/database";
 import { toast } from "react-toastify";
 import { validateFormDataForProject } from "../components/forms/validateFormDataForProject.jsx";
+import { useSelector } from "react-redux";
 
 const tabs = [
   "Project Details",
@@ -24,6 +25,8 @@ const tabs = [
 const AddProject = ({ forUpdate = false, viewOnly = false }) => {
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const userData = useSelector((state) => state.auth.userData);
   
   const [loading, setLoading] = useState(false);
   const [activeTabIndex, setActiveTabIndex] = useState(0);
@@ -31,6 +34,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
   const [projectId, setProjectId] = useState(id || null);
   
   // Form states
+  const [prevProjectDetails, setPrevProjectDetails] = useState({})
   const [projectDetails, setProjectDetails] = useState({
     channel_partner_id: null,
     promoter_id: "",
@@ -49,6 +53,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     expiry_date: "",
   });
   
+  const [prevProjectProfessionalDetails, setPrevProjectProfessionalDetails] = useState({})
   const [projectProfessionalDetails, setProjectProfessionalDetails] = useState({
     project_id: projectId,
     engineer_id: "",
@@ -95,6 +100,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     sign_stamp_uploaded_url: "",
   });
 
+  const [prevProjectUnitDetails, setPrevProjectUnitDetails] = useState({})
   const [projectUnit, setProjectUnit] = useState({
     id: 1,
     project_id: projectId,
@@ -129,6 +135,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     sale_deed_uploaded_url: "",
   });
 
+  const [prevProjectDocuments, setPrevProjectDocuments] = useState({})
   const [projectDocuments, setProjectDocuments] = useState({
     project_id: projectId,
     cc_uploaded_url: "",
@@ -141,6 +148,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     promoter_sign_stamp_uploaded_url: "",
   });
 
+  const [prevProjectBuildingProgress, setPrevProjectBuildingProgress] = useState({})
   const [projectBuildingProgress, setProjectBuildingProgress] = useState({
     project_id: projectId,
     excavation: "",
@@ -154,7 +162,6 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     common_infrastructure: "",
     external_works: "",
     final_installations: "",
-    updated_at: "",
   });
 
   const initialCommonAreaItem = {
@@ -163,9 +170,9 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     details: "",
   };
 
+  const [prevProjectCommonAreasProgress, setPrevProjectCommonAreasProgress] = useState({})
   const [projectCommonAreasProgress, setProjectCommonAreasProgress] = useState({
     project_id: projectId,
-    updated_at: "",
     internal_roads_footpaths: {...initialCommonAreaItem},
     water_supply: {...initialCommonAreaItem},
     sewerage: {...initialCommonAreaItem},
@@ -248,21 +255,39 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
       // 1. Project Details
       try {
         const project = await databaseService.getProjectById(id);
+        setPrevProjectDetails(project)
         setProjectDetails(project);
+        // console.log(project);
+        
       } catch (error) {
         console.error("❌ Error loading project details:", error);
-        toast.error(`❌ Failed to load project details: ${error.message}`);
+        // toast.error(`❌ Failed to load project details: ${error.message}`);
       }
 
       // 2. Project Professionals
       try {
         const professionals = await databaseService.getProjectProfessionalData(id);
+        // console.log(professionals);
         
         setProjectProfessionalDetails({
           project_id: professionals.project_id,
           engineer_id: professionals.engineer_id,
           architect_id: professionals.architect_id,
           ca_id: professionals.ca_id,
+          updated_at: professionals.updated_at,
+          updated_by: professionals.updated_by,
+          updated_user: professionals.updated_user,
+          update_action:professionals.update_action,
+        });
+        setPrevProjectProfessionalDetails({
+          project_id: professionals.project_id,
+          engineer_id: professionals.engineer_id,
+          architect_id: professionals.architect_id,
+          ca_id: professionals.ca_id,
+          updated_at: professionals.updated_at,
+          updated_by: professionals.updated_by,
+          updated_user: professionals.updated_user,
+          update_action:professionals.update_action,
         });
 
         if (viewOnly && professionals) {
@@ -278,12 +303,29 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
         }
       } catch (error) {
         console.error("❌ Error loading project professionals:", error);
-        toast.error(`❌ Failed to load project professionals: ${error.message}`);
+        // toast.error(`❌ Failed to load project professionals: ${error.message}`);
       }
 
       // 3. Project Documents
       try {
         const documents = await databaseService.getProjectDocuments(id);
+        // console.log(documents);
+        
+        setPrevProjectDocuments({
+          project_id: documents.project_id,
+          cc_uploaded_url: documents.cc_uploaded_url,
+          plan_uploaded_url: documents.plan_uploaded_url,
+          search_report_uploaded_url: documents.search_report_uploaded_url,
+          da_uploaded_url: documents.da_uploaded_url,
+          pa_uploaded_url: documents.pa_uploaded_url,
+          satbara_uploaded_url: documents.satbara_uploaded_url,
+          promoter_letter_head_uploaded_url: documents.promoter_letter_head_uploaded_url,
+          promoter_sign_stamp_uploaded_url: documents.promoter_sign_stamp_uploaded_url,
+          updated_at: documents.updated_at,
+          updated_by: documents.updated_by,
+          updated_user: documents.updated_user,
+          update_action:documents.update_action,
+        });
         setProjectDocuments({
           project_id: documents.project_id,
           cc_uploaded_url: documents.cc_uploaded_url,
@@ -294,6 +336,10 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
           satbara_uploaded_url: documents.satbara_uploaded_url,
           promoter_letter_head_uploaded_url: documents.promoter_letter_head_uploaded_url,
           promoter_sign_stamp_uploaded_url: documents.promoter_sign_stamp_uploaded_url,
+          updated_at: documents.updated_at,
+          updated_by: documents.updated_by,
+          updated_user: documents.updated_user,
+          update_action:documents.update_action,
         });
       } catch (error) {
         console.error("❌ Error loading project documents:", error);
@@ -302,22 +348,51 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
       // 4. Site Progress
       try {
         const progress = await databaseService.getProjectSiteProgress(id);
+
+        console.log(progress);
+        
         
         // Set Building Progress (if available)
         if (progress.buildingProgress) {
           setProjectBuildingProgress(prev => ({...prev, ...progress.buildingProgress}));
+          setPrevProjectBuildingProgress(prev => ({...prev, ...progress.buildingProgress}));
         }
 
         // Set Common Area Progress (if available)
         if (progress.commonAreasProgress) {
+          setPrevProjectCommonAreasProgress(prev => {
+            const updatedProgress = {
+              project_id: prev.project_id,
+              updated_at: progress.commonAreasProgress.updated_at || "",
+              updated_by: progress.commonAreasProgress.updated_by,
+              updated_user: progress.commonAreasProgress.updated_user,
+              update_action: progress.commonAreasProgress.update_action,
+            };
+
+            Object.keys(prev).forEach(key => {
+              if (key !== "project_id" && key !== "updated_at" && key !== "updated_by" && key !== "updated_user" && key !== "update_action") {
+                const areaData = progress.commonAreasProgress[key];
+                updatedProgress[key] = {
+                  proposed: areaData?.proposed ?? false,
+                  percentage_of_work: areaData?.percentage_of_work ?? "",
+                  details: areaData?.details ?? "",
+                };
+              }
+            });
+
+            return updatedProgress;
+          });
           setProjectCommonAreasProgress(prev => {
             const updatedProgress = {
               project_id: prev.project_id,
               updated_at: progress.commonAreasProgress.updated_at || "",
+              updated_by: progress.commonAreasProgress.updated_by,
+              updated_user: progress.commonAreasProgress.updated_user,
+              update_action: progress.commonAreasProgress.update_action,
             };
 
             Object.keys(prev).forEach(key => {
-              if (key !== "project_id" && key !== "updated_at") {
+              if (key !== "project_id" && key !== "updated_at" && key !== "updated_by" && key !== "updated_user" && key !== "update_action") {
                 const areaData = progress.commonAreasProgress[key];
                 updatedProgress[key] = {
                   proposed: areaData?.proposed ?? false,
@@ -398,10 +473,24 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
       projectDetails,
       async () => {
         if (forUpdate && id) {
-          const response = await databaseService.updateProjectDetails(id, projectDetails);
-          return response;
+          let update_action = null;
+
+          const changedFields = [];
+
+          for (const key in projectDetails) {
+            if (projectDetails[key] !== prevProjectDetails[key]) {
+              changedFields.push(key);
+            }
+          }  
+          if (changedFields.length === 0) {
+            toast.info("ℹ️ No changes detected.");
+          } else{
+            update_action = changedFields.join(', ');
+            const response = await databaseService.updateProjectDetails(id, {...projectDetails,userId: userData?.id,update_action});
+            return response;
+          }
         } else {
-          const response = await databaseService.uploadProjectDetails(projectDetails);
+          const response = await databaseService.uploadProjectDetails(projectDetails,userData?.id);
           const newProjectId = response?.data?.[0]?.id;
           if (newProjectId) {
             setProjectId(newProjectId);
@@ -411,7 +500,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
       },
       forUpdate ? "✅ Project details updated successfully!" : "✅ Project details submitted successfully!",
       () => {
-        setProjectDetails(prev => resetObjectData(prev));
+        // setProjectDetails(prev => resetObjectData(prev));
         setActiveTabIndex(1);
       }
     );
@@ -421,15 +510,29 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     return handleSubmitWithValidation(
       projectProfessionalDetails,
       async () => {
-        const response = await databaseService.uploadProjectProfessionalDetails({
-          ...projectProfessionalDetails,
-          project_id: projectId,
-        });
-        return response;
+          let update_action = null;
+
+          const changedFields = [];
+
+          for (const key in projectProfessionalDetails) {
+            if (projectProfessionalDetails[key] !== prevProjectProfessionalDetails[key]) {
+              changedFields.push(key);
+            }
+          }  
+          if (changedFields.length === 0) {
+            toast.info("ℹ️ No changes detected.");
+          } else{
+            update_action = changedFields.join(', ');
+            const response = await databaseService.uploadProjectProfessionalDetails({
+            ...projectProfessionalDetails,
+            project_id: projectId,
+            userId: userData?.id,update_action
+            });
+            return response;
+          }
       },
       "✅ Project professional details submitted successfully!",
       () => {
-        setProjectProfessionalDetails(prev => resetObjectData(prev));
         setActiveTabIndex(prev => prev + 1);
       }
     );
@@ -487,41 +590,110 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
   };
 
   const handleSubmitProjectDocuments = async () => {
-    return handleSubmitWithValidation(
-      projectDocuments,
-      async () => await databaseService.uploadProjectDocuments(projectDocuments),
+          let update_action = null;
+
+          const changedFields = [];
+
+          for (const key in projectDocuments) {
+            if (projectDocuments[key] !== prevProjectDocuments[key]) {
+              changedFields.push(key);
+            }
+          }  
+          if (changedFields.length === 0) {
+            toast.info("ℹ️ No changes detected.");
+            return setActiveTabIndex(prev => prev + 1)
+          } else{
+            const { updated_user, ...rest } = projectDocuments
+            update_action = changedFields.join(', ');
+                return handleSubmitWithValidation(
+      rest,
+      async () => await databaseService.uploadProjectDocuments({...rest,userId: userData?.id,update_action}),
       "✅ Documents submitted successfully!",
       () => setActiveTabIndex(prev => prev + 1)
     );
+          }
   };
 
   const handleSubmitProjectBuildingProgress = async () => {
-    const dataWithTimestamp = {
-      ...projectBuildingProgress,
-      updated_at: getCurrentISTTimestamp()
-    };
-    setProjectBuildingProgress(dataWithTimestamp);
+
+              let update_action = null;
+
+          const changedFields = [];
+
+          for (const key in projectBuildingProgress) {
+            if ( key !== 'project_id' && projectBuildingProgress[key] !== prevProjectBuildingProgress[key]) {
+              changedFields.push(key);
+            }
+          }  
+          if (changedFields.length === 0) {
+            toast.info("ℹ️ No changes detected.");
+            return true
+          } else{
+            const { updated_user, ...rest } = projectBuildingProgress
+            update_action = changedFields.join(', ');
     
     return handleSubmitWithValidation(
-      dataWithTimestamp,
-      async () => await databaseService.uploadProjectBuildingProgress(dataWithTimestamp),
+      projectBuildingProgress,
+      async () => await databaseService.uploadProjectBuildingProgress({...rest,updated_by: userData?.id,update_action}),
       "✅ Building progress submitted successfully!"
     );
+  }
   };
 
-  const handleSubmitProjectCommonAreasProgresss = async () => {
-    const dataWithTimestamp = {
-      ...projectCommonAreasProgress,
-      updated_at: getCurrentISTTimestamp()
-    };
-    setProjectCommonAreasProgress(dataWithTimestamp);
-    
-    return handleSubmitWithValidation(
-      dataWithTimestamp,
-      async () => await databaseService.uploadProjectCommonAreasProgress(dataWithTimestamp),
-      "✅ Common areas progress submitted successfully!"
-    );
-  };
+const handleSubmitProjectCommonAreasProgresss = async () => {
+  try {
+    console.log("🔍 Debug: Starting handleSubmitProjectCommonAreasProgresss");
+
+    let update_action = null;
+    const changedFields = [];
+
+    // Log current and previous data for comparison
+    console.log("🟦 Current data:", projectCommonAreasProgress);
+    console.log("⬜ Previous data:", prevProjectCommonAreasProgress);
+
+    for (const key in projectCommonAreasProgress) {
+      if (key === 'project_id') continue;
+
+      const currentValue = projectCommonAreasProgress[key];
+      const previousValue = prevProjectCommonAreasProgress[key];
+
+      const currentStr = JSON.stringify(currentValue ?? null);
+      const previousStr = JSON.stringify(previousValue ?? null);
+
+      if (currentStr !== previousStr) {
+        changedFields.push(key);
+        console.log(`🟡 Field changed: ${key} | Prev: ${previousStr}, New: ${currentStr}`);
+      }
+    }
+
+    if (changedFields.length === 0) {
+      toast.info("ℹ️ No changes detected.");
+      console.log("✅ No fields changed. Skipping submission.");
+      return true;
+    } else {
+      const { updated_user, ...rest } = projectCommonAreasProgress;
+      update_action = changedFields.join(', ');
+
+      console.log("📝 Changed fields:", update_action);
+      console.log("📤 Data to upload:", { ...rest, updated_by: userData?.id, update_action });
+
+      return handleSubmitWithValidation(
+        projectCommonAreasProgress,
+        async () =>
+          await databaseService.uploadProjectCommonAreasProgress({
+            ...rest,
+            updated_by: userData?.id,
+            update_action,
+          }),
+        "✅ Common areas progress submitted successfully!"
+      );
+    }
+  } catch (error) {
+    console.error("❌ Error in handleSubmitProjectCommonAreasProgresss:", error);
+    toast.error("An error occurred while submitting progress. Please try again.");
+  }
+};
+
 
   // Render active form
   const renderForm = () => {

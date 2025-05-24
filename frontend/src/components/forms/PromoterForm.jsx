@@ -22,6 +22,7 @@ import {
 
 import { validateFormData } from "./promoter-form-components/validateFormData.jsx";
 import { useSelector } from "react-redux";
+import UpdateInfoComponent from "../UpdateInfoComponent.jsx";
 
 const PromoterForm = ({ id, disabled }) => {
   const selectRef = useRef(null);
@@ -254,6 +255,7 @@ const PromoterForm = ({ id, disabled }) => {
 
       if(!userData){
         console.log("userData: ", userData);
+        return
       }
 
       let response;
@@ -273,27 +275,26 @@ const PromoterForm = ({ id, disabled }) => {
       console.log(typeFormData);
       console.log(prevData?.typeFormData);
       
-for (const key in typeFormData) {
-  const current = typeFormData[key] ?? "";
-  const previous = prevData?.typeFormData?.[key] ?? "";
+      for (const key in typeFormData) {
+        const current = typeFormData[key] ?? "";
+        const previous = prevData?.typeFormData?.[key] ?? "";
 
-  if (current !== previous) {
-    console.log("Changed Key:", key);
-    console.log("New:", current);
-    console.log("Old:", previous);
-    changedFields.push(key);
-  }
-}
+        if (current !== previous) {
+          console.log("Changed Key:", key);
+          console.log("New:", current);
+          console.log("Old:", previous);
+          changedFields.push(key);
+        }
+      }
 
 
       if (changedFields.length === 0) {
         toast.info("ℹ️ No changes detected.");
-      }
+        // return
+      } else{
 
-      update_action = changedFields.join(', ');
-    }
-
-    const response = await databaseService.updatePromoter(id, {
+              update_action = changedFields.join(', ');
+          const response = await databaseService.updatePromoter(id, {
       userId: userData?.id || null,
       commonData: formData,
       formData: typeFormData,
@@ -303,6 +304,8 @@ for (const key in typeFormData) {
 
     console.log("✅ Promoter updated:", response);
     toast.success("✅ Promoter updated successfully!");
+      }
+    }
   } else {
       response = await databaseService.uploadPromoterData({
         userId: userData?.id || null,
@@ -389,6 +392,7 @@ const commonFormValues = {
   updated_at:response.updated_at,
   updated_by:response.updated_by,
   updated_user:response.updated_user,
+  update_action: response.update_action,
 };
 
 setPrevData({...commonFormValues, typeFormData:response?.promoter_details?.[response.promoter_type]});
@@ -657,46 +661,7 @@ switch (promoterType) {
               Promoter Information
             </h2>
 {
-  formData.updated_at && (() => {
-    const updatedDate = new Date(formData.updated_at);
-    const now = new Date();
-
-    const diffTime = now.getTime() - updatedDate.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-    let dateLabel = '';
-    if (diffDays === 0) {
-      dateLabel = 'Today';
-    } else if (diffDays === 1) {
-      dateLabel = 'Yesterday';
-    } else if (diffDays <= 6) {
-      dateLabel = `${diffDays} days ago`;
-    } else {
-      dateLabel = updatedDate.toLocaleDateString('en-IN', { dateStyle: 'medium' });
-    }
-
-    const timeLabel = updatedDate.toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-
-    return (
-      <div className="bg-white border-l-4 border-[#5CAAAB] shadow rounded-xl animate-fade-in px-3 py-2 w-fit ">
-        <div className="flex items-center gap-2">
-          <svg className="w-4 h-4 text-[#5CAAAB]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <p className="text-gray-700">
-            <span className="text-[#5CAAAB] font-semibold">Last updated:</span>{' '}
-            <span className="text-gray-800 font-semibold">{dateLabel} at {timeLabel}</span>
-            {formData.updated_by && (
-              <span className="text-gray-400 font-medium"> by <span className="font-semibold text-gray-800">{formData?.updated_user?.name}</span></span>
-            )}
-          </p>
-        </div>
-      </div>
-    );
-  })()
+  formData.updated_at && <UpdateInfoComponent formData={formData}/>
 }
 
 

@@ -19,6 +19,7 @@ export const uploadProjectData = async (req, res) => {
       rera_certificate_uploaded_url,
       registration_date,
       expiry_date,
+      userId,
     } = req.body;
     
     // Build insert object with conditional fields
@@ -37,6 +38,7 @@ export const uploadProjectData = async (req, res) => {
       rera_certificate_uploaded_url,
       registration_date: registration_date || null,
       expiry_date: expiry_date || null,
+      created_by:userId,
     };
     
     // Only add project_pincode if it’s not empty (undefined, null, or empty string)
@@ -82,7 +84,12 @@ export const updateProjectData = async (req, res) => {
       rera_certificate_uploaded_url,
       registration_date,
       expiry_date,
+      userId,
+      update_action,
     } = req.body;
+
+    console.log(userId, update_action);
+    
 
     const updateData = {
       channel_partner_id,
@@ -100,6 +107,8 @@ export const updateProjectData = async (req, res) => {
       registration_date: registration_date || null,
       expiry_date: expiry_date || null,
       updated_at: new Date().toISOString(),
+      updated_by:userId,
+      update_action,
     };
 
     if (project_pincode) {
@@ -298,39 +307,13 @@ export const getAllCAs = async (req, res) => {
 
 export const getProjectProfessionalData = async (req, res) => {
   try {
-    const { id:project_id } = req.params;
+    const { id: project_id } = req.params;
 
     const { data, error } = await supabase
-      .from('project_professional_details')
-      .select(`
-        id,
-        project_id,
-        engineer_id,
-        architect_id,
-        ca_id,
-        created_at,
-        updated_at,
-        engineers (
-          id, name, contact_number, email_id, office_address,
-          licence_number, licence_uploaded_url,
-          pan_number, pan_uploaded_url,
-          letter_head_uploaded_url, sign_stamp_uploaded_url
-        ),
-        architects (
-          id, name, contact_number, email_id, office_address,
-          licence_number, licence_uploaded_url,
-          pan_number, pan_uploaded_url,
-          letter_head_uploaded_url, sign_stamp_uploaded_url
-        ),
-        cas (
-          id, name, contact_number, email_id, office_address,
-          licence_number, licence_uploaded_url,
-          pan_number, pan_uploaded_url,
-          letter_head_uploaded_url, sign_stamp_uploaded_url
-        )
-      `)
+      .from('view_project_professional_details_full')
+      .select('*')
       .eq('project_id', project_id)
-      .maybeSingle(); // Since project_id is UNIQUE
+      .maybeSingle();
 
     if (error) {
       console.error("❌ Error fetching project professional data:", error);
@@ -348,55 +331,29 @@ export const getSiteProgress = async (req, res) => {
   try {
     const { id: project_id } = req.params;
 
-    // Step 1: Fetch site_progress by project_id
-    const { data: siteProgressData, error: siteError } = await supabase
-      .from('site_progress')
+    const { data, error } = await supabase
+      .from('view_site_progress_full')
       .select('*')
-      .eq('project_id', project_id);
+      .eq('project_id', project_id)
+      .maybeSingle();
 
-    if (siteError) {
-      console.error("❌ Supabase error fetching site_progress:", siteError.message);
+    if (error) {
+      console.error("❌ Supabase error fetching site progress:", error.message);
       return res.status(500).json({ error: "Failed to fetch site progress." });
     }
 
-    if (!siteProgressData || siteProgressData.length === 0) {
+    if (!data) {
       return res.status(404).json({ error: "No site progress found for this project." });
     }
 
-    const siteProgress = siteProgressData[0];
-    const site_progress_id = siteProgress.id;
-
-    // Step 2: Fetch building_progress using site_progress_id
-    const { data: buildingProgress, error: buildingError } = await supabase
-      .from('building_progress')
-      .select('*')
-      .eq('site_progress_id', site_progress_id)
-      .single();
-
-    if (buildingError && buildingError.code !== 'PGRST116') {
-      console.error("❌ Supabase error fetching building_progress:", buildingError.message);
-      return res.status(500).json({ error: "Failed to fetch building progress." });
-    }
-
-    // Step 3: Fetch common_areas_progress using site_progress_id
-    const { data: commonAreasProgress, error: commonError } = await supabase
-      .from('common_areas_progress')
-      .select('*')
-      .eq('site_progress_id', site_progress_id)
-      .single();
-
-    if (commonError && commonError.code !== 'PGRST116') {
-      console.error("❌ Supabase error fetching common_areas_progress:", commonError.message);
-      return res.status(500).json({ error: "Failed to fetch common areas progress." });
-    }
-
-    // Return combined data
     res.status(200).json({
-      siteProgress,
-      buildingProgress: buildingProgress || null,
-      commonAreasProgress: commonAreasProgress || null,
+      siteProgress: {
+        id: data.id,
+        project_id: data.project_id,
+      },
+      buildingProgress: data.building_progress || null,
+      commonAreasProgress: data.common_areas_progress || null,
     });
-
   } catch (error) {
     console.error("❌ Unexpected error fetching site progress:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -408,11 +365,11 @@ export const getDocuments = async (req, res) => {
   try {
     const { id: project_id } = req.params;
 
-    // Querying the project_documents table in Supabase
     const { data, error } = await supabase
-      .from('project_documents')
+      .from('view_project_documents_full')
       .select('*')
-      .eq('project_id', project_id);
+      .eq('project_id', project_id)
+      .maybeSingle();
 
     if (error) {
       console.error("❌ Supabase error fetching documents:", error.message);
@@ -422,15 +379,14 @@ export const getDocuments = async (req, res) => {
       });
     }
 
-    if (!data || data.length === 0) {
+    if (!data) {
       console.log("⚠️ No documents found for project ID:", project_id);
-      return res.json({
+      return res.status(404).json({
         error: "No documents found for this project.",
       });
     }
 
-    // Return the fetched documents (first document in case of multiple)
-    res.status(200).json({ documents: data[0] });
+    res.status(200).json({ documents: data });
   } catch (error) {
     console.error("❌ Unexpected error fetching documents:", error);
     res.status(500).json({
@@ -440,33 +396,31 @@ export const getDocuments = async (req, res) => {
   }
 };
 
-
-
 export const getProject = async (req, res) => {
   try {
     const { id: project_id } = req.params;
 
     const { data, error } = await supabase
-      .from('projects')
+      .from('view_projects_with_updated_user') // use view instead of raw table
       .select('*')
       .eq('id', project_id)
+      .single(); // use single to get a single row directly
 
     if (error) {
       console.error("❌ Supabase error fetching project:", error.message);
       return res.status(500).json({ error: "Failed to fetch project." });
     }
 
-    if (!data || data.length === 0) {
+    if (!data) {
       return res.status(404).json({ error: "Project not found." });
     }
 
-    res.status(200).json({ project: data[0] });
+    res.status(200).json({ project: data });
   } catch (error) {
     console.error("❌ Unexpected error fetching project:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 export const uploadProjectProfessionalFiles = async (req, res) => {
   try {
@@ -519,7 +473,8 @@ export const uploadProjectProfessionalFiles = async (req, res) => {
 
 export const adddProjectProfessionals = async (req, res) => {
   try {
-    const { project_id, engineer, architect, ca, engineer_id, architect_id, ca_id } = req.body;
+    const { project_id, engineer, architect, ca, engineer_id, architect_id, ca_id,
+            userId,update_action } = req.body;
 
     if (!project_id) {
       return res.status(400).json({ message: "Missing project_id" });
@@ -533,6 +488,8 @@ export const adddProjectProfessionals = async (req, res) => {
           engineer_id: parseInt(engineer_id),
           architect_id: parseInt(architect_id),
           ca_id: parseInt(ca_id),
+          updated_by: userId,
+          update_action
         }
       ], { onConflict: 'project_id' })
       .select()
@@ -734,7 +691,7 @@ export const uploadDocumentFiles = async (req, res) => {
 
 export const uploadProjectDocuments = async (req, res) => {
   try {
-    const { project_id, ...documentData } = req.body;
+    const { project_id, userId, update_action, ...documentData } = req.body;
     // console.log(req.body);
     
     if (!project_id) return res.status(400).json({ message: 'Missing project_id' });
@@ -745,7 +702,7 @@ export const uploadProjectDocuments = async (req, res) => {
       filtered[key] = value;
     });
 
-    const { data, error } = await supabase.from('project_documents').upsert([{ project_id, ...filtered }], { onConflict: 'project_id' });
+    const { data, error } = await supabase.from('project_documents').upsert([{ project_id, ...filtered,updated_by: userId,update_action }], { onConflict: 'project_id' });
     // console.log('data: ',data);
     // console.log('error: ',error);
     
@@ -815,7 +772,7 @@ export const addBuildingProgress = async (req, res) => {
         onConflict: 'site_progress_id',
       });
 
-      // console.log('error :',error);
+      console.log('error :',error);
       
 
     if (error) {
