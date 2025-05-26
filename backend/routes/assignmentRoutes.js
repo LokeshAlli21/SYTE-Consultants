@@ -8,6 +8,7 @@ import { createNewAssignment,
   updateAssignmentStatus,
   addAssignmentNote,
   setAssignmentReminder,
+  getAssignmentTimeline,
 } from '../controllers/assignmentController.js';
 
 const router = express.Router();
@@ -45,6 +46,8 @@ router.post(
   router.get('/get-all', protect, getAllAssignments);
 
     router.get('/get/:id', protect, getAssignmentById);
+
+    router.get('/timeline/:id', protect, getAssignmentTimeline);
 
   router.delete('/delete/:id', protect, softDeleteAssignmentById);
 

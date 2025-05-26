@@ -105,20 +105,8 @@ export const getAllAssignments = async (req, res) => {
     try {
       // Fetch assignment data from the database
       const { data, error } = await supabase
-        .from('assignments')
-        .select(`
-          project_id,
-          assignment_type,
-          payment_date,
-          application_number,
-          consultation_charges,
-          govt_fees,
-          ca_fees,
-          engineer_fees,
-          arch_fees,
-          liasioning_fees,
-          remarks
-        `)
+        .from('assignment_with_updated_user')
+        .select('*')
         .eq('id', id)
         .single();
   
@@ -155,6 +143,8 @@ export const getAllAssignments = async (req, res) => {
       arch_fees,
       liasioning_fees,
       remarks,
+      updated_by,
+      update_action,
     } = req.body;
   
     try {
@@ -176,6 +166,8 @@ export const getAllAssignments = async (req, res) => {
         ...(typeof arch_fees === "number" && arch_fees !== 0 && { arch_fees }),
         ...(typeof liasioning_fees === "number" && liasioning_fees !== 0 && { liasioning_fees }),
         ...(remarks && { remarks }),
+        updated_by,
+        update_action,
       };
   
       console.log('Assignment Data:', assignmentData);  // Log assignment data to check for unexpected values
@@ -207,7 +199,7 @@ export const getAllAssignments = async (req, res) => {
   
 export const updateAssignmentStatus = async (req, res) => {
   const { id } = req.params;
-  const { assignment_status } = req.body;
+  const { assignment_status, created_by } = req.body;
 
   console.log('Updating assignment status for ID:', id);
   console.log('New Status:', assignment_status);
@@ -225,6 +217,7 @@ export const updateAssignmentStatus = async (req, res) => {
         assignment_id: id,
         event_type: 'status_changed',
         assignment_status,
+        created_by,
       }]);
 
     console.log('Executed Supabase Insert');
@@ -245,7 +238,7 @@ export const updateAssignmentStatus = async (req, res) => {
 
 export const addAssignmentNote = async (req, res) => {
   const { id } = req.params; // assignment_id
-  const notePayload = req.body;
+  const {created_by,...notePayload} = req.body;
 
   // console.log('Incoming note payload:', notePayload);
 
@@ -262,6 +255,7 @@ export const addAssignmentNote = async (req, res) => {
         assignment_id: id,
         event_type: 'note_added',
         note: notePayload, // stored as JSONB
+        created_by,
       }]);
 
     if (error) {
@@ -278,7 +272,7 @@ export const addAssignmentNote = async (req, res) => {
 
 export const setAssignmentReminder = async (req, res) => {
   const { id } = req.params; // assignment_id
-  const { date_and_time, message, status = 'pending', assignment_status } = req.body;
+  const { date_and_time, message, status = 'pending', assignment_status, created_by } = req.body;
 
   // console.log(req.body);
   
@@ -299,6 +293,7 @@ export const setAssignmentReminder = async (req, res) => {
           message,
           status,
           assignment_status,
+          created_by,
         }
       ]);
 
@@ -310,6 +305,34 @@ export const setAssignmentReminder = async (req, res) => {
     res.status(200).json({ message: '✅ Reminder set successfully', data });
   } catch (err) {
     console.error('❌ Unexpected error in setAssignmentReminder:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAssignmentTimeline = async (req, res) => {
+  const { id } = req.params;
+  // console.log(id);
+  
+
+  try {
+    const { data, error } = await supabase
+      .from('assignment_timeline_view')
+      .select('*')
+      .eq('assignment_id', id)
+
+    if (error) {
+      console.error(`❌ Error fetching timeline for assignment ID ${id}:`, error);
+      return res.status(500).json({ error: 'Failed to fetch assignment timeline', details: error });
+    }
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: 'No timeline events found for this assignment' });
+    }
+
+    res.status(200).json({ timeline: data });
+
+  } catch (err) {
+    console.error('❌ Unexpected error in getAssignmentTimeline:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };

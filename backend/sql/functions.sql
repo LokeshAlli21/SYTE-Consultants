@@ -72,12 +72,14 @@ BEGIN
         assignment_id,
         event_type,
         assignment_status,
+        created_by,
         created_at
     )
     VALUES (
         NEW.id,
         'assignment_created',  -- Event type for new assignment creation
         'new',
+        NEW.created_by,
         CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'
     );
     RETURN NEW;

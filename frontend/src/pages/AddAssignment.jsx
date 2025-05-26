@@ -14,6 +14,7 @@ function AddAssignment({viewOnly}) {
   console.log(id);
   
     const navigate = useNavigate()
+    const [prevAssignment, setPrevAssignment ] = useState({})
     const [assignment, setAssignment ] = useState({
       id : null,
       
@@ -40,6 +41,7 @@ function AddAssignment({viewOnly}) {
               const response = await databaseService.getAssignmentById(id); // Use the appropriate service method
               console.log("✅ Assignment Response:", response);
               setAssignment(response); // Make sure you pass the fetched data
+              setPrevAssignment(response); 
               // toast.success("✅ Assignment details loaded successfully!");
             } catch (error) {
               console.error("❌ Error fetching assignment:", error);
@@ -62,28 +64,46 @@ function AddAssignment({viewOnly}) {
       
         // Check if we are updating an existing assignment (by checking the `id`)
         if (id) {
-          try {
-            const response = await databaseService.updateAssignment(id, {...assignment}); // Assuming you have an updateAssignment method
-            console.log("✅ Assignment updated:", response);
-            toast.success("✅ Assignment updated successfully!");
-            navigate("/assignments"); // Navigate to assignments page or wherever appropriate
-            return; // Prevent further execution
-          } catch (error) {
-            console.error("❌ Error updating Assignment:", error);
-            toast.error(`❌ Failed to update Assignment: ${error.message}`);
-            return;
+
+
+ let update_action = null;
+
+          const changedFields = [];
+
+          for (const key in assignment) {
+            if (assignment[key] !== prevAssignment[key]) {
+              changedFields.push(key);
+            }
+          }  
+          if (changedFields.length === 0) {
+            toast.info("ℹ️ No changes detected.");
+          } else{
+            update_action = changedFields.join(', ');
+            try {
+            const response = await databaseService.updateAssignment(id, {...assignment,updated_by:userData?.id,update_action}); // Assuming you have an updateAssignment method
+              console.log("✅ Assignment updated:", response);
+              toast.success("✅ Assignment updated successfully!");
+              navigate("/assignments"); // Navigate to assignments page or wherever appropriate
+              return; // Prevent further execution
+            } catch (error) {
+              console.error("❌ Error updating Assignment:", error);
+              toast.error(`❌ Failed to update Assignment: ${error.message}`);
+              return;
+            }
           }
-        }
-      
-        // Create a new assignment if no ID is found (new assignment)
-        try {
-          const response = await databaseService.createNewAssignment({...assignment, created_by: userData?.id});
-          console.log("✅ New assignment created:", response);
-          toast.success("✅ New assignment created successfully!");
-          navigate("/assignments"); // Navigate to assignments page or wherever appropriate
-        } catch (error) {
-          console.error("❌ Error creating new Assignment:", error);
-          toast.error(`❌ Failed to create new Assignment: ${error.message}`);
+        } else {
+            try {
+    const response = await databaseService.createNewAssignment({
+      ...assignment,
+      created_by: userData.id,
+    });
+    console.log("✅ New assignment created:", response);
+    toast.success("✅ New assignment created successfully!");
+    navigate("/assignments");
+  } catch (error) {
+    console.error("❌ Error creating new Assignment:", error);
+    toast.error(`❌ Failed to create new Assignment: ${error.message}`);
+  }
         }
       };
       
@@ -91,6 +111,7 @@ function AddAssignment({viewOnly}) {
       const handleBack = () => {
           navigate(-1);
       };
+      console.log(userData);
       
   return (
     <>

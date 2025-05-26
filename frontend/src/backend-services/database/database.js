@@ -1631,7 +1631,7 @@ async updateAssignment(id, formData) {
   }
 }
 
-async updateAssignmentStatus(assignmentId, newStatus) {
+async updateAssignmentStatus(assignmentId, userId, newStatus) {
   try {
     const response = await fetch(`${this.baseUrl}/api/assignments/update-status/${assignmentId}`, {
       method: "PUT",
@@ -1639,7 +1639,7 @@ async updateAssignmentStatus(assignmentId, newStatus) {
         ...this.getAuthHeaders(),
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({ assignment_status: newStatus })
+      body: JSON.stringify({ assignment_status: newStatus , created_by: userId })
     });
 
     if (!response.ok) {
@@ -1729,6 +1729,33 @@ async setAssignmentReminder(assignmentId, reminderData) {
     return data;
   } catch (err) {
     console.error("❌ Error setting assignment reminder:", err);
+    // toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
+async getAssignmentTimeline(assignmentId) {
+  console.log("📅 Fetching timeline for assignmentId:", assignmentId);
+
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/timeline/${assignmentId}`, {
+      method: "GET",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Fetching timeline failed.");
+    }
+
+    const data = await response.json();
+    // toast.success("📅 Timeline fetched successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error fetching assignment timeline:", err);
     // toast.error(`❌ ${err.message}`);
     throw err;
   }

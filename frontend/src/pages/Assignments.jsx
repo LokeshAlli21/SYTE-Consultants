@@ -11,6 +11,7 @@ import StatusDropdown from "../components/assignment-dashboard-components/Status
 import ReminderForm from "../components/assignment-dashboard-components/ReminderForm";
 import NoteCell from "../components/assignment-dashboard-components/NoteCell";     // Corrected import path
 import { HiEye, HiEyeOff } from 'react-icons/hi'
+import { useSelector } from "react-redux";
 
 // Constants
 const ASSIGNMENT_TYPES = [
@@ -35,6 +36,7 @@ const COLOR_PALETTE = [
 ];
 
 function Assignments() {
+  const userData = useSelector((state) => state.auth.userData);
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("table"); // "table" or "cards"
   const [assignments, setAssignments] = useState([]);
@@ -240,7 +242,7 @@ const handleStatusChange = useCallback(async (assignmentId, newStatus) => {
   }
 
   try {
-    await databaseService.updateAssignmentStatus(assignmentId, newStatus);
+    await databaseService.updateAssignmentStatus(assignmentId,userData?.id, newStatus);
     setAssignments(prev =>
       prev.map(item =>
         item.id === assignmentId ? { ...item, assignment_status: newStatus } : item
@@ -282,7 +284,7 @@ const handleNoteChange = useCallback(
         return;
       }
 
-      await databaseService.addAssignmentNote(assignmentId, notePayload);
+      await databaseService.addAssignmentNote(assignmentId, {...notePayload, created_by: userData?.id});
 
       // Update local state if needed
       setAssignments(prev =>

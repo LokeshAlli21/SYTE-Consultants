@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { IoClose } from 'react-icons/io5';
 import { toast } from 'react-toastify';
 import databaseService from '../../backend-services/database/database';
+import { useSelector } from 'react-redux';
 
 function ReminderForm({
   setShowReminderForm,
@@ -9,6 +10,7 @@ function ReminderForm({
   assignmentId,
   currentAssignmentStatus = 'new',
 }) {
+    const userData = useSelector((state) => state.auth.userData);
   const [reminderData, setReminderData] = useState(reminder);
 console.log('currentAssignmentStatus: ',currentAssignmentStatus);
 
@@ -41,7 +43,7 @@ const handleSubmit = async (e) => {
   console.log("Submitting reminder:", reminderData, "for assignmentId:", assignmentId);
 
   try {
-    const result = await databaseService.setAssignmentReminder(assignmentId, {...reminderData,assignment_status:currentAssignmentStatus});
+    const result = await databaseService.setAssignmentReminder(assignmentId, {...reminderData,assignment_status:currentAssignmentStatus, created_by: userData?.id});
     toast.success('✅ Reminder set successfully!');
     console.log("Reminder response:", result);
     setShowReminderForm(false);

@@ -546,6 +546,7 @@ CREATE TABLE assignment_timeline (
     assignment_status VARCHAR(25),
     note JSONB,                         -- Optional comment about the change
 
+    created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );
 
@@ -563,5 +564,6 @@ CREATE TABLE assignment_reminders (
     assignment_status VARCHAR(25),
     status VARCHAR(25),
 
+    created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );
