@@ -13,7 +13,8 @@ export const createNewAssignment = async (req, res) => {
         engineer_fees,
         arch_fees,
         liasioning_fees,
-        remarks
+        remarks,
+        created_by,
       } = req.body;
   
       // Ensure project_id exists
@@ -43,7 +44,7 @@ export const createNewAssignment = async (req, res) => {
   
       const { error } = await supabase
         .from('assignments')
-        .insert([assignmentData]);
+        .insert([{...assignmentData,created_by}]);
   
       if (error) {
         console.error('❌ Error inserting assignment:', error);
@@ -277,7 +278,7 @@ export const addAssignmentNote = async (req, res) => {
 
 export const setAssignmentReminder = async (req, res) => {
   const { id } = req.params; // assignment_id
-  const { date_and_time, message, status = 'pending' } = req.body;
+  const { date_and_time, message, status = 'pending', assignment_status } = req.body;
 
   // console.log(req.body);
   
@@ -296,7 +297,8 @@ export const setAssignmentReminder = async (req, res) => {
           assignment_id: id,
           date_and_time,
           message,
-          status
+          status,
+          assignment_status,
         }
       ]);
 

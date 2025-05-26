@@ -4,8 +4,11 @@ import {AssignmentForm} from '../components/index.js'
 import { useNavigate, useParams } from 'react-router-dom';
 import databaseService from '../backend-services/database/database.js';
 import { toast } from 'react-toastify';
+import { useSelector } from 'react-redux';
 
 function AddAssignment({viewOnly}) {
+
+  const userData = useSelector((state) => state.auth.userData);
 
   const {id} = useParams()
   console.log(id);
@@ -60,7 +63,7 @@ function AddAssignment({viewOnly}) {
         // Check if we are updating an existing assignment (by checking the `id`)
         if (id) {
           try {
-            const response = await databaseService.updateAssignment(id, assignment); // Assuming you have an updateAssignment method
+            const response = await databaseService.updateAssignment(id, {...assignment}); // Assuming you have an updateAssignment method
             console.log("✅ Assignment updated:", response);
             toast.success("✅ Assignment updated successfully!");
             navigate("/assignments"); // Navigate to assignments page or wherever appropriate
@@ -74,7 +77,7 @@ function AddAssignment({viewOnly}) {
       
         // Create a new assignment if no ID is found (new assignment)
         try {
-          const response = await databaseService.createNewAssignment(assignment);
+          const response = await databaseService.createNewAssignment({...assignment, created_by: userData?.id});
           console.log("✅ New assignment created:", response);
           toast.success("✅ New assignment created successfully!");
           navigate("/assignments"); // Navigate to assignments page or wherever appropriate

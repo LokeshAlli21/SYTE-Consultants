@@ -7,8 +7,10 @@ function ReminderForm({
   setShowReminderForm,
   reminder = { date_and_time: '', message: '' },
   assignmentId,
+  currentAssignmentStatus = 'new',
 }) {
   const [reminderData, setReminderData] = useState(reminder);
+console.log('currentAssignmentStatus: ',currentAssignmentStatus);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -39,7 +41,7 @@ const handleSubmit = async (e) => {
   console.log("Submitting reminder:", reminderData, "for assignmentId:", assignmentId);
 
   try {
-    const result = await databaseService.setAssignmentReminder(assignmentId, reminderData);
+    const result = await databaseService.setAssignmentReminder(assignmentId, {...reminderData,assignment_status:currentAssignmentStatus});
     toast.success('✅ Reminder set successfully!');
     console.log("Reminder response:", result);
     setShowReminderForm(false);

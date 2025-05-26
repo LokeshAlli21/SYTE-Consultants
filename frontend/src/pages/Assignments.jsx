@@ -849,6 +849,7 @@ const TableRow = ({
     {showReminderForm && <ReminderForm 
     setShowReminderForm={setShowReminderForm}
     assignmentId={assignment.id}
+    currentAssignmentStatus={assignment?.assignment_status}
     />}
 
   {/* Timeline */}

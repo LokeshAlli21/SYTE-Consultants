@@ -72,18 +72,12 @@ BEGIN
         assignment_id,
         event_type,
         assignment_status,
-        note_type,
-        note,
-        reminder_date,
         created_at
     )
     VALUES (
         NEW.id,
         'assignment_created',  -- Event type for new assignment creation
-        'new',                 -- Default status for new assignment
-        NULL,                  -- Default note_type (nullable)
-        NULL,                  -- Default note (nullable)
-        NULL,                  -- No reminder at creation
+        'new',
         CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'
     );
     RETURN NEW;

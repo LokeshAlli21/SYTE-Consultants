@@ -560,6 +560,7 @@ CREATE TABLE assignment_reminders (
 
     date_and_time TIMESTAMP NOT NULL,
     message TEXT NOT NULL,
+    assignment_status VARCHAR(25),
     status VARCHAR(25),
 
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
