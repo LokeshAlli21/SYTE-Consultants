@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import FileInputWithPreview from "./FileInputWithPreview ";
 import Select from "react-select";
 import { IoClose } from "react-icons/io5";
+import UpdateInfoComponent from "../UpdateInfoComponent";
 
 const unitTypeOptions = [
   { value: "1 BHK", label: "1 BHK" },
@@ -187,8 +188,9 @@ function UnitDetailsForm({
         >
           <IoClose />
         </button>
-        <div className="p-2 bg-[#5CAAAB] rounded-t-2xl  px-6">
-          <h1 className="text-2xl  font-bold text-white">Add Unit Details</h1>
+        <div className="p-2 bg-[#5CAAAB] rounded-t-2xl  px-6 flex flex-row items-center justify-around">
+          <h1 className="text-2xl  font-bold text-white flex-1">Add Unit Details</h1>
+          {formData.updated_by && <UpdateInfoComponent formData={formData} /> }
         </div>
         <form className=" p-8  space-y-6" onSubmit={handleSubmit}>
           {/* Unit Details */}
@@ -319,7 +321,7 @@ function UnitDetailsForm({
                 disabled={disabled}
                 type="text"
                 name="customer_name"
-                value={formData.customer_name}
+                value={formData.customer_name || ''}
                 onChange={handleChange}
                 className={commonInputStyles}
               />

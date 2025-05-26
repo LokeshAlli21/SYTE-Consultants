@@ -51,7 +51,7 @@ const inputRefs = useRef({});
     }
   }, [projectCommonAreasProgress, projectBuildingProgress]);
     
-  console.log('building',projectBuildingProgress,'\n',"cap: ",  projectCommonAreasProgress);
+  // console.log('building',projectBuildingProgress,'\n',"cap: ",  projectCommonAreasProgress);
   
 
   const handleKeyDown = (e) => {

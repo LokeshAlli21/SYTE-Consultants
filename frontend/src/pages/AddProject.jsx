@@ -170,7 +170,22 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     details: "",
   };
 
-  const [prevProjectCommonAreasProgress, setPrevProjectCommonAreasProgress] = useState({})
+  const [prevProjectCommonAreasProgress, setPrevProjectCommonAreasProgress] = useState({
+    project_id: projectId,
+    internal_roads_footpaths: {...initialCommonAreaItem},
+    water_supply: {...initialCommonAreaItem},
+    sewerage: {...initialCommonAreaItem},
+    storm_water_drains: {...initialCommonAreaItem},
+    landscaping_tree_planting: {...initialCommonAreaItem},
+    street_lighting: {...initialCommonAreaItem},
+    community_buildings: {...initialCommonAreaItem},
+    sewage_treatment: {...initialCommonAreaItem},
+    solid_waste_management: {...initialCommonAreaItem},
+    rain_water_harvesting: {...initialCommonAreaItem},
+    energy_management: {...initialCommonAreaItem},
+    fire_safety: {...initialCommonAreaItem},
+    electrical_metering: {...initialCommonAreaItem},
+  })
   const [projectCommonAreasProgress, setProjectCommonAreasProgress] = useState({
     project_id: projectId,
     internal_roads_footpaths: {...initialCommonAreaItem},
@@ -349,7 +364,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
       try {
         const progress = await databaseService.getProjectSiteProgress(id);
 
-        console.log(progress);
+        // console.log(progress);
         
         
         // Set Building Progress (if available)
@@ -566,9 +581,10 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
   };
 
   const handleSubmitProjectUnit = async () => {
+    const unit = {created_by: userData?.id,...projectUnit}
     return handleSubmitWithValidation(
-      projectUnit,
-      async () => await databaseService.uploadProjectUnitDetails(projectUnit),
+      unit,
+      async () => await databaseService.uploadProjectUnitDetails(unit),
       "✅ Unit details submitted successfully!",
       () => {
         setProjectUnit(prev => resetObjectData(prev));
@@ -578,9 +594,26 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
   };
 
   const handleUpdateProjectUnit = async (id) => {
+              let update_action = null;
+
+          const changedFields = [];
+
+          for (const key in projectUnit) {
+            if (projectUnit[key] !== prevProjectUnitDetails[key]) {
+              changedFields.push(key);
+            }
+          }  
+          if (changedFields.length === 0) {
+            toast.info("ℹ️ No changes detected.");
+            setIsUnitDetailsFormActive(false);
+            return
+          } 
+            update_action = changedFields.join(', ');
+            
+    const unit = {updated_by: userData?.id,update_action,...projectUnit}
     return handleSubmitWithValidation(
-      projectUnit,
-      async () => await databaseService.updateProjectUnitDetails(id, projectUnit),
+      unit,
+      async () => await databaseService.updateProjectUnitDetails(id, unit),
       "✅ Unit details updated successfully!",
       () => {
         setProjectUnit(prev => resetObjectData(prev));
@@ -642,14 +675,14 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
 
 const handleSubmitProjectCommonAreasProgresss = async () => {
   try {
-    console.log("🔍 Debug: Starting handleSubmitProjectCommonAreasProgresss");
+    // console.log("🔍 Debug: Starting handleSubmitProjectCommonAreasProgresss");
 
     let update_action = null;
     const changedFields = [];
 
     // Log current and previous data for comparison
-    console.log("🟦 Current data:", projectCommonAreasProgress);
-    console.log("⬜ Previous data:", prevProjectCommonAreasProgress);
+    // console.log("🟦 Current data:", projectCommonAreasProgress);
+    // console.log("⬜ Previous data:", prevProjectCommonAreasProgress);
 
     for (const key in projectCommonAreasProgress) {
       if (key === 'project_id') continue;
@@ -662,7 +695,7 @@ const handleSubmitProjectCommonAreasProgresss = async () => {
 
       if (currentStr !== previousStr) {
         changedFields.push(key);
-        console.log(`🟡 Field changed: ${key} | Prev: ${previousStr}, New: ${currentStr}`);
+        // console.log(`🟡 Field changed: ${key} | Prev: ${previousStr}, New: ${currentStr}`);
       }
     }
 
@@ -674,8 +707,8 @@ const handleSubmitProjectCommonAreasProgresss = async () => {
       const { updated_user, ...rest } = projectCommonAreasProgress;
       update_action = changedFields.join(', ');
 
-      console.log("📝 Changed fields:", update_action);
-      console.log("📤 Data to upload:", { ...rest, updated_by: userData?.id, update_action });
+      // console.log("📝 Changed fields:", update_action);
+      // console.log("📤 Data to upload:", { ...rest, updated_by: userData?.id, update_action });
 
       return handleSubmitWithValidation(
         projectCommonAreasProgress,
@@ -744,6 +777,7 @@ const handleSubmitProjectCommonAreasProgresss = async () => {
             setIsUnitDetailsFormActive={setIsUnitDetailsFormActive}
             formData={projectUnit}
             setFormData={setProjectUnit}
+            setPrevProjectUnitDetails={setPrevProjectUnitDetails}
             activeTab={activeTab}
             projectId={projectId}
             disabled={viewOnly}

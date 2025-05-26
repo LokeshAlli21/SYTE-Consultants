@@ -589,6 +589,9 @@ export const uploadProjectUnits = async (req, res) => {
       sanitizedUnit[key] = value;
     });
 
+    console.log("sanitizedUnit: ",sanitizedUnit);
+    
+
     // Perform the insert operation (not upsert)
     const { error } = await supabase
       .from('project_units')
@@ -788,7 +791,7 @@ export const addBuildingProgress = async (req, res) => {
 
 export const addCommonAreasProgress = async (req, res) => {
   try {
-    const { project_id, updated_at, ...commonData } = req.body;
+    const { project_id, updated_at, updated_by, update_action , ...commonData } = req.body;
     // console.log(req.body);
     
 
@@ -808,12 +811,12 @@ export const addCommonAreasProgress = async (req, res) => {
     }
 
     const site_progress_id = await getOrCreateSiteProgressId(project_id);
-    console.log(filtered);
+    // console.log(filtered);
     
 
     const { error } = await supabase
       .from('common_areas_progress')
-      .upsert([{ site_progress_id, updated_at, ...filtered }], {
+      .upsert([{ site_progress_id, updated_at, updated_by, update_action, ...filtered }], {
         onConflict: 'site_progress_id',
       });
 
@@ -876,38 +879,8 @@ export const getUnitById = async (req, res) => {
 
   try {
     const { data, error } = await supabase
-      .from('project_units')
-      .select(`
-        id,
-        project_id,
-        status_for_delete,
-        unit_name,
-        unit_type,
-        carpet_area,
-        unit_status,
-        customer_name,
-        agreement_value,
-        agreement_for_sale_date, 
-        sale_deed_date,
-        received_fy_2018_19,
-        received_fy_2019_20,
-        received_fy_2020_21,
-        received_fy_2021_22,
-        received_fy_2022_23,
-        received_fy_2023_24,
-        received_fy_2024_25,
-        received_fy_2025_26,
-        received_fy_2026_27,
-        received_fy_2027_28,
-        received_fy_2028_29,
-        received_fy_2029_30,
-        total_received,
-        balance_amount,
-        afs_uploaded_url,
-        sale_deed_uploaded_url,
-        created_at,
-        updated_at
-      `)
+      .from('view_unit_with_updated_user')
+      .select('*')
       .eq('id', unitId)
       .eq('status_for_delete', 'active')
       .single();

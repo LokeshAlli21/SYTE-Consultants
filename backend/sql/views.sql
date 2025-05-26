@@ -333,3 +333,50 @@ LEFT JOIN building_progress bp ON bp.site_progress_id = sp.id
 LEFT JOIN users u1 ON bp.updated_by = u1.id
 LEFT JOIN common_areas_progress cap ON cap.site_progress_id = sp.id
 LEFT JOIN users u2 ON cap.updated_by = u2.id;
+
+CREATE OR REPLACE VIEW view_unit_with_updated_user AS
+SELECT 
+  pu.id,
+  pu.project_id,
+  pu.status_for_delete,
+  pu.unit_name,
+  pu.unit_type,
+  pu.carpet_area,
+  pu.unit_status,
+  pu.customer_name,
+  pu.agreement_value,
+  pu.agreement_for_sale_date,
+  pu.sale_deed_date,
+  pu.received_fy_2018_19,
+  pu.received_fy_2019_20,
+  pu.received_fy_2020_21,
+  pu.received_fy_2021_22,
+  pu.received_fy_2022_23,
+  pu.received_fy_2023_24,
+  pu.received_fy_2024_25,
+  pu.received_fy_2025_26,
+  pu.received_fy_2026_27,
+  pu.received_fy_2027_28,
+  pu.received_fy_2028_29,
+  pu.received_fy_2029_30,
+  pu.total_received,
+  pu.balance_amount,
+  pu.afs_uploaded_url,
+  pu.sale_deed_uploaded_url,
+  pu.created_at,
+  pu.updated_at,
+  pu.created_by,
+  pu.updated_by,
+  pu.update_action,
+
+  -- Join and format the updated user's details as a JSON object
+  jsonb_build_object(
+    'name', u.name,
+    'email', u.email,
+    'phone', u.phone
+  ) AS updated_user
+
+FROM 
+  project_units pu
+LEFT JOIN 
+  users u ON pu.updated_by = u.id;
