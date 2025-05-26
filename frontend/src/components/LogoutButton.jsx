@@ -26,15 +26,21 @@ function LogoutButton() {
   };
 
   return (
-    <div className='w-full pl-4 overflow-hidden'>
-      <button
-        onClick={handleLogout}
-        className="flex py-4 w-full items-center justify-center gap-2 p-2 bg-red-500 text-white rounded-tl-[40px] rounded-bl-[40px] hover:bg-red-700 transition duration-300"
-      >
-        <FiLogOut className="text-xl" />
-        Logout
-      </button>
-    </div>
+<div className='w-full pl-4 overflow-hidden'>
+  <button
+    onClick={handleLogout}
+    className="group relative flex py-4 w-full items-center justify-center gap-3 px-6 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-tl-[40px] rounded-bl-[40px] hover:from-red-600 hover:to-red-700 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg shadow-red-500/25 font-medium overflow-hidden"
+  >
+    <FiLogOut className="text-lg group-hover:rotate-12 transition-transform duration-300 z-10" />
+    <span className="tracking-wide z-10">Logout</span>
+    
+    {/* Hover effect overlay */}
+    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+    
+    {/* Shine effect */}
+    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+  </button>
+</div>
   );
 }
 
