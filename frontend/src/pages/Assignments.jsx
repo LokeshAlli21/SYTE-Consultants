@@ -324,56 +324,68 @@ const handleNoteChange = useCallback(
     />
 
     {/* Action Bar - Search, Filters, New Button */}
-    <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-      <div className="flex flex-wrap gap-4 items-center">
-        <SearchBox
-          searchQuery={searchQuery}
-          onChange={handleSearchChange}
-          onClear={() => setSearchQuery("")}
-          selectedIds={selectedIds}
-          handleBulkDelete={handleBulkDelete}
-        />
+ <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+  <div className="flex flex-col lg:flex-row flex-wrap items-center gap-4">
 
-        <button
-          onClick={() => setIsFilterVisible(!isFilterVisible)}
-          className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-50 transition"
-        >
-          <FaFilter />
-          Filters
-          {Object.values(filters).some((f) => f) && (
-            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-          )}
-        </button>
-
-        {Object.values(filters).some((f) => f) && (
-          <button
-            onClick={clearFilters}
-            className="flex items-center gap-1 px-3 py-2.5 border border-gray-300 rounded-full text-red-500 hover:bg-gray-50 transition"
-          >
-            <IoClose />
-            Clear
-          </button>
-        )}
-
-        <button
-          onClick={() => navigate("/assignments/add")}
-          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-md transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
-        >
-          <FaPlus className="text-base" />
-          New Assignment
-        </button>
-      </div>
-
-      {/* Conditionally Render Filter Panel */}
-      {isFilterVisible && (
-        <FilterPanel
-          filters={filters}
-          onChange={handleFilterChange}
-          onClear={clearFilters}
-          assignmentTypes={ASSIGNMENT_TYPES}
-        />
-      )}
+    {/* Search */}
+    <div className="flex-1">
+      <SearchBox
+        searchQuery={searchQuery}
+        onChange={handleSearchChange}
+        onClear={() => setSearchQuery("")}
+        selectedIds={selectedIds}
+        handleBulkDelete={handleBulkDelete}
+      />
     </div>
+
+    {/* Filter Toggle */}
+    <button
+      onClick={() => setIsFilterVisible(!isFilterVisible)}
+      className={`px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
+        isFilterVisible ? 'bg-[#5CAAAB] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+      }`}
+    >
+      <FaFilter />
+      Filters
+      {Object.values(filters).some(f => f) && (
+        <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+      )}
+    </button>
+
+    {/* Clear Filters Button */}
+    {Object.values(filters).some(f => f) && (
+      <button
+        onClick={clearFilters}
+        className="px-4 py-2 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 font-medium transition"
+      >
+        <IoClose className="inline-block mr-1" />
+        Clear Filters
+      </button>
+    )}
+
+    {/* Add New Assignment */}
+    <button
+      onClick={() => navigate("/assignments/add")}
+      className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-xl font-semibold text-md shadow-md transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
+    >
+      <FaPlus className="text-base" />
+      New Assignment
+    </button>
+  </div>
+
+  {/* Filter Panel */}
+  {isFilterVisible && (
+    <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+      <FilterPanel
+        filters={filters}
+        onChange={handleFilterChange}
+        onClear={clearFilters}
+        assignmentTypes={ASSIGNMENT_TYPES}
+      />
+    </div>
+  )}
+</div>
+
 
     {/* Main Content Area */}
     <div className="bg-white rounded-xl shadow-lg ">
@@ -394,49 +406,47 @@ const handleNoteChange = useCallback(
           hasFilters={Object.values(filters).some((f) => f)}
         />
       ) : viewMode === "table" ? (
-        <>
-          <div className=" w-full overflow-visible">
-            <table className=" table-auto border-collapse w-full text-sm">
-              <TableHead
-                sortField={sortField}
-                sortDirection={sortDirection}
-                onSort={handleSort}
-                toggleSelectAll={toggleSelectAll}
-                selectedIds={selectedIds}
-                currentItems={currentItems}
-              />
-              <tbody>
-                {currentItems.map((assignment, idx) => (
-                  <TableRow
-                    key={assignment.id}
-                    assignment={assignment}
-                    index={indexOfFirstItem + idx + 1}
-                    onView={handleView}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onStatusChange={handleStatusChange}
-                    onNoteChange={handleNoteChange}
-                    selectedIds={selectedIds}
-                    toggleSelect={toggleSelect}
-                    assignmentTypes={ASSIGNMENT_TYPES}
-  onTimeline={onTimeline}
-                  />
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            goToPage={goToPage}
-            goToPreviousPage={goToPreviousPage}
-            goToNextPage={goToNextPage}
-            indexOfFirstItem={indexOfFirstItem}
-            indexOfLastItem={indexOfLastItem}
-            totalItems={filteredAssignments.length}
+         <>
+    <ModernTableContainer>
+      <TableHead
+        sortField={sortField}
+        sortDirection={sortDirection}
+        onSort={handleSort}
+        toggleSelectAll={toggleSelectAll}
+        selectedIds={selectedIds}
+        currentItems={currentItems}
+      />
+      <tbody>
+        {currentItems.map((assignment, idx) => (
+          <TableRow
+            key={assignment.id}
+            assignment={assignment}
+            index={indexOfFirstItem + idx + 1}
+            onView={handleView}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            onStatusChange={handleStatusChange}
+            onNoteChange={handleNoteChange}
+            selectedIds={selectedIds}
+            toggleSelect={toggleSelect}
+            assignmentTypes={ASSIGNMENT_TYPES}
+            onTimeline={onTimeline}
           />
-        </>
+        ))}
+      </tbody>
+    </ModernTableContainer>
+
+    <Pagination
+      currentPage={currentPage}
+      totalPages={totalPages}
+      goToPage={goToPage}
+      goToPreviousPage={goToPreviousPage}
+      goToNextPage={goToNextPage}
+      indexOfFirstItem={indexOfFirstItem}
+      indexOfLastItem={indexOfLastItem}
+      totalItems={filteredAssignments.length}
+    />
+  </>
       ) : (
         <CardView
           assignments={currentItems}
@@ -467,12 +477,12 @@ const DashboardHeader = ({ stats, viewMode, setViewMode }) => (
   <div className="mb-8">
     <div className="flex items-center justify-between mb-6 pl-2">
       <div>
-        <h1 className="text-3xl font-bold text-[#2F4C92]">Assignments Dashboard</h1>
+        <h1 className="text-3xl font-bold text-[#2F4C92]">Assignments</h1>
         <p className="text-gray-500 mt-1">Manage and track all assignment activities</p>
       </div>
 
       <div className="flex items-center gap-3">
-        <div className="bg-white rounded-lg p-1 shadow-sm border">
+        <div className="bg-white rounded-lg p-1 shadow-sm border-2 border-[#5caaab]">
           <button
             onClick={() => setViewMode("table")}
             className={`px-3 py-1.5 rounded ${
@@ -503,7 +513,7 @@ const DashboardHeader = ({ stats, viewMode, setViewMode }) => (
       </div>
     </div>
 
-    <div className="overflow-x-auto pb-4">
+    {/* <div className="overflow-x-auto pb-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-2 px-2 w-full">
         <div className="min-w-[200px]">
           <StatCard
@@ -528,86 +538,92 @@ const DashboardHeader = ({ stats, viewMode, setViewMode }) => (
           );
         })}
       </div>
-    </div>
+    </div> */}
   </div>
 );
 
 // SearchBox Component (updated styling)
-const SearchBox = ({ searchQuery, onChange, onClear ,selectedIds, handleBulkDelete  }) => (
-  <>
-  <div className="relative flex-1 max-w-[250px]">
-    <input
-      type="text"
-      placeholder="Search assignments..."
-      value={searchQuery}
-      onChange={onChange}
-      className="w-full pl-10 pr-10 py-2.5 rounded-full border border-[#5CAAAB] font-medium text-zinc-500 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5CAAAB] transition duration-200"
-    />
-    <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-[#5CAAAB] text-base" />
-    {searchQuery && (
+
+const SearchBox = ({ searchQuery, onChange, onClear, selectedIds, handleBulkDelete }) => (
+  <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+    <div className="relative flex-1 max-w-md w-full">
+      <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+      <input
+        type="text"
+        placeholder="Search assignments..."
+        value={searchQuery}
+        onChange={onChange}
+        className="w-full pl-12 pr-12 py-3 rounded-xl border outline-none border-gray-200 focus:border-[#5CAAAB] focus:ring-2 focus:ring-[#5CAAAB] text-gray-700 placeholder-gray-400 transition-all duration-200"
+      />
+      {searchQuery && (
+        <button
+          type="button"
+          onClick={onClear}
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition"
+        >
+          <IoClose size={20} />
+        </button>
+      )}
+    </div>
+
+    {selectedIds.length > 0 && (
       <button
-        type="button"
-        onClick={onClear}
-        className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition"
+        onClick={handleBulkDelete}
+        className="flex items-center gap-2 px-4 py-2.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition"
       >
-        <IoClose className="text-2xl" />
+        <FaTrash />
+        Delete Selected ({selectedIds.length})
       </button>
     )}
   </div>
-
-  {selectedIds.length > 0 && (
-                <button
-                  onClick={handleBulkDelete}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-red-100 rounded-full text-red-600 hover:bg-red-200 transition"
-                >
-                  <FaTrash />
-                  Delete Selected {selectedIds.length}
-                </button>
-)}
-</>
-  
 );
 
 // FilterPanel Component (minimal & clean style)
 const FilterPanel = ({ filters, onChange, onClear, assignmentTypes }) => (
-  <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-3 gap-4">
-    <div className="flex flex-col">
-      <label className="text-sm text-gray-500 mb-1">Assignment Type</label>
-      <select
-        value={filters.type}
-        onChange={(e) => onChange("type", e.target.value)}
-        className="rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
-      >
-        <option value="">All Types</option>
-        {assignmentTypes.map(type => (
-          <option key={type.value} value={type.value}>{type.label}</option>
-        ))}
-      </select>
-    </div>
+  <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Assignment Type */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Assignment Type</label>
+        <select
+          value={filters.type}
+          onChange={(e) => onChange("type", e.target.value)}
+          className="w-full p-3 rounded-lg border outline-none border-gray-300 text-sm text-gray-700 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab]"
+        >
+          <option value="">All Types</option>
+          {assignmentTypes.map(type => (
+            <option key={type.value} value={type.value}>{type.label}</option>
+          ))}
+        </select>
+      </div>
 
-    <div className="flex flex-col">
-      <label className="text-sm text-gray-500 mb-1">Status</label>
-      <select
-        value={filters.status}
-        onChange={(e) => onChange("status", e.target.value)}
-        className="rounded-full border border-gray-300 px-4 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
-      >
-        <option value="">All Statuses</option>
-        <option value="pending">Pending</option>
-        <option value="in_progress">In Progress</option>
-        <option value="completed">Completed</option>
-        <option value="on_hold">On Hold</option>
-        <option value="rejected">Rejected</option>
-      </select>
-    </div>
+      {/* Status */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+        <select
+          value={filters.status}
+          onChange={(e) => onChange("status", e.target.value)}
+          className="w-full p-3 rounded-lg border outline-none border-gray-300 text-sm text-gray-700 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab]"
+        >
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="in_progress">In Progress</option>
+          <option value="completed">Completed</option>
+          <option value="on_hold">On Hold</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
 
-    <div className="flex items-end">
-      <button
-        onClick={onClear}
-        className="px-4 py-2 rounded-full text-sm text-gray-600 border border-gray-300 hover:bg-gray-100 transition"
-      >
-        Reset Filters
-      </button>
+
+      {/* Reset Button */}
+      <div className="flex items-end">
+        <button
+          onClick={onClear}
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 text-sm text-gray-600 hover:bg-gray-100 transition"
+        >
+          Reset Filters
+        </button>
+      </div>
     </div>
   </div>
 );
@@ -668,31 +684,84 @@ const EmptyState = ({ clearFilters, hasFilters }) => (
 );
 
 // Table head component
-const TableHead = ({ sortField, sortDirection, onSort , toggleSelectAll,selectedIds,currentItems }) => (
-  <thead className="bg-gray-50 text-left text-gray-600">
-    <tr>
-<th className="p-3 border-y font-semibold">
-        <input
-    type="checkbox"
-    onChange={toggleSelectAll}
-    checked={
-      selectedIds.length === currentItems.length &&
-      currentItems.length !== 0
-    }
-    className="w-4 h-4 accent-[#5CAAAB] cursor-pointer"
-  />
-</th>
-      <th className="p-3 border-y font-semibold">Sr No.</th>
-
-      <SortableHeader field="assignment_type" title="Assignment Type" currentSort={sortField} direction={sortDirection} onSort={onSort} />
-      <SortableHeader field="application_number" title="Application Number" currentSort={sortField} direction={sortDirection} onSort={onSort} />
-      <SortableHeader field="project_name" title="Project Name" currentSort={sortField} direction={sortDirection} onSort={onSort} />
-      <SortableHeader field="login_id" title="Login ID" currentSort={sortField} direction={sortDirection} onSort={onSort} />
-      <SortableHeader field="assignment_status" title="Status" currentSort={sortField} direction={sortDirection} onSort={onSort} />
-      <SortableHeader field="note" title="Note" currentSort={sortField} direction={sortDirection} onSort={onSort} />
-      <th className="p-3 border-y font-semibold text-center">Actions</th>
+const TableHead = ({ sortField, sortDirection, onSort, toggleSelectAll, selectedIds, currentItems }) => (
+  <thead className="bg-gradient-to-r from-slate-50 to-gray-50 backdrop-blur-sm">
+    <tr className="border-b border-gray-200/60">
+      <th className="p-4 border-y border-gray-200/40 font-semibold">
+        <div className="flex items-center justify-center">
+          <input
+            type="checkbox"
+            onChange={toggleSelectAll}
+            checked={
+              selectedIds.length === currentItems.length &&
+              currentItems.length !== 0
+            }
+            className="w-4 h-4 accent-[#5caaab] cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+          />
+        </div>
+      </th>
+      <th className="p-4 border-y border-gray-200/40 font-semibold text-gray-700 text-left">
+        Sr No.
+      </th>
+      <SortableHeader 
+        field="assignment_type" 
+        title="Assignment Type" 
+        currentSort={sortField} 
+        direction={sortDirection} 
+        onSort={onSort} 
+      />
+      <SortableHeader 
+        field="application_number" 
+        title="Application Number" 
+        currentSort={sortField} 
+        direction={sortDirection} 
+        onSort={onSort} 
+      />
+      <SortableHeader 
+        field="project_name" 
+        title="Project Name" 
+        currentSort={sortField} 
+        direction={sortDirection} 
+        onSort={onSort} 
+      />
+      <SortableHeader 
+        field="login_id" 
+        title="Login ID" 
+        currentSort={sortField} 
+        direction={sortDirection} 
+        onSort={onSort} 
+      />
+      <SortableHeader 
+        field="assignment_status" 
+        title="Status" 
+        currentSort={sortField} 
+        direction={sortDirection} 
+        onSort={onSort} 
+      />
+      <SortableHeader 
+        field="note" 
+        title="Note" 
+        currentSort={sortField} 
+        direction={sortDirection} 
+        onSort={onSort} 
+      />
+      <th className="p-4 border-y border-gray-200/40 font-semibold text-center text-gray-700">
+        Actions
+      </th>
     </tr>
   </thead>
+);
+
+const ModernTableContainer = ({ children }) => (
+  <div className="w-full overflow-hidden">
+    <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="table-auto border-collapse w-full text-sm">
+          {children}
+        </table>
+      </div>
+    </div>
+  </div>
 );
 
 // Table row component
@@ -709,163 +778,177 @@ const TableRow = ({
   selectedIds,
   toggleSelect
 }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showReminderForm, setShowReminderForm] = useState(false);
 
-    const [showPassword, setShowPassword] = useState(false);
-    const [showReminderForm, setShowReminderForm] = useState(false);
+  const onReminder = (id) => {
+    setShowReminderForm(true);
+  };
 
-    const onReminder = (id) => {
-      setShowReminderForm(true)
-    }
+  return (
+    <tr className="border-b relative border-gray-100/60 hover:bg-gradient-to-r hover:from-blue-50/30 hover:to-indigo-50/30 transition-all duration-300 ease-out ">
+      <td className="p-2">
+        <div className="flex items-center justify-center">
+          <input
+            type="checkbox"
+            checked={selectedIds.includes(assignment.id)}
+            onChange={() => toggleSelect(assignment.id)}
+            className="w-4 h-4 accent-[#5caaab] cursor-pointer rounded border-gray-300 focus:ring-2 focus:ring-emerald-500/20 transition-all duration-200"
+          />
+        </div>
+      </td>
 
-  return(
-  <tr className="border-b hover:bg-gray-50 transition-colors">
-<td  className="p-3">
-  {/* {console.log(assignment)} */}
-      <input
-  type="checkbox"
-  checked={selectedIds.includes(assignment.id)}
-  onChange={() => toggleSelect(assignment.id)}
-  className="w-4 h-4 accent-[#5CAAAB] cursor-pointer"
-/>
-</td>
+      <td className="p-2 text-gray-600 font-medium">{index}</td>
+      
+      <td className="p-2">
+        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-gradient-to-r from-teal-500 to-[#5caaab] text-white hover:shadow-md transition-shadow duration-200">
+          {assignmentTypes?.find(option => option.value === assignment.assignment_type)?.label ?? "NA"}
+        </span>
+      </td>
+      
+      <td className="p-2 font-semibold text-gray-800 group-hover:text-gray-900 transition-colors duration-200">
+        {assignment.application_number ?? "NA"}
+      </td>
+      
+      <td className="p-2 text-gray-700 group-hover:text-gray-800 transition-colors duration-200">
+        {assignment.project_name ?? "NA"}
+      </td>
 
-    <td className="p-3 text-gray-700">{index}</td>
-    <td className="p-3">
-      <span className="px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap bg-blue-50 text-blue-700">
-        {assignmentTypes?.find(option => option.value === assignment.assignment_type)?.label ?? "NA"}
-      </span>
-    </td>
-    <td className="p-3 font-medium text-gray-800">{assignment.application_number ?? "NA"}</td>
-    <td className="p-3 text-gray-700">{assignment.project_name ?? "NA"}</td>
+      <td className="p-2 text-gray-900">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+            <h5 className="text-sm font-bold text-gray-800 tracking-wide">
+              {assignment.login_id ?? 'NA'}
+            </h5>
+          </div>
 
-<td className="p-4 text-gray-900 align-top">
-  <div className="flex flex-col gap-1">
-    <h5 className="text-sm font-semibold text-primary tracking-wide">
-      {assignment.login_id ?? 'NA'}
-    </h5>
-
-    <div className="text-sm text-gray-600 font-mono flex items-center gap-2">
-      {assignment.password ? (
-          <div className="text-sm text-gray-600 font-mono flex items-center gap-2">
+          <div className="text-sm text-gray-600 font-mono">
             {assignment.password ? (
-              <div className="flex items-center">
-                <span className="tracking-wider">
+              <div className="flex items-center gap-2 bg-gray-50/80 rounded-lg px-3 py-2 border border-gray-200/50">
+                <span className="tracking-wider font-medium">
                   {showPassword ? assignment.password : '•'.repeat(assignment.password.length)}
                 </span>
                 <button
                   onClick={() => setShowPassword(!showPassword)}
-                  className="ml-2 text-gray-500 hover:text-blue-600 transition-colors"
+                  className="ml-2 p-1 rounded-full text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <HiEyeOff size={16} /> : <HiEye size={16} />}
                 </button>
               </div>
             ) : (
-              'NA'
+              <span className="text-gray-400 italic">No password</span>
             )}
           </div>
-      ) : (
-        'NA'
-      )}
-    </div>
-  </div>
-</td>
+        </div>
+      </td>
 
+      <td className="p-2">
+        <StatusDropdown
+          currentStatus={assignment.assignment_status}
+          assignmentType={assignment.assignment_type}
+          onChange={(newStatus) => onStatusChange(assignment.id, newStatus)}
+        />
+      </td>
+      
+      <td className="p-2">
+        <NoteCell
+          currentNote={assignment?.note}
+          onChange={(newNote) => onNoteChange(assignment.id, newNote)}
+        />
+      </td>
+      
+      <td className="p-2">
+        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200/50  hover:shadow-md transition-all duration-300 group-hover:border-gray-300/60">
+          {/* View */}
+          <button
+            title="View Details"
+            onClick={() => onView(assignment.id)}
+            className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <FaEye className="w-3.5 h-3.5" />
+          </button>
 
-    <td className="p-3">
-      <StatusDropdown
-        currentStatus={assignment.assignment_status}
-        assignmentType={assignment.assignment_type}
-        onChange={(newStatus) => onStatusChange(assignment.id, newStatus)}
-      />
-    </td>
-    <td className="p-3">
-      <NoteCell
-        currentNote={assignment?.note}
-        onChange={(newNote) => onNoteChange(assignment.id, newNote)}
-      />
-    </td>
-    <td className="p-3">
-<div className="inline-flex items-center gap-1 px-3 py-2 rounded-full border-2 border-[#53d9d9cc] bg-white shadow-sm hover:shadow-lg">
-  {/* View */}
-  <button
-    title="View Details"
-    onClick={() => onView(assignment.id)}
-    className="p-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors cursor-pointer"
-  >
-    <FaEye />
-  </button>
+          {/* Edit */}
+          <button
+            title="Edit Assignment"
+            onClick={() => onEdit(assignment.id)}
+            className="p-2.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <FaEdit className="w-3.5 h-3.5" />
+          </button>
 
-  {/* Edit */}
-  <button
-    title="Edit Assignment"
-    onClick={() => onEdit(assignment.id)}
-    className="p-1.5 rounded-full bg-yellow-50 text-yellow-600 hover:bg-yellow-100 transition-colors cursor-pointer"
-  >
-    <FaEdit />
-  </button>
+          {/* Delete */}
+          <button
+            title="Delete Assignment"
+            onClick={() => onDelete(assignment.id)}
+            className="p-2.5 rounded-lg bg-gradient-to-br from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <FaTrash className="w-3.5 h-3.5" />
+          </button>
 
-  {/* Delete */}
-  <button
-    title="Delete Assignment"
-    onClick={() => onDelete(assignment.id)}
-    className="p-1.5 rounded-full bg-red-50 text-red-500 hover:bg-red-100 transition-colors cursor-pointer"
-  >
-    <FaTrash />
-  </button>
+          {/* Reminder */}
+          <div className="relative group/reminder">
+            <button
+              onClick={() => onReminder(assignment.id)}
+              className="relative p-2.5 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 text-white hover:from-orange-500 hover:to-orange-600 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
+              title="Set Reminder"
+            >
+              <FaBell className="w-3.5 h-3.5" />
 
-  {/* Reminder */}
-<div className="relative group inline-block">
-  <button
-    onClick={() => onReminder(assignment.id)}
-    className="relative p-1.5 rounded-full bg-orange-50 text-orange-400 hover:bg-orange-100 transition-colors cursor-pointer"
-    title="Set Reminder"
-  >
-    <FaBell className="text-base" />
+              {assignment.reminders?.length > 0 && (
+                <span className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] leading-none font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-lg animate-bounce">
+                  {assignment.reminders.length}
+                </span>
+              )}
+            </button>
 
-    {assignment.reminders?.length > 0 && (
-      <span className="absolute -top-1.5 -right-1 bg-red-500 text-white text-[10px] leading-none font-semibold w-4 h-4 flex items-center justify-center rounded-full shadow-md">
-        {assignment.reminders.length}
-      </span>
-    )}
-  </button>
+            {/* Enhanced Tooltip */}
+            {assignment.reminders?.length > 0 && (
+              <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-xs opacity-0 group-hover/reminder:opacity-100 transition-all duration-300 z-50">
+                <div className="bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-700/50 p-4">
+                  <div className="flex flex-col gap-3 max-h-40 overflow-y-auto">
+                    {assignment.reminders.map((reminder, index) => (
+                      <div key={index} className="border-b border-gray-700/50 pb-2 last:border-b-0 last:pb-0">
+                        <div className="text-[11px] font-semibold text-orange-300 mb-1">
+                          {new Date(reminder.date_and_time).toLocaleString()}
+                        </div>
+                        <div className="text-[11px] text-gray-200">
+                          {reminder.message}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Arrow */}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/95"></div>
+                </div>
+              </div>
+            )}
+          </div>
 
-  {/* Tooltip */}
-  {assignment.reminders?.length > 0 && (
-    <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-xs px-4 py-2 text-[11px] text-white bg-gray-900 rounded-xl shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50">
-      <div className="flex flex-col gap-1 max-h-40 overflow-y-auto">
-        {assignment.reminders.map((reminder, index) => (
-          <p key={index} className="border-b border-gray-700 pb-1">
-            <span className="font-semibold text-orange-300">
-              {new Date(reminder.date_and_time).toLocaleString()}
-            </span>
-            <br />
-            <span>{reminder.message}</span>
-          </p>
-        ))}
-      </div>
-    </div>
-  )}
-</div>
+          {showReminderForm && (
+            <ReminderForm 
+              setShowReminderForm={setShowReminderForm}
+              assignmentId={assignment.id}
+              currentAssignmentStatus={assignment?.assignment_status}
+            />
+          )}
 
-    {showReminderForm && <ReminderForm 
-    setShowReminderForm={setShowReminderForm}
-    assignmentId={assignment.id}
-    currentAssignmentStatus={assignment?.assignment_status}
-    />}
+          {/* Timeline */}
+          <button
+            title="View Timeline"
+            onClick={() => onTimeline(assignment.id)}
+            className="p-2.5 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
+          >
+            <FaRegClock className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+};
 
-  {/* Timeline */}
-  <button
-    title="View Timeline"
-    onClick={() => onTimeline(assignment.id)}
-    className="p-1.5 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors cursor-pointer"
-  >
-    <FaRegClock />
-  </button>
-</div>
-    </td>
-  </tr>
-) }
 
 // Card view component
 const CardView = ({
@@ -986,7 +1069,6 @@ const Pagination = ({
   goToPreviousPage,
   goToNextPage,
 }) => {
-  // Helper to get page numbers (with ellipsis for long ranges)
   const getPageNumbers = () => {
     const pages = [];
     if (totalPages <= 7) {
@@ -1004,60 +1086,74 @@ const Pagination = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6 rounded-xl shadow-sm mt-4 flex-wrap gap-2">
-      {/* Info */}
-      <div className="text-sm text-gray-600">
-        Showing{" "}
-        <span className="font-medium">{indexOfFirstItem + 1}</span> to{" "}
-        <span className="font-medium">{Math.min(indexOfLastItem, totalItems)}</span> of{" "}
-        <span className="font-medium">{totalItems}</span> entries
+    <div className="flex items-center justify-between px-6 py-4 bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg mt-6 flex-wrap gap-4">
+      {/* Enhanced Info */}
+      <div className="flex items-center gap-2 text-sm text-gray-600">
+        <div className="flex items-center gap-1">
+          <div className="w-2 h-2 bg-emerald-400 rounded-full"></div>
+          <span>Showing</span>
+        </div>
+        <span className="font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded-md">
+          {indexOfFirstItem + 1}
+        </span>
+        <span>to</span>
+        <span className="font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded-md">
+          {Math.min(indexOfLastItem, totalItems)}
+        </span>
+        <span>of</span>
+        <span className="font-bold text-gray-800 bg-gray-100 px-2 py-1 rounded-md">
+          {totalItems}
+        </span>
+        <span>entries</span>
       </div>
 
-      {/* Pagination Controls */}
-      <div className="flex items-center space-x-2">
+      {/* Enhanced Pagination Controls */}
+      <div className="flex items-center gap-2">
         {/* Previous */}
         <button
           onClick={goToPreviousPage}
           disabled={currentPage === 1}
-          className={`px-4 py-2 text-sm font-medium rounded-md border border-gray-300 ${
+          className={`px-4 py-2 text-sm font-semibold rounded-xl border transition-all duration-200 ${
             currentPage === 1
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-white text-gray-700 hover:bg-gray-50"
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+              : "bg-white text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 border-gray-300 hover:border-blue-300 hover:shadow-md hover:scale-105"
           }`}
         >
           Previous
         </button>
 
         {/* Page Numbers */}
-        {getPageNumbers().map((page, index) =>
-          page === "..." ? (
-            <span key={index} className="px-2 text-gray-500 select-none">
-              ...
-            </span>
-          ) : (
-            <button
-              key={index}
-              onClick={() => goToPage(page)}
-              disabled={page === currentPage}
-              className={`px-3 py-1 text-sm font-medium rounded-md border ${
-                page === currentPage
-                  ? "bg-blue-600 text-white border-blue-600 cursor-default"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              {page}
-            </button>
-          )
-        )}
+        <div className="flex items-center gap-1">
+          {getPageNumbers().map((page, index) =>
+            page === "..." ? (
+              <span key={index} className="px-3 py-2 text-gray-500 select-none">
+                ...
+              </span>
+            ) : (
+              <button
+                key={index}
+                onClick={() => goToPage(page)}
+                disabled={page === currentPage}
+                className={`px-3 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                  page === currentPage
+                    ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg cursor-default scale-105"
+                    : "bg-white text-gray-700 border border-gray-300 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 hover:border-blue-300 hover:shadow-md hover:scale-105"
+                }`}
+              >
+                {page}
+              </button>
+            )
+          )}
+        </div>
 
         {/* Next */}
         <button
           onClick={goToNextPage}
           disabled={currentPage === totalPages}
-          className={`px-4 py-2 text-sm font-medium rounded-md border border-gray-300 ${
+          className={`px-4 py-2 text-sm font-semibold rounded-xl border transition-all duration-200 ${
             currentPage === totalPages
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-white text-gray-700 hover:bg-gray-50"
+              ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+              : "bg-white text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-indigo-50 border-gray-300 hover:border-blue-300 hover:shadow-md hover:scale-105"
           }`}
         >
           Next

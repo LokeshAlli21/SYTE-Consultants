@@ -17,7 +17,8 @@ import {
   FaSortUp,
   FaSortDown,
 } from "react-icons/fa";
-import { IoMail, IoClose } from "react-icons/io5";
+import { IoClose, IoChevronDown } from "react-icons/io5";
+
 import { toast } from "react-toastify";
 import databaseService from "../backend-services/database/database";
 import Select from "react-select";
@@ -398,7 +399,7 @@ const PromotersPage = () => {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className=" top-0  bg-white shadow px-6 py-4">
+      <div className=" top-0    px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <h1 className="text-2xl font-bold text-[#2F4C92]">
             <span className="hidden md:inline">Promoters</span>
@@ -420,195 +421,226 @@ const PromotersPage = () => {
       </div>
 
       <div className="max-w-7xl mx-auto p-4 md:p-6">
-        {/* Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col border-l-4 border-blue-500">
-            <span className="text-gray-500 text-sm">Total Promoters</span>
-            <div className="flex items-end mt-2">
-              <span className="text-3xl font-bold text-gray-800">{stats.total}</span>
-              <span className="ml-2 text-sm text-green-600">+{Math.floor(stats.total * 0.05)} this week</span>
-            </div>
-            <div className="mt-4 h-1 w-full bg-gray-100">
-              <div className="h-1 bg-blue-500" style={{ width: '100%' }}></div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col border-l-4 border-green-500">
-            <span className="text-gray-500 text-sm">Active Promoters</span>
-            <div className="flex items-end mt-2">
-              <span className="text-3xl font-bold text-gray-800">{stats.active}</span>
-              <span className="ml-2 text-sm text-green-600">{Math.round(stats.active/stats.total*100)}% of total</span>
-            </div>
-            <div className="mt-4 h-1 w-full bg-gray-100">
-              <div className="h-1 bg-green-500" style={{ width: `${Math.round(stats.active/stats.total*100)}%` }}></div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col border-l-4 border-purple-500">
-            <span className="text-gray-500 text-sm">New This Month</span>
-            <div className="flex items-end mt-2">
-              <span className="text-3xl font-bold text-gray-800">{stats.newThisMonth}</span>
-              <span className="ml-2 text-sm text-blue-600 cursor-pointer hover:underline">View details</span>
-            </div>
-            <div className="mt-4 h-1 w-full bg-gray-100">
-              <div className="h-1 bg-purple-500" style={{ width: `${Math.round(stats.newThisMonth/stats.total*100)}%` }}></div>
-            </div>
-          </div>
-        </div>
 
         {/* Search & Control Bar */}
-        <div className="bg-white rounded-xl shadow-sm p-4 mb-6">
-          <div className="flex flex-wrap gap-4 items-center">
-            <div className="relative flex-1 min-w-[250px]">
-              <input
-                type="text"
-                placeholder="Search promoters..."
-                value={searchQuery}
-                onChange={handleSearchChange}
-                className="w-full pl-10 pr-10 py-2.5 rounded-full border border-[#5CAAAB] font-medium text-zinc-500 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5CAAAB] transition duration-200"
-              />
-              <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-[#5CAAAB] text-base" />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition"
-                >
-                  <IoClose className="text-2xl" />
-                </button>
-              )}
-            </div>
-            
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-50 transition"
-            >
-              <FaFilter />
-              Filters
-              {Object.values(filters).some(f => f) && (
-                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
-              )}
-            </button>
-            
-            <button
-              onClick={handleExport}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2.5 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-50 transition"
-            >
-              <FaFileExport />
-              Export
-            </button>
-            
-            {selectedIds.length > 0 && (
-              <>
-                <button
-                  onClick={handleBulkMail}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-blue-100 rounded-full text-blue-600 hover:bg-blue-200 transition"
-                >
-                  <FaEnvelope />
-                  Email Selected ({selectedIds.length})
-                </button>
-                
-                <button
-                  onClick={showBulkDeleteConfirm}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-red-100 rounded-full text-red-600 hover:bg-red-200 transition"
-                >
-                  <FaTrash />
-                  Delete Selected
-                </button>
-              </>
-            )}
-            
-            <button
-              onClick={handleNewPromoterClick}
-              className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-md transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
-            >
-              <FaPlus className="text-base" />
-              New Promoter
-            </button>
-          </div>
-          
-          {/* Advanced Filters */}
-          {showFilters && (
-            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="flex flex-col">
-                <label className="text-sm text-gray-500 mb-1">District</label>
-                <Select
-                  isClearable
-                  options={districtOptions}
-                  value={districtOptions.find((opt) => opt.value === filters.district)}
-                  onChange={(option) => handleFilterChange("district", option ? option.value : "")}
-                  placeholder="Select District"
-                  className="rounded-md"
-                  classNamePrefix="react-select"
-                  theme={(theme) => ({
-                    ...theme,
-                    colors: {
-                      ...theme.colors,
-                      primary: '#5CAAAB',
-                    },
-                  })}
-                />
-              </div>
-              
-              <div className="flex flex-col">
-                <label className="text-sm text-gray-500 mb-1">City</label>
-                <Select
-                  isClearable
-                  options={cityOptions}
-                  value={cityOptions.find((opt) => opt.value === filters.city)}
-                  onChange={(option) => handleFilterChange("city", option ? option.value : "")}
-                  placeholder="Select City"
-                  isDisabled={!filters.district}
-                  className="rounded-md"
-                  classNamePrefix="react-select"
-                  theme={(theme) => ({
-                    ...theme,
-                    colors: {
-                      ...theme.colors,
-                      primary: '#5CAAAB',
-                    },
-                  })}
-                />
-              </div>
-              
-              <div className="flex flex-col">
-                <label className="text-sm text-gray-500 mb-1">Contact Number</label>
-                <input
-                  type="text"
-                  value={filters.contact_number}
-                  onChange={(e) => handleFilterChange("contact_number", e.target.value)}
-                  placeholder="Search by phone"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
-                />
-              </div>
-              
-              <div className="flex flex-col">
-                <label className="text-sm text-gray-500 mb-1">Email</label>
-                <input
-                  type="text"
-                  value={filters.email_id}
-                  onChange={(e) => handleFilterChange("email_id", e.target.value)}
-                  placeholder="Search by email"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
-                />
-              </div>
-              
-              <div className="col-span-1 md:col-span-4 flex justify-end">
-                <button
-                  onClick={clearFilters}
-                  className="text-blue-600 hover:text-blue-800 hover:underline"
-                >
-                  Clear All Filters
-                </button>
-              </div>
-            </div>
-          )}
+{/* Search & Control Bar */}
+<div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+  <div className="flex flex-col lg:flex-row flex-wrap gap-4 items-center">
+
+    {/* Search Bar */}
+    <div className="relative flex-1 min-w-[250px]">
+      <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+      <input
+        type="text"
+        placeholder="Search promoters..."
+        value={searchQuery}
+        onChange={handleSearchChange}
+        className="w-full pl-12 pr-12 py-3 rounded-xl border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none transition-all duration-200"
+      />
+      {searchQuery && (
+        <button
+          onClick={() => setSearchQuery("")}
+          className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition"
+        >
+          <IoClose size={20} />
+        </button>
+      )}
+    </div>
+
+    {/* Filters Toggle */}
+    <button
+      onClick={() => setShowFilters(!showFilters)}
+      className={`px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
+        showFilters ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+      }`}
+    >
+      <FaFilter />
+      Filters
+      <IoChevronDown className={`transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+    </button>
+
+    {/* Export Button */}
+    <button
+      onClick={handleExport}
+      disabled={loading}
+      className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium flex items-center gap-2 transition-all duration-200"
+    >
+      <FaFileExport />
+      Export
+    </button>
+
+    {/* Bulk Actions */}
+    {selectedIds.length > 0 && (
+      <>
+        <span className="text-blue-600 bg-blue-50 px-6 py-3 rounded-xl font-medium">
+          {selectedIds.length} selected
+        </span>
+
+        {/* <button
+          onClick={handleBulkMail}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
+        >
+          <FaEnvelope />
+          Email
+        </button> */}
+
+        <button
+          onClick={showBulkDeleteConfirm}
+          className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-200 shadow-sm hover:shadow-md"
+        >
+          <FaTrash />
+          Delete
+        </button>
+      </>
+    )}
+
+    {/* Add New Button */}
+    <button
+      onClick={handleNewPromoterClick}
+      className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl"
+    >
+      <FaPlus />
+      New Promoter
+    </button>
+  </div>
+
+  {/* Advanced Filters */}
+  {showFilters && (
+    <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+        {/* District */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">District</label>
+  <Select
+    isClearable
+    options={districtOptions}
+    value={districtOptions.find(opt => opt.value === filters.district)}
+    onChange={(opt) => handleFilterChange("district", opt ? opt.value : "")}
+    placeholder="Select District"
+    classNamePrefix="react-select"
+    theme={(theme) => ({
+      ...theme,
+      borderRadius: 8,
+      colors: {
+        ...theme.colors,
+        primary: '#5CAAAB',
+        primary25: '#e0f2f1', // light shade of the primary color
+      },
+    })}
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        padding: '2px',
+        borderWidth: '1px',
+        borderColor: state.isFocused ? '#5CAAAB' : '#e5e7eb', // gray-200
+        boxShadow: state.isFocused ? '0 0 0 2px #5CAAAB' : 'none',
+        '&:hover': {
+          borderColor: '#5CAAAB',
+        },
+        minHeight: '48px',
+        borderRadius: '0.5rem', // rounded-lg
+      }),
+      placeholder: (base) => ({
+        ...base,
+        color: '#9ca3af', // text-gray-400
+      }),
+      singleValue: (base) => ({
+        ...base,
+        color: '#111827', // text-gray-900
+      }),
+    }}
+  />
+</div>
+
+        {/* City */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+  <Select
+    isClearable
+    isDisabled={!filters.district}
+    options={cityOptions}
+    value={cityOptions.find(opt => opt.value === filters.city)}
+    onChange={(opt) => handleFilterChange("city", opt ? opt.value : "")}
+    placeholder="Select City"
+    classNamePrefix="react-select"
+    theme={(theme) => ({
+      ...theme,
+      borderRadius: 8,
+      colors: {
+        ...theme.colors,
+        primary: '#5CAAAB',
+        primary25: '#e0f2f1', // light shade of the primary color
+      },
+    })}
+    styles={{
+      control: (base, state) => ({
+        ...base,
+        padding: '2px',
+        borderWidth: '1px',
+        borderColor: state.isFocused ? '#5CAAAB' : '#e5e7eb', // gray-200
+        boxShadow: state.isFocused ? '0 0 0 2px #5CAAAB' : 'none',
+        '&:hover': {
+          borderColor: '#5CAAAB',
+        },
+        minHeight: '48px',
+        borderRadius: '0.5rem', // rounded-lg
+      }),
+      placeholder: (base) => ({
+        ...base,
+        color: '#9ca3af', // text-gray-400
+      }),
+      singleValue: (base) => ({
+        ...base,
+        color: '#111827', // text-gray-900
+      }),
+    }}
+  />
+</div>
+
+        {/* Contact Number */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Contact Number</label>
+          <input
+            type="text"
+            value={filters.contact_number}
+            onChange={(e) => handleFilterChange("contact_number", e.target.value)}
+            placeholder="Phone"
+            className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
+          />
         </div>
 
+        {/* Email */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+          <input
+            type="text"
+            value={filters.email_id}
+            onChange={(e) => handleFilterChange("email_id", e.target.value)}
+            placeholder="Email"
+            className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
+          />
+        </div>
+      </div>
+
+      {/* Clear Filters */}
+      <div className="mt-4 flex justify-end">
+        <button
+          onClick={clearFilters}
+          className="text-gray-800 hover:text-[#5caaab] font-medium transition"
+        >
+          Clear All Filters
+        </button>
+      </div>
+    </div>
+  )}
+</div>
         {/* Promoters Table */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden promoter-table">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="text-lg font-semibold text-gray-800">Promoter List</h2>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-500">
+<div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden promoter-table">
+          <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-slate-50 to-gray-50">
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight">Promoter List</h2>
+            <div className="flex items-center gap-6">
+              <span className="text-sm text-gray-600 font-medium  px-3 py-1 rounded-full ">
                 {filteredPromoters.length} promoters found
               </span>
               <select 
@@ -617,7 +649,7 @@ const PromotersPage = () => {
                   setPromotersPerPage(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="border rounded-md px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-[#5CAAAB]"
+                className="border-2 border-gray-200 rounded-lg px-4 py-2 text-sm font-medium focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition-all duration-200 bg-white hover:border-gray-300"
               >
                 <option value={5}>5 per page</option>
                 <option value={10}>10 per page</option>
@@ -628,21 +660,21 @@ const PromotersPage = () => {
           </div>
           
           {loading ? (
-            <div className="py-20 text-center">
-              <div className="inline-block w-8 h-8 border-4 border-[#5CAAAB] border-t-transparent rounded-full animate-spin"></div>
-              <p className="mt-4 text-gray-500">Fetching promoter data...</p>
+            <div className="py-24 text-center bg-gradient-to-b from-gray-50 to-white">
+              <div className="inline-block w-10 h-10 border-4 border-[#5caaab] border-t-transparent rounded-full animate-spin"></div>
+              <p className="mt-6 text-gray-600 font-medium">Fetching promoter data...</p>
             </div>
           ) : currentPromoters.length === 0 ? (
-            <div className="py-16 text-center">
-              <div className="w-16 h-16 mx-auto mb-4 text-gray-300">
-                <FaSearch className="w-full h-full" />
+            <div className="py-20 text-center bg-gradient-to-b from-gray-50 to-white">
+              <div className="w-20 h-20 mx-auto mb-6 text-gray-300 bg-gray-100 rounded-full flex items-center justify-center">
+                <FaSearch className="w-8 h-8" />
               </div>
-              <h3 className="text-lg font-medium text-gray-600 mb-1">No promoters found</h3>
-              <p className="text-gray-400">Try adjusting your search or filter criteria</p>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">No promoters found</h3>
+              <p className="text-gray-500 mb-6">Try adjusting your search or filter criteria</p>
               {(searchQuery || Object.values(filters).some(f => f)) && (
                 <button 
                   onClick={clearFilters}
-                  className="mt-4 px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-md transition"
+                  className="px-6 py-3 text-[#5caaab] hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium border-2 border-blue-200 hover:border-blue-300"
                 >
                   Clear all filters
                 </button>
@@ -650,10 +682,10 @@ const PromotersPage = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full table-auto border-collapse text-sm">
-                <thead className="bg-gray-50">
-                  <tr className="text-left text-gray-600 font-semibold">
-                    <th className="p-3 w-12">
+              <table className="w-full table-auto border-collapse">
+                <thead className="bg-gradient-to-r from-gray-50 to-slate-50 border-b-2 border-gray-100">
+                  <tr className="text-left text-gray-700 font-semibold">
+                    <th className="p-4 w-12">
                       <input
                         type="checkbox"
                         onChange={toggleSelectAll}
@@ -661,260 +693,229 @@ const PromotersPage = () => {
                           selectedIds.length === currentPromoters.length &&
                           currentPromoters.length !== 0
                         }
-                        className="w-4 h-4 accent-[#5CAAAB] cursor-pointer"
+                        className="w-4 h-4 accent-[#5caaab] cursor-pointer rounded border-2 border-gray-300 focus:ring-2 focus:ring-blue-100"
                       />
                     </th>
-                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("id")}>
-                      <div className="flex items-center">
+                    <th className="p-4 cursor-pointer group hover:bg-white transition-colors duration-200" onClick={() => requestSort("id")}>
+                      <div className="flex items-center font-semibold text-gray-700">
                         ID
                         {sortConfig.key === "id" ? (
                           sortConfig.direction === "ascending" ? (
-                            <FaSortUp className="ml-1 text-[#5CAAAB]" />
+                            <FaSortUp className="ml-2 text-[#5caaab]" />
                           ) : (
-                            <FaSortDown className="ml-1 text-[#5CAAAB]" />
+                            <FaSortDown className="ml-2 text-[#5caaab]" />
                           )
                         ) : (
-                          <FaSort className="ml-1 text-gray-300 group-hover:text-gray-400" />
+                          <FaSort className="ml-2 text-gray-400 group-hover:text-gray-600 transition-colors" />
                         )}
                       </div>
                     </th>
-                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("promoter_name")}>
-                      <div className="flex items-center">
+                    <th className="p-4 cursor-pointer group hover:bg-white transition-colors duration-200" onClick={() => requestSort("promoter_name")}>
+                      <div className="flex items-center font-semibold text-gray-700">
                         Name
                         {sortConfig.key === "promoter_name" ? (
                           sortConfig.direction === "ascending" ? (
-                            <FaSortUp className="ml-1 text-[#5CAAAB]" />
+                            <FaSortUp className="ml-2 text-[#5caaab]" />
                           ) : (
-                            <FaSortDown className="ml-1 text-[#5CAAAB]" />
+                            <FaSortDown className="ml-2 text-[#5caaab]" />
                           )
                         ) : (
-                          <FaSort className="ml-1 text-gray-300 group-hover:text-gray-400" />
+                          <FaSort className="ml-2 text-gray-400 group-hover:text-gray-600 transition-colors" />
                         )}
                       </div>
                     </th>
-                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("email_id")}>
-                      <div className="flex items-center">
+                    <th className="p-4 cursor-pointer group hover:bg-white transition-colors duration-200" onClick={() => requestSort("email_id")}>
+                      <div className="flex items-center font-semibold text-gray-700">
                         Email
                         {sortConfig.key === "email_id" ? (
                           sortConfig.direction === "ascending" ? (
-                            <FaSortUp className="ml-1 text-[#5CAAAB]" />
+                            <FaSortUp className="ml-2 text-[#5caaab]" />
                           ) : (
-                            <FaSortDown className="ml-1 text-[#5CAAAB]" />
+                            <FaSortDown className="ml-2 text-[#5caaab]" />
                           )
                         ) : (
-                          <FaSort className="ml-1 text-gray-300 group-hover:text-gray-400" />
+                          <FaSort className="ml-2 text-gray-400 group-hover:text-gray-600 transition-colors" />
                         )}
                       </div>
                     </th>
-                    <th className="p-3 cursor-pointer group"  onClick={() => requestSort("contact_number")}>
-                      <div className="flex items-center">
+                    <th className="p-4 cursor-pointer group hover:bg-white transition-colors duration-200"  onClick={() => requestSort("contact_number")}>
+                      <div className="flex items-center font-semibold text-gray-700">
                         Phone Number
                          {sortConfig.key === "contact_number" ? (
                           sortConfig.direction === "ascending" ? (
-                            <FaSortUp className="ml-1 text-[#5CAAAB]" />
+                            <FaSortUp className="ml-2 text-[#5caaab]" />
                           ) : (
-                            <FaSortDown className="ml-1 text-[#5CAAAB]" />
+                            <FaSortDown className="ml-2 text-[#5caaab]" />
                           )
                         ) : (
-                          <FaSort className="ml-1 text-gray-300 group-hover:text-gray-400" />
+                          <FaSort className="ml-2 text-gray-400 group-hover:text-gray-600 transition-colors" />
                         )}
                       </div>
                     </th>
-                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("district")}>
-                      <div className="flex items-center">
+                    <th className="p-4 cursor-pointer group hover:bg-white transition-colors duration-200" onClick={() => requestSort("district")}>
+                      <div className="flex items-center font-semibold text-gray-700">
                         District
                         {sortConfig.key === "district" ? (
                           sortConfig.direction === "ascending" ? (
-                            <FaSortUp className="ml-1 text-[#5CAAAB]" />
+                            <FaSortUp className="ml-2 text-[#5caaab]" />
                           ) : (
-                            <FaSortDown className="ml-1 text-[#5CAAAB]" />
+                            <FaSortDown className="ml-2 text-[#5caaab]" />
                           )
                         ) : (
-                          <FaSort className="ml-1 text-gray-300 group-hover:text-gray-400" />
+                          <FaSort className="ml-2 text-gray-400 group-hover:text-gray-600 transition-colors" />
                         )}
                       </div>
                     </th>
-                    <th className="p-3 cursor-pointer group" onClick={() => requestSort("city")}>
-                      <div className="flex items-center">
+                    <th className="p-4 cursor-pointer group hover:bg-white transition-colors duration-200" onClick={() => requestSort("city")}>
+                      <div className="flex items-center font-semibold text-gray-700">
                         City
                         {sortConfig.key === "city" ? (
                           sortConfig.direction === "ascending" ? (
-                            <FaSortUp className="ml-1 text-[#5CAAAB]" />
+                            <FaSortUp className="ml-2 text-[#5caaab]" />
                           ) : (
-                            <FaSortDown className="ml-1 text-[#5CAAAB]" />
+                            <FaSortDown className="ml-2 text-[#5caaab]" />
                           )
                         ) : (
-                          <FaSort className="ml-1 text-gray-300 group-hover:text-gray-400" />
+                          <FaSort className="ml-2 text-gray-400 group-hover:text-gray-600 transition-colors" />
                         )}
                       </div>
                     </th>
-                    <th className="p-3 text-right">Actions</th>
+                    <th className="p-4 text-center font-semibold text-gray-700">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white">
-                  {currentPromoters.map((promoter) => (
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {currentPromoters.map((promoter, index) => (
                     <tr 
                       key={promoter.id} 
-                      className="border-b border-gray-100 hover:bg-gray-50"
+                      className={`hover:bg-gradient-to-r hover:from-teal-50 hover:to-teal-50 transition-all duration-200 ${
+                        index % 2 === 0 ? 'bg-white' : 'bg-gray-50/30'
+                      }`}
                     >
-                      <td className="p-3">
+                      <td className="p-4">
                         <input
                           type="checkbox"
                           checked={selectedIds.includes(promoter.id)}
                           onChange={() => toggleSelect(promoter.id)}
-                          className="w-4 h-4 accent-[#5CAAAB] cursor-pointer"
+                          className="w-4 h-4 accent-[#5caaab] cursor-pointer rounded border-2 border-gray-300 focus:ring-2 focus:ring-blue-100"
                         />
                       </td>
-                      <td className="p-3 font-mono text-xs text-gray-500">{promoter.id}</td>
-                      <td className="p-3">
+                      <td className="p-4">
+                        <span className="font-mono text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-md">
+                          {promoter.id}
+                        </span>
+                      </td>
+                      <td className="p-4">
                         <div className="flex items-center">
-                          <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium mr-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm mr-4 shadow-md">
                             {promoter.promoter_name.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <div className="font-medium text-gray-800">{promoter.promoter_name}</div>
-                            <div className="text-xs text-gray-500">{promoter.promoter_type || 'Individual'}</div>
+                            <div className="font-semibold text-gray-900 text-sm">{promoter.promoter_name}</div>
+                            <div className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full inline-block mt-1">
+                              {promoter.promoter_type || 'Individual'}
+                            </div>
                           </div>
                         </div>
                       </td>
-                      <td className="p-3 text-gray-600">{promoter.email_id}</td>
-                      <td className="p-3 text-gray-600">{promoter.contact_number}</td>
-                      <td className="p-3 text-gray-600">{promoter.district}</td>
-                      <td className="p-3 text-gray-600">{promoter.city}</td>
-                      <td className="p-3 text-right space-x-2">
-                        <button
-                          onClick={() => handleView(promoter.id)}
-                          className="text-gray-400 hover:text-gray-600"
-                          title="View details"
-                        >
-                          <FaEye className="inline" />
-                        </button>
-                        <button
-                          onClick={() => handleEdit(promoter.id)}
-                          className="text-gray-400 hover:text-blue-600"
-                          title="Edit promoter"
-                        >
-                          <FaEdit className="inline" />
-                        </button>
-                        <button
-                          onClick={() => showDeleteConfirm(promoter.id, promoter.promoter_name)}
-                          className="text-gray-400 hover:text-red-600"
-                          title="Delete promoter"
-                        >
-                          <FaTrash className="inline" />
-                        </button>
-                      </td>
+                      <td className="p-4 text-gray-700 font-medium text-sm">{promoter.email_id}</td>
+                      <td className="p-4 text-gray-700 font-medium text-sm">{promoter.contact_number}</td>
+                      <td className="p-4 text-gray-700 font-medium text-sm">{promoter.district}</td>
+                      <td className="p-4 text-gray-700 font-medium text-sm">{promoter.city}</td>
+<td className="p-4">
+  <div className="flex items-center justify-center gap-2">
+    <button
+      onClick={() => handleView(promoter.id)}
+      className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors"
+      title="View Promoter"
+    >
+      <FaEye className="w-4 h-4" />
+    </button>
+    <button
+      onClick={() => handleEdit(promoter.id)}
+      className="p-2 text-yellow-600 hover:bg-yellow-100 rounded-full transition-colors"
+      title="Edit Promoter"
+    >
+      <FaEdit className="w-4 h-4" />
+    </button>
+    <button
+      onClick={() => showDeleteConfirm(promoter.id, promoter.promoter_name)}
+      className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors"
+      title="Delete Promoter"
+    >
+      <FaTrash className="w-4 h-4" />
+    </button>
+  </div>
+</td>
+
                     </tr>
                   ))}
                 </tbody>
               </table>
 
-{/* 
-<div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6 rounded-md shadow-sm mt-4">
-
-  <div className="flex items-center text-sm text-gray-600">
-    Showing{" "}
-    <span className="font-medium mx-1">
-      {(currentPage - 1) * promotersPerPage + 1}
-    </span>
-    to
-    <span className="font-medium mx-1">
-      {Math.min(currentPage * promotersPerPage, filteredPromoters.length)}
-    </span>
-    of
-    <span className="font-medium mx-1">{filteredPromoters.length}</span> promoters
-  </div>
-
-  <div className="flex space-x-2">
-    <button
-      onClick={() => handlePageChange(currentPage - 1)}
-      disabled={currentPage === 1}
-      className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md border border-gray-300 ${
-        currentPage === 1
-          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-          : "bg-white text-gray-700 hover:bg-gray-50"
-      }`}
-    >
-      Previous
-    </button>
-    <span className="text-sm text-gray-700 flex items-center px-2">
-      Page {currentPage} of {totalPages}
-    </span>
-    <button
-      onClick={() => handlePageChange(currentPage + 1)}
-      disabled={currentPage === totalPages}
-      className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md border border-gray-300 ${
-        currentPage === totalPages
-          ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-          : "bg-white text-gray-700 hover:bg-gray-50"
-      }`}
-    >
-      Next
-    </button>
-  </div>
-</div> */}
-
 {/* Pagination */}
-    <div className="flex items-center justify-between px-4 py-3 bg-white border-t border-gray-200 sm:px-6 rounded-md shadow-sm mt-4">
-      {/* Pagination Info */}
-      <div className="flex items-center text-sm text-gray-600">
-        Showing{" "}
-        <span className="font-medium mx-1">{indexOfFirst + 1}</span>
-        to
-        <span className="font-medium mx-1">
-          {Math.min(indexOfLast, filteredPromoters.length)}
-        </span>
-        of
-        <span className="font-medium mx-1">{filteredPromoters.length}</span> promoters
-      </div>
-
-      {/* Pagination Buttons */}
-      <div className="flex space-x-2 items-center">
-        <button
-          onClick={() => handlePageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md border border-gray-300 ${
-            currentPage === 1
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-white text-gray-700 hover:bg-gray-50"
-          }`}
-        >
-          Previous
-        </button>
-
-        {/* Render page numbers dynamically */}
-        {getPageNumbers().map((page, index) =>
-          page === '...' ? (
-            <span key={index} className="px-2 text-gray-500 select-none">...</span>
-          ) : (
-            <button
-              key={index}
-              onClick={() => handlePageChange(page)}
-              disabled={page === currentPage}
-              className={`relative inline-flex items-center px-3 py-1 text-sm font-medium rounded-md border ${
-                page === currentPage
-                  ? "bg-blue-600 text-white border-blue-600 cursor-default"
-                  : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-              }`}
-            >
-              {page}
-            </button>
-          )
-        )}
-
-        <button
-          onClick={() => handlePageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-          className={`relative inline-flex items-center px-4 py-2 text-sm font-medium rounded-md border border-gray-300 ${
-            currentPage === totalPages
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-white text-gray-700 hover:bg-gray-50"
-          }`}
-        >
-          Next
-        </button>
-      </div>
+<div className="p-6 bg-gradient-to-r from-gray-50 to-slate-50 border-t border-gray-200">
+  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+    
+    {/* Pagination Info */}
+    <div className="text-sm text-gray-700">
+      Showing{" "}
+      <span className="font-semibold text-gray-900 px-2 py-0.5 rounded-md ">
+        {indexOfFirst + 1}
+      </span>{" "}
+      to{" "}
+      <span className="font-semibold text-gray-900 px-2 py-0.5 rounded-md ">
+        {Math.min(indexOfLast, filteredPromoters.length)}
+      </span>{" "}
+      of{" "}
+      <span className="font-semibold text-gray-900 px-2 py-0.5  rounded-md ">
+        {filteredPromoters.length}
+      </span>{" "}
+      promoters
     </div>
+
+    {/* Pagination Controls */}
+    <div className="flex items-center gap-2 flex-wrap justify-center">
+      {/* Previous Button */}
+      <button
+        onClick={() => handlePageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Previous
+      </button>
+
+      {/* Page Numbers */}
+      {getPageNumbers().map((page, index) =>
+        page === "..." ? (
+          <span key={index} className="w-10 text-center text-gray-500">...</span>
+        ) : (
+          <button
+            key={index}
+            onClick={() => handlePageChange(page)}
+            disabled={page === currentPage}
+            className={`w-10 h-10 rounded-lg font-medium text-sm transition ${
+              page === currentPage
+                ? "bg-teal-600 text-white shadow-md"
+                : "text-gray-700 hover:bg-gray-100"
+            }`}
+          >
+            {page}
+          </button>
+        )
+      )}
+
+      {/* Next Button */}
+      <button
+        onClick={() => handlePageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+</div>
+
 
             </div>
           )}
@@ -956,6 +957,8 @@ const PromotersPage = () => {
 )}
 
           </div> 
+
+          
           </div>
         </div>
         )

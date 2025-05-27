@@ -66,6 +66,7 @@ function SideBar() {
       {location.pathname !== '/login' && (
         <div className={`
           fixed lg:static top-0 left-0 z-40 w-72 min-h-screen
+          min-w-[250px]
           bg-white border-r border-gray-200
           shadow-xl lg:shadow-md
           flex flex-col
