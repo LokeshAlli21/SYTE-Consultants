@@ -116,8 +116,8 @@ useEffect(() => {
   return (
     <div className=" mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Assignment Timeline</h1>
-        <p className="text-gray-600 mt-1">Track progress and status changes grouped by status</p>
+        <h1 className="text-2xl font-bold text-[#2F4C92]">Assignment Timeline</h1>
+        <p className="text-gray-500 mt-1">Track progress, follow up reminders and status changes </p>
       </div>
       {/* Summary stats */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">

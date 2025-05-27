@@ -1302,6 +1302,50 @@ async getAllProjects() {
     throw error;
   }
 }
+async getAllProjectsForQPR() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/get-all-for-qpr`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch promoters.");
+    }
+
+    const data = await response.json();
+    // toast.success("✅ Projects fetched successfully!");
+    return data.projects;
+
+  } catch (error) {
+    console.error("❌ Error fetching promoters:", error);
+    // toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
+async getAllProjectsForAA() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/projects/get-all-for-aa`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch promoters.");
+    }
+
+    const data = await response.json();
+    // toast.success("✅ Projects fetched successfully!");
+    return data.projects;
+
+  } catch (error) {
+    console.error("❌ Error fetching promoters:", error);
+    // toast.error(`❌ ${error.message}`);
+    throw error;
+  }
+}
 
 async getAllProjectsForDropdown() {
   try {

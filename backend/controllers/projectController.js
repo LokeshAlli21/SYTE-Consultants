@@ -206,6 +206,42 @@ export const getAllProjects = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+export const getAllProjectsForQPR = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('id, project_name, rera_number, district, city,login_id')
+      .eq('status_for_delete','active');
+
+    if (error) {
+      console.error('❌ Error fetching projects:', error);
+      return res.status(500).json({ error: 'Failed to fetch projects', details: error });
+    }
+
+    res.status(200).json({ projects: data });
+  } catch (err) {
+    console.error('❌ Unexpected error in getAllProjects:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+export const getAllProjectsForAA = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('id, project_name, rera_number, district, city,login_id')
+      .eq('status_for_delete','active');
+
+    if (error) {
+      console.error('❌ Error fetching projects:', error);
+      return res.status(500).json({ error: 'Failed to fetch projects', details: error });
+    }
+
+    res.status(200).json({ projects: data });
+  } catch (err) {
+    console.error('❌ Unexpected error in getAllProjects:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 export const getAllUnitsForProject = async (req, res) => {
   try {

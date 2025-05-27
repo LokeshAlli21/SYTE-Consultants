@@ -27,6 +27,8 @@ import { uploadProjectFiles,
     addEngineer,
     addArchitect,
     addCA,
+    getAllProjectsForQPR,
+    getAllProjectsForAA,
 } from '../controllers/projectController.js';
 import {upload} from '../supabase/supabaseClient.js'
 
@@ -41,6 +43,10 @@ router.get('/get-project/:id', protect, getProject);
 router.post('/upload-files', protect, upload.any(), uploadProjectFiles);
 
 router.get('/get-all', protect, getAllProjects);
+
+router.get('/get-all-for-qpr', protect, getAllProjectsForQPR);
+
+router.get('/get-all-for-aa', protect, getAllProjectsForAA);
 
 router.get('/units/get-all', protect, getAllUnitsForProject);
 

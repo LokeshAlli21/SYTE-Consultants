@@ -1,26 +1,45 @@
-import { FaPlus, FaSearch, FaEye, FaEdit, FaTrash } from 'react-icons/fa';
-import { useEffect, useState } from "react";
+import React, { useState, useEffect, useMemo } from 'react';
+import { 
+  FaPlus, 
+  FaSearch, 
+  FaEye, 
+  FaEdit, 
+  FaTrash, 
+  FaSort, 
+  FaSortUp, 
+  FaSortDown,
+  FaFilter,
+  FaDownload
+} from 'react-icons/fa';
+import { IoClose, IoChevronDown } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import databaseService from "../backend-services/database/database";
-import Select from "react-select";
-import { IoClose } from "react-icons/io5";
 
 const ChannelPartners = () => {
   const navigate = useNavigate();
+
   const [partners, setPartners] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchQuery, setSearchQuery] = useState('');
-  const [filters, setFilters] = useState({ district: '', city: '' });
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
+  const [showFilters, setShowFilters] = useState(false);
+  
+  // Filters
+  const [filters, setFilters] = useState({
+    district: '',
+    city: ''
+  });
+
+  // District and City data
   const [districtOptions, setDistrictOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
   const [districtCityMap, setDistrictCityMap] = useState({});
-  
-  // Pagination states
-  const [currentPage, setCurrentPage] = useState(1);
-  const [partnersPerPage] = useState(10);
-  
-  // Fetch cities and districts on component mount
+
+  // Fetch cities and districts
   useEffect(() => {
     async function fetchCitiesAndDistricts() {
       try {
@@ -29,13 +48,12 @@ const ChannelPartners = () => {
         setDistrictOptions(districtOptions);
       } catch (error) {
         console.error("Error fetching cities and districts:", error);
-        toast.error("Failed to load location data");
+        toast.error("❌ Failed to load cities and districts");
       }
     }
-    
     fetchCitiesAndDistricts();
   }, []);
-  
+
   // Update city options when district changes
   useEffect(() => {
     if (filters.district) {
@@ -45,11 +63,11 @@ const ChannelPartners = () => {
     }
   }, [filters.district, districtCityMap]);
 
-  // Fetch channel partners data
+  // Fetch channel partners
   useEffect(() => {
     const fetchPartners = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
         const data = await databaseService.getAllChannelPartners();
         setPartners(data);
       } catch (error) {
@@ -59,363 +77,512 @@ const ChannelPartners = () => {
         setLoading(false);
       }
     };
-    
     fetchPartners();
   }, []);
 
-  // Handle search and filters
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
+  const filteredAndSortedPartners = useMemo(() => {
+    let filtered = partners.filter(partner => {
+      const query = searchQuery.toLowerCase();
+      
+      const matchesSearch =
+        partner.full_name?.toLowerCase().includes(query) ||
+        partner.contact_number?.toLowerCase().includes(query) ||
+        partner.alternate_contact_number?.toLowerCase().includes(query) ||
+        partner.email_id?.toLowerCase().includes(query) ||
+        partner.district?.toLowerCase().includes(query) ||
+        partner.city?.toLowerCase().includes(query) ||
+        query === '';
+      
+      const matchesDistrict = !filters.district || partner.district?.toLowerCase() === filters.district.toLowerCase();
+      const matchesCity = !filters.city || partner.city?.toLowerCase() === filters.city.toLowerCase();
+      
+      return matchesSearch && matchesDistrict && matchesCity;
+    });
+
+    // Sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        let aValue = a[sortConfig.key];
+        let bValue = b[sortConfig.key];
+        
+        // Handle null/undefined values
+        if (aValue == null) aValue = '';
+        if (bValue == null) bValue = '';
+        
+        if (typeof aValue === 'string') {
+          aValue = aValue.toLowerCase();
+          bValue = bValue.toLowerCase();
+        }
+        
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+        return 0;
+      });
+    }
+
+    return filtered;
+  }, [partners, searchQuery, filters, sortConfig]);
+
+  // Pagination
+  const totalPages = Math.ceil(filteredAndSortedPartners.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const currentPartners = filteredAndSortedPartners.slice(startIndex, startIndex + itemsPerPage);
+
+  // Handlers
+  const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === 'asc' ? 'desc' : 'asc'
+    }));
   };
-  
-  const handleClearSearch = () => {
+
+  const handleSelectAll = () => {
+    setSelectedIds(prev => 
+      prev.length === currentPartners.length 
+        ? [] 
+        : currentPartners.map(p => p.id)
+    );
+  };
+
+  const handleSelectItem = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) 
+        ? prev.filter(x => x !== id) 
+        : [...prev, id]
+    );
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      district: '',
+      city: ''
+    });
     setSearchQuery('');
     setCurrentPage(1);
   };
 
-  const handleClearFilters = () => {
-    setFilters({ district: '', city: '' });
-    setCurrentPage(1);
-  };
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    
+    const confirmDelete = window.confirm(`Are you sure you want to delete ${selectedIds.length} selected channel partners?`);
+    if (!confirmDelete) return;
 
-  // Filter partners based on search and filter criteria
-  const filteredPartners = partners.filter(p => {
-    const query = searchQuery.toLowerCase();
-    
-    const matchesSearch =
-      p.full_name?.toLowerCase().includes(query) ||
-      p.contact_number?.toLowerCase().includes(query) ||
-      p.alternate_contact_number?.toLowerCase().includes(query) ||
-      p.email_id?.toLowerCase().includes(query) ||
-      p.district?.toLowerCase().includes(query) ||
-      p.city?.toLowerCase().includes(query) ||
-      query === '';
-    
-    const matchesDistrict = !filters.district || p.district?.toLowerCase() === filters.district.toLowerCase();
-    const matchesCity = !filters.city || p.city?.toLowerCase() === filters.city.toLowerCase();
-    
-    return matchesSearch && matchesDistrict && matchesCity;
-  });
-  
-  // Pagination logic
-  const indexOfLastPartner = currentPage * partnersPerPage;
-  const indexOfFirstPartner = indexOfLastPartner - partnersPerPage;
-  const currentPartners = filteredPartners.slice(indexOfFirstPartner, indexOfLastPartner);
-  const totalPages = Math.ceil(filteredPartners.length / partnersPerPage);
-  
-  // CRUD operations
-  const handleAdd = () => navigate('/channel-partners/add');
-  const handleView = (id) => navigate(`/channel-partners/view/${id}`);
-  const handleEdit = (id) => navigate(`/channel-partners/edit/${id}`);
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this channel partner?")) return;
-    
+    setLoading(true);
     try {
-      setLoading(true);
-      await databaseService.deleteChannelPartnerById(id);
-      setPartners(prev => prev.filter(p => p.id !== id));
-      toast.success("✅ Deleted successfully");
+      // Delete each selected partner
+      await Promise.all(selectedIds.map(id => databaseService.deleteChannelPartnerById(id)));
       
-      // Adjust current page if needed after deletion
-      if (currentPartners.length === 1 && currentPage > 1) {
-        setCurrentPage(currentPage - 1);
-      }
-    } catch (err) {
-      console.error("Error deleting partner:", err);
-      toast.error("❌ Deletion failed");
+      // Update local state
+      setPartners(prev => prev.filter(p => !selectedIds.includes(p.id)));
+      setSelectedIds([]);
+      
+      toast.success(`✅ ${selectedIds.length} channel partners deleted successfully.`);
+    } catch (error) {
+      console.error("Error deleting partners:", error);
+      toast.error("❌ Failed to delete channel partners.");
     } finally {
       setLoading(false);
     }
   };
 
-  // Generate page numbers for pagination
-  const pageNumbers = [];
-  for (let i = 1; i <= totalPages; i++) {
-    pageNumbers.push(i);
-  }
-  
-  // Custom select styles
-  const selectStyles = {
-    control: (base, state) => ({
-      ...base,
-      padding: "6px",
-      minHeight: "44px",
-      borderRadius: "9999px",
-      borderColor: "transparent",
-      boxShadow: state.isFocused ? "0 0 0 3px #5caaab55" : "none",
-      transition: "border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
-      "&:hover": { borderColor: "#5caaab" },
-      backgroundColor: "white",
-    }),
-    menu: (base) => ({
-      ...base,
-      borderRadius: "0.75rem",
-      zIndex: 50,
-      marginTop: "4px",
-      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
-      overflow: "hidden",
-    }),
-    option: (base, state) => ({
-      ...base,
-      backgroundColor: state.isSelected
-        ? "#5caaab"
-        : state.isFocused
-        ? "#5caaab22"
-        : "white",
-      color: state.isSelected ? "white" : "#1f2937",
-      padding: "10px 14px",
-      fontSize: "0.95rem",
-      fontWeight: state.isSelected ? 600 : 400,
-      cursor: "pointer",
-      transition: "background-color 0.2s ease-in-out",
-    }),
-    placeholder: (base) => ({
-      ...base,
-      color: "#9ca3af",
-      fontSize: "0.95rem",
-    }),
-    singleValue: (base) => ({
-      ...base,
-      color: "#374151",
-      fontWeight: 500,
-    }),
+  const handleDelete = async (id, name) => {
+    const confirmDelete = window.confirm(`Are you sure you want to delete channel partner "${name}"?`);
+    if (!confirmDelete) return;
+
+    setLoading(true);
+    try {
+      await databaseService.deleteChannelPartnerById(id);
+      setPartners(prev => prev.filter(partner => partner.id !== id));
+      toast.success(`✅ Channel partner "${name}" deleted successfully.`);
+    } catch (error) {
+      console.error("Error deleting partner:", error);
+      toast.error("❌ Failed to delete channel partner.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAdd = () => navigate('/channel-partners/add');
+  const handleView = (id) => navigate(`/channel-partners/view/${id}`);
+  const handleEdit = (id) => navigate(`/channel-partners/edit/${id}`);
+
+  const getSortIcon = (column) => {
+    if (sortConfig.key !== column) return <FaSort className="text-gray-400" />;
+    return sortConfig.direction === 'asc' 
+      ? <FaSortUp className="text-teal-600" />
+      : <FaSortDown className="text-teal-600" />;
   };
 
   return (
-    <div className="p-8 pt-3">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6 pl-6">
-        <h1 className="text-[24px] font-bold text-[#2F4C92]">Channel Partners</h1>
-        <div className="w-10 h-10 bg-[#C2C2FF] rounded-full" />
-      </div>
-      
-      {/* Search & Filters */}
-      <div className="flex flex-wrap gap-4 mb-6 items-center">
-        <div className="flex flex-1 items-center flex-wrap gap-4">
-          {/* Search Input */}
-          <div className="relative w-full max-w-sm rounded-full shadow-md">
-            <input
-              type="text"
-              placeholder="Search here..."
-              value={searchQuery}
-              onChange={handleSearchChange}
-              className="w-full pl-10 pr-10 py-2.5 rounded-full border border-[#5CAAAB] font-medium text-zinc-500 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#5CAAAB] transition duration-200"
-            />
-            <FaSearch className="absolute top-1/2 left-3 transform -translate-y-1/2 text-[#5CAAAB] text-base" />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="absolute top-1/2 right-3 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition"
-              >
-                <IoClose className="text-2xl" />
-              </button>
-            )}
+    <div className="min-h-screen p-6">
+      <div className="max-w-7xl mx-auto">
+        
+        {/* Header */}
+        <div className="p-6 pt-0 mb-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">Channel Partners</h1>
+              <p className="text-gray-500">Manage and monitor all your channel partners in one place</p>
+            </div>
+            <div className="bg-teal-50 p-4 rounded-xl flex flex-row gap-4 border border-teal-200">
+              <p className="text-2xl font-bold text-teal-600 mt-1">
+                {filteredAndSortedPartners.length}
+              </p>
+              <div className="flex items-center">
+                <span className="text-sm font-medium text-teal-900">Total Partners</span>
+              </div>
+            </div>
           </div>
-          
-          {/* District Filter */}
-          <div className="flex flex-col w-[200px] shadow-md rounded-full">
-            <Select
-              isClearable
-              options={districtOptions}
-              value={districtOptions.find((opt) => opt.value === filters.district)}
-              onChange={(selectedOption) => {
-                setFilters({
-                  ...filters,
-                  district: selectedOption ? selectedOption.value : "",
-                  city: "", // Reset city when district changes
-                });
-                setCurrentPage(1);
-              }}
-              isSearchable={true}
-              placeholder="Select a district"
-              styles={selectStyles}
-            />
+        </div>
+
+        {/* Search and Filters */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+          <div className="flex flex-col lg:flex-row gap-4">
+            
+            {/* Search Bar */}
+            <div className="flex-1">
+              <div className="relative">
+                <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search partners, contact numbers, emails, or locations..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full pl-12 pr-12 py-3 rounded-xl border border-gray-200 transition-all duration-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500"
+                  >
+                    <IoClose size={20} />
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Bulk Actions */}
+            {selectedIds.length > 0 && (
+              <>
+                <span className="text-blue-600 px-6 py-3 rounded-xl font-medium bg-blue-50 transition-all duration-200">
+                  {selectedIds.length} partner{selectedIds.length > 1 ? 's' : ''} selected
+                </span>
+                <div className="flex items-center gap-2">
+                  <button 
+                    onClick={handleBulkDelete}
+                    className="bg-red-600 text-white hover:bg-red-700 flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <FaTrash className="text-lg" />
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
+
+            {/* Filter Toggle */}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className={`px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
+                showFilters ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <FaFilter />
+              Filters
+              <IoChevronDown className={`transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
+
+            <button
+              onClick={handleAdd}
+              className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              <FaPlus />
+              New Channel Partner
+            </button>
           </div>
 
-          {/* City Filter */}
-          <div className="flex flex-col w-[200px] shadow-md rounded-full">
-            <Select
-              isClearable
-              options={cityOptions}
-              value={cityOptions.find((opt) => opt.value === filters.city)}
-              onChange={(selectedOption) => {
-                setFilters({
-                  ...filters,
-                  city: selectedOption ? selectedOption.value : "",
-                });
-                setCurrentPage(1);
-              }}
-              isSearchable={true}
-              isDisabled={!filters.district || cityOptions.length < 1}
-              placeholder="Select a city"
-              styles={selectStyles}
-            />
-          </div>
-          
-          {/* Clear Filters Button */}
-          {(filters.district || filters.city) && (
-            <button
-              onClick={handleClearFilters}
-              className="flex items-center gap-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm transition-colors duration-200"
-            >
-              <IoClose className="text-base" />
-              Clear Filters
-            </button>
+          {/* Expanded Filters */}
+          {showFilters && (
+            <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                
+                {/* District Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">District</label>
+                  <select
+                    value={filters.district}
+                    onChange={(e) => {
+                      setFilters(prev => ({ ...prev, district: e.target.value, city: '' }));
+                      setCurrentPage(1);
+                    }}
+                    className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
+                  >
+                    <option value="">All Districts</option>
+                    {districtOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* City Filter */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                  <select
+                    value={filters.city}
+                    onChange={(e) => {
+                      setFilters(prev => ({ ...prev, city: e.target.value }));
+                      setCurrentPage(1);
+                    }}
+                    disabled={!filters.district || cityOptions.length === 0}
+                    className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  >
+                    <option value="">All Cities</option>
+                    {cityOptions.map(option => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center gap-3 justify-end">
+                <button
+                  onClick={clearFilters}
+                  className="px-4 py-2 text-gray-600 hover:text-[#5caaab] font-medium"
+                >
+                  Clear All Filters
+                </button>
+                <span className="text-sm text-gray-500">
+                  {filteredAndSortedPartners.length} of {partners.length} partners shown
+                </span>
+              </div>
+            </div>
           )}
         </div>
 
-        {/* Add New Button */}
-        <button
-          onClick={handleAdd}
-          className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-full font-semibold text-md shadow-xl transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
-        >
-          <FaPlus className="text-base" />
-          New Channel Partner
-        </button>
-      </div>
-
-      {/* Stats Summary */}
-      <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-xl shadow-md p-4 flex flex-col">
-          <span className="text-gray-500 text-sm">Total Partners</span>
-          <span className="text-2xl font-bold text-[#2F4C92]">{partners.length}</span>
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-4 flex flex-col">
-          <span className="text-gray-500 text-sm">Active Filters</span>
-          <span className="text-2xl font-bold text-[#5CAAAB]">
-            {(filters.district ? 1 : 0) + (filters.city ? 1 : 0) + (searchQuery ? 1 : 0)}
-          </span>
-        </div>
-        <div className="bg-white rounded-xl shadow-md p-4 flex flex-col">
-          <span className="text-gray-500 text-sm">Filtered Results</span>
-          <span className="text-2xl font-bold text-[#5CAAAB]">{filteredPartners.length}</span>
-        </div>
-      </div>
-
-      {/* Data Table */}
-      <div className="bg-white rounded-xl shadow-lg p-4 overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600 font-semibold">
-            <tr>
-              <th className="p-3">Sr No</th>
-              <th className="p-3">Channel Partner Name</th>
-              <th className="p-3">Contact Number</th>
-              <th className="p-3">Alternate Number</th>
-              <th className="p-3">Email ID</th>
-              <th className="p-3">District</th>
-              <th className="p-3">City</th>
-              <th className="p-3 text-center">Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr>
-                <td colSpan="8" className="p-6 text-center">
-                  <div className="flex justify-center items-center space-x-2">
-                    <div className="w-4 h-4 rounded-full bg-[#5CAAAB] animate-bounce" style={{ animationDelay: "0.1s" }} />
-                    <div className="w-4 h-4 rounded-full bg-[#5CAAAB] animate-bounce" style={{ animationDelay: "0.2s" }} />
-                    <div className="w-4 h-4 rounded-full bg-[#5CAAAB] animate-bounce" style={{ animationDelay: "0.3s" }} />
-                  </div>
-                </td>
-              </tr>
-            ) : currentPartners.length === 0 ? (
-              <tr>
-                <td colSpan="8" className="p-6 text-center text-gray-500">
-                  {filteredPartners.length === 0 && partners.length > 0 ? 
-                    "No results match your search criteria" : 
-                    "No channel partners found"}
-                </td>
-              </tr>
-            ) : (
-              currentPartners.map((p, idx) => (
-                <tr key={p.id} className="border-b hover:bg-gray-50 transition-colors duration-150">
-                  <td className="p-3">{indexOfFirstPartner + idx + 1}</td>
-                  <td className="p-3 font-medium">{p.full_name ?? 'NA'}</td>
-                  <td className="p-3">{p.contact_number ?? 'NA'}</td>
-                  <td className="p-3">{p.alternate_contact_number ?? 'NA'}</td>
-                  <td className="p-3">{p.email_id ?? 'NA'}</td>
-                  <td className="p-3">{p.district ?? 'NA'}</td>
-                  <td className="p-3">{p.city ?? 'NA'}</td>
-                  <td className="p-3">
-                    <div className="flex gap-2 justify-center text-lg">
-                      <button 
-                        onClick={() => handleView(p.id)} 
-                        className="text-blue-500 hover:text-blue-700 transition-colors"
-                        title="View Details"
-                      >
-                        <FaEye />
-                      </button>
-                      <button 
-                        onClick={() => handleEdit(p.id)} 
-                        className="text-yellow-500 hover:text-yellow-600 transition-colors"
-                        title="Edit"
-                      >
-                        <FaEdit />
-                      </button>
-                      <button 
-                        onClick={() => handleDelete(p.id)} 
-                        className="text-red-500 hover:text-red-700 transition-colors"
-                        title="Delete"
-                      >
-                        <FaTrash />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        
-        {/* Pagination */}
-        {!loading && filteredPartners.length > 0 && (
-          <div className="flex justify-between items-center mt-4 px-2">
-            <div className="text-sm text-gray-500">
-              Showing {indexOfFirstPartner + 1} to {Math.min(indexOfLastPartner, filteredPartners.length)} of {filteredPartners.length} entries
-            </div>
-            <div className="flex space-x-1">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
-                className={`px-3 py-1 rounded ${
-                  currentPage === 1
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                Prev
-              </button>
-              
-              {pageNumbers.map(number => (
-                <button
-                  key={number}
-                  onClick={() => setCurrentPage(number)}
-                  className={`px-3 py-1 rounded ${
-                    currentPage === number
-                      ? "bg-[#5CAAAB] text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                  }`}
+        {/* Content */}
+        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+          
+          {/* Table Header */}
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-gray-900">Channel Partners List</h2>
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="px-3 py-2 border border-gray-200 rounded-lg focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
                 >
-                  {number}
-                </button>
-              ))}
-              
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages || totalPages === 0}
-                className={`px-3 py-1 rounded ${
-                  currentPage === totalPages || totalPages === 0
-                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
-              >
-                Next
-              </button>
+                  <option value={5}>5 per page</option>
+                  <option value={10}>10 per page</option>
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                </select>
+              </div>
             </div>
           </div>
-        )}
+
+          {/* Table */}
+          {loading ? (
+            <div className="p-12 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-teal-600"></div>
+              <p className="mt-4 text-gray-500">Loading channel partners...</p>
+            </div>
+          ) : filteredAndSortedPartners.length === 0 ? (
+            <div className="p-12 text-center">
+              <div className="text-gray-400 mb-4">
+                <FaSearch size={48} className="mx-auto mb-4 opacity-50" />
+                <p className="text-lg font-medium">No channel partners found</p>
+                <p className="text-sm">Try adjusting your search or filters</p>
+              </div>
+              {(searchQuery || Object.values(filters).some(f => f !== '' && f !== null)) && (
+                <button
+                  onClick={clearFilters}
+                  className="mt-4 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+                >
+                  Clear Filters
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="p-4 w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.length === currentPartners.length && currentPartners.length > 0}
+                        onChange={handleSelectAll}
+                        className="w-4 h-4 accent-[#5caaab] text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                      />
+                    </th>
+                    <th className="p-4 text-left">
+                      <button
+                        onClick={() => handleSort('full_name')}
+                        className="flex items-center gap-2 font-semibold text-gray-700 hover:text-teal-600"
+                      >
+                        Partner Name
+                        {getSortIcon('full_name')}
+                      </button>
+                    </th>
+                    <th className="p-4 text-left">
+                      <button
+                        onClick={() => handleSort('contact_number')}
+                        className="flex items-center gap-2 font-semibold text-gray-700 hover:text-teal-600"
+                      >
+                        Contact
+                        {getSortIcon('contact_number')}
+                      </button>
+                    </th>
+                    <th className="p-4 text-left">
+                      <button
+                        onClick={() => handleSort('email_id')}
+                        className="flex items-center gap-2 font-semibold text-gray-700 hover:text-teal-600"
+                      >
+                        Email
+                        {getSortIcon('email_id')}
+                      </button>
+                    </th>
+                    <th className="p-4 text-left">
+                      <button
+                        onClick={() => handleSort('district')}
+                        className="flex items-center gap-2 font-semibold text-gray-700 hover:text-teal-600"
+                      >
+                        Location
+                        {getSortIcon('district')}
+                      </button>
+                    </th>
+                    <th className="p-4 text-center font-semibold text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {currentPartners.map((partner, index) => (
+                    <tr
+                      key={partner.id}
+                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                        selectedIds.includes(partner.id) ? 'bg-teal-50' : ''
+                      }`}
+                    >
+                      <td className="p-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(partner.id)}
+                          onChange={() => handleSelectItem(partner.id)}
+                          className="w-4 h-4 text-teal-600 accent-[#5caaab] border-gray-300 rounded focus:ring-teal-500"
+                        />
+                      </td>
+                      <td className="p-4">
+                        <div className="font-medium text-gray-900">{partner.full_name || 'N/A'}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-gray-900">{partner.contact_number || 'N/A'}</div>
+                        {partner.alternate_contact_number && (
+                          <div className="text-sm text-gray-500">Alt: {partner.alternate_contact_number}</div>
+                        )}
+                      </td>
+                      <td className="p-4 text-gray-700">{partner.email_id || 'N/A'}</td>
+                      <td className="p-4">
+                        <div className="text-gray-900">{partner.district || 'N/A'}</div>
+                        <div className="text-sm text-gray-500">{partner.city || 'N/A'}</div>
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <button 
+                            onClick={() => handleView(partner.id)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 bg-blue-50 rounded-full transition-colors"
+                            title="View Partner"
+                          >
+                            <FaEye />
+                          </button>
+                          <button 
+                            onClick={() => handleEdit(partner.id)}
+                            className="p-2 text-yellow-600 hover:bg-yellow-100 bg-yellow-50 rounded-full transition-colors"
+                            title="Edit Partner"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(partner.id, partner.full_name)}
+                            className="p-2 text-red-600 hover:bg-red-100 bg-red-50 rounded-full transition-colors"
+                            title="Delete Partner"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {/* Pagination */}
+          {filteredAndSortedPartners.length > 0 && (
+            <div className="p-6 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredAndSortedPartners.length)} of {filteredAndSortedPartners.length} results
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  {/* Page Numbers */}
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`w-10 h-10 rounded-lg font-medium ${
+                            currentPage === pageNum
+                              ? 'bg-teal-600 text-white'
+                              : 'text-gray-700 hover:bg-gray-100'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

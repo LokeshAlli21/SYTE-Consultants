@@ -502,7 +502,7 @@ let filtered = projects.filter(project => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="px-3 py-2 border border-gray-200 rounded-lg focus:border-teal-500 focus:ring-2 focus:ring-teal-200"
+                  className="px-3 py-2 border border-gray-200 rounded-lg focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
                 >
                   <option value={5}>5 per page</option>
                   <option value={10}>10 per page</option>
@@ -662,24 +662,24 @@ let filtered = projects.filter(project => {
                         </span>
                       </td>
                       <td className="p-4">
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center  gap-2 ">
                           <button 
                             onClick={() => handleView(project.id)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors"
+                            className="p-2 text-blue-600 hover:bg-blue-100 bg-blue-50 rounded-full transition-colors"
                             title="View Project"
                           >
                             <FaEye />
                           </button>
                           <button 
                             onClick={() => handleEdit(project.id)}
-                            className="p-2 text-yellow-600 hover:bg-yellow-100 rounded-full transition-colors"
+                            className="p-2 text-yellow-600 hover:bg-yellow-100 bg-yellow-50 rounded-full transition-colors"
                             title="Edit Project"
                           >
                             <FaEdit />
                           </button>
                           <button 
                             onClick={() => handleDelete(project.id, project.project_name)}
-                            className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors"
+                            className="p-2 text-red-600 hover:bg-red-100 bg-red-50 rounded-full transition-colors"
                             title="Delete Project"
                           >
                             <FaTrash />

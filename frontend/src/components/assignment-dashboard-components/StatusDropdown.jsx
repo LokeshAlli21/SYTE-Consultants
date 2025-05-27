@@ -459,7 +459,7 @@ export default function StatusDropdown({
         </button>
         
         {isOpen && !disabled && (
-          <div className="absolute z-20 w-[200px] mt-1 bg-white rounded-md shadow-lg  overflow-hidden">
+          <div className="absolute z-50 w-[200px] mt-1 bg-white rounded-md shadow-lg  overflow-hidden">
             <ul 
               role="listbox"
               className={`py-1 overflow-auto ${maxHeight} flex flex-col gap-1 px-1`}

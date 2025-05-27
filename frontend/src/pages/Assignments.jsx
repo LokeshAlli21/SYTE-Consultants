@@ -5,7 +5,7 @@ import {
   FaPlus, FaSearch, FaEye, FaEdit, FaTrash,
   FaSort, FaChartBar, FaListAlt, FaFilter, FaBell, FaRegClock
 } from "react-icons/fa";
-import { IoClose } from "react-icons/io5";
+import { IoClose , IoChevronDown} from "react-icons/io5";
 import databaseService from "../backend-services/database/database"; // Corrected import path
 import StatusDropdown from "../components/assignment-dashboard-components/StatusDropdown"; // Corrected import path
 import ReminderForm from "../components/assignment-dashboard-components/ReminderForm";
@@ -315,7 +315,7 @@ const handleNoteChange = useCallback(
   }
 
  return (
-  <div className="p-4 md:p-6  lg:p-8 pt-3 min-h-screen max-w-full overflow-x-auto">
+  <div className="p-6 min-h-screen max-w-full overflow-x-auto">
     {/* Dashboard Header with Stats */}
     <DashboardHeader
       stats={stats}
@@ -342,15 +342,17 @@ const handleNoteChange = useCallback(
     <button
       onClick={() => setIsFilterVisible(!isFilterVisible)}
       className={`px-6 py-3 rounded-xl font-medium flex items-center gap-2 transition-all duration-200 ${
-        isFilterVisible ? 'bg-[#5CAAAB] text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+        isFilterVisible ? 'bg-teal-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
       }`}
     >
       <FaFilter />
       Filters
+      <IoChevronDown className={`transition-transform ${isFilterVisible ? 'rotate-180' : ''}`} />
       {Object.values(filters).some(f => f) && (
         <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
       )}
     </button>
+
 
     {/* Clear Filters Button */}
     {Object.values(filters).some(f => f) && (
@@ -366,7 +368,7 @@ const handleNoteChange = useCallback(
     {/* Add New Assignment */}
     <button
       onClick={() => navigate("/assignments/add")}
-      className="ml-auto flex items-center gap-2 bg-[#5CAAAB] text-white px-5 py-3 rounded-xl font-semibold text-md shadow-md transition-all duration-200 hover:bg-[#489090] hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-[#5CAAAB]"
+      className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl"
     >
       <FaPlus className="text-base" />
       New Assignment
@@ -474,79 +476,57 @@ const handleNoteChange = useCallback(
 
 // Component for dashboard header with stats and view toggle
 const DashboardHeader = ({ stats, viewMode, setViewMode }) => (
-  <div className="mb-8">
-    <div className="flex items-center justify-between mb-6 pl-2">
-      <div>
-        <h1 className="text-3xl font-bold text-[#2F4C92]">Assignments</h1>
-        <p className="text-gray-500 mt-1">Manage and track all assignment activities</p>
-      </div>
-
-      <div className="flex items-center gap-3">
-        <div className="bg-white rounded-lg p-1 shadow-sm border-2 border-[#5caaab]">
-          <button
-            onClick={() => setViewMode("table")}
-            className={`px-3 py-1.5 rounded ${
-              viewMode === "table"
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <FaListAlt className="text-lg" />
-          </button>
-          <button
-            onClick={() => setViewMode("cards")}
-            className={`px-3 py-1.5 rounded ${
-              viewMode === "cards"
-                ? "bg-blue-50 text-blue-600"
-                : "text-gray-600 hover:bg-gray-100"
-            }`}
-          >
-            <FaChartBar className="text-lg" />
-          </button>
-        </div>
-
-        <div className="w-10 h-10 bg-[#C2C2FF] rounded-full flex items-center justify-center">
-          <span className="text-white font-bold">
-            {stats.total > 99 ? "99+" : stats.total}
-          </span>
-        </div>
-      </div>
+<div className="p-6 pt-0 mb-0">
+  <div className="flex items-center justify-between">
+    <div>
+      <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">Assignments</h1>
+      <p className="text-gray-500">Manage and track all assignment activities</p>
     </div>
 
-    {/* <div className="overflow-x-auto pb-4">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-2 px-2 w-full">
-        <div className="min-w-[200px]">
-          <StatCard
-            title="Total Assignments"
-            value={stats.total}
-            color="#2F4C92"
-            icon={<FaListAlt className="text-2xl" />}
-          />
+    <div className="flex items-center gap-3">
+      <div className="bg-teal-50 p-3 rounded-xl flex flex-row gap-4 border items-center border-teal-200">
+        <p className="text-2xl font-bold text-teal-600 ">
+          {stats.total > 99 ? "99+" : stats.total}
+        </p>
+        <div className="flex items-center">
+          <span className="text-sm font-medium text-teal-900">Total Assignments</span>
         </div>
-        {ASSIGNMENT_TYPES.map((option, index) => {
-          const count = stats.statusCounts[option.value] || 0;
-          if (!count) return null;
-
-          return (
-            <div key={option.value} className="min-w-[200px]">
-              <StatCard
-                title={option.label}
-                value={count}
-                color={COLOR_PALETTE[index % COLOR_PALETTE.length]}
-              />
-            </div>
-          );
-        })}
       </div>
-    </div> */}
+      
+      <div className="bg-white flex flex-row gap-1 items-center rounded-lg p-2">
+        <button
+          onClick={() => setViewMode("table")}
+          className={`px-3 py-2.5 rounded ${
+            viewMode === "table"
+              ? "bg-blue-50 text-blue-600"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          <FaListAlt className="text-lg" />
+        </button>
+        <button
+          onClick={() => setViewMode("cards")}
+          className={`px-3 py-2.5 rounded ${
+            viewMode === "cards"
+              ? "bg-blue-50 text-blue-600"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+        >
+          <FaChartBar className="text-lg" />
+        </button>
+      </div>
+
+      
+    </div>
   </div>
+</div>
 );
 
 // SearchBox Component (updated styling)
 
 const SearchBox = ({ searchQuery, onChange, onClear, selectedIds, handleBulkDelete }) => (
   <div className="flex flex-col md:flex-row items-center gap-4 w-full">
-    <div className="relative flex-1 max-w-md w-full">
+    <div className="relative flex-1 w-full">
       <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
       <input
         type="text"
@@ -580,7 +560,7 @@ const SearchBox = ({ searchQuery, onChange, onClear, selectedIds, handleBulkDele
 
 // FilterPanel Component (minimal & clean style)
 const FilterPanel = ({ filters, onChange, onClear, assignmentTypes }) => (
-  <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+  <div className=" p-4 bg-gray-50 rounded-xl">
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
       {/* Assignment Type */}
       <div>
@@ -685,8 +665,8 @@ const EmptyState = ({ clearFilters, hasFilters }) => (
 
 // Table head component
 const TableHead = ({ sortField, sortDirection, onSort, toggleSelectAll, selectedIds, currentItems }) => (
-  <thead className="bg-gradient-to-r from-slate-50 to-gray-50 backdrop-blur-sm">
-    <tr className="border-b border-gray-200/60">
+  <thead className="bg-gradient-to-r  from-slate-50 rounded-t-2xl to-gray-50 backdrop-blur-sm">
+    <tr className="rounded-t-2xl">
       <th className="p-4 border-y border-gray-200/40 font-semibold">
         <div className="flex items-center justify-center">
           <input
@@ -753,10 +733,10 @@ const TableHead = ({ sortField, sortDirection, onSort, toggleSelectAll, selected
 );
 
 const ModernTableContainer = ({ children }) => (
-  <div className="w-full overflow-hidden">
-    <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-gray-200/50 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="table-auto border-collapse w-full text-sm">
+  <div className="w-full">
+    <div className="bg-white/90   border-y-2 border-gray-200 ">
+      <div className="">
+        <table className="table-auto  border-collapse w-full text-sm">
           {children}
         </table>
       </div>
@@ -1086,7 +1066,7 @@ const Pagination = ({
   };
 
   return (
-    <div className="flex items-center justify-between px-6 py-4 bg-white/90 backdrop-blur-sm border border-gray-200/50 rounded-2xl shadow-lg mt-6 flex-wrap gap-4">
+    <div className="flex items-center justify-between px-6 py-4 bg-white/90 backdrop-blur-sm  rounded-2xl flex-wrap gap-4">
       {/* Enhanced Info */}
       <div className="flex items-center gap-2 text-sm text-gray-600">
         <div className="flex items-center gap-1">
