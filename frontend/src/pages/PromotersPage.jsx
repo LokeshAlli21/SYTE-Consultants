@@ -399,26 +399,20 @@ const PromotersPage = () => {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <div className=" top-0    px-6 py-4">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-[#2F4C92]">
-            <span className="hidden md:inline">Promoters</span>
-            <span className="md:hidden">Promoters</span>
-          </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-500 hidden md:inline-block">
-              Last updated: {new Date().toLocaleDateString()}
-            </span>
-            <button className="relative p-2 hover:bg-gray-100 rounded-full transition-colors">
-              <FaBell className="text-gray-600 text-xl" />
-              <span className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-            <div className="w-10 h-10 bg-[#5CAAAB] rounded-full flex items-center justify-center">
-              <FaUserCircle className="text-white text-xl" />
+          <div className="flex items-center justify-between p-6 pb-0">
+            <div className="px-6">
+              <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">Promoters</h1>
+              <p className="text-gray-500">Manage all promoters</p>
+            </div>
+            <div className="bg-teal-50 p-4 rounded-xl flex flex-row gap-4 border border-teal-200 mx-6">
+              <p className="text-2xl font-bold text-teal-600 mt-1">
+                {promoters.length}
+              </p>
+              <div className="flex items-center">
+                <span className="text-sm font-medium text-teal-900">Total Projects</span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
       <div className="max-w-7xl mx-auto p-4 md:p-6">
 
@@ -460,14 +454,14 @@ const PromotersPage = () => {
     </button>
 
     {/* Export Button */}
-    <button
+    {/* <button
       onClick={handleExport}
       disabled={loading}
       className="px-6 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-medium flex items-center gap-2 transition-all duration-200"
     >
       <FaFileExport />
       Export
-    </button>
+    </button> */}
 
     {/* Bulk Actions */}
     {selectedIds.length > 0 && (

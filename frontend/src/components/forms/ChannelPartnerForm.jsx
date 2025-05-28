@@ -217,7 +217,7 @@ function ChannelPartnerForm({
       <div className="bg-white rounded-xl shadow-lg">
         {/* Form Header */}
         <div className="py-2 px-6 bg-[#5CAAAB] rounded-t-xl flex flex-row items-center justify-between">
-          <h2 className="text-2xl font-bold text-white">{activeTab}</h2>
+          <h2 className="text-2xl font-bold text-white flex-1">{activeTab}</h2>
           {formData.updated_by && (
             <UpdateInfoComponent formData={formData} />
           )}

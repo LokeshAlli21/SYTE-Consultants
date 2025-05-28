@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Clock, User, MessageSquare, Bell, CheckCircle, AlertCircle, FileText, Calendar } from 'lucide-react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import databaseService from '../backend-services/database/database';
 import { getStatusColor, getStatusIcon } from '../components/assignment-dashboard-components/GetStatusColor&Icon'
 import { NotesDisplay, DynamicNotesDisplay } from '../components/assignment-dashboard-components/NotesDisplay';
+import { FaArrowLeft } from 'react-icons/fa6';
 
 function AssignmentTimeLine() {
   const { id } = useParams();
   const [timeline, setTimeline] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  const navigate = useNavigate()
 
 useEffect(() => {
   const fetchTimeline = async () => {
@@ -115,8 +118,11 @@ useEffect(() => {
 
   return (
     <div className=" mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#2F4C92]">Assignment Timeline</h1>
+      <div className="mb-6 pl-6">
+        <div className='flex flex-row items-center gap-4'>
+          <FaArrowLeft className="text-[#2F4C92] text-3xl cursor-pointer" onClick={() => {navigate(-1)}}/>
+          <h1 className="text-2xl font-bold text-[#2F4C92]">Assignment Timeline</h1>
+        </div>
         <p className="text-gray-500 mt-1">Track progress, follow up reminders and status changes </p>
       </div>
       {/* Summary stats */}
