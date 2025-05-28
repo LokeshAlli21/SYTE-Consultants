@@ -13,11 +13,14 @@ import {
   FaBars,
   FaTh
 } from 'react-icons/fa';
+import {
+  Building2, CheckCircle, Clock, BookOpen, DollarSign, TrendingUp, AlertCircle,
+  Lock, CalendarCheck, Hammer, Ban, Tag
+} from 'lucide-react';
 import { IoClose, IoChevronDown } from "react-icons/io5";
 import { toast } from "react-toastify";
 import databaseService from '../../backend-services/database/database';
-import {UnitDetailsForm} from '../index.js';
-import { Edit2, Trash2, X, AlertTriangle } from 'lucide-react';
+import { UnitDetailsForm } from '../index.js';
 
 function UnitDetails({
   disabled,
@@ -40,58 +43,55 @@ function UnitDetails({
   const [searchQuery, setSearchQuery] = useState('');
   const [sortConfig, setSortConfig] = useState({ key: null, direction: 'asc' });
   const [showFilters, setShowFilters] = useState(false);
-
-  const [showForm, setShowForm] = useState(false);
-const [editingUnit, setEditingUnit] = useState(null);
-const [formErrors, setFormErrors] = useState({});
-const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-const [unitToDelete, setUnitToDelete] = useState(null);
-
+  
   // Filters
   const [filters, setFilters] = useState({
     unitType: '',
     status: '',
-    customerName: '',
-    priceRange: { min: '', max: '' },
-    areaRange: { min: '', max: '' }
+    minArea: '',
+    maxArea: '',
+    minPrice: '',
+    maxPrice: ''
   });
 
-  // Filter options
-  const statusOptions = [
-    { value: 'Sold', label: 'Sold' },
-    { value: 'Unsold', label: 'Unsold' },
-    { value: 'Booked', label: 'Booked' },
-    { value: 'Available', label: 'Available' }
-  ];
-
   const unitTypeOptions = [
-    { value: '1BHK', label: '1BHK' },
-    { value: '2BHK', label: '2BHK' },
-    { value: '3BHK', label: '3BHK' },
-    { value: '4BHK', label: '4BHK' },
-    { value: 'Villa', label: 'Villa' },
-    { value: 'Penthouse', label: 'Penthouse' },
-    { value: 'Studio', label: 'Studio' }
+    { value: "1 BHK", label: "1 BHK" },
+    { value: "2 BHK", label: "2 BHK" },
+    { value: "3 BHK", label: "3 BHK" },
+    { value: "4 BHK", label: "4 BHK" },
+    { value: "Duplex", label: "Duplex" },
+    { value: "Office Space", label: "Office Space" },
+    { value: "Other", label: "Other" },
+    { value: "5 BHK", label: "5 BHK" },
+    { value: "6 BHK", label: "6 BHK" },
+    { value: "Bunglow", label: "Bunglow" },
+    { value: "Shops", label: "Shops" },
+    { value: "Showroom", label: "Showroom" },
+    { value: "Hall", label: "Hall" },
+    { value: "Amenity", label: "Amenity" },
+    { value: "Multi Purpose Room", label: "Multi Purpose Room" },
+    { value: "1 Room Kitchen", label: "1 Room Kitchen" },
+    { value: "Row Houses", label: "Row Houses" },
   ];
-const handleSubmit = (e) => {
-  // Form submission logic
-};
 
-const confirmDelete = () => {
-  // Delete confirmation logic  
-};
+  const statusOptions = [
+    { value: "Sold", label: "Sold" },
+    { value: "Unsold", label: "Unsold" },
+    { value: "Booked", label: "Booked" },
+    { value: "Mortgage", label: "Mortgage" },
+    { value: "Reservation", label: "Reservation" },
+    { value: "Rehab", label: "Rehab" },
+    {
+      value: "Land Owner/Investor Share (Not for Sale)",
+      label: "Land Owner/Investor Share (Not for Sale)",
+    },
+    {
+      value: "Land Owner/Investor Share (for Sale)",
+      label: "Land Owner/Investor Share (for Sale)",
+    },
+  ];
 
-const handleEditUnit = (unit) => {
-  setEditingUnit(unit);
-  setFormData(unit);
-  setShowForm(true);
-};
-
-const handleDeleteUnit = (id) => {
-  setUnitToDelete(id);
-  setShowDeleteConfirm(true);
-};
-  // Fetch units data
+  // Fetch units
   useEffect(() => {
     if(isUnitDetailsFormActive) return;
     
@@ -100,6 +100,8 @@ const handleDeleteUnit = (id) => {
         setLoading(true);
         try {
           const data = await databaseService.getAllUnitsForProject(projectId);
+          console.log(data);
+          
           setUnits(data);
         } catch (error) {
           toast.error("❌ Failed to load unit details");
@@ -143,7 +145,7 @@ const handleDeleteUnit = (id) => {
     return clearedObj;
   }
 
-  // Filtered and sorted units
+  // Filter and sort units
   const filteredAndSortedUnits = useMemo(() => {
     let filtered = units.filter(unit => {
       const matchesSearch = 
@@ -152,28 +154,23 @@ const handleDeleteUnit = (id) => {
         unit.customer_name?.toLowerCase().includes(searchQuery.toLowerCase());
 
       const matchesUnitType = !filters.unitType || unit.unit_type?.toLowerCase() === filters.unitType.toLowerCase();
-      const matchesStatus = !filters.status || unit.unit_status === filters.status;
-      const matchesCustomer = !filters.customerName || 
-        unit.customer_name?.toLowerCase().includes(filters.customerName.toLowerCase());
+      const matchesStatus = !filters.status || unit.unit_status?.toLowerCase() === filters.status.toLowerCase();
+      
+      const matchesMinArea = !filters.minArea || (unit.carpet_area && parseFloat(unit.carpet_area) >= parseFloat(filters.minArea));
+      const matchesMaxArea = !filters.maxArea || (unit.carpet_area && parseFloat(unit.carpet_area) <= parseFloat(filters.maxArea));
+      
+      const matchesMinPrice = !filters.minPrice || (unit.agreement_value && parseFloat(unit.agreement_value) >= parseFloat(filters.minPrice));
+      const matchesMaxPrice = !filters.maxPrice || (unit.agreement_value && parseFloat(unit.agreement_value) <= parseFloat(filters.maxPrice));
 
-      // Price range filter
-      let matchesPriceRange = true;
-      if (filters.priceRange.min || filters.priceRange.max) {
-        const price = unit.agreement_value || 0;
-        if (filters.priceRange.min && price < parseFloat(filters.priceRange.min)) matchesPriceRange = false;
-        if (filters.priceRange.max && price > parseFloat(filters.priceRange.max)) matchesPriceRange = false;
-      }
-
-      // Area range filter
-      let matchesAreaRange = true;
-      if (filters.areaRange.min || filters.areaRange.max) {
-        const area = unit.carpet_area || 0;
-        if (filters.areaRange.min && area < parseFloat(filters.areaRange.min)) matchesAreaRange = false;
-        if (filters.areaRange.max && area > parseFloat(filters.areaRange.max)) matchesAreaRange = false;
-      }
-
-      return matchesSearch && matchesUnitType && matchesStatus && matchesCustomer && 
-             matchesPriceRange && matchesAreaRange;
+      return (
+        matchesSearch &&
+        matchesUnitType &&
+        matchesStatus &&
+        matchesMinArea &&
+        matchesMaxArea &&
+        matchesMinPrice &&
+        matchesMaxPrice
+      );
     });
 
     // Sorting
@@ -186,7 +183,11 @@ const handleDeleteUnit = (id) => {
         if (aValue == null) aValue = '';
         if (bValue == null) bValue = '';
         
-        if (typeof aValue === 'string') {
+        // Handle numeric values
+        if (sortConfig.key === 'carpet_area' || sortConfig.key === 'agreement_value' || sortConfig.key === 'total_received' || sortConfig.key === 'balance_amount') {
+          aValue = parseFloat(aValue) || 0;
+          bValue = parseFloat(bValue) || 0;
+        } else if (typeof aValue === 'string') {
           aValue = aValue.toLowerCase();
           bValue = bValue.toLowerCase();
         }
@@ -205,17 +206,82 @@ const handleDeleteUnit = (id) => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentUnits = filteredAndSortedUnits.slice(startIndex, startIndex + itemsPerPage);
 
-  // Statistics
-  const stats = useMemo(() => {
-    return {
-      total: units.length,
-      sold: units.filter(u => u.unit_status === 'Sold').length,
-      available: units.filter(u => u.unit_status === 'Unsold' || u.unit_status === 'Available').length,
-      booked: units.filter(u => u.unit_status === 'Booked').length,
-      totalRevenue: units.reduce((sum, u) => sum + (u.total_received || 0), 0),
-      totalValue: units.reduce((sum, u) => sum + (u.agreement_value || 0), 0)
-    };
-  }, [units]);
+  // Stats calculations
+const stats = useMemo(() => {
+  const totalUnits = units.length;
+  const totalRevenue = units.reduce((sum, u) => sum + (parseFloat(u.total_received) || 0), 0);
+  const totalValue = units.reduce((sum, u) => sum + (parseFloat(u.agreement_value) || 0), 0);
+  const balanceAmount = units.reduce((sum, u) => sum + (parseFloat(u.balance_amount) || 0), 0);
+
+  const statusCounts = {};
+  statusOptions.forEach(({ value }) => {
+    statusCounts[value] = units.filter(u => u.unit_status === value).length;
+  });
+
+  // Calculate availableUnits: a combination of Available/Unsold
+  const availableUnits = statusCounts['Unsold'] || 0;
+
+  return {
+    totalUnits,
+    totalRevenue,
+    totalValue,
+    balanceAmount,
+    ...statusCounts,
+    availableUnits
+  };
+}, [units]);
+
+const statusCardStyles = {
+  Sold: {
+    icon: CheckCircle,
+    color: 'text-green-700',
+    bgGradient: 'from-green-50 to-green-100',
+    iconBg: 'bg-green-500'
+  },
+  Unsold: {
+    icon: Clock,
+    color: 'text-amber-700',
+    bgGradient: 'from-amber-50 to-amber-100',
+    iconBg: 'bg-amber-500'
+  },
+  Booked: {
+    icon: BookOpen,
+    color: 'text-indigo-700',
+    bgGradient: 'from-indigo-50 to-indigo-100',
+    iconBg: 'bg-indigo-500'
+  },
+  Mortgage: {
+    icon: Lock,
+    color: 'text-yellow-700',
+    bgGradient: 'from-yellow-50 to-yellow-100',
+    iconBg: 'bg-yellow-500'
+  },
+  Reservation: {
+    icon: CalendarCheck,
+    color: 'text-blue-700',
+    bgGradient: 'from-blue-50 to-blue-100',
+    iconBg: 'bg-blue-500'
+  },
+  Rehab: {
+    icon: Hammer,
+    color: 'text-orange-700',
+    bgGradient: 'from-orange-50 to-orange-100',
+    iconBg: 'bg-orange-500'
+  },
+  "Land Owner/Investor Share (Not for Sale)": {
+    icon: Ban,
+    color: 'text-gray-700',
+    bgGradient: 'from-gray-50 to-gray-100',
+    iconBg: 'bg-gray-500'
+  },
+  "Land Owner/Investor Share (for Sale)": {
+    icon: Tag,
+    color: 'text-teal-700',
+    bgGradient: 'from-teal-50 to-teal-100',
+    iconBg: 'bg-teal-500'
+  },
+};
+
 
   // Handlers
   const handleSort = (key) => {
@@ -245,9 +311,10 @@ const handleDeleteUnit = (id) => {
     setFilters({
       unitType: '',
       status: '',
-      customerName: '',
-      priceRange: { min: '', max: '' },
-      areaRange: { min: '', max: '' }
+      minArea: '',
+      maxArea: '',
+      minPrice: '',
+      maxPrice: ''
     });
     setSearchQuery('');
     setCurrentPage(1);
@@ -288,7 +355,7 @@ const handleDeleteUnit = (id) => {
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   const handleEdit = async (id) => {
     try {
@@ -371,12 +438,93 @@ const handleDeleteUnit = (id) => {
     );
   }
 
+
+  const formatNumber = (num) => {
+    return new Intl.NumberFormat('en-IN').format(num);
+  };
+
+  const getPercentage = (value, total) => {
+    return ((value / total) * 100).toFixed(1);
+  };
+
+const cardData = [
+  {
+    title: 'Total Units',
+    value: formatNumber(stats.totalUnits),
+    icon: Building2,
+    color: 'blue',
+    bgGradient: 'from-blue-50 to-blue-100',
+    iconBg: 'bg-blue-500',
+    textColor: 'text-blue-700',
+    subtitle: 'Unites listed'
+  },
+  {
+    title: 'Total Value',
+    value: formatCurrency(stats.totalValue),
+    icon: () => <span className="text-2xl font-medium p-0 text-white">₹</span>,
+    color: 'purple',
+    bgGradient: 'from-purple-50 to-purple-100',
+    iconBg: 'bg-purple-500',
+    textColor: 'text-purple-700',
+    subtitle: 'Total worth',
+    isLarge: true
+  },
+  {
+    title: 'Revenue',
+    value: formatCurrency(stats.totalRevenue),
+    icon: TrendingUp,
+    color: 'emerald',
+    bgGradient: 'from-emerald-50 to-emerald-100',
+    iconBg: 'bg-emerald-500',
+    textColor: 'text-emerald-700',
+    subtitle: 'Total Amount received',
+    trend: '+15%',
+    isLarge: true
+  },
+  {
+    title: 'Balance Due',
+    value: formatCurrency(stats.balanceAmount),
+    icon: AlertCircle,
+    color: 'rose',
+    bgGradient: 'from-rose-50 to-rose-100',
+    iconBg: 'bg-rose-500',
+    textColor: 'text-rose-700',
+    subtitle: 'Pending amount',
+    isLarge: true
+  },
+  {
+    title: 'Unsold',
+    value: formatNumber(stats.availableUnits),
+    icon: Clock,
+    color: 'amber',
+    bgGradient: 'from-amber-50 to-amber-100',
+    iconBg: 'bg-amber-500',
+    textColor: 'text-amber-700',
+    subtitle: `${getPercentage(stats.availableUnits, stats.totalUnits)}% Unsold`
+  },
+  // Dynamically add status cards
+  ...statusOptions.map(({ value: status }) => {
+    const count = stats[status] || 0;
+    const style = statusCardStyles[status] || {};
+    return {
+      title: status,
+      value: formatNumber(count),
+      icon: style.icon || AlertCircle,
+      color: style.color || 'slate',
+      bgGradient: `${style.bgGradient}`,
+      iconBg: `${style.iconBg || 'slate'}`,
+      textColor: `text-${style.bg || 'slate'}-700`,
+      subtitle: `${getPercentage(count, stats.totalUnits)}% of total`
+    };
+  })
+];
+
   return (
     <div className="min-h-screen p-6">
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
-        <div className="p-6 pt-0 mb-0">
+        <div className="py-6 pt-0 mb-0">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">Unit Management</h1>
@@ -394,55 +542,88 @@ const handleDeleteUnit = (id) => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-          <div className="bg-white p-6 rounded-xl shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Units</p>
-                <p className="text-2xl font-bold text-blue-600">{stats.total}</p>
-              </div>
-              <div className="bg-blue-100 p-3 rounded-full">
-                <div className="w-6 h-6 bg-blue-600 rounded"></div>
-              </div>
-            </div>
+<div className="flex max-w-6xl gap-4 overflow-x-scroll py-4 mb-4" style={{
+    scrollbarWidth: 'none',        // Firefox
+    msOverflowStyle: 'none'        // IE 10+
+  }}>
+      {cardData.map((card, index) => (
+        <div
+          key={index}
+          className={`
+            min-w-[200px]
+            group relative overflow-hidden rounded-2xl shadow-sm border border-gray-200/50 
+            bg-gradient-to-br ${card.bgGradient} backdrop-blur-sm
+            hover:shadow-lg hover:shadow-${card.color}-500/10 hover:-translate-y-1 
+            transition-all duration-300 cursor-pointer
+            ${card.isLarge ? 'md:col-span-1' : ''}
+          `}
+        >
+          {/* Subtle background pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0 bg-grid-pattern"></div>
           </div>
           
-          <div className="bg-white p-6 rounded-xl shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Sold Units</p>
-                <p className="text-2xl font-bold text-green-600">{stats.sold}</p>
+          <div className="relative p-5">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
+                  {card.title}
+                </p>
+                <div className="flex items-baseline gap-2">
+                  <p className={`text-2xl font-bold ${card.textColor} group-hover:scale-105 transition-transform duration-200`}>
+                    {card.value}
+                  </p>
+                  {card.trend && (
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/50 text-green-700">
+                      ↗ {card.trend}
+                    </span>
+                  )}
+                </div>
               </div>
-              <div className="bg-green-100 p-3 rounded-full">
-                <div className="w-6 h-6 bg-green-600 rounded"></div>
+              
+              <div className={`
+                ${card.iconBg} p-3 rounded-xl shadow-sm
+                group-hover:scale-110 group-hover:rotate-3 
+                transition-all duration-300
+              `}>
+                <card.icon className="w-5 h-5 text-white" />
               </div>
             </div>
+            
+            {card.subtitle && (
+              <p className="text-xs text-gray-600 font-medium">
+                {card.subtitle}
+              </p>
+            )}
+            
+            {/* Progress bar for percentage-based cards */}
+            {(card.title === 'Sold' || card.title === 'Available' || card.title === 'Booked') && (
+              <div className="mt-3">
+                <div className="w-full bg-white/60 rounded-full h-1.5">
+                  <div 
+                    className={`h-1.5 rounded-full bg-gradient-to-r ${
+                      card.color === 'green' ? 'from-green-400 to-green-600' :
+                      card.color === 'amber' ? 'from-amber-400 to-amber-600' :
+                      'from-indigo-400 to-indigo-600'
+                    } transition-all duration-1000`}
+                    style={{
+                      width: `${
+                        card.title === 'Sold' ? getPercentage(stats.soldUnits, stats.totalUnits) :
+                        card.title === 'Available' ? getPercentage(stats.availableUnits, stats.totalUnits) :
+                        getPercentage(stats.bookedUnits, stats.totalUnits)
+                      }%`
+                    }}
+                  ></div>
+                </div>
+              </div>
+            )}
           </div>
           
-          <div className="bg-white p-6 rounded-xl shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Available Units</p>
-                <p className="text-2xl font-bold text-yellow-600">{stats.available}</p>
-              </div>
-              <div className="bg-yellow-100 p-3 rounded-full">
-                <div className="w-6 h-6 bg-yellow-600 rounded"></div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl shadow-sm border">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                <p className="text-2xl font-bold text-purple-600">{formatCurrency(stats.totalRevenue)}</p>
-              </div>
-              <div className="bg-purple-100 p-3 rounded-full">
-                <div className="w-6 h-6 bg-purple-600 rounded"></div>
-              </div>
-            </div>
-          </div>
+          {/* Hover effect overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
         </div>
+      ))}
+    </div>
 
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
@@ -517,7 +698,7 @@ const handleDeleteUnit = (id) => {
           {/* Expanded Filters */}
           {showFilters && (
             <div className="mt-6 p-4 bg-gray-50 rounded-xl">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
                 
                 {/* Unit Type Filter */}
                 <div>
@@ -555,85 +736,64 @@ const handleDeleteUnit = (id) => {
                   </select>
                 </div>
 
-                {/* Customer Filter */}
+                {/* Min Area */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Customer</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Area (sq ft)</label>
                   <input
-                    type="text"
-                    value={filters.customerName}
+                    type="number"
+                    value={filters.minArea}
                     onChange={(e) => {
-                      setFilters(prev => ({ ...prev, customerName: e.target.value }));
+                      setFilters(prev => ({ ...prev, minArea: e.target.value }));
                       setCurrentPage(1);
                     }}
-                    placeholder="Search customer name"
+                    placeholder="Min area"
                     className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
                   />
                 </div>
 
-                {/* Price Range */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Price Range (₹)</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="number"
-                      value={filters.priceRange.min}
-                      onChange={(e) => {
-                        setFilters(prev => ({ 
-                          ...prev, 
-                          priceRange: { ...prev.priceRange, min: e.target.value }
-                        }));
-                        setCurrentPage(1);
-                      }}
-                      placeholder="Min price"
-                      className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
-                    />
-                    <input
-                      type="number"
-                      value={filters.priceRange.max}
-                      onChange={(e) => {
-                        setFilters(prev => ({ 
-                          ...prev, 
-                          priceRange: { ...prev.priceRange, max: e.target.value }
-                        }));
-                        setCurrentPage(1);
-                      }}
-                      placeholder="Max price"
-                      className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
-                    />
-                  </div>
+                {/* Max Area */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Max Area (sq ft)</label>
+                  <input
+                    type="number"
+                    value={filters.maxArea}
+                    onChange={(e) => {
+                      setFilters(prev => ({ ...prev, maxArea: e.target.value }));
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Max area"
+                    className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
+                  />
                 </div>
 
-                {/* Area Range */}
+                {/* Min Price */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Area Range (sq ft)</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <input
-                      type="number"
-                      value={filters.areaRange.min}
-                      onChange={(e) => {
-                        setFilters(prev => ({ 
-                          ...prev, 
-                          areaRange: { ...prev.areaRange, min: e.target.value }
-                        }));
-                        setCurrentPage(1);
-                      }}
-                      placeholder="Min area"
-                      className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
-                    />
-                    <input
-                      type="number"
-                      value={filters.areaRange.max}
-                      onChange={(e) => {
-                        setFilters(prev => ({ 
-                          ...prev, 
-                          areaRange: { ...prev.areaRange, max: e.target.value }
-                        }));
-                        setCurrentPage(1);
-                      }}
-                      placeholder="Max area"
-                      className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
-                    />
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Min Price (₹)</label>
+                  <input
+                    type="number"
+                    value={filters.minPrice}
+                    onChange={(e) => {
+                      setFilters(prev => ({ ...prev, minPrice: e.target.value }));
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Min price"
+                    className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
+                  />
+                </div>
+
+                {/* Max Price */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Max Price (₹)</label>
+                  <input
+                    type="number"
+                    value={filters.maxPrice}
+                    onChange={(e) => {
+                      setFilters(prev => ({ ...prev, maxPrice: e.target.value }));
+                      setCurrentPage(1);
+                    }}
+                    placeholder="Max price"
+                    className="w-full p-3 rounded-lg border border-gray-200 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab] outline-none"
+                  />
                 </div>
               </div>
 
@@ -693,11 +853,7 @@ const handleDeleteUnit = (id) => {
                 <p className="text-lg font-medium">No units found</p>
                 <p className="text-sm">Try adjusting your search or filters</p>
               </div>
-              {(searchQuery || Object.values(filters).some(f => 
-                typeof f === 'string' ? f !== '' : 
-                typeof f === 'object' ? Object.values(f).some(v => v !== '') : 
-                false
-              )) && (
+              {(searchQuery || Object.values(filters).some(f => f !== '' && f !== null)) && (
                 <button
                   onClick={clearFilters}
                   className="mt-4 px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700"
@@ -711,371 +867,243 @@ const handleDeleteUnit = (id) => {
               <table className="w-full">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="p-4 w-12">
+<th className="p-4 w-12">
                       <input
                         disabled={disabled}
                         type="checkbox"
                         checked={selectedIds.length === currentUnits.length && currentUnits.length > 0}
                         onChange={handleSelectAll}
-                        className="w-4 h-4 accent-[#5caaab] text-teal-600 border-gray-300 rounded focus:ring-teal-500"
+                        className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
                       />
                     </th>
-                    <th className="p-4 text-left">
-                      <button
-                        onClick={() => handleSort('unit_name')}
-                        className="flex items-center gap-2 font-semibold text-gray-700 hover:text-teal-600"
-                      >
+                    <th 
+                      className="text-left p-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('unit_name')}
+                    >
+                      <div className="flex items-center gap-2">
                         Unit Name
                         {getSortIcon('unit_name')}
-                      </button>
+                      </div>
                     </th>
-                <th className="p-4 text-left">
-                  <button
-                    onClick={() => handleSort('unit_type')}
-                    className="flex items-center gap-2 font-semibold text-gray-700 hover:text-teal-600"
-                  >
-                    Type
-                    {getSortIcon('unit_type')}
-                  </button>
-                </th>
-                <th className="p-4 text-left">
-                  <button
-                    onClick={() => handleSort('description')}
-                    className="flex items-center gap-2 font-semibold text-gray-700 hover:text-teal-600"
-                  >
-                    Description
-                    {getSortIcon('description')}
-                  </button>
-                </th>
-                <th className="p-4 text-left">
-                  <button
-                    onClick={() => handleSort('location')}
-                    className="flex items-center gap-2 font-semibold text-gray-700 hover:text-teal-600"
-                  >
-                    Location
-                    {getSortIcon('location')}
-                  </button>
-                </th>
-                <th className="p-4 text-left">
-                  <button
-                    onClick={() => handleSort('is_occupied')}
-                    className="flex items-center gap-2 font-semibold text-gray-700 hover:text-teal-600"
-                  >
-                    Status
-                    {getSortIcon('is_occupied')}
-                  </button>
-                </th>
-                <th className="p-4 text-left">
-                  <button
-                    onClick={() => handleSort('monthly_rent')}
-                    className="flex items-center gap-2 font-semibold text-gray-700 hover:text-teal-600"
-                  >
-                    Monthly Rent
-                    {getSortIcon('monthly_rent')}
-                  </button>
-                </th>
-                <th className="p-4 text-center font-semibold text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentUnits.map((unit, index) => (
-                <tr key={unit.id} className={`border-b hover:bg-gray-50 ${index % 2 === 0 ? 'bg-white' : 'bg-gray-25'}`}>
-                  <td className="p-4">
-                    <input
-                      disabled={disabled}
-                      type="checkbox"
-                      checked={selectedIds.includes(unit.id)}
-                      onChange={() => handleSelectUnit(unit.id)}
-                      className="w-4 h-4 accent-[#5caaab] text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-                    />
-                  </td>
-                  <td className="p-4 font-medium text-gray-900">{unit.unit_name}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      unit.unit_type === 'apartment' ? 'bg-blue-100 text-blue-800' :
-                      unit.unit_type === 'house' ? 'bg-green-100 text-green-800' :
-                      unit.unit_type === 'studio' ? 'bg-purple-100 text-purple-800' :
-                      unit.unit_type === 'condo' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {unit.unit_type}
-                    </span>
-                  </td>
-                  <td className="p-4 text-gray-600 max-w-xs truncate">{unit.description || 'No description'}</td>
-                  <td className="p-4 text-gray-600">{unit.location}</td>
-                  <td className="p-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      unit.is_occupied ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'
-                    }`}>
-                      {unit.is_occupied ? 'Occupied' : 'Available'}
-                    </span>
-                  </td>
-                  <td className="p-4 font-medium text-gray-900">${unit.monthly_rent?.toLocaleString()}</td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <button
-                        disabled={disabled}
-                        onClick={() => handleEditUnit(unit)}
-                        className="p-1 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Edit unit"
-                      >
-                        <Edit2 size={16} />
-                      </button>
-                      <button
-                        disabled={disabled}
-                        onClick={() => handleDeleteUnit(unit.id)}
-                        className="p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title="Delete unit"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-6">
-          <div className="text-sm text-gray-600">
-            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredUnits.length)} of {filteredUnits.length} units
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Previous
-            </button>
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-              <button
-                key={page}
-                onClick={() => setCurrentPage(page)}
-                className={`px-3 py-1 text-sm border rounded ${
-                  currentPage === page
-                    ? 'bg-teal-500 text-white border-teal-500'
-                    : 'border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-            <button
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Unit Form Modal */}
-      {isUnitDetailsFormActive && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-900">
-                {editingUnit ? 'Edit Unit' : 'Add New Unit'}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setEditingUnit(null);
-                  setFormData({
-                    unit_name: '',
-                    unit_type: 'apartment',
-                    description: '',
-                    location: '',
-                    monthly_rent: '',
-                    is_occupied: false
-                  });
-                  setFormErrors({});
-                }}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X size={20} />
-              </button>
+                    <th 
+                      className="text-left p-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('unit_type')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Type
+                        {getSortIcon('unit_type')}
+                      </div>
+                    </th>
+                    <th 
+                      className="text-left p-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('carpet_area')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Area (sq ft)
+                        {getSortIcon('carpet_area')}
+                      </div>
+                    </th>
+                    <th 
+                      className="text-left p-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('unit_status')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Status
+                        {getSortIcon('unit_status')}
+                      </div>
+                    </th>
+                    <th 
+                      className="text-left p-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('customer_name')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Customer
+                        {getSortIcon('customer_name')}
+                      </div>
+                    </th>
+                    <th 
+                      className="text-left p-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('agreement_value')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Agreement Value
+                        {getSortIcon('agreement_value')}
+                      </div>
+                    </th>
+                    <th 
+                      className="text-left p-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('total_received')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Received
+                        {getSortIcon('total_received')}
+                      </div>
+                    </th>
+                    <th 
+                      className="text-left p-4 font-semibold text-gray-900 cursor-pointer hover:bg-gray-100"
+                      onClick={() => handleSort('balance_amount')}
+                    >
+                      <div className="flex items-center gap-2">
+                        Balance
+                        {getSortIcon('balance_amount')}
+                      </div>
+                    </th>
+                    <th className="text-left p-4 font-semibold text-gray-900">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {currentUnits.map((unit, index) => (
+                    <tr 
+                      key={unit.id} 
+                      className={`hover:bg-gray-50 transition-colors ${
+                        selectedIds.includes(unit.id) ? 'bg-blue-50' : ''
+                      }`}
+                    >
+                      <td className="p-4">
+                        <input
+                          disabled={disabled}
+                          type="checkbox"
+                          checked={selectedIds.includes(unit.id)}
+                          onChange={() => handleSelectItem(unit.id)}
+                          className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
+                        />
+                      </td>
+                      <td className="p-4 flex flex-col items-center">
+                        <div className="font-medium text-gray-900">
+                          {unit.unit_name || 'N/A'}
+                        </div>
+                        <div className="text-sm text-gray-500 text-center flex flex-row items-center justify-center gap-2 w-full">
+                          <p className=''>ID: </p> <p className=' px-1.5 text-center bg-zinc-200 rounded'> {unit.id || 'N/A'}</p>
+                        </div>
+                      </td>
+                      <td className="p-4">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                          {unit.unit_type || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="p-4 text-gray-900">
+                        {unit.carpet_area ? `${unit.carpet_area} sq ft` : 'N/A'}
+                      </td>
+                      <td className="p-4">
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(unit.unit_status)}`}>
+                          {unit.unit_status || 'N/A'}
+                        </span>
+                      </td>
+                      <td className="p-4">
+                        <div className="text-gray-900">
+                          {unit.customer_name || 'N/A'}
+                        </div>
+                        {unit.customer_mobile && (
+                          <div className="text-sm text-gray-500">
+                            {unit.customer_mobile}
+                          </div>
+                        )}
+                      </td>
+                      <td className="p-4 text-gray-900 font-medium">
+                        {formatCurrency(unit.agreement_value)}
+                      </td>
+                      <td className="p-4 text-green-600 font-medium">
+                        {formatCurrency(unit.total_received)}
+                      </td>
+                      <td className="p-4 text-red-600 font-medium">
+                        {formatCurrency(unit.balance_amount)}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleView(unit.id)}
+                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
+                            title="View Unit"
+                          >
+                            <FaEye />
+                          </button>
+                          {!disabled && (
+                            <>
+                              <button
+                                onClick={() => handleEdit(unit.id)}
+                                className="p-2 text-yellow-600 hover:bg-yellow-100 rounded-lg transition-colors"
+                                title="Edit Unit"
+                              >
+                                <FaEdit />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(unit.id, unit.unit_name)}
+                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                                title="Delete Unit"
+                              >
+                                <FaTrash />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          )}
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Unit Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.unit_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, unit_name: e.target.value }))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                    formErrors.unit_name ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="e.g., Unit 101, Apartment A"
-                />
-                {formErrors.unit_name && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.unit_name}</p>
-                )}
-              </div>
+          {/* Pagination */}
+          {!loading && filteredAndSortedUnits.length > 0 && (
+            <div className="p-6 border-t border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredAndSortedUnits.length)} of {filteredAndSortedUnits.length} units
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum;
+                      if (totalPages <= 5) {
+                        pageNum = i + 1;
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1;
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i;
+                      } else {
+                        pageNum = currentPage - 2 + i;
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-2 text-sm font-medium rounded-lg ${
+                            currentPage === pageNum
+                              ? 'bg-teal-600 text-white'
+                              : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Unit Type *
-                </label>
-                <select
-                  value={formData.unit_type}
-                  onChange={(e) => setFormData(prev => ({ ...prev, unit_type: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                >
-                  <option value="apartment">Apartment</option>
-                  <option value="house">House</option>
-                  <option value="studio">Studio</option>
-                  <option value="condo">Condo</option>
-                  <option value="room">Room</option>
-                  <option value="other">Other</option>
-                </select>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-                  rows={3}
-                  placeholder="Brief description of the unit..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Location *
-                </label>
-                <input
-                  type="text"
-                  value={formData.location}
-                  onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                    formErrors.location ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="e.g., 123 Main St, Building A"
-                />
-                {formErrors.location && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.location}</p>
-                )}
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Monthly Rent *
-                </label>
-                <input
-                  type="number"
-                  value={formData.monthly_rent}
-                  onChange={(e) => setFormData(prev => ({ ...prev, monthly_rent: e.target.value }))}
-                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-                    formErrors.monthly_rent ? 'border-red-500' : 'border-gray-300'
-                  }`}
-                  placeholder="0"
-                  min="0"
-                  step="0.01"
-                />
-                {formErrors.monthly_rent && (
-                  <p className="text-red-500 text-xs mt-1">{formErrors.monthly_rent}</p>
-                )}
-              </div>
-
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="is_occupied"
-                  checked={formData.is_occupied}
-                  onChange={(e) => setFormData(prev => ({ ...prev, is_occupied: e.target.checked }))}
-                  className="w-4 h-4 accent-[#5caaab] text-teal-600 border-gray-300 rounded focus:ring-teal-500"
-                />
-                <label htmlFor="is_occupied" className="ml-2 text-sm text-gray-700">
-                  Currently Occupied
-                </label>
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowForm(false);
-                    setEditingUnit(null);
-                    setFormData({
-                      unit_name: '',
-                      unit_type: 'apartment',
-                      description: '',
-                      location: '',
-                      monthly_rent: '',
-                      is_occupied: false
-                    });
-                    setFormErrors({});
-                  }}
-                  className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex-1 px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-colors disabled:bg-gray-400"
-                >
-                  {loading ? 'Saving...' : editingUnit ? 'Update Unit' : 'Add Unit'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-red-100 rounded-full">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Confirm Deletion</h3>
             </div>
-            <p className="text-gray-600 mb-6">
-              Are you sure you want to delete the selected unit(s)? This action cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setUnitToDelete(null);
-                }}
-                className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                disabled={loading}
-                className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:bg-gray-400"
-              >
-                {loading ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          </div>
+          )}
         </div>
-      )}
-    </div>
-    </div>
+      </div>
     </div>
   );
-};
+}
 
-export default UnitDetails
+export default UnitDetails;

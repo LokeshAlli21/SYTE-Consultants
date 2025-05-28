@@ -464,6 +464,10 @@ export default function StatusDropdown({
               role="listbox"
               className={`py-1 overflow-auto ${maxHeight} flex flex-col gap-1 px-1`}
               tabIndex={-1}
+              style={{
+                scrollbarWidth: 'none',        // Firefox
+                msOverflowStyle: 'none'        // IE 10+
+              }}
             >
               {groupedOptions().map(option => {
                 const optionColors = statusColorMap[option.value.toLowerCase()] || statusColorMap.default;

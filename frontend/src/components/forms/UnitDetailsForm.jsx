@@ -76,6 +76,8 @@ function UnitDetailsForm({
     e.preventDefault();
     const confirmed = window.confirm("Are you sure you want to submit?");
     if (confirmed) {
+      console.log('currentUnitId: ',currentUnitId);
+      
       if (currentUnitId) {
         handleUpdateProjectUnit(currentUnitId) && setCurrentUnitId(null);
       } else {

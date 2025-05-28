@@ -649,7 +649,7 @@ export const updateProjectUnits = async (req, res) => {
     const unit = req.body;
     const { id } = req.params;
     console.log(id);
-    console.log(unit);
+    // console.log(unit);
     
     
 
@@ -677,12 +677,15 @@ export const updateProjectUnits = async (req, res) => {
       if (stringFields.includes(key) && value === '') return;
       sanitizedUnit[key] = value;
     });
-
+const {updated_user, ...dataToUpload} = sanitizedUnit
     // Perform update operation
-    const { error } = await supabase
+    const {data, error } = await supabase
       .from('project_units')
-      .update(sanitizedUnit)
+      .update(dataToUpload)
       .eq('id', id);
+// console.log("dataToUpload: ",dataToUpload);
+// console.log("error: ",error);
+// console.log("data: ",data);
 
     if (error) {
       return res.status(500).json({ message: '❌ Failed to update unit data', error });

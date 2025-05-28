@@ -549,7 +549,7 @@ const SearchBox = ({ searchQuery, onChange, onClear, selectedIds, handleBulkDele
     {selectedIds.length > 0 && (
       <button
         onClick={handleBulkDelete}
-        className="flex items-center gap-2 px-4 py-2.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 transition"
+        className="flex items-center gap-2 px-4 py-2 rounded-xl text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 font-medium transition"
       >
         <FaTrash />
         Delete Selected ({selectedIds.length})
@@ -578,21 +578,41 @@ const FilterPanel = ({ filters, onChange, onClear, assignmentTypes }) => (
       </div>
 
       {/* Status */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-        <select
-          value={filters.status}
-          onChange={(e) => onChange("status", e.target.value)}
-          className="w-full p-3 rounded-lg border outline-none border-gray-300 text-sm text-gray-700 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab]"
-        >
-          <option value="">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="in_progress">In Progress</option>
-          <option value="completed">Completed</option>
-          <option value="on_hold">On Hold</option>
-          <option value="rejected">Rejected</option>
-        </select>
-      </div>
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+  <select
+    value={filters.status}
+    onChange={(e) => onChange("status", e.target.value)}
+    className="w-full p-3 rounded-lg border outline-none border-gray-300 text-sm text-gray-700 focus:border-[#5caaab] focus:ring-2 focus:ring-[#5caaab]"
+  >
+    <option value="">All Statuses</option>
+    {/* Extended status options from statusColorMap */}
+    <option value="new">New</option>
+    <option value="info-pending-syte">Info Pending - Syte</option>
+    <option value="info-pending-client">Info Pending - Client</option>
+    <option value="info-pending-cp">Info Pending - Channel Partner</option>
+    <option value="govt-fees-pending">Govt Fees Pending</option>
+    <option value="application-done">Application Done</option>
+    <option value="scrutiny-raised">Scrutiny Raised</option>
+    <option value="scrutiny-raised-d1">Scrutiny Raised D1</option>
+    <option value="app-pending-d1">Application Pending D1</option>
+    <option value="scrutiny-raised-d2">Scrutiny Raised D2</option>
+    <option value="app-pending-d2">Application Pending D2</option>
+    <option value="scrutiny-raised-d3">Scrutiny Raised D3</option>
+    <option value="app-pending-d3">Application Pending D3</option>
+    <option value="scrutiny-raised-d4">Scrutiny Raised D4</option>
+    <option value="app-pending-d4">Application Pending D4</option>
+    <option value="app-pending">Application Pending</option>
+    <option value="certificate-generated">Certificate Generated</option>
+    <option value="close">Close</option>
+    <option value="qpr-submitted">QPR Submitted</option>
+    <option value="form-5-submitted">Form 5 Submitted</option>
+    <option value="form-2a-submitted">Form 2A Submitted</option>
+    <option value="work-done">Work Done</option>
+    <option value="reply-to-notice-sent">Reply to Notice Sent</option>
+    <option value="email-sent-to-authority">Email Sent to Authority</option>
+  </select>
+</div>
 
 
       {/* Reset Button */}
