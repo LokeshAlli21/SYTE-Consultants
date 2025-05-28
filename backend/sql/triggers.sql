@@ -72,6 +72,13 @@ CREATE TRIGGER trigger_update_assignments_timestamp
     FOR EACH ROW
     EXECUTE FUNCTION update_timestamp();
 
+-- Add trigger to update `updated_at` before row update on `assignment_reminders`
+DROP TRIGGER IF EXISTS trigger_update_reminders_timestamp ON assignment_reminders;
+CREATE TRIGGER trigger_update_reminders_timestamp
+    BEFORE UPDATE ON assignment_reminders
+    FOR EACH ROW
+    EXECUTE FUNCTION update_timestamp();
+
 -- ================================================
 -- Constraints
 -- ================================================

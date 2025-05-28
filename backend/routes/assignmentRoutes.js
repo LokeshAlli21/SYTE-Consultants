@@ -9,6 +9,8 @@ import { createNewAssignment,
   addAssignmentNote,
   setAssignmentReminder,
   getAssignmentTimeline,
+  getAllPendingReminders,
+  updateReminderStatus,
 } from '../controllers/assignmentController.js';
 
 const router = express.Router();
@@ -43,7 +45,15 @@ router.post(
       setAssignmentReminder
     );
 
+    router.patch(
+      '/update-reminder-status',
+      protect,
+      updateReminderStatus
+    );
+
   router.get('/get-all', protect, getAllAssignments);
+
+  router.get('/get-all-pending-reminders', protect, getAllPendingReminders);
 
     router.get('/get/:id', protect, getAssignmentById);
 

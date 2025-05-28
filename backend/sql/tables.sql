@@ -565,5 +565,7 @@ CREATE TABLE assignment_reminders (
     status VARCHAR(25),
 
     created_by INT NOT NULL,
+    updated_by INT,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
 );

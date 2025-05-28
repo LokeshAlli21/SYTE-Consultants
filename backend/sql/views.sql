@@ -61,6 +61,7 @@ assignment_reminders_grouped AS (
             ) ORDER BY date_and_time
         ) AS reminders
     FROM assignment_reminders
+    WHERE status = 'pending'
     GROUP BY assignment_id
 )
 

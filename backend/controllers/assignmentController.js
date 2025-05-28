@@ -336,3 +336,66 @@ export const getAssignmentTimeline = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const getAllPendingReminders = async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from('assignment_reminders')
+      .select('*')
+      .eq('status', 'pending')
+      .order('date_and_time', { ascending: true });
+
+    if (error) {
+      console.error('❌ Error fetching pending reminders:', error);
+      return res.status(500).json({ error: 'Failed to fetch pending reminders', details: error });
+    }
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: 'No pending reminders found' });
+    }
+
+    return res.status(200).json({ reminders: data });
+
+  } catch (err) {
+    console.error('❌ Unexpected error in getAllPendingReminders:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateReminderStatus = async (req, res) => {
+  try {
+    const { id, updated_by } = req.body;
+    console.log(req.body);
+    
+
+    if (!id || !updated_by) {
+      return res.status(400).json({ error: "Missing required fields: 'id' or 'updated_by'" });
+    }
+
+    const { data, error } = await supabase
+      .from('assignment_reminders')
+      .update({
+        status: 'completed',
+        updated_by,
+        updated_at: new Date().toISOString() // Supabase will use trigger to overwrite this
+      })
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) {
+      console.error("❌ Error updating reminder status:", error);
+      return res.status(500).json({ error: "Failed to update reminder status", details: error });
+    }
+
+    if (!data) {
+      return res.status(404).json({ error: "Reminder not found" });
+    }
+
+    return res.status(200).json({ message: "✅ Reminder status updated successfully", updatedReminder: data });
+
+  } catch (err) {
+    console.error("❌ Unexpected error in updateReminderStatus:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};

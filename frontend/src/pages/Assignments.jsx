@@ -9,6 +9,7 @@ import { IoClose , IoChevronDown} from "react-icons/io5";
 import databaseService from "../backend-services/database/database"; // Corrected import path
 import StatusDropdown from "../components/assignment-dashboard-components/StatusDropdown"; // Corrected import path
 import ReminderForm from "../components/assignment-dashboard-components/ReminderForm";
+import ShowAllPendingReminders from "../components/assignment-dashboard-components/showAllPendingReminders";
 import NoteCell from "../components/assignment-dashboard-components/NoteCell";     // Corrected import path
 import { HiEye, HiEyeOff } from 'react-icons/hi'
 import { useSelector } from "react-redux";
@@ -53,6 +54,7 @@ function Assignments() {
     status: ""
   });
   const [isFilterVisible, setIsFilterVisible] = useState(false);
+  const [totalPendingReminders,setTotalPendingReminders] = useState(0)
         // console.log(assignments);
   // Fetch assignments data
 useEffect(() => {
@@ -103,6 +105,21 @@ useEffect(() => {
 
   fetchAssignments();
 }, []);
+
+// Updated useEffect to count total pending reminders
+useEffect(() => {
+  const getTotalPendingReminderscount = async () => {
+    let totalCount = 0;
+    assignments.forEach(element => {
+      if (element.reminders && Array.isArray(element.reminders)) {
+        totalCount += element.reminders.length;
+      }
+    });
+    setTotalPendingReminders(totalCount);
+  }
+
+  getTotalPendingReminderscount()
+}, [assignments])
 
   // Apply filters and search
   const filteredAssignments = useMemo(() => {
@@ -321,6 +338,7 @@ const handleNoteChange = useCallback(
       stats={stats}
       viewMode={viewMode}
       setViewMode={setViewMode}
+      totalPendingReminders={totalPendingReminders}
     />
 
     {/* Action Bar - Search, Filters, New Button */}
@@ -475,52 +493,101 @@ const handleNoteChange = useCallback(
 }
 
 // Component for dashboard header with stats and view toggle
-const DashboardHeader = ({ stats, viewMode, setViewMode }) => (
-<div className="p-6 pt-0 mb-0">
-  <div className="flex items-center justify-between">
-    <div>
-      <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">Assignments</h1>
-      <p className="text-gray-500">Manage and track all assignment activities</p>
-    </div>
+const DashboardHeader = ({ stats, viewMode, setViewMode, totalPendingReminders }) => {
+  const [showAllReminders, setShowAllReminders] = useState(false);
 
-    <div className="flex items-center gap-3">
-      <div className="bg-teal-50 p-3 rounded-xl flex flex-row gap-4 border items-center border-teal-200">
-        <p className="text-2xl font-bold text-teal-600 ">
-          {stats.total > 99 ? "99+" : stats.total}
-        </p>
-        <div className="flex items-center">
-          <span className="text-sm font-medium text-teal-900">Total Assignments</span>
+  return (
+    <div className="p-6 pt-0 mb-0">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">Assignments</h1>
+          <p className="text-gray-500">Manage and track all assignment activities</p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {/* 🔔 Reminder Bell */}
+          <div
+            className="relative group"
+            onClick={() => setShowAllReminders(true)}
+          >
+            <div className="relative p-2.5 rounded-xl border-0 border-orange-300/60 hover:border hover:border-orange-300/60 hover:shadow-lg hover:shadow-orange-100/50 transition-all duration-300 cursor-pointer">
+              <FaBell
+                className={`w-6 h-6 transition-all duration-300 ${
+                  totalPendingReminders > 0
+                    ? "text-orange-500 group-hover:text-orange-600"
+                    : "text-gray-500 group-hover:text-gray-700"
+                }`}
+              />
+
+              {totalPendingReminders > 0 && (
+                <span className="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] font-bold min-w-[18px] h-[18px] flex items-center justify-center rounded-full px-1 shadow-lg shadow-red-500/30">
+                  {totalPendingReminders > 99 ? "99+" : totalPendingReminders}
+                </span>
+              )}
+
+              {totalPendingReminders > 0 && (
+                <div className="absolute inset-0 rounded-xl bg-orange-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              )}
+            </div>
+
+            {/* Tooltip */}
+            <div className="absolute bottom-[70%] left-1/2 -translate-x-1/2 mb-3 opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none z-50">
+              <div className="bg-gray-900/95 backdrop-blur-sm text-white text-xs font-medium px-3 py-2 rounded-lg shadow-xl border border-gray-700/50 whitespace-nowrap">
+                {totalPendingReminders > 0
+                  ? `${totalPendingReminders} pending reminder${totalPendingReminders !== 1 ? 's' : ''}`
+                  : 'No pending reminders'}
+                <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/95"></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Assignment Stats Box */}
+          <div className="bg-teal-50 p-3 rounded-xl flex flex-row gap-4 border items-center border-teal-200">
+            <p className="text-2xl font-bold text-teal-600 ">
+              {stats.total > 99 ? "99+" : stats.total}
+            </p>
+            <div className="flex items-center">
+              <span className="text-sm font-medium text-teal-900">Total Assignments</span>
+            </div>
+          </div>
+
+          {/* View Toggle */}
+          <div className="bg-white flex flex-row gap-1 items-center rounded-lg p-2">
+            <button
+              onClick={() => setViewMode("table")}
+              className={`px-3 py-2.5 rounded ${
+                viewMode === "table"
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <FaListAlt className="text-lg" />
+            </button>
+            <button
+              onClick={() => setViewMode("cards")}
+              className={`px-3 py-2.5 rounded ${
+                viewMode === "cards"
+                  ? "bg-blue-50 text-blue-600"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <FaChartBar className="text-lg" />
+            </button>
+          </div>
         </div>
       </div>
-      
-      <div className="bg-white flex flex-row gap-1 items-center rounded-lg p-2">
-        <button
-          onClick={() => setViewMode("table")}
-          className={`px-3 py-2.5 rounded ${
-            viewMode === "table"
-              ? "bg-blue-50 text-blue-600"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-        >
-          <FaListAlt className="text-lg" />
-        </button>
-        <button
-          onClick={() => setViewMode("cards")}
-          className={`px-3 py-2.5 rounded ${
-            viewMode === "cards"
-              ? "bg-blue-50 text-blue-600"
-              : "text-gray-600 hover:bg-gray-100"
-          }`}
-        >
-          <FaChartBar className="text-lg" />
-        </button>
-      </div>
 
-      
+      {/* ✅ Moved outside and rendered conditionally */}
+      {showAllReminders && (
+        <ShowAllPendingReminders
+          showAllReminders={showAllReminders}
+          setShowAllReminders={setShowAllReminders}
+        />
+      )}
     </div>
-  </div>
-</div>
-);
+  );
+};
+
 
 // SearchBox Component (updated styling)
 
@@ -860,7 +927,7 @@ const TableRow = ({
       </td>
       
       <td className="p-2">
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-200/50  hover:shadow-md transition-all duration-300 group-hover:border-gray-300/60">
+        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-gray-200/50  hover:shadow-md transition-all duration-300 group-hover:border-gray-300/60">
           {/* View */}
           <button
             title="View Details"

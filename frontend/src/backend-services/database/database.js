@@ -1778,6 +1778,60 @@ async setAssignmentReminder(assignmentId, reminderData) {
   }
 }
 
+async getAllPendingReminders() {
+  // console.log("⏰ Fetching all pending reminders...");
+
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/get-all-pending-reminders`, {
+      method: "GET",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      }
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Fetching pending reminders failed.");
+    }
+
+    const data = await response.json();
+    // toast.success("⏰ Pending reminders fetched successfully!");
+    return data.reminders;
+  } catch (err) {
+    console.error("❌ Error fetching pending reminders:", err);
+    // toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
+async updateReminderStatus(formData) {
+
+  try {
+    const response = await fetch(`${this.baseUrl}/api/assignments/update-reminder-status`, {
+      method: "PATCH",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(formData)
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Failed to update reminder status.");
+    }
+
+    const data = await response.json();
+    // toast.success("✅ Reminder status updated successfully!");
+    return data.updatedReminder;
+  } catch (err) {
+    console.error("❌ Error updating reminder status:", err);
+    // toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
 async getAssignmentTimeline(assignmentId) {
   console.log("📅 Fetching timeline for assignmentId:", assignmentId);
 
