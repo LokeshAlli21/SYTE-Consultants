@@ -593,34 +593,62 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
     );
   };
 
-  const handleUpdateProjectUnit = async (id) => {
-              let update_action = null;
-
-          const changedFields = [];
-
-          for (const key in projectUnit) {
-            if (projectUnit[key] !== prevProjectUnitDetails[key]) {
-              changedFields.push(key);
-            }
-          }  
-          if (changedFields.length === 0) {
-            toast.info("ℹ️ No changes detected.");
-            setIsUnitDetailsFormActive(false);
-            return
-          } 
-            update_action = changedFields.join(', ');
-            
-    const unit = {updated_by: userData?.id,update_action,...projectUnit}
-    return handleSubmitWithValidation(
-      unit,
-      async () => await databaseService.updateProjectUnitDetails(id, unit),
+const handleUpdateProjectUnit = async (id) => {
+  try {
+    // Get only the changed fields for efficient comparison
+    const changedFields = getChangedFields(projectUnit, prevProjectUnitDetails);
+    
+    // Early return if no changes detected
+    if (changedFields.length === 0) {
+      toast.info("ℹ️ No changes detected.");
+      setIsUnitDetailsFormActive(false);
+      return;
+    }
+    
+    // Create update payload with only necessary data
+    const updatePayload = {
+      ...projectUnit,
+      updated_by: userData?.id,
+      update_action: changedFields.join(', ')
+    };
+    
+    // console.log("changedFields: ",changedFields.join(', '));
+    
+    // console.log('Update payload:', projectUnit);
+    
+    // Execute update with validation
+    return await handleSubmitWithValidation(
+      updatePayload,
+      () => databaseService.updateProjectUnitDetails(id, updatePayload),
       "✅ Unit details updated successfully!",
-      () => {
-        setProjectUnit(prev => resetObjectData(prev));
-        setIsUnitDetailsFormActive(false);
-      }
+      handleSuccessfulUpdate
     );
-  };
+    
+  } catch (error) {
+    console.error('Error updating project unit:', error);
+    toast.error("❌ Failed to update unit details.");
+    throw error;
+  }
+};
+
+// Helper function to identify changed fields
+const getChangedFields = (current, previous) => {
+  const changedFields = [];
+  
+  for (const [key, value] of Object.entries(current)) {
+    if (value !== previous[key]) {
+      changedFields.push(key);
+    }
+  }
+  
+  return changedFields;
+};
+
+// Success callback extracted for better readability
+const handleSuccessfulUpdate = () => {
+  setProjectUnit(prev => resetObjectData(prev));
+  setIsUnitDetailsFormActive(false);
+};
 
   const handleSubmitProjectDocuments = async () => {
           let update_action = null;

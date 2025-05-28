@@ -82,7 +82,7 @@ pointer-events-none right-full mr-3 opacity-0 group-hover:opacity-100 z-50"
 
         {/* Updated fields section */}
         {updatedFields.length > 0 && (
-          <div className="border-t border-gray-200 pt-3 mt-3">
+          <div className="border-t border-gray-200 pt-3 mt-3 max-w-3xl">
             <div className="flex items-start gap-3">
               <div className="flex-shrink-0 mt-1">
                 <svg className="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
