@@ -9,6 +9,7 @@ import promoterRoutes from './routes/promoterRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
 import channelPartnerRoutes from './routes/channelPartnerRoutes.js'
 import assignmentRoutes from './routes/assignmentRoutes.js'
+import dashboardRoutes from './routes/dashboardRoutes.js'
 dotenv.config();
 
 const app = express();
@@ -30,6 +31,7 @@ app.use('/api/promoters', promoterRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/channel-partners',channelPartnerRoutes );
+app.use('/api/dashboard',dashboardRoutes );
 
 // Main route
 app.get('/', (req, res) => {

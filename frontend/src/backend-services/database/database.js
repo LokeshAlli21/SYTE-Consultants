@@ -1638,13 +1638,10 @@ async getAllAssignments() {
 
     
     const data = await response.json();
-    // console.log(data);
-    // toast.success("✅ Assignments fetched successfully!");
     return data.assignments;
 
   } catch (error) {
     console.error("❌ Error fetching assignments:", error);
-    // toast.error(`❌ ${error.message}`);
     throw error;
   }
 }
@@ -2877,9 +2874,347 @@ const districtOptions = [
   return { districtCityMap, districtOptions };
 };
 
+
+// DashBoard
+// 1. Master Dashboard Overview
+async getMasterDashboard() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/master-overview`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch master dashboard data.");
+    }
+
+    const data = await response.json();
+    return data.data;
+
+  } catch (error) {
+    console.error("❌ Error fetching master dashboard:", error);
+    throw error;
+  }
+}
+
+// 2. Promoters Dashboard
+async getPromotersDashboard(params = {}) {
+  try {
+    const { page = 1, limit = 50, search, district, city, promoter_type } = params;
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
+    
+    if (search) queryParams.append('search', search);
+    if (district) queryParams.append('district', district);
+    if (city) queryParams.append('city', city);
+    if (promoter_type) queryParams.append('promoter_type', promoter_type);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/promoters?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch promoters dashboard data.");
+    }
+
+    const data = await response.json();
+    return {
+      data: data.data,
+      pagination: data.pagination
+    };
+
+  } catch (error) {
+    console.error("❌ Error fetching promoters dashboard:", error);
+    throw error;
+  }
+}
+
+// 3. Projects Dashboard
+async getProjectsDashboard(params = {}) {
+  try {
+    const { page = 1, limit = 50, search, district, city, project_type, promoter_id } = params;
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
+    
+    if (search) queryParams.append('search', search);
+    if (district) queryParams.append('district', district);
+    if (city) queryParams.append('city', city);
+    if (project_type) queryParams.append('project_type', project_type);
+    if (promoter_id) queryParams.append('promoter_id', promoter_id);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/projects?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch projects dashboard data.");
+    }
+
+    const data = await response.json();
+    return {
+      data: data.data,
+      pagination: data.pagination
+    };
+
+  } catch (error) {
+    console.error("❌ Error fetching projects dashboard:", error);
+    throw error;
+  }
+}
+
+// 4. Units Dashboard
+async getUnitsDashboard(params = {}) {
+  try {
+    const { page = 1, limit = 50, search, unit_status, project_id, district, city } = params;
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
+    
+    if (search) queryParams.append('search', search);
+    if (unit_status) queryParams.append('unit_status', unit_status);
+    if (project_id) queryParams.append('project_id', project_id);
+    if (district) queryParams.append('district', district);
+    if (city) queryParams.append('city', city);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/units?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch units dashboard data.");
+    }
+
+    const data = await response.json();
+    return {
+      data: data.data,
+      pagination: data.pagination
+    };
+
+  } catch (error) {
+    console.error("❌ Error fetching units dashboard:", error);
+    throw error;
+  }
+}
+
+// 5. Assignments Dashboard
+async getAssignmentsDashboard(params = {}) {
+  try {
+    const { page = 1, limit = 50, search, assignment_type, project_id, current_status } = params;
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
+    
+    if (search) queryParams.append('search', search);
+    if (assignment_type) queryParams.append('assignment_type', assignment_type);
+    if (project_id) queryParams.append('project_id', project_id);
+    if (current_status) queryParams.append('current_status', current_status);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/assignments?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch assignments dashboard data.");
+    }
+
+    const data = await response.json();
+    return {
+      data: data.data,
+      pagination: data.pagination
+    };
+
+  } catch (error) {
+    console.error("❌ Error fetching assignments dashboard:", error);
+    throw error;
+  }
+}
+
+// 6. Financial Dashboard
+async getFinancialDashboard() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/financial`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch financial dashboard data.");
+    }
+
+    const data = await response.json();
+    return data.data;
+
+  } catch (error) {
+    console.error("❌ Error fetching financial dashboard:", error);
+    throw error;
+  }
+}
+
+// 7. Site Progress Dashboard
+async getSiteProgressDashboard(params = {}) {
+  try {
+    const { page = 1, limit = 50, search, district, city, project_id } = params;
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
+    
+    if (search) queryParams.append('search', search);
+    if (district) queryParams.append('district', district);
+    if (city) queryParams.append('city', city);
+    if (project_id) queryParams.append('project_id', project_id);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/site-progress?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch site progress dashboard data.");
+    }
+
+    const data = await response.json();
+    return {
+      data: data.data,
+      pagination: data.pagination
+    };
+
+  } catch (error) {
+    console.error("❌ Error fetching site progress dashboard:", error);
+    throw error;
+  }
+}
+
+// 8. Channel Partners Dashboard
+async getChannelPartnersDashboard(params = {}) {
+  try {
+    const { page = 1, limit = 50, search, district, city } = params;
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
+    
+    if (search) queryParams.append('search', search);
+    if (district) queryParams.append('district', district);
+    if (city) queryParams.append('city', city);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/channel-partners?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch channel partners dashboard data.");
+    }
+
+    const data = await response.json();
+    return {
+      data: data.data,
+      pagination: data.pagination
+    };
+
+  } catch (error) {
+    console.error("❌ Error fetching channel partners dashboard:", error);
+    throw error;
+  }
+}
+
+// 9. Reminders Dashboard
+async getRemindersDashboard(params = {}) {
+  try {
+    const { page = 1, limit = 50, search, reminder_status, assignment_type } = params;
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
+    
+    if (search) queryParams.append('search', search);
+    if (reminder_status) queryParams.append('reminder_status', reminder_status);
+    if (assignment_type) queryParams.append('assignment_type', assignment_type);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/reminders?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch reminders dashboard data.");
+    }
+
+    const data = await response.json();
+    return {
+      data: data.data,
+      pagination: data.pagination
+    };
+
+  } catch (error) {
+    console.error("❌ Error fetching reminders dashboard:", error);
+    throw error;
+  }
+}
+
+// 10. Document Status Dashboard
+async getDocumentStatusDashboard(params = {}) {
+  try {
+    const { page = 1, limit = 50, search, min_completeness_percentage } = params;
+    
+    const queryParams = new URLSearchParams();
+    queryParams.append('page', page);
+    queryParams.append('limit', limit);
+    
+    if (search) queryParams.append('search', search);
+    if (min_completeness_percentage) queryParams.append('min_completeness_percentage', min_completeness_percentage);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/document-status?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch document status dashboard data.");
+    }
+
+    const data = await response.json();
+    return {
+      data: data.data,
+      pagination: data.pagination
+    };
+
+  } catch (error) {
+    console.error("❌ Error fetching document status dashboard:", error);
+    throw error;
+  }
+}
   
   
 }
 
 const databaseService = new DatabaseService();
 export default databaseService;
+
+
+
+// now create a simple Dashboard to show all the data  for the methods i provided u
+
+//  all this methods are can accessed as   useEffect(() => {     async function fetchCitiesAndDistricts() {       try {         const { districtOptions, districtCityMap } = await databaseService.getAllCitiesAndDistricts();         setDistrictCityMap(districtCityMap);         setDistrictOptions(districtOptions);       } catch (error) {         console.error("Error fetching cities and districts:", error);         toast.error("Failed to load location data");       }     }      fetchCitiesAndDistricts();   }, []);   so create a basic dashboard , for now i dont want to focus on UI but just to ensure all the data getching is proper  so create a dashboard  see sample code i made  import React from 'react' import databaseService from "../backend-services/database/database";  function Dashboard() {   return (<>hi   ) }  export default Dashboard
+
