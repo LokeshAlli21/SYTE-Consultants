@@ -1,532 +1,449 @@
--- =====================================================
--- MASTER DASHBOARD VIEWS FOR REAL ESTATE PROJECT MANAGEMENT SYSTEM
--- =====================================================
+-- ====================================================================
+-- REAL ESTATE MASTER DASHBOARD - SQL VIEWS
+-- ====================================================================
 
--- 1. MASTER DASHBOARD OVERVIEW VIEW
--- =====================================================
-CREATE OR REPLACE VIEW vw_master_dashboard AS
+-- ====================================================================
+-- 1. MONTHLY TRENDS VIEWS
+-- ====================================================================
+
+-- Monthly Promoters Added
+CREATE OR REPLACE VIEW dashboard_monthly_promoters AS
 SELECT 
-    -- Summary Counts
-    (SELECT COUNT(*) FROM promoters WHERE status_for_delete = 'active') AS total_active_promoters,
-    (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active') AS total_active_projects,
-    (SELECT COUNT(*) FROM project_units WHERE status_for_delete = 'active') AS total_units,
-    (SELECT COUNT(*) FROM project_units WHERE status_for_delete = 'active' AND unit_status = 'Available') AS available_units,
-    (SELECT COUNT(*) FROM project_units WHERE status_for_delete = 'active' AND unit_status = 'Booked') AS booked_units,
-    (SELECT COUNT(*) FROM project_units WHERE status_for_delete = 'active' AND unit_status = 'Sold') AS sold_units,
-    (SELECT COUNT(*) FROM assignments WHERE status_for_delete = 'active') AS total_assignments,
+    TO_CHAR(created_at, 'YYYY-MM') AS month_year,
+    EXTRACT(YEAR FROM created_at) AS year,
+    EXTRACT(MONTH FROM created_at) AS month,
+    TO_CHAR(created_at, 'Mon YYYY') AS month_name,
+    COUNT(*) AS promoters_added,
+    COUNT(*) FILTER (WHERE promoter_type = 'Individual') AS individual_promoters,
+    COUNT(*) FILTER (WHERE promoter_type = 'Company') AS company_promoters,
+    COUNT(*) FILTER (WHERE promoter_type = 'Partnership') AS partnership_promoters,
+    COUNT(*) FILTER (WHERE promoter_type IN ('HUF', 'Trust', 'Society', 'LLP')) AS other_promoters
+FROM promoters 
+WHERE status_for_delete = 'active'
+GROUP BY 
+    TO_CHAR(created_at, 'YYYY-MM'),
+    EXTRACT(YEAR FROM created_at),
+    EXTRACT(MONTH FROM created_at),
+    TO_CHAR(created_at, 'Mon YYYY')
+ORDER BY year DESC, month DESC;
+
+-- Monthly Channel Partners Added
+CREATE OR REPLACE VIEW dashboard_monthly_channel_partners AS
+SELECT 
+    TO_CHAR(created_at, 'YYYY-MM') AS month_year,
+    EXTRACT(YEAR FROM created_at) AS year,
+    EXTRACT(MONTH FROM created_at) AS month,
+    TO_CHAR(created_at, 'Mon YYYY') AS month_name,
+    COUNT(*) AS channel_partners_added,
+    COUNT(DISTINCT district) AS districts_covered,
+    COUNT(DISTINCT city) AS cities_covered
+FROM channel_partners 
+WHERE status_for_delete = 'active'
+GROUP BY 
+    TO_CHAR(created_at, 'YYYY-MM'),
+    EXTRACT(YEAR FROM created_at),
+    EXTRACT(MONTH FROM created_at),
+    TO_CHAR(created_at, 'Mon YYYY')
+ORDER BY year DESC, month DESC;
+
+-- Monthly Projects Added
+CREATE OR REPLACE VIEW dashboard_monthly_projects AS
+SELECT 
+    TO_CHAR(created_at, 'YYYY-MM') AS month_year,
+    EXTRACT(YEAR FROM created_at) AS year,
+    EXTRACT(MONTH FROM created_at) AS month,
+    TO_CHAR(created_at, 'Mon YYYY') AS month_name,
+    COUNT(*) AS projects_added,
+    COUNT(*) FILTER (WHERE project_type = 'Residential') AS residential_projects,
+    COUNT(*) FILTER (WHERE project_type = 'Commercial') AS commercial_projects,
+    COUNT(*) FILTER (WHERE project_type NOT IN ('Residential', 'Commercial') OR project_type IS NULL) AS other_projects,
+    COUNT(DISTINCT district) AS districts_covered,
+    COUNT(DISTINCT city) AS cities_covered
+FROM projects 
+WHERE status_for_delete = 'active'
+GROUP BY 
+    TO_CHAR(created_at, 'YYYY-MM'),
+    EXTRACT(YEAR FROM created_at),
+    EXTRACT(MONTH FROM created_at),
+    TO_CHAR(created_at, 'Mon YYYY')
+ORDER BY year DESC, month DESC;
+
+-- Monthly Assignments Added
+CREATE OR REPLACE VIEW dashboard_monthly_assignments AS
+SELECT 
+    TO_CHAR(created_at, 'YYYY-MM') AS month_year,
+    EXTRACT(YEAR FROM created_at) AS year,
+    EXTRACT(MONTH FROM created_at) AS month,
+    TO_CHAR(created_at, 'Mon YYYY') AS month_name,
+    COUNT(*) AS assignments_added,
+    COUNT(DISTINCT assignment_type) AS assignment_types,
+    ROUND(AVG(consultation_charges), 2) AS avg_consultation_charges,
+    SUM(consultation_charges) AS total_consultation_charges,
+    SUM(govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees) AS total_operational_costs
+FROM assignments 
+WHERE status_for_delete = 'active'
+GROUP BY 
+    TO_CHAR(created_at, 'YYYY-MM'),
+    EXTRACT(YEAR FROM created_at),
+    EXTRACT(MONTH FROM created_at),
+    TO_CHAR(created_at, 'Mon YYYY')
+ORDER BY year DESC, month DESC;
+
+-- ====================================================================
+-- 2. ASSIGNMENT STATUS SUMMARY
+-- ====================================================================
+
+-- Assignment Status Distribution (for Pie Charts)
+CREATE OR REPLACE VIEW dashboard_assignment_status_summary AS
+SELECT 
+    COALESCE(
+        (SELECT assignment_status 
+         FROM assignment_timeline at2 
+         WHERE at2.assignment_id = a.id 
+         ORDER BY at2.created_at DESC 
+         LIMIT 1), 
+        'Not Started'
+    ) AS current_status,
+    COUNT(*) AS assignment_count,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS percentage,
+    COUNT(DISTINCT a.project_id) AS projects_involved,
+    COUNT(DISTINCT a.assignment_type) AS assignment_types_involved,
+    SUM(a.consultation_charges) AS total_consultation_value,
+    AVG(a.consultation_charges) AS avg_consultation_value
+FROM assignments a
+WHERE a.status_for_delete = 'active'
+GROUP BY 
+    (SELECT assignment_status 
+     FROM assignment_timeline at2 
+     WHERE at2.assignment_id = a.id 
+     ORDER BY at2.created_at DESC 
+     LIMIT 1)
+ORDER BY assignment_count DESC;
+
+-- Assignment Type Distribution
+CREATE OR REPLACE VIEW dashboard_assignment_type_summary AS
+SELECT 
+    COALESCE(assignment_type, 'Unspecified') AS assignment_type,
+    COUNT(*) AS assignment_count,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS percentage,
+    COUNT(DISTINCT project_id) AS projects_involved,
+    SUM(consultation_charges) AS total_consultation_value,
+    SUM(govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees) AS total_operational_costs,
+    ROUND(AVG(consultation_charges), 2) AS avg_consultation_charges
+FROM assignments
+WHERE status_for_delete = 'active'
+GROUP BY assignment_type
+ORDER BY assignment_count DESC;
+
+-- ====================================================================
+-- 3. DAILY REMINDERS AND TASKS
+-- ====================================================================
+
+-- Today's and Overdue Reminders
+CREATE OR REPLACE VIEW dashboard_daily_reminders AS
+SELECT 
+    ar.id AS reminder_id,
+    ar.assignment_id,
+    a.assignment_type,
+    p.project_name,
+    pr.promoter_name,
+    ar.message,
+    ar.date_and_time,
+    ar.assignment_status,
+    ar.status AS reminder_status,
+    CASE 
+        WHEN DATE(ar.date_and_time) = CURRENT_DATE THEN 'Due Today'
+        WHEN DATE(ar.date_and_time) < CURRENT_DATE THEN 'Overdue'
+        ELSE 'Upcoming'
+    END AS urgency,
+    DATE(ar.date_and_time) - CURRENT_DATE AS days_difference
+FROM assignment_reminders ar
+JOIN assignments a ON ar.assignment_id = a.id
+JOIN projects p ON a.project_id = p.id
+JOIN promoters pr ON p.promoter_id = pr.id
+WHERE 
+    ar.date_and_time <= CURRENT_DATE + INTERVAL '7 days'
+    AND a.status_for_delete = 'active'
+    AND p.status_for_delete = 'active'
+    AND pr.status_for_delete = 'active'
+ORDER BY ar.date_and_time ASC;
+
+-- ====================================================================
+-- 4. GENERAL STATISTICS
+-- ====================================================================
+
+-- Overall System Statistics
+CREATE OR REPLACE VIEW dashboard_general_stats AS
+SELECT 
+    -- Promoter Statistics
+    (SELECT COUNT(*) FROM promoters WHERE status_for_delete = 'active') AS total_promoters,
+    (SELECT COUNT(*) FROM promoters WHERE status_for_delete = 'active' AND DATE(created_at) >= DATE_TRUNC('month', CURRENT_DATE)) AS promoters_this_month,
+    
+    -- Channel Partner Statistics
     (SELECT COUNT(*) FROM channel_partners WHERE status_for_delete = 'active') AS total_channel_partners,
+    (SELECT COUNT(*) FROM channel_partners WHERE status_for_delete = 'active' AND DATE(created_at) >= DATE_TRUNC('month', CURRENT_DATE)) AS channel_partners_this_month,
     
-    -- Financial Summary
-    (SELECT COALESCE(SUM(agreement_value), 0) FROM project_units WHERE status_for_delete = 'active') AS total_agreement_value,
-    (SELECT COALESCE(SUM(total_received), 0) FROM project_units WHERE status_for_delete = 'active') AS total_amount_received,
-    (SELECT COALESCE(SUM(balance_amount), 0) FROM project_units WHERE status_for_delete = 'active') AS total_balance_amount,
+    -- Project Statistics
+    (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active') AS total_projects,
+    (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active' AND DATE(created_at) >= DATE_TRUNC('month', CURRENT_DATE)) AS projects_this_month,
+    (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active' AND project_type = 'Residential') AS residential_projects,
+    (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active' AND project_type = 'Commercial') AS commercial_projects,
     
-    -- Assignment Financial Summary
-    (SELECT COALESCE(SUM(consultation_charges), 0) FROM assignments WHERE status_for_delete = 'active') AS total_consultation_charges,
-    (SELECT COALESCE(SUM(govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees), 0) FROM assignments WHERE status_for_delete = 'active') AS total_operational_costs;
+    -- Assignment Statistics
+    (SELECT COUNT(*) FROM assignments WHERE status_for_delete = 'active') AS total_assignments,
+    (SELECT COUNT(*) FROM assignments WHERE status_for_delete = 'active' AND DATE(created_at) >= DATE_TRUNC('month', CURRENT_DATE)) AS assignments_this_month,
+    
+    -- Professional Statistics
+    (SELECT COUNT(*) FROM engineers) AS total_engineers,
+    (SELECT COUNT(*) FROM architects) AS total_architects,
+    (SELECT COUNT(*) FROM cas) AS total_cas,
+    
+    -- Financial Statistics
+    (SELECT COALESCE(SUM(consultation_charges), 0) FROM assignments WHERE status_for_delete = 'active') AS total_consultation_value,
+    (SELECT COALESCE(SUM(consultation_charges), 0) FROM assignments WHERE status_for_delete = 'active' AND DATE(created_at) >= DATE_TRUNC('month', CURRENT_DATE)) AS consultation_value_this_month,
+    
+    -- Geographic Coverage
+    (SELECT COUNT(DISTINCT district) FROM promoters WHERE status_for_delete = 'active') AS promoter_districts_covered,
+    (SELECT COUNT(DISTINCT city) FROM promoters WHERE status_for_delete = 'active') AS promoter_cities_covered,
+    (SELECT COUNT(DISTINCT district) FROM projects WHERE status_for_delete = 'active') AS project_districts_covered,
+    (SELECT COUNT(DISTINCT city) FROM projects WHERE status_for_delete = 'active') AS project_cities_covered;
 
--- 2. PROMOTERS DASHBOARD VIEW
--- =====================================================
-CREATE OR REPLACE VIEW vw_promoters_dashboard AS
+-- ====================================================================
+-- 5. PROMOTER INSIGHTS
+-- ====================================================================
+
+-- Promoter Type Distribution
+CREATE OR REPLACE VIEW dashboard_promoter_type_distribution AS
 SELECT 
-    p.id,
-    p.promoter_name,
-    p.contact_number,
-    p.email_id,
-    p.district,
-    p.city,
-    p.promoter_type,
-    p.status_for_delete,
-    p.created_at,
-    
-    -- Project counts for each promoter
-    COALESCE(proj_stats.project_count, 0) AS total_projects,
-    COALESCE(proj_stats.active_projects, 0) AS active_projects,
-    
-    -- Unit statistics
-    COALESCE(unit_stats.total_units, 0) AS total_units,
-    COALESCE(unit_stats.sold_units, 0) AS sold_units,
-    COALESCE(unit_stats.booked_units, 0) AS booked_units,
-    COALESCE(unit_stats.available_units, 0) AS available_units,
-    
-    -- Financial summary
-    COALESCE(unit_stats.total_agreement_value, 0) AS total_agreement_value,
-    COALESCE(unit_stats.total_received, 0) AS total_received,
-    COALESCE(unit_stats.total_balance, 0) AS total_balance,
-    
-    -- Assignment counts
-    COALESCE(assign_stats.total_assignments, 0) AS total_assignments
-    
+    COALESCE(promoter_type, 'Unspecified') AS promoter_type,
+    COUNT(*) AS promoter_count,
+    ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER (), 2) AS percentage,
+    COUNT(DISTINCT district) AS districts_covered,
+    COUNT(DISTINCT city) AS cities_covered,
+    (SELECT COUNT(*) FROM projects WHERE promoter_id IN 
+        (SELECT id FROM promoters WHERE promoter_type = COALESCE(p.promoter_type, 'Unspecified') AND status_for_delete = 'active')
+        AND status_for_delete = 'active') AS total_projects
 FROM promoters p
-LEFT JOIN (
-    SELECT 
-        promoter_id,
-        COUNT(*) AS project_count,
-        COUNT(CASE WHEN status_for_delete = 'active' THEN 1 END) AS active_projects
-    FROM projects 
-    GROUP BY promoter_id
-) proj_stats ON p.id = proj_stats.promoter_id
+WHERE status_for_delete = 'active'
+GROUP BY promoter_type
+ORDER BY promoter_count DESC;
 
-LEFT JOIN (
-    SELECT 
-        pr.promoter_id,
-        COUNT(pu.id) AS total_units,
-        COUNT(CASE WHEN pu.unit_status = 'Sold' THEN 1 END) AS sold_units,
-        COUNT(CASE WHEN pu.unit_status = 'Booked' THEN 1 END) AS booked_units,
-        COUNT(CASE WHEN pu.unit_status = 'Available' THEN 1 END) AS available_units,
-        SUM(pu.agreement_value) AS total_agreement_value,
-        SUM(pu.total_received) AS total_received,
-        SUM(pu.balance_amount) AS total_balance
-    FROM projects pr
-    LEFT JOIN project_units pu ON pr.id = pu.project_id AND pu.status_for_delete = 'active'
-    WHERE pr.status_for_delete = 'active'
-    GROUP BY pr.promoter_id
-) unit_stats ON p.id = unit_stats.promoter_id
-
-LEFT JOIN (
-    SELECT 
-        pr.promoter_id,
-        COUNT(a.id) AS total_assignments
-    FROM projects pr
-    LEFT JOIN assignments a ON pr.id = a.project_id AND a.status_for_delete = 'active'
-    WHERE pr.status_for_delete = 'active'
-    GROUP BY pr.promoter_id
-) assign_stats ON p.id = assign_stats.promoter_id
-
-WHERE p.status_for_delete = 'active'
-ORDER BY p.promoter_name;
-
--- 3. PROJECTS DASHBOARD VIEW
--- =====================================================
-CREATE OR REPLACE VIEW vw_projects_dashboard AS
+-- Geographic Distribution of Promoters
+CREATE OR REPLACE VIEW dashboard_promoter_geographic_distribution AS
 SELECT 
-    p.id,
-    p.promoter_id,
-    p.promoter_name,
+    district,
+    city,
+    COUNT(*) AS promoter_count,
+    COUNT(DISTINCT promoter_type) AS promoter_types,
+    (SELECT COUNT(*) FROM projects WHERE promoter_id IN 
+        (SELECT id FROM promoters WHERE district = p.district AND city = p.city AND status_for_delete = 'active')
+        AND status_for_delete = 'active') AS total_projects
+FROM promoters p
+WHERE status_for_delete = 'active'
+GROUP BY district, city
+ORDER BY promoter_count DESC;
+
+-- ====================================================================
+-- 6. PROJECT INSIGHTS
+-- ====================================================================
+
+-- Project Status Overview
+CREATE OR REPLACE VIEW dashboard_project_overview AS
+SELECT 
+    p.id AS project_id,
     p.project_name,
     p.project_type,
     p.district,
     p.city,
+    pr.promoter_name,
+    pr.promoter_type,
+    cp.full_name AS channel_partner_name,
     p.rera_number,
     p.registration_date,
     p.expiry_date,
-    p.status_for_delete,
-    p.created_at,
-    
-    -- Channel partner info
-    cp.full_name AS channel_partner_name,
-    cp.contact_number AS channel_partner_contact,
-    
-    -- Unit statistics
-    COALESCE(unit_stats.total_units, 0) AS total_units,
-    COALESCE(unit_stats.sold_units, 0) AS sold_units,
-    COALESCE(unit_stats.booked_units, 0) AS booked_units,
-    COALESCE(unit_stats.available_units, 0) AS available_units,
-    
-    -- Financial summary
-    COALESCE(unit_stats.total_agreement_value, 0) AS total_agreement_value,
-    COALESCE(unit_stats.total_received, 0) AS total_received,
-    COALESCE(unit_stats.total_balance, 0) AS total_balance,
-    
-    -- Progress summary
-    COALESCE(ROUND(building_progress.avg_building_progress, 2), 0) AS avg_building_progress,
-    
-    -- Assignment counts
-    COALESCE(assign_stats.total_assignments, 0) AS total_assignments,
-    COALESCE(assign_stats.consultation_revenue, 0) AS consultation_revenue,
-    
-    -- Professional team
-    prof.engineer_name,
-    prof.architect_name,
-    prof.ca_name
-    
+    CASE 
+        WHEN p.expiry_date < CURRENT_DATE THEN 'Expired'
+        WHEN p.expiry_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'Expiring Soon'
+        ELSE 'Active'
+    END AS rera_status,
+    (SELECT COUNT(*) FROM assignments WHERE project_id = p.id AND status_for_delete = 'active') AS total_assignments,
+    COALESCE((SELECT SUM(consultation_charges) FROM assignments WHERE project_id = p.id AND status_for_delete = 'active'), 0) AS total_consultation_value
 FROM projects p
+JOIN promoters pr ON p.promoter_id = pr.id
 LEFT JOIN channel_partners cp ON p.channel_partner_id = cp.id
-LEFT JOIN (
-    SELECT 
-        project_id,
-        COUNT(*) AS total_units,
-        COUNT(CASE WHEN unit_status = 'Sold' THEN 1 END) AS sold_units,
-        COUNT(CASE WHEN unit_status = 'Booked' THEN 1 END) AS booked_units,
-        COUNT(CASE WHEN unit_status = 'Available' THEN 1 END) AS available_units,
-        SUM(agreement_value) AS total_agreement_value,
-        SUM(total_received) AS total_received,
-        SUM(balance_amount) AS total_balance
-    FROM project_units 
-    WHERE status_for_delete = 'active'
-    GROUP BY project_id
-) unit_stats ON p.id = unit_stats.project_id
+WHERE p.status_for_delete = 'active' 
+    AND pr.status_for_delete = 'active'
+    AND (cp.status_for_delete = 'active' OR cp.id IS NULL);
 
-LEFT JOIN (
-    SELECT 
-        sp.project_id,
-        (COALESCE(bp.excavation, 0) + COALESCE(bp.basement, 0) + COALESCE(bp.podium, 0) + 
-         COALESCE(bp.plinth, 0) + COALESCE(bp.stilt, 0) + COALESCE(bp.superstructure, 0) +
-         COALESCE(bp.interior_finishing, 0) + COALESCE(bp.sanitary_fittings, 0) + 
-         COALESCE(bp.common_infrastructure, 0) + COALESCE(bp.external_works, 0) + 
-         COALESCE(bp.final_installations, 0)) / 11.0 AS avg_building_progress
-    FROM site_progress sp
-    LEFT JOIN building_progress bp ON sp.id = bp.site_progress_id
-) building_progress ON p.id = building_progress.project_id
-
-LEFT JOIN (
-    SELECT 
-        project_id,
-        COUNT(*) AS total_assignments,
-        SUM(consultation_charges) AS consultation_revenue
-    FROM assignments 
-    WHERE status_for_delete = 'active'
-    GROUP BY project_id
-) assign_stats ON p.id = assign_stats.project_id
-
-LEFT JOIN (
-    SELECT 
-        ppd.project_id,
-        e.name AS engineer_name,
-        a.name AS architect_name,
-        c.name AS ca_name
-    FROM project_professional_details ppd
-    LEFT JOIN engineers e ON ppd.engineer_id = e.id
-    LEFT JOIN architects a ON ppd.architect_id = a.id
-    LEFT JOIN cas c ON ppd.ca_id = c.id
-) prof ON p.id = prof.project_id
-
-WHERE p.status_for_delete = 'active'
-ORDER BY p.project_name;
-
--- 4. UNITS DASHBOARD VIEW
--- =====================================================
-CREATE OR REPLACE VIEW vw_units_dashboard AS
+-- RERA Expiry Alerts
+CREATE OR REPLACE VIEW dashboard_rera_expiry_alerts AS
 SELECT 
-    pu.id,
-    pu.project_id,
+    p.id AS project_id,
     p.project_name,
-    p.promoter_name,
+    p.rera_number,
+    p.expiry_date,
+    pr.promoter_name,
     p.district,
     p.city,
-    pu.unit_name,
-    pu.unit_type,
-    pu.carpet_area,
-    pu.unit_status,
-    pu.customer_name,
-    pu.agreement_value,
-    pu.total_received,
-    pu.balance_amount,
-    pu.agreement_for_sale_date,
-    pu.sale_deed_date,
-    pu.status_for_delete,
-    pu.created_at,
-    
-    -- Financial year wise collection summary (last 3 years)
-    pu.received_fy_2022_23,
-    pu.received_fy_2023_24,
-    pu.received_fy_2024_25,
-    
-    -- Collection percentage
+    p.expiry_date - CURRENT_DATE AS days_to_expiry,
     CASE 
-        WHEN pu.agreement_value > 0 THEN ROUND((pu.total_received / pu.agreement_value) * 100, 2)
+        WHEN p.expiry_date < CURRENT_DATE THEN 'Expired'
+        WHEN p.expiry_date <= CURRENT_DATE + INTERVAL '30 days' THEN 'Critical'
+        WHEN p.expiry_date <= CURRENT_DATE + INTERVAL '90 days' THEN 'Warning'
+        ELSE 'Normal'
+    END AS alert_level
+FROM projects p
+JOIN promoters pr ON p.promoter_id = pr.id
+WHERE p.status_for_delete = 'active' 
+    AND pr.status_for_delete = 'active'
+    AND p.expiry_date IS NOT NULL
+    AND p.expiry_date <= CURRENT_DATE + INTERVAL '90 days'
+ORDER BY p.expiry_date ASC;
+
+-- ====================================================================
+-- 7. FINANCIAL INSIGHTS
+-- ====================================================================
+
+-- Monthly Financial Summary
+CREATE OR REPLACE VIEW dashboard_monthly_financial_summary AS
+SELECT 
+    TO_CHAR(created_at, 'YYYY-MM') AS month_year,
+    TO_CHAR(created_at, 'Mon YYYY') AS month_name,
+    COUNT(*) AS assignments_count,
+    SUM(consultation_charges) AS total_consultation_revenue,
+    SUM(govt_fees) AS total_govt_fees,
+    SUM(ca_fees) AS total_ca_fees,
+    SUM(engineer_fees) AS total_engineer_fees,
+    SUM(arch_fees) AS total_architect_fees,
+    SUM(liasioning_fees) AS total_liasioning_fees,
+    SUM(govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees) AS total_operational_costs,
+    SUM(consultation_charges) - SUM(govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees) AS net_revenue,
+    ROUND(AVG(consultation_charges), 2) AS avg_consultation_charges
+FROM assignments
+WHERE status_for_delete = 'active'
+GROUP BY 
+    TO_CHAR(created_at, 'YYYY-MM'),
+    TO_CHAR(created_at, 'Mon YYYY')
+ORDER BY month_year DESC;
+
+-- Assignment Type Financial Performance
+CREATE OR REPLACE VIEW dashboard_assignment_financial_performance AS
+SELECT 
+    assignment_type,
+    COUNT(*) AS assignment_count,
+    SUM(consultation_charges) AS total_revenue,
+    SUM(govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees) AS total_costs,
+    SUM(consultation_charges) - SUM(govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees) AS net_profit,
+    ROUND(AVG(consultation_charges), 2) AS avg_consultation_charges,
+    ROUND(AVG(govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees), 2) AS avg_operational_costs,
+    CASE 
+        WHEN SUM(consultation_charges) > 0 THEN 
+            ROUND(((SUM(consultation_charges) - SUM(govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees)) / SUM(consultation_charges)) * 100, 2)
         ELSE 0 
-    END AS collection_percentage,
-    
-    -- Document status
-    CASE WHEN pu.afs_uploaded_url IS NOT NULL THEN 'Yes' ELSE 'No' END AS afs_uploaded,
-    CASE WHEN pu.sale_deed_uploaded_url IS NOT NULL THEN 'Yes' ELSE 'No' END AS sale_deed_uploaded
+    END AS profit_margin_percentage
+FROM assignments
+WHERE status_for_delete = 'active'
+GROUP BY assignment_type
+ORDER BY total_revenue DESC;
 
-FROM project_units pu
-JOIN projects p ON pu.project_id = p.id
-WHERE pu.status_for_delete = 'active' AND p.status_for_delete = 'active'
-ORDER BY p.project_name, pu.unit_name;
+-- ====================================================================
+-- 8. ACTIVITY AND PRODUCTIVITY METRICS
+-- ====================================================================
 
--- 5. ASSIGNMENTS DASHBOARD VIEW
--- =====================================================
-CREATE OR REPLACE VIEW vw_assignments_dashboard AS
+-- User Activity Summary (based on created_by and updated_by fields)
+CREATE OR REPLACE VIEW dashboard_user_activity_summary AS
 SELECT 
-    a.id,
-    a.project_id,
-    p.project_name,
-    p.promoter_name,
-    a.assignment_type,
-    a.payment_date,
-    a.application_number,
-    a.consultation_charges,
-    a.govt_fees,
-    a.ca_fees,
-    a.engineer_fees,
-    a.arch_fees,
-    a.liasioning_fees,
-    (a.govt_fees + a.ca_fees + a.engineer_fees + a.arch_fees + a.liasioning_fees) AS total_operational_cost,
-    (a.consultation_charges - (a.govt_fees + a.ca_fees + a.engineer_fees + a.arch_fees + a.liasioning_fees)) AS net_profit,
-    a.remarks,
-    a.status_for_delete,
-    a.created_at,
-    
-    -- Latest status from timeline
-    latest_status.assignment_status AS current_status,
-    latest_status.latest_update AS last_status_update
-
-FROM assignments a
-JOIN projects p ON a.project_id = p.id
-LEFT JOIN (
-    SELECT DISTINCT ON (assignment_id)
-        assignment_id,
-        assignment_status,
-        created_at AS latest_update
-    FROM assignment_timeline
-    WHERE assignment_status IS NOT NULL
-    ORDER BY assignment_id, created_at DESC
-) latest_status ON a.id = latest_status.assignment_id
-
-WHERE a.status_for_delete = 'active' AND p.status_for_delete = 'active'
-ORDER BY a.created_at DESC;
-
--- 6. FINANCIAL DASHBOARD VIEW
--- =====================================================
-CREATE OR REPLACE VIEW vw_financial_dashboard AS
-SELECT 
-    -- Overall Financial Summary
-    'Overall Summary' AS category,
-    SUM(pu.agreement_value) AS total_agreement_value,
-    SUM(pu.total_received) AS total_received,
-    SUM(pu.balance_amount) AS total_balance,
-    ROUND(
-        CASE 
-            WHEN SUM(pu.agreement_value) > 0 
-            THEN (SUM(pu.total_received) / SUM(pu.agreement_value)) * 100 
-            ELSE 0 
-        END, 2
-    ) AS collection_percentage,
-
-    -- FY wise collections (last 3 years)
-    SUM(pu.received_fy_2022_23) AS fy_2022_23_collection,
-    SUM(pu.received_fy_2023_24) AS fy_2023_24_collection,
-    SUM(pu.received_fy_2024_25) AS fy_2024_25_collection,
-
-    -- Assignment Revenue (use MAX since it's a single-row CROSS JOIN)
-    MAX(assign_revenue.total_consultation_charges) AS total_consultation_revenue,
-    MAX(assign_revenue.total_operational_costs) AS total_operational_costs,
-    MAX(assign_revenue.net_assignment_profit) AS net_assignment_profit
-
-FROM project_units pu
-JOIN projects p ON pu.project_id = p.id
-CROSS JOIN (
+    user_id,
+    user_type,
+    total_actions,
+    promoters_created,
+    projects_created,
+    assignments_created,
+    channel_partners_created,
+    last_activity_date
+FROM (
     SELECT 
-        SUM(consultation_charges) AS total_consultation_charges,
-        SUM(govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees) AS total_operational_costs,
-        SUM(consultation_charges - (govt_fees + ca_fees + engineer_fees + arch_fees + liasioning_fees)) AS net_assignment_profit
+        created_by AS user_id,
+        'Creator' AS user_type,
+        COUNT(*) AS total_actions,
+        COUNT(*) FILTER (WHERE table_name = 'promoters') AS promoters_created,
+        COUNT(*) FILTER (WHERE table_name = 'projects') AS projects_created,
+        COUNT(*) FILTER (WHERE table_name = 'assignments') AS assignments_created,
+        COUNT(*) FILTER (WHERE table_name = 'channel_partners') AS channel_partners_created,
+        MAX(created_at) AS last_activity_date
+    FROM (
+        SELECT created_by, created_at, 'promoters' AS table_name FROM promoters WHERE status_for_delete = 'active'
+        UNION ALL
+        SELECT created_by, created_at, 'projects' AS table_name FROM projects WHERE status_for_delete = 'active'
+        UNION ALL
+        SELECT created_by, created_at, 'assignments' AS table_name FROM assignments WHERE status_for_delete = 'active'
+        UNION ALL
+        SELECT created_by, created_at, 'channel_partners' AS table_name FROM channel_partners WHERE status_for_delete = 'active'
+    ) combined_activity
+    GROUP BY created_by
+) user_stats
+ORDER BY total_actions DESC;
+
+-- Recent Activity Feed
+CREATE OR REPLACE VIEW dashboard_recent_activity AS
+SELECT 
+    activity_date,
+    activity_type,
+    entity_name,
+    entity_type,
+    created_by_user,
+    district,
+    city
+FROM (
+    SELECT 
+        created_at AS activity_date,
+        'New Promoter Added' AS activity_type,
+        promoter_name AS entity_name,
+        'Promoter' AS entity_type,
+        created_by AS created_by_user,
+        district,
+        city
+    FROM promoters 
+    WHERE status_for_delete = 'active'
+    
+    UNION ALL
+    
+    SELECT 
+        created_at AS activity_date,
+        'New Project Added' AS activity_type,
+        project_name AS entity_name,
+        'Project' AS entity_type,
+        created_by AS created_by_user,
+        district,
+        city
+    FROM projects 
+    WHERE status_for_delete = 'active'
+    
+    UNION ALL
+    
+    SELECT 
+        created_at AS activity_date,
+        'New Assignment Created' AS activity_type,
+        assignment_type AS entity_name,
+        'Assignment' AS entity_type,
+        created_by AS created_by_user,
+        NULL AS district,
+        NULL AS city
     FROM assignments 
     WHERE status_for_delete = 'active'
-) assign_revenue
-WHERE pu.status_for_delete = 'active' AND p.status_for_delete = 'active';
-
--- 7. SITE PROGRESS DASHBOARD VIEW
--- =====================================================
-CREATE OR REPLACE VIEW vw_site_progress_dashboard AS
-SELECT 
-    p.id AS project_id,
-    p.project_name,
-    p.promoter_name,
-    p.district,
-    p.city,
     
-    -- Building Progress Details
-    bp.excavation,
-    bp.basement,
-    bp.podium,
-    bp.plinth,
-    bp.stilt,
-    bp.superstructure,
-    bp.interior_finishing,
-    bp.sanitary_fittings,
-    bp.common_infrastructure,
-    bp.external_works,
-    bp.final_installations,
+    UNION ALL
     
-    -- Average Building Progress
-    ROUND(
-        (COALESCE(bp.excavation, 0) + COALESCE(bp.basement, 0) + COALESCE(bp.podium, 0) + 
-         COALESCE(bp.plinth, 0) + COALESCE(bp.stilt, 0) + COALESCE(bp.superstructure, 0) +
-         COALESCE(bp.interior_finishing, 0) + COALESCE(bp.sanitary_fittings, 0) + 
-         COALESCE(bp.common_infrastructure, 0) + COALESCE(bp.external_works, 0) + 
-         COALESCE(bp.final_installations, 0)) / 11.0, 2
-    ) AS avg_building_progress,
-    
-    -- Common Areas Progress Status (counting completed items)
-    COALESCE(common_areas_summary.completed_items, 0) AS common_areas_completed,
-    COALESCE(common_areas_summary.total_items, 13) AS total_common_area_items,
-    ROUND(
-        (COALESCE(common_areas_summary.completed_items, 0) / 13.0) * 100, 2
-    ) AS common_areas_progress_percentage,
-    
-    bp.updated_at AS building_progress_last_updated,
-    cap.updated_at AS common_areas_last_updated
-
-FROM projects p
-LEFT JOIN site_progress sp ON p.id = sp.project_id
-LEFT JOIN building_progress bp ON sp.id = bp.site_progress_id
-LEFT JOIN common_areas_progress cap ON sp.id = cap.site_progress_id
-LEFT JOIN (
     SELECT 
-        site_progress_id,
-        (CASE WHEN internal_roads_footpaths->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN water_supply->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN sewerage->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN storm_water_drains->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN landscaping_tree_planting->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN street_lighting->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN community_buildings->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN sewage_treatment->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN solid_waste_management->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN rain_water_harvesting->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN energy_management->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN fire_safety->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END +
-         CASE WHEN electrical_metering->>'percentage_of_work' IS NOT NULL THEN 1 ELSE 0 END) AS completed_items,
-        13 AS total_items
-    FROM common_areas_progress
-) common_areas_summary ON sp.id = common_areas_summary.site_progress_id
-
-WHERE p.status_for_delete = 'active'
-ORDER BY p.project_name;
-
--- 8. CHANNEL PARTNERS DASHBOARD VIEW
--- =====================================================
-CREATE OR REPLACE VIEW vw_channel_partners_dashboard AS
-SELECT 
-    cp.id,
-    cp.full_name,
-    cp.contact_number,
-    cp.alternate_contact_number,
-    cp.email_id,
-    cp.district,
-    cp.city,
-    cp.status_for_delete,
-    cp.created_at,
-    
-    -- Project statistics
-    COALESCE(proj_stats.total_projects, 0) AS total_projects,
-    COALESCE(proj_stats.active_projects, 0) AS active_projects,
-    
-    -- Unit statistics through projects
-    COALESCE(unit_stats.total_units, 0) AS total_units_handled,
-    COALESCE(unit_stats.sold_units, 0) AS units_sold,
-    COALESCE(unit_stats.total_revenue, 0) AS total_sales_value
-
-FROM channel_partners cp
-LEFT JOIN (
-    SELECT 
-        channel_partner_id,
-        COUNT(*) AS total_projects,
-        COUNT(CASE WHEN status_for_delete = 'active' THEN 1 END) AS active_projects
-    FROM projects 
-    WHERE channel_partner_id IS NOT NULL
-    GROUP BY channel_partner_id
-) proj_stats ON cp.id = proj_stats.channel_partner_id
-
-LEFT JOIN (
-    SELECT 
-        p.channel_partner_id,
-        COUNT(pu.id) AS total_units,
-        COUNT(CASE WHEN pu.unit_status = 'Sold' THEN 1 END) AS sold_units,
-        SUM(CASE WHEN pu.unit_status = 'Sold' THEN pu.agreement_value ELSE 0 END) AS total_revenue
-    FROM projects p
-    JOIN project_units pu ON p.id = pu.project_id
-    WHERE p.channel_partner_id IS NOT NULL 
-      AND p.status_for_delete = 'active' 
-      AND pu.status_for_delete = 'active'
-    GROUP BY p.channel_partner_id
-) unit_stats ON cp.id = unit_stats.channel_partner_id
-
-WHERE cp.status_for_delete = 'active'
-ORDER BY cp.full_name;
-
--- 9. REMINDERS AND TIMELINE DASHBOARD VIEW
--- =====================================================
-CREATE OR REPLACE VIEW vw_reminders_dashboard AS
-SELECT 
-    ar.id,
-    ar.assignment_id,
-    a.assignment_type,
-    p.project_name,
-    p.promoter_name,
-    ar.date_and_time,
-    ar.message,
-    ar.assignment_status,
-    ar.status,
-    ar.created_at,
-    
-    -- Time until reminder
-    CASE 
-        WHEN ar.date_and_time > NOW() THEN 'Upcoming'
-        WHEN ar.date_and_time <= NOW() AND ar.status != 'completed' THEN 'Overdue'
-        ELSE 'Completed'
-    END AS reminder_status,
-    
-    -- Days difference
-    EXTRACT(DAY FROM ar.date_and_time - NOW()) AS days_from_now
-
-FROM assignment_reminders ar
-JOIN assignments a ON ar.assignment_id = a.id
-JOIN projects p ON a.project_id = p.id
-WHERE a.status_for_delete = 'active' AND p.status_for_delete = 'active'
-ORDER BY ar.date_and_time;
-
--- 10. DOCUMENT STATUS DASHBOARD VIEW
--- =====================================================
-CREATE OR REPLACE VIEW vw_document_status_dashboard AS
-SELECT 
-    p.id AS project_id,
-    p.project_name,
-    p.promoter_name,
-    
-    -- RERA Documents
-    CASE WHEN p.rera_certificate_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS rera_certificate_status,
-    
-    -- Project Documents
-    CASE WHEN pd.cc_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS completion_certificate_status,
-    CASE WHEN pd.plan_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS project_plan_status,
-    CASE WHEN pd.search_report_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS search_report_status,
-    CASE WHEN pd.da_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS development_agreement_status,
-    CASE WHEN pd.pa_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS power_of_attorney_status,
-    CASE WHEN pd.satbara_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS satbara_status,
-    CASE WHEN pd.promoter_letter_head_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS promoter_letterhead_status,
-    CASE WHEN pd.promoter_sign_stamp_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS promoter_signature_status,
-    
-    -- Professional Documents
-    CASE WHEN e.licence_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS engineer_licence_status,
-    CASE WHEN a_prof.licence_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS architect_licence_status,
-    CASE WHEN c.licence_uploaded_url IS NOT NULL THEN 'Uploaded' ELSE 'Missing' END AS ca_licence_status,
-    
-    -- Document Completeness Score
-    (
-        (CASE WHEN p.rera_certificate_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN pd.cc_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN pd.plan_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN pd.search_report_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN pd.da_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN pd.pa_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN pd.satbara_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN pd.promoter_letter_head_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-        (CASE WHEN pd.promoter_sign_stamp_uploaded_url IS NOT NULL THEN 1 ELSE 0 END)
-    ) AS documents_uploaded_count,
-    
-    ROUND(
-        (
-            (CASE WHEN p.rera_certificate_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-            (CASE WHEN pd.cc_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-            (CASE WHEN pd.plan_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-            (CASE WHEN pd.search_report_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-            (CASE WHEN pd.da_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-            (CASE WHEN pd.pa_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-            (CASE WHEN pd.satbara_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-            (CASE WHEN pd.promoter_letter_head_uploaded_url IS NOT NULL THEN 1 ELSE 0 END) +
-            (CASE WHEN pd.promoter_sign_stamp_uploaded_url IS NOT NULL THEN 1 ELSE 0 END)
-        ) / 9.0 * 100, 2
-    ) AS document_completeness_percentage
-
-FROM projects p
-LEFT JOIN project_documents pd ON p.id = pd.project_id
-LEFT JOIN project_professional_details ppd ON p.id = ppd.project_id
-LEFT JOIN engineers e ON ppd.engineer_id = e.id
-LEFT JOIN architects a_prof ON ppd.architect_id = a_prof.id
-LEFT JOIN cas c ON ppd.ca_id = c.id
-WHERE p.status_for_delete = 'active'
-ORDER BY document_completeness_percentage DESC, p.project_name;
+        created_at AS activity_date,
+        'New Channel Partner Added' AS activity_type,
+        full_name AS entity_name,
+        'Channel Partner' AS entity_type,
+        created_by AS created_by_user,
+        district,
+        city
+    FROM channel_partners 
+    WHERE status_for_delete = 'active'
+) recent_activities
+ORDER BY activity_date DESC
+LIMIT 50;

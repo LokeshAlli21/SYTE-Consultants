@@ -1,233 +1,145 @@
 import React, { useEffect, useState } from 'react';
-import databaseService from '../backend-services/database/database'; // Adjust the path as needed
-import { toast } from 'react-toastify'; // Assuming you have react-toastify for notifications
+import databaseService from "../backend-services/database/database"; // Assuming this path is correct
+import { toast } from 'react-toastify'; // Assuming you have react-toastify configured
 
 function Dashboard() {
-  const [masterDashboardData, setMasterDashboardData] = useState(null);
-  const [promotersDashboardData, setPromotersDashboardData] = useState(null);
-  const [projectsDashboardData, setProjectsDashboardData] = useState(null);
-  const [unitsDashboardData, setUnitsDashboardData] = useState(null);
-  const [assignmentsDashboardData, setAssignmentsDashboardData] = useState(null);
-  const [financialDashboardData, setFinancialDashboardData] = useState(null);
-  const [siteProgressDashboardData, setSiteProgressDashboardData] = useState(null);
-  const [channelPartnersDashboardData, setChannelPartnersDashboardData] = useState(null);
-  const [remindersDashboardData, setRemindersDashboardData] = useState(null);
-  const [documentStatusDashboardData, setDocumentStatusDashboardData] = useState(null);
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // State for all dashboard data
+  const [monthlyPromoters, setMonthlyPromoters] = useState(null);
+  const [monthlyChannelPartners, setMonthlyChannelPartners] = useState(null);
+  const [monthlyProjects, setMonthlyProjects] = useState(null);
+  const [monthlyAssignments, setMonthlyAssignments] = useState(null);
+  const [assignmentStatusSummary, setAssignmentStatusSummary] = useState(null);
+  const [assignmentTypeSummary, setAssignmentTypeSummary] = useState(null);
+  const [dailyReminders, setDailyReminders] = useState(null);
+  const [generalStats, setGeneralStats] = useState(null);
+  const [promoterTypeDistribution, setPromoterTypeDistribution] = useState(null);
+  const [promoterGeographicDistribution, setPromoterGeographicDistribution] = useState(null);
+  const [projectOverview, setProjectOverview] = useState(null);
+  const [reraExpiryAlerts, setReraExpiryAlerts] = useState(null);
+  const [monthlyFinancialSummary, setMonthlyFinancialSummary] = useState(null);
+  const [assignmentFinancialPerformance, setAssignmentFinancialPerformance] = useState(null);
+  const [userActivitySummary, setUserActivitySummary] = useState(null);
+  const [recentActivity, setRecentActivity] = useState(null);
+  const [completeDashboardData, setCompleteDashboardData] = useState(null);
+  const [dashboardOverview, setDashboardOverview] = useState(null);
+  const [quickStats, setQuickStats] = useState(null);
+
+  // Helper function to fetch data for a specific method and set state
+  const fetchData = async (methodName, setterFunction, params = {}) => {
+    try {
+      const data = await databaseService[methodName](params);
+      setterFunction(data);
+      console.log(`✅ Fetched ${methodName} data:`, data);
+    } catch (error) {
+      console.error(`❌ Error fetching ${methodName} data:`, error);
+      toast.error(`Failed to load ${methodName} data`);
+      setterFunction(null); // Clear data on error
+    }
+  };
 
   useEffect(() => {
     async function fetchAllDashboardData() {
-      try {
-        // Fetch Master Dashboard
-        const masterData = await databaseService.getMasterDashboard();
-        setMasterDashboardData(masterData);
+      // Monthly Trends
+      await fetchData('getMonthlyPromoters', setMonthlyPromoters);
+      await fetchData('getMonthlyChannelPartners', setMonthlyChannelPartners);
+      await fetchData('getMonthlyProjects', setMonthlyProjects);
+      await fetchData('getMonthlyAssignments', setMonthlyAssignments);
 
-        // Fetch Promoters Dashboard (with default params)
-        const promotersData = await databaseService.getPromotersDashboard({ page: 1, limit: 5 });
-        setPromotersDashboardData(promotersData);
+      // Assignment Status Summary
+      await fetchData('getAssignmentStatusSummary', setAssignmentStatusSummary);
+      await fetchData('getAssignmentTypeSummary', setAssignmentTypeSummary);
 
-        // Fetch Projects Dashboard (with default params)
-        const projectsData = await databaseService.getProjectsDashboard({ page: 1, limit: 5 });
-        setProjectsDashboardData(projectsData);
+      // Daily Reminders and Tasks
+      await fetchData('getDailyReminders', setDailyReminders);
 
-        // Fetch Units Dashboard (with default params)
-        const unitsData = await databaseService.getUnitsDashboard({ page: 1, limit: 5 });
-        setUnitsDashboardData(unitsData);
+      // General Statistics
+      await fetchData('getGeneralStats', setGeneralStats);
 
-        // Fetch Assignments Dashboard (with default params)
-        const assignmentsData = await databaseService.getAssignmentsDashboard({ page: 1, limit: 5 });
-        setAssignmentsDashboardData(assignmentsData);
+      // Promoter Insights
+      await fetchData('getPromoterTypeDistribution', setPromoterTypeDistribution);
+      await fetchData('getPromoterGeographicDistribution', setPromoterGeographicDistribution, { district: 'Mumbai' });
 
-        // Fetch Financial Dashboard
-        const financialData = await databaseService.getFinancialDashboard();
-        setFinancialDashboardData(financialData);
+      // Project Insights
+      await fetchData('getProjectOverview', setProjectOverview, { limit: 5, rera_status: 'ongoing' });
+      await fetchData('getReraExpiryAlerts', setReraExpiryAlerts, { days_ahead: 60, alert_level: 'critical' });
 
-        // Fetch Site Progress Dashboard (with default params)
-        const siteProgressData = await databaseService.getSiteProgressDashboard({ page: 1, limit: 5 });
-        setSiteProgressDashboardData(siteProgressData);
+      // Financial Insights
+      await fetchData('getMonthlyFinancialSummary', setMonthlyFinancialSummary, { year: 2024, limit: 3 });
+      await fetchData('getAssignmentFinancialPerformance', setAssignmentFinancialPerformance, { assignment_type: 'Sales' });
 
-        // Fetch Channel Partners Dashboard (with default params)
-        const channelPartnersData = await databaseService.getChannelPartnersDashboard({ page: 1, limit: 5 });
-        setChannelPartnersDashboardData(channelPartnersData);
+      // Activity and Productivity Metrics
+      await fetchData('getUserActivitySummary', setUserActivitySummary, { limit: 5 });
+      await fetchData('getRecentActivity', setRecentActivity, { days_back: 15, activity_type: 'login' });
 
-        // Fetch Reminders Dashboard (with default params)
-        const remindersData = await databaseService.getRemindersDashboard({ page: 1, limit: 5 });
-        setRemindersDashboardData(remindersData);
-
-        // Fetch Document Status Dashboard (with default params)
-        const documentStatusData = await databaseService.getDocumentStatusDashboard({ page: 1, limit: 5 });
-        setDocumentStatusDashboardData(documentStatusData);
-
-      } catch (err) {
-        console.error("Error fetching dashboard data:", err);
-        setError("Failed to load dashboard data. Please try again.");
-        toast.error("Failed to load dashboard data.");
-      } finally {
-        setLoading(false);
-      }
+      // Combined Dashboard Data
+      await fetchData('getCompleteDashboardData', setCompleteDashboardData);
+      await fetchData('getDashboardOverview', setDashboardOverview); // Alias
+      await fetchData('getQuickStats', setQuickStats); // Alias
     }
 
     fetchAllDashboardData();
   }, []);
 
-  if (loading) {
-    return <div style={{ padding: '20px', textAlign: 'center' }}>Loading dashboard data...</div>;
-  }
-
-  if (error) {
-    return <div style={{ padding: '20px', color: 'red', textAlign: 'center' }}>Error: {error}</div>;
-  }
-
   return (
-    <div style={{ fontFamily: 'Arial, sans-serif', padding: '20px', maxWidth: '1200px', margin: '0 auto' }}>
-      <h1>Dashboard Overview</h1>
-      <p>This dashboard displays data fetched from various backend services. The focus here is on data fetching and display, not elaborate UI.</p>
+    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
+      <h1>Basic Dashboard Data Display</h1>
 
-      {/* --- Master Dashboard --- */}
-      <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-        <h2>Master Dashboard Overview</h2>
-        {masterDashboardData ? (
-          <pre style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-            {JSON.stringify(masterDashboardData, null, 2)}
-          </pre>
-        ) : (
-          <p>No master dashboard data available.</p>
-        )}
-      </div>
+      <h2>Monthly Trends</h2>
+      <h3>Monthly Promoters</h3>
+      <pre>{JSON.stringify(monthlyPromoters, null, 2)}</pre>
+      <h3>Monthly Channel Partners</h3>
+      <pre>{JSON.stringify(monthlyChannelPartners, null, 2)}</pre>
+      <h3>Monthly Projects</h3>
+      <pre>{JSON.stringify(monthlyProjects, null, 2)}</pre>
+      <h3>Monthly Assignments</h3>
+      <pre>{JSON.stringify(monthlyAssignments, null, 2)}</pre>
 
-      {/* --- Promoters Dashboard --- */}
-      <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-        <h2>Promoters Dashboard (First 5)</h2>
-        {promotersDashboardData && promotersDashboardData.data && promotersDashboardData.data.length > 0 ? (
-          <pre style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-            {JSON.stringify(promotersDashboardData.data, null, 2)}
-          </pre>
-        ) : (
-          <p>No promoters data available or fetching failed.</p>
-        )}
-        {promotersDashboardData && promotersDashboardData.pagination && (
-          <p>Total Promoters: {promotersDashboardData.pagination.totalRecords}</p>
-        )}
-      </div>
+      <h2>Assignment Status Summary</h2>
+      <h3>Assignment Status Summary</h3>
+      <pre>{JSON.stringify(assignmentStatusSummary, null, 2)}</pre>
+      <h3>Assignment Type Summary</h3>
+      <pre>{JSON.stringify(assignmentTypeSummary, null, 2)}</pre>
 
-      {/* --- Projects Dashboard --- */}
-      <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-        <h2>Projects Dashboard (First 5)</h2>
-        {projectsDashboardData && projectsDashboardData.data && projectsDashboardData.data.length > 0 ? (
-          <pre style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-            {JSON.stringify(projectsDashboardData.data, null, 2)}
-          </pre>
-        ) : (
-          <p>No projects data available or fetching failed.</p>
-        )}
-        {projectsDashboardData && projectsDashboardData.pagination && (
-          <p>Total Projects: {projectsDashboardData.pagination.totalRecords}</p>
-        )}
-      </div>
+      <h2>Daily Reminders and Tasks</h2>
+      <h3>Daily Reminders</h3>
+      <pre>{JSON.stringify(dailyReminders, null, 2)}</pre>
 
-      {/* --- Units Dashboard --- */}
-      <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-        <h2>Units Dashboard (First 5)</h2>
-        {unitsDashboardData && unitsDashboardData.data && unitsDashboardData.data.length > 0 ? (
-          <pre style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-            {JSON.stringify(unitsDashboardData.data, null, 2)}
-          </pre>
-        ) : (
-          <p>No units data available or fetching failed.</p>
-        )}
-        {unitsDashboardData && unitsDashboardData.pagination && (
-          <p>Total Units: {unitsDashboardData.pagination.totalRecords}</p>
-        )}
-      </div>
+      <h2>General Statistics</h2>
+      <h3>General Stats</h3>
+      <pre>{JSON.stringify(generalStats, null, 2)}</pre>
 
-      {/* --- Assignments Dashboard --- */}
-      <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-        <h2>Assignments Dashboard (First 5)</h2>
-        {assignmentsDashboardData && assignmentsDashboardData.data && assignmentsDashboardData.data.length > 0 ? (
-          <pre style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-            {JSON.stringify(assignmentsDashboardData.data, null, 2)}
-          </pre>
-        ) : (
-          <p>No assignments data available or fetching failed.</p>
-        )}
-        {assignmentsDashboardData && assignmentsDashboardData.pagination && (
-          <p>Total Assignments: {assignmentsDashboardData.pagination.totalRecords}</p>
-        )}
-      </div>
+      <h2>Promoter Insights</h2>
+      <h3>Promoter Type Distribution</h3>
+      <pre>{JSON.stringify(promoterTypeDistribution, null, 2)}</pre>
+      <h3>Promoter Geographic Distribution</h3>
+      <pre>{JSON.stringify(promoterGeographicDistribution, null, 2)}</pre>
 
-      {/* --- Financial Dashboard --- */}
-      <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-        <h2>Financial Dashboard</h2>
-        {financialDashboardData ? (
-          <pre style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-            {JSON.stringify(financialDashboardData, null, 2)}
-          </pre>
-        ) : (
-          <p>No financial dashboard data available.</p>
-        )}
-      </div>
+      <h2>Project Insights</h2>
+      <h3>Project Overview</h3>
+      <pre>{JSON.stringify(projectOverview, null, 2)}</pre>
+      <h3>RERA Expiry Alerts</h3>
+      <pre>{JSON.stringify(reraExpiryAlerts, null, 2)}</pre>
 
-      {/* --- Site Progress Dashboard --- */}
-      <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-        <h2>Site Progress Dashboard (First 5)</h2>
-        {siteProgressDashboardData && siteProgressDashboardData.data && siteProgressDashboardData.data.length > 0 ? (
-          <pre style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-            {JSON.stringify(siteProgressDashboardData.data, null, 2)}
-          </pre>
-        ) : (
-          <p>No site progress data available or fetching failed.</p>
-        )}
-        {siteProgressDashboardData && siteProgressDashboardData.pagination && (
-          <p>Total Site Progress Entries: {siteProgressDashboardData.pagination.totalRecords}</p>
-        )}
-      </div>
+      <h2>Financial Insights</h2>
+      <h3>Monthly Financial Summary</h3>
+      <pre>{JSON.stringify(monthlyFinancialSummary, null, 2)}</pre>
+      <h3>Assignment Financial Performance</h3>
+      <pre>{JSON.stringify(assignmentFinancialPerformance, null, 2)}</pre>
 
-      {/* --- Channel Partners Dashboard --- */}
-      <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-        <h2>Channel Partners Dashboard (First 5)</h2>
-        {channelPartnersDashboardData && channelPartnersDashboardData.data && channelPartnersDashboardData.data.length > 0 ? (
-          <pre style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-            {JSON.stringify(channelPartnersDashboardData.data, null, 2)}
-          </pre>
-        ) : (
-          <p>No channel partners data available or fetching failed.</p>
-        )}
-        {channelPartnersDashboardData && channelPartnersDashboardData.pagination && (
-          <p>Total Channel Partners: {channelPartnersDashboardData.pagination.totalRecords}</p>
-        )}
-      </div>
+      <h2>Activity and Productivity Metrics</h2>
+      <h3>User Activity Summary</h3>
+      <pre>{JSON.stringify(userActivitySummary, null, 2)}</pre>
+      <h3>Recent Activity</h3>
+      <pre>{JSON.stringify(recentActivity, null, 2)}</pre>
 
-      {/* --- Reminders Dashboard --- */}
-      <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-        <h2>Reminders Dashboard (First 5)</h2>
-        {remindersDashboardData && remindersDashboardData.data && remindersDashboardData.data.length > 0 ? (
-          <pre style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-            {JSON.stringify(remindersDashboardData.data, null, 2)}
-          </pre>
-        ) : (
-          <p>No reminders data available or fetching failed.</p>
-        )}
-        {remindersDashboardData && remindersDashboardData.pagination && (
-          <p>Total Reminders: {remindersDashboardData.pagination.totalRecords}</p>
-        )}
-      </div>
-
-      {/* --- Document Status Dashboard --- */}
-      <div style={{ marginBottom: '30px', border: '1px solid #eee', padding: '15px', borderRadius: '8px' }}>
-        <h2>Document Status Dashboard (First 5)</h2>
-        {documentStatusDashboardData && documentStatusDashboardData.data && documentStatusDashboardData.data.length > 0 ? (
-          <pre style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', overflowX: 'auto' }}>
-            {JSON.stringify(documentStatusDashboardData.data, null, 2)}
-          </pre>
-        ) : (
-          <p>No document status data available or fetching failed.</p>
-        )}
-        {documentStatusDashboardData && documentStatusDashboardData.pagination && (
-          <p>Total Document Status Entries: {documentStatusDashboardData.pagination.totalRecords}</p>
-        )}
-      </div>
+      <h2>Combined Dashboard Data</h2>
+      <h3>Complete Dashboard Data</h3>
+      <pre>{JSON.stringify(completeDashboardData, null, 2)}</pre>
+      <h3>Dashboard Overview (Alias)</h3>
+      <pre>{JSON.stringify(dashboardOverview, null, 2)}</pre>
+      <h3>Quick Stats (Alias)</h3>
+      <pre>{JSON.stringify(quickStats, null, 2)}</pre>
     </div>
   );
 }

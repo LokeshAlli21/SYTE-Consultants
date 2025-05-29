@@ -2877,332 +2877,612 @@ const districtOptions = [
 
 
 // DashBoard
-// 1. Master Dashboard Overview
-async getMasterDashboard() {
+// ====================================================================
+// DASHBOARD API METHODS
+// ====================================================================
+
+// ====================================================================
+// 1. MONTHLY TRENDS METHODS
+// ====================================================================
+
+/**
+ * Get Monthly Promoters Added
+ * @param {Object} params - Query parameters
+ * @param {number} params.year - Filter by year
+ * @param {number} params.month - Filter by month
+ * @param {number} params.limit - Limit results (default: 12)
+ */
+async getMonthlyPromoters(params = {}) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/master-overview`, {
+    const queryParams = new URLSearchParams();
+    if (params.year) queryParams.append('year', params.year);
+    if (params.month) queryParams.append('month', params.month);
+    if (params.limit) queryParams.append('limit', params.limit);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/monthly/promoters?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch master dashboard data.");
+      throw new Error(errorData.message || "Failed to fetch monthly promoters data.");
     }
 
     const data = await response.json();
     return data.data;
-
   } catch (error) {
-    console.error("❌ Error fetching master dashboard:", error);
+    console.error("❌ Error fetching monthly promoters:", error);
     throw error;
   }
 }
 
-// 2. Promoters Dashboard
-async getPromotersDashboard(params = {}) {
+/**
+ * Get Monthly Channel Partners Added
+ * @param {Object} params - Query parameters
+ * @param {number} params.year - Filter by year
+ * @param {number} params.month - Filter by month
+ * @param {number} params.limit - Limit results (default: 12)
+ */
+async getMonthlyChannelPartners(params = {}) {
   try {
-    const { page = 1, limit = 50, search, district, city, promoter_type } = params;
-    
     const queryParams = new URLSearchParams();
-    queryParams.append('page', page);
-    queryParams.append('limit', limit);
-    
-    if (search) queryParams.append('search', search);
-    if (district) queryParams.append('district', district);
-    if (city) queryParams.append('city', city);
-    if (promoter_type) queryParams.append('promoter_type', promoter_type);
+    if (params.year) queryParams.append('year', params.year);
+    if (params.month) queryParams.append('month', params.month);
+    if (params.limit) queryParams.append('limit', params.limit);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/promoters?${queryParams}`, {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/monthly/channel-partners?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch promoters dashboard data.");
-    }
-
-    const data = await response.json();
-    return {
-      data: data.data,
-      pagination: data.pagination
-    };
-
-  } catch (error) {
-    console.error("❌ Error fetching promoters dashboard:", error);
-    throw error;
-  }
-}
-
-// 3. Projects Dashboard
-async getProjectsDashboard(params = {}) {
-  try {
-    const { page = 1, limit = 50, search, district, city, project_type, promoter_id } = params;
-    
-    const queryParams = new URLSearchParams();
-    queryParams.append('page', page);
-    queryParams.append('limit', limit);
-    
-    if (search) queryParams.append('search', search);
-    if (district) queryParams.append('district', district);
-    if (city) queryParams.append('city', city);
-    if (project_type) queryParams.append('project_type', project_type);
-    if (promoter_id) queryParams.append('promoter_id', promoter_id);
-
-    const response = await fetch(`${this.baseUrl}/api/dashboard/projects?${queryParams}`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch projects dashboard data.");
-    }
-
-    const data = await response.json();
-    return {
-      data: data.data,
-      pagination: data.pagination
-    };
-
-  } catch (error) {
-    console.error("❌ Error fetching projects dashboard:", error);
-    throw error;
-  }
-}
-
-// 4. Units Dashboard
-async getUnitsDashboard(params = {}) {
-  try {
-    const { page = 1, limit = 50, search, unit_status, project_id, district, city } = params;
-    
-    const queryParams = new URLSearchParams();
-    queryParams.append('page', page);
-    queryParams.append('limit', limit);
-    
-    if (search) queryParams.append('search', search);
-    if (unit_status) queryParams.append('unit_status', unit_status);
-    if (project_id) queryParams.append('project_id', project_id);
-    if (district) queryParams.append('district', district);
-    if (city) queryParams.append('city', city);
-
-    const response = await fetch(`${this.baseUrl}/api/dashboard/units?${queryParams}`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch units dashboard data.");
-    }
-
-    const data = await response.json();
-    return {
-      data: data.data,
-      pagination: data.pagination
-    };
-
-  } catch (error) {
-    console.error("❌ Error fetching units dashboard:", error);
-    throw error;
-  }
-}
-
-// 5. Assignments Dashboard
-async getAssignmentsDashboard(params = {}) {
-  try {
-    const { page = 1, limit = 50, search, assignment_type, project_id, current_status } = params;
-    
-    const queryParams = new URLSearchParams();
-    queryParams.append('page', page);
-    queryParams.append('limit', limit);
-    
-    if (search) queryParams.append('search', search);
-    if (assignment_type) queryParams.append('assignment_type', assignment_type);
-    if (project_id) queryParams.append('project_id', project_id);
-    if (current_status) queryParams.append('current_status', current_status);
-
-    const response = await fetch(`${this.baseUrl}/api/dashboard/assignments?${queryParams}`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch assignments dashboard data.");
-    }
-
-    const data = await response.json();
-    return {
-      data: data.data,
-      pagination: data.pagination
-    };
-
-  } catch (error) {
-    console.error("❌ Error fetching assignments dashboard:", error);
-    throw error;
-  }
-}
-
-// 6. Financial Dashboard
-async getFinancialDashboard() {
-  try {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/financial`, {
-      method: "GET",
-      headers: this.getAuthHeaders(),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch financial dashboard data.");
+      throw new Error(errorData.message || "Failed to fetch monthly channel partners data.");
     }
 
     const data = await response.json();
     return data.data;
-
   } catch (error) {
-    console.error("❌ Error fetching financial dashboard:", error);
+    console.error("❌ Error fetching monthly channel partners:", error);
     throw error;
   }
 }
 
-// 7. Site Progress Dashboard
-async getSiteProgressDashboard(params = {}) {
+/**
+ * Get Monthly Projects Added
+ * @param {Object} params - Query parameters
+ * @param {number} params.year - Filter by year
+ * @param {number} params.month - Filter by month
+ * @param {string} params.project_type - Filter by project type
+ * @param {number} params.limit - Limit results (default: 12)
+ */
+async getMonthlyProjects(params = {}) {
   try {
-    const { page = 1, limit = 50, search, district, city, project_id } = params;
-    
     const queryParams = new URLSearchParams();
-    queryParams.append('page', page);
-    queryParams.append('limit', limit);
-    
-    if (search) queryParams.append('search', search);
-    if (district) queryParams.append('district', district);
-    if (city) queryParams.append('city', city);
-    if (project_id) queryParams.append('project_id', project_id);
+    if (params.year) queryParams.append('year', params.year);
+    if (params.month) queryParams.append('month', params.month);
+    if (params.project_type) queryParams.append('project_type', params.project_type);
+    if (params.limit) queryParams.append('limit', params.limit);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/site-progress?${queryParams}`, {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/monthly/projects?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch site progress dashboard data.");
+      throw new Error(errorData.message || "Failed to fetch monthly projects data.");
     }
 
     const data = await response.json();
-    return {
-      data: data.data,
-      pagination: data.pagination
-    };
-
+    return data.data;
   } catch (error) {
-    console.error("❌ Error fetching site progress dashboard:", error);
+    console.error("❌ Error fetching monthly projects:", error);
     throw error;
   }
 }
 
-// 8. Channel Partners Dashboard
-async getChannelPartnersDashboard(params = {}) {
+/**
+ * Get Monthly Assignments Added
+ * @param {Object} params - Query parameters
+ * @param {number} params.year - Filter by year
+ * @param {number} params.month - Filter by month
+ * @param {number} params.limit - Limit results (default: 12)
+ */
+async getMonthlyAssignments(params = {}) {
   try {
-    const { page = 1, limit = 50, search, district, city } = params;
-    
     const queryParams = new URLSearchParams();
-    queryParams.append('page', page);
-    queryParams.append('limit', limit);
-    
-    if (search) queryParams.append('search', search);
-    if (district) queryParams.append('district', district);
-    if (city) queryParams.append('city', city);
+    if (params.year) queryParams.append('year', params.year);
+    if (params.month) queryParams.append('month', params.month);
+    if (params.limit) queryParams.append('limit', params.limit);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/channel-partners?${queryParams}`, {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/monthly/assignments?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch channel partners dashboard data.");
+      throw new Error(errorData.message || "Failed to fetch monthly assignments data.");
     }
 
     const data = await response.json();
-    return {
-      data: data.data,
-      pagination: data.pagination
-    };
-
+    return data.data;
   } catch (error) {
-    console.error("❌ Error fetching channel partners dashboard:", error);
+    console.error("❌ Error fetching monthly assignments:", error);
     throw error;
   }
 }
 
-// 9. Reminders Dashboard
-async getRemindersDashboard(params = {}) {
-  try {
-    const { page = 1, limit = 50, search, reminder_status, assignment_type } = params;
-    
-    const queryParams = new URLSearchParams();
-    queryParams.append('page', page);
-    queryParams.append('limit', limit);
-    
-    if (search) queryParams.append('search', search);
-    if (reminder_status) queryParams.append('reminder_status', reminder_status);
-    if (assignment_type) queryParams.append('assignment_type', assignment_type);
+// ====================================================================
+// 2. ASSIGNMENT STATUS SUMMARY METHODS
+// ====================================================================
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/reminders?${queryParams}`, {
+/**
+ * Get Assignment Status Summary
+ */
+async getAssignmentStatusSummary() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/assignments/status-summary`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch reminders dashboard data.");
+      throw new Error(errorData.message || "Failed to fetch assignment status summary.");
     }
 
     const data = await response.json();
-    return {
-      data: data.data,
-      pagination: data.pagination
-    };
-
+    return data.data;
   } catch (error) {
-    console.error("❌ Error fetching reminders dashboard:", error);
+    console.error("❌ Error fetching assignment status summary:", error);
     throw error;
   }
 }
 
-// 10. Document Status Dashboard
-async getDocumentStatusDashboard(params = {}) {
+/**
+ * Get Assignment Type Summary
+ */
+async getAssignmentTypeSummary() {
   try {
-    const { page = 1, limit = 50, search, min_completeness_percentage } = params;
-    
-    const queryParams = new URLSearchParams();
-    queryParams.append('page', page);
-    queryParams.append('limit', limit);
-    
-    if (search) queryParams.append('search', search);
-    if (min_completeness_percentage) queryParams.append('min_completeness_percentage', min_completeness_percentage);
-
-    const response = await fetch(`${this.baseUrl}/api/dashboard/document-status?${queryParams}`, {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/assignments/type-summary`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || "Failed to fetch document status dashboard data.");
+      throw new Error(errorData.message || "Failed to fetch assignment type summary.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching assignment type summary:", error);
+    throw error;
+  }
+}
+
+// ====================================================================
+// 3. DAILY REMINDERS AND TASKS METHODS
+// ====================================================================
+
+/**
+ * Get Daily Reminders
+ * @param {Object} params - Query parameters
+ * @param {string} params.urgency - Filter by urgency level
+ * @param {string} params.assignment_type - Filter by assignment type
+ * @param {number} params.days_ahead - Days ahead to look (default: 7)
+ */
+async getDailyReminders(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.urgency) queryParams.append('urgency', params.urgency);
+    if (params.assignment_type) queryParams.append('assignment_type', params.assignment_type);
+    if (params.days_ahead) queryParams.append('days_ahead', params.days_ahead);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/reminders/daily?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch daily reminders.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching daily reminders:", error);
+    throw error;
+  }
+}
+
+// ====================================================================
+// 4. GENERAL STATISTICS METHODS
+// ====================================================================
+
+/**
+ * Get General Statistics
+ */
+async getGeneralStats() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/stats/general`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch general statistics.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching general statistics:", error);
+    throw error;
+  }
+}
+
+// ====================================================================
+// 5. PROMOTER INSIGHTS METHODS
+// ====================================================================
+
+/**
+ * Get Promoter Type Distribution
+ */
+async getPromoterTypeDistribution() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/promoters/type-distribution`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch promoter type distribution.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching promoter type distribution:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get Promoter Geographic Distribution
+ * @param {Object} params - Query parameters
+ * @param {string} params.district - Filter by district
+ * @param {string} params.city - Filter by city
+ * @param {number} params.limit - Limit results (default: 50)
+ */
+async getPromoterGeographicDistribution(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.district) queryParams.append('district', params.district);
+    if (params.city) queryParams.append('city', params.city);
+    if (params.limit) queryParams.append('limit', params.limit);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/promoters/geographic-distribution?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch promoter geographic distribution.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching promoter geographic distribution:", error);
+    throw error;
+  }
+}
+
+// ====================================================================
+// 6. PROJECT INSIGHTS METHODS
+// ====================================================================
+
+/**
+ * Get Project Overview
+ * @param {Object} params - Query parameters
+ * @param {number} params.page - Page number (default: 1)
+ * @param {number} params.limit - Limit results (default: 50)
+ * @param {string} params.search - Search term
+ * @param {string} params.district - Filter by district
+ * @param {string} params.city - Filter by city
+ * @param {string} params.project_type - Filter by project type
+ * @param {string} params.promoter_id - Filter by promoter ID
+ * @param {string} params.rera_status - Filter by RERA status
+ */
+async getProjectOverview(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.append('page', params.page);
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.search) queryParams.append('search', params.search);
+    if (params.district) queryParams.append('district', params.district);
+    if (params.city) queryParams.append('city', params.city);
+    if (params.project_type) queryParams.append('project_type', params.project_type);
+    if (params.promoter_id) queryParams.append('promoter_id', params.promoter_id);
+    if (params.rera_status) queryParams.append('rera_status', params.rera_status);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/projects/overview?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch project overview.");
     }
 
     const data = await response.json();
     return {
-      data: data.data,
+      projects: data.data,
       pagination: data.pagination
     };
-
   } catch (error) {
-    console.error("❌ Error fetching document status dashboard:", error);
+    console.error("❌ Error fetching project overview:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get RERA Expiry Alerts
+ * @param {Object} params - Query parameters
+ * @param {string} params.alert_level - Filter by alert level
+ * @param {string} params.district - Filter by district
+ * @param {string} params.city - Filter by city
+ * @param {number} params.days_ahead - Days ahead to look (default: 90)
+ */
+async getReraExpiryAlerts(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.alert_level) queryParams.append('alert_level', params.alert_level);
+    if (params.district) queryParams.append('district', params.district);
+    if (params.city) queryParams.append('city', params.city);
+    if (params.days_ahead) queryParams.append('days_ahead', params.days_ahead);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/projects/rera-expiry-alerts?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch RERA expiry alerts.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching RERA expiry alerts:", error);
+    throw error;
+  }
+}
+
+// ====================================================================
+// 7. FINANCIAL INSIGHTS METHODS
+// ====================================================================
+
+/**
+ * Get Monthly Financial Summary
+ * @param {Object} params - Query parameters
+ * @param {number} params.year - Filter by year
+ * @param {number} params.month - Filter by month
+ * @param {number} params.limit - Limit results (default: 12)
+ */
+async getMonthlyFinancialSummary(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.year) queryParams.append('year', params.year);
+    if (params.month) queryParams.append('month', params.month);
+    if (params.limit) queryParams.append('limit', params.limit);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/financial/monthly-summary?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch monthly financial summary.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching monthly financial summary:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get Assignment Financial Performance
+ * @param {Object} params - Query parameters
+ * @param {string} params.assignment_type - Filter by assignment type
+ */
+async getAssignmentFinancialPerformance(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.assignment_type) queryParams.append('assignment_type', params.assignment_type);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/financial/assignment-performance?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch assignment financial performance.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching assignment financial performance:", error);
+    throw error;
+  }
+}
+
+// ====================================================================
+// 8. ACTIVITY AND PRODUCTIVITY METRICS METHODS
+// ====================================================================
+
+/**
+ * Get User Activity Summary
+ * @param {Object} params - Query parameters
+ * @param {string} params.user_id - Filter by user ID
+ * @param {string} params.user_type - Filter by user type
+ * @param {number} params.limit - Limit results (default: 50)
+ */
+async getUserActivitySummary(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.user_id) queryParams.append('user_id', params.user_id);
+    if (params.user_type) queryParams.append('user_type', params.user_type);
+    if (params.limit) queryParams.append('limit', params.limit);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/activity/user-summary?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch user activity summary.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching user activity summary:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get Recent Activity
+ * @param {Object} params - Query parameters
+ * @param {string} params.activity_type - Filter by activity type
+ * @param {string} params.entity_type - Filter by entity type
+ * @param {string} params.district - Filter by district
+ * @param {string} params.city - Filter by city
+ * @param {string} params.created_by_user - Filter by user who created
+ * @param {number} params.limit - Limit results (default: 50)
+ * @param {number} params.days_back - Days back to look (default: 30)
+ */
+async getRecentActivity(params = {}) {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params.activity_type) queryParams.append('activity_type', params.activity_type);
+    if (params.entity_type) queryParams.append('entity_type', params.entity_type);
+    if (params.district) queryParams.append('district', params.district);
+    if (params.city) queryParams.append('city', params.city);
+    if (params.created_by_user) queryParams.append('created_by_user', params.created_by_user);
+    if (params.limit) queryParams.append('limit', params.limit);
+    if (params.days_back) queryParams.append('days_back', params.days_back);
+
+    const response = await fetch(`${this.baseUrl}/api/dashboard/activity/recent?${queryParams}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch recent activity.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching recent activity:", error);
+    throw error;
+  }
+}
+
+// ====================================================================
+// 9. COMBINED DASHBOARD DATA METHODS
+// ====================================================================
+
+/**
+ * Get Complete Dashboard Data (combines multiple views for single API call)
+ */
+async getCompleteDashboardData() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/complete`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch complete dashboard data.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching complete dashboard data:", error);
+    throw error;
+  }
+}
+
+// ====================================================================
+// 10. CONVENIENCE METHODS (Using alternative routes)
+// ====================================================================
+
+/**
+ * Get Dashboard Overview (alias for getCompleteDashboardData)
+ */
+async getDashboardOverview() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/overview`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch dashboard overview.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching dashboard overview:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get Quick Stats (alias for getGeneralStats)
+ */
+async getQuickStats() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/dashboard/stats`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch quick stats.");
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching quick stats:", error);
     throw error;
   }
 }
