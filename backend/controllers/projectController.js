@@ -625,13 +625,14 @@ export const uploadProjectUnits = async (req, res) => {
       sanitizedUnit[key] = value;
     });
 
-    console.log("sanitizedUnit: ",sanitizedUnit);
     
-
+    const {updated_user, ...dataToUpload} = sanitizedUnit
+    // console.log("sanitizedUnit: ",dataToUpload);
     // Perform the insert operation (not upsert)
     const { error } = await supabase
       .from('project_units')
-      .insert([sanitizedUnit]);
+      .insert([dataToUpload]);
+console.log(error);
 
     if (error) {
       return res.status(500).json({ message: '❌ Failed to insert unit data', error });

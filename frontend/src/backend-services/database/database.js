@@ -919,6 +919,7 @@ async uploadProjectUnitDetails(formData) {
         }
       });
     }
+console.log(formData);
 
     // Submit final form
     const response = await fetch(`${this.baseUrl}/api/projects/add-project-units`, {

@@ -520,11 +520,11 @@ const cardData = [
 ];
 
   return (
-    <div className="min-h-screen p-6">
+    <div className="min-h-screen p-0 pt-0">
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
-        <div className="py-6 pt-0 mb-0">
+        <div className="py-6 px-2 pt-0 mb-0">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">Unit Management</h1>
@@ -542,7 +542,7 @@ const cardData = [
         </div>
 
         {/* Stats Cards */}
-<div className="flex max-w-6xl gap-4 overflow-x-scroll py-4 mb-4" style={{
+<div className="flex max-w-6xl gap-4 overflow-x-scroll p-0 pb-4 mb-2" style={{
     scrollbarWidth: 'none',        // Firefox
     msOverflowStyle: 'none'        // IE 10+
   }}>

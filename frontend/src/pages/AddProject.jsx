@@ -581,7 +581,9 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
   };
 
   const handleSubmitProjectUnit = async () => {
-    const unit = {created_by: userData?.id,...projectUnit}
+    console.log(userData);
+    
+    const unit = {...projectUnit,created_by: userData.id}
     return handleSubmitWithValidation(
       unit,
       async () => await databaseService.uploadProjectUnitDetails(unit),
