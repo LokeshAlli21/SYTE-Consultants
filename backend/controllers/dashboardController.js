@@ -14,15 +14,15 @@ export const getMonthlyPromoters = async (req, res) => {
       .select('*');
 
     // Apply filters
-    // if (year) {
-    //   query = query.eq('year', parseInt(year));
-    // }
-    // if (month) {
-    //   query = query.eq('month', parseInt(month));
-    // }
+    if (year) {
+      query = query.eq('year', parseInt(year));
+    }
+    if (month) {
+      query = query.eq('month', parseInt(month));
+    }
 
     // Limit results and order
-    // query = query.limit(parseInt(limit));
+    query = query.limit(parseInt(limit));
 
     const { data, error } = await query;
 
