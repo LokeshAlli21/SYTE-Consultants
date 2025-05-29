@@ -863,7 +863,7 @@ const getStatusColor = (status) => {
 
           {/* Team Summary */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Team Overview</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Project Professionals Overview</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-center">
@@ -950,19 +950,19 @@ const getStatusColor = (status) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
               <p className="text-2xl font-bold text-blue-600">{generalStats?.promoter_districts_covered}</p>
-              <p className="text-sm text-gray-600">Districts Covered</p>
+              <p className="text-sm text-gray-600">Promoter Districts Covered</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-green-600">{generalStats?.promoter_cities_covered}</p>
-              <p className="text-sm text-gray-600">Cities Covered</p>
+              <p className="text-sm text-gray-600">Promoter Cities Covered</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-purple-600">{generalStats?.project_districts_covered}</p>
-              <p className="text-sm text-gray-600">Project Districts</p>
+              <p className="text-sm text-gray-600">Project Districts Covered</p>
             </div>
             <div>
               <p className="text-2xl font-bold text-orange-600">{generalStats?.project_cities_covered}</p>
-              <p className="text-sm text-gray-600">Project Cities</p>
+              <p className="text-sm text-gray-600">Project Cities Covered</p>
             </div>
           </div>
         </div>
