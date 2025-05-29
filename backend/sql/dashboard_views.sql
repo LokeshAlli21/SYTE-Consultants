@@ -186,8 +186,10 @@ SELECT
     -- Project Statistics
     (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active') AS total_projects,
     (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active' AND DATE(created_at) >= DATE_TRUNC('month', CURRENT_DATE)) AS projects_this_month,
-    (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active' AND project_type = 'Residential') AS residential_projects,
+    (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active' AND project_type = 'Residential / Group Housing') AS residential_projects,
     (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active' AND project_type = 'Commercial') AS commercial_projects,
+    (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active' AND project_type = 'Mixed') AS mixed_projects,
+    (SELECT COUNT(*) FROM projects WHERE status_for_delete = 'active' AND project_type = 'Plotted') AS plotted_projects,
     
     -- Assignment Statistics
     (SELECT COUNT(*) FROM assignments WHERE status_for_delete = 'active') AS total_assignments,

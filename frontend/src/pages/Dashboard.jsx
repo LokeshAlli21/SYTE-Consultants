@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, Area, AreaChart } from 'recharts';
-import { Calendar, TrendingUp, Users, Building2, FileText, AlertTriangle, DollarSign, Activity, Clock, MapPin, Home, UserCheck,IndianRupee  } from 'lucide-react';
+import { Calendar, TrendingUp, Users, Building2, FileText, AlertTriangle, DollarSign, Activity, Clock, MapPin, Home, UserCheck,IndianRupee , Layers } from 'lucide-react';
 import databaseService from '../backend-services/database/database';
 
 // Updated database service to match SQL views structure
@@ -198,6 +198,184 @@ import databaseService from '../backend-services/database/database';
 //   }
 // };
 
+const statusColorMap = {
+  new: {
+    background: "bg-blue-50",
+    text: "text-blue-800",
+    border: "border-blue-200",
+    hover: "hover:bg-blue-100",
+    hex: "#3B82F6" // vibrant blue
+  },
+  "info-pending-syte": {
+    background: "bg-amber-50",
+    text: "text-amber-800",
+    border: "border-amber-200",
+    hover: "hover:bg-amber-100",
+    hex: "#F59E0B" // warm amber
+  },
+  "info-pending-client": {
+    background: "bg-yellow-50",
+    text: "text-yellow-800",
+    border: "border-yellow-200",
+    hover: "hover:bg-yellow-100",
+    hex: "#FCD34D" // bright yellow
+  },
+  "info-pending-cp": {
+    background: "bg-orange-50",
+    text: "text-orange-800",
+    border: "border-orange-200",
+    hover: "hover:bg-orange-100",
+    hex: "#FB923C" // vibrant orange
+  },
+  "govt-fees-pending": {
+    background: "bg-orange-50",
+    text: "text-orange-800",
+    border: "border-orange-200",
+    hover: "hover:bg-orange-100",
+    hex: "#F97316" // bright orange-red
+  },
+  "application-done": {
+    background: "bg-green-50",
+    text: "text-green-800",
+    border: "border-green-200",
+    hover: "hover:bg-green-100",
+    hex: "#10B981" // success green
+  },
+  "scrutiny-raised": {
+    background: "bg-red-50",
+    text: "text-red-800",
+    border: "border-red-200",
+    hover: "hover:bg-red-100",
+    hex: "#EF4444" // alert red
+  },
+  "scrutiny-raised-d1": {
+    background: "bg-red-50",
+    text: "text-red-800",
+    border: "border-red-200",
+    hover: "hover:bg-red-100",
+    hex: "#F87171" // light red
+  },
+  "app-pending-d1": {
+    background: "bg-red-100",
+    text: "text-red-800",
+    border: "border-red-300",
+    hover: "hover:bg-red-200",
+    hex: "#DC2626" // medium red
+  },
+  "scrutiny-raised-d2": {
+    background: "bg-red-100",
+    text: "text-red-800",
+    border: "border-red-300",
+    hover: "hover:bg-red-200",
+    hex: "#B91C1C" // deeper red
+  },
+  "app-pending-d2": {
+    background: "bg-red-200",
+    text: "text-red-800",
+    border: "border-red-300",
+    hover: "hover:bg-red-300",
+    hex: "#991B1B" // dark red
+  },
+  "scrutiny-raised-d3": {
+    background: "bg-red-200",
+    text: "text-red-800",
+    border: "border-red-300",
+    hover: "hover:bg-red-300",
+    hex: "#7F1D1D" // darker red
+  },
+  "app-pending-d3": {
+    background: "bg-red-300",
+    text: "text-gray-100",
+    border: "border-red-400",
+    hover: "hover:bg-red-400",
+    hex: "#450A0A" // very dark red
+  },
+  "scrutiny-raised-d4": {
+    background: "bg-red-300",
+    text: "text-gray-100",
+    border: "border-red-400",
+    hover: "hover:bg-red-400",
+    hex: "#BE123C" // rose red
+  },
+  "app-pending-d4": {
+    background: "bg-red-400",
+    text: "text-gray-100",
+    border: "border-red-500",
+    hover: "hover:bg-red-500",
+    hex: "#E11D48" // bright rose
+  },
+  "app-pending": {
+    background: "bg-red-300",
+    text: "text-gray-100",
+    border: "border-red-400",
+    hover: "hover:bg-red-400",
+    hex: "#F43F5E" // vibrant rose
+  },
+  "certificate-generated": {
+    background: "bg-emerald-100",
+    text: "text-emerald-800",
+    border: "border-emerald-300",
+    hover: "hover:bg-emerald-200",
+    hex: "#059669" // rich emerald
+  },
+  close: {
+    background: "bg-gray-100",
+    text: "text-gray-800",
+    border: "border-gray-300",
+    hover: "hover:bg-gray-200",
+    hex: "#64748B" // slate gray
+  },
+  "qpr-submitted": {
+    background: "bg-purple-100",
+    text: "text-purple-800",
+    border: "border-purple-300",
+    hover: "hover:bg-purple-200",
+    hex: "#8B5CF6" // vibrant purple
+  },
+  "form-5-submitted": {
+    background: "bg-purple-200",
+    text: "text-purple-900",
+    border: "border-purple-400",
+    hover: "hover:bg-purple-300",
+    hex: "#7C3AED" // deeper purple
+  },
+  "form-2a-submitted": {
+    background: "bg-purple-300",
+    text: "text-purple-900",
+    border: "border-purple-500",
+    hover: "hover:bg-purple-400",
+    hex: "#6D28D9" // rich purple
+  },
+  "work-done": {
+    background: "bg-green-300",
+    text: "text-green-900",
+    border: "border-green-500",
+    hover: "hover:bg-green-400",
+    hex: "#16A34A" // forest green
+  },
+  "reply-to-notice-sent": {
+    background: "bg-pink-100",
+    text: "text-pink-800",
+    border: "border-pink-300",
+    hover: "hover:bg-pink-200",
+    hex: "#EC4899" // bright pink
+  },
+  "email-sent-to-authority": {
+    background: "bg-blue-200",
+    text: "text-blue-900",
+    border: "border-blue-400",
+    hover: "hover:bg-blue-300",
+    hex: "#1D4ED8" // deep blue
+  },
+  default: {
+    background: "bg-gray-50",
+    text: "text-gray-800",
+    border: "border-gray-200",
+    hover: "hover:bg-gray-100",
+    hex: "#94A3B8" // neutral gray
+  }
+};
+
 function Dashboard() {
   // Separate state for each data type
   const [generalStats, setGeneralStats] = useState(null);
@@ -256,6 +434,8 @@ function Dashboard() {
 
         // Set all state
         setGeneralStats(statsData);
+        console.log(statsData);
+        
         setMonthlyPromoters(promotersData);
         setMonthlyChannelPartners(channelPartnersData);
         setMonthlyProjects(projectsData);
@@ -292,6 +472,11 @@ function Dashboard() {
     profit: item.net_revenue / 100000
   }));
 
+  // Function to get color for a status
+const getStatusColor = (status) => {
+  return statusColorMap[status]?.hex || statusColorMap.default.hex;
+};
+
   if (loading) {
     return (
       <div className="min-h-screen  flex items-center justify-center">
@@ -304,7 +489,7 @@ function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen  p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -412,24 +597,48 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total Projects</p>
-                <p className="text-3xl font-bold text-gray-900">{generalStats?.total_projects.toLocaleString()}</p>
-                <div className="flex items-center mt-1 text-xs">
-                  <Home className="h-3 w-3 mr-1 text-blue-500" />
-                  <span className="text-blue-600">{generalStats?.residential_projects} Residential</span>
-                  <span className="mx-1 text-gray-400">•</span>
-                  <Building2 className="h-3 w-3 mr-1 text-orange-500" />
-                  <span className="text-orange-600">{generalStats?.commercial_projects} Commercial</span>
-                </div>
-              </div>
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <FileText className="h-6 w-6 text-yellow-600" />
-              </div>
-            </div>
+<div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+  <div className="flex items-center justify-between">
+    <div>
+      <p className="text-sm font-medium text-gray-600">Total Projects</p>
+      <p className="text-3xl font-bold text-gray-900">{generalStats?.total_projects.toLocaleString()}</p>
+
+      <div className="flex items-center mt-1 text-xs flex-wrap gap-x-2 gap-y-1">
+        {generalStats?.residential_projects > 0 && (
+          <div className=' flex flex-row flex-nowrap'>
+            <Home className="h-3 w-3 mr-1 text-blue-500" />
+            <span className="text-blue-600">{generalStats.residential_projects} Residential</span>
           </div>
+        )}
+
+        {generalStats?.commercial_projects > 0 && (
+          <div className=' flex flex-row flex-nowrap'>
+            <Building2 className="h-3 w-3 mr-1 text-orange-500" />
+            <span className="text-orange-600">{generalStats.commercial_projects} Commercial</span>
+          </div>
+        )}
+
+        {generalStats?.mixed_projects > 0 && (
+          <div className=' flex flex-row flex-nowrap'>
+            <Layers className="h-3 w-3 mr-1 text-purple-500" />
+            <span className="text-purple-600">{generalStats.mixed_projects} Mixed</span>
+          </div>
+        )}
+
+        {generalStats?.plotted_projects > 0 && (
+          <div className=' flex flex-row flex-nowrap'>
+            <MapPin className="h-3 w-3 mr-1 text-green-500" />
+            <span className="text-green-600">{generalStats.plotted_projects} Plotted</span>
+          </div>
+        )}
+      </div>
+    </div>
+
+    <div className="p-3 bg-yellow-100 rounded-lg">
+      <FileText className="h-6 w-6 text-yellow-600" />
+    </div>
+  </div>
+</div>
 
 <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
   <div className="flex items-center justify-between">
@@ -485,37 +694,40 @@ function Dashboard() {
           </div>
 
           {/* Assignment Status Distribution */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment Status Distribution</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={assignmentStatusSummary}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="assignment_count"
-                  nameKey="current_status"
-                >
-                  {assignmentStatusSummary.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  formatter={(value, name) => [value.toLocaleString(), name]}
-                  contentStyle={{ 
-                    backgroundColor: '#fff', 
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }} 
-                />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+<div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+  <h3 className="text-lg font-semibold text-gray-900 mb-4">Assignment Status Distribution</h3>
+  <ResponsiveContainer width="100%" height={300}>
+    <PieChart>
+      <Pie
+        data={assignmentStatusSummary}
+        cx="50%"
+        cy="50%"
+        innerRadius={60}
+        outerRadius={100}
+        paddingAngle={5}
+        dataKey="assignment_count"
+        nameKey="current_status"
+      >
+        {assignmentStatusSummary.map((entry, index) => (
+          <Cell 
+            key={`cell-${index}`} 
+            fill={getStatusColor(entry.current_status)} 
+          />
+        ))}
+      </Pie>
+      <Tooltip 
+        formatter={(value, name) => [value.toLocaleString(), name]}
+        contentStyle={{ 
+          backgroundColor: '#fff', 
+          border: '1px solid #e5e7eb',
+          borderRadius: '8px',
+          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+        }} 
+      />
+      <Legend />
+    </PieChart>
+  </ResponsiveContainer>
+</div>
         </div>
 
         {/* Charts Row 2 */}
