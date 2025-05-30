@@ -441,6 +441,8 @@ function Dashboard() {
         setMonthlyProjects(projectsData);
         setMonthlyAssignments(assignmentsData);
         setAssignmentStatusSummary(statusSummaryData);
+        console.log(statusSummaryData);
+        
         setDailyReminders(remindersData);
         setMonthlyFinancialSummary(financialData);
         setRecentActivity(activityData);

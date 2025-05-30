@@ -534,25 +534,23 @@ CREATE TABLE assignments (
 
 CREATE TABLE assignment_timeline (
     id SERIAL PRIMARY KEY,
-
     assignment_id INT NOT NULL,
     CONSTRAINT fk_assignment
         FOREIGN KEY (assignment_id)
         REFERENCES assignments(id)
         ON DELETE CASCADE,
-
-    event_type VARCHAR(100) NOT NULL,  -- e.g., 'status_changed', 'payment_updated', 'note_changed', etc.
-
-    assignment_status VARCHAR(25),
-    note JSONB,                         -- Optional comment about the change
-
-    created_by INT NOT NULL,
+    event_type VARCHAR(100) NOT NULL,  -- e.g., 'status_changed', 'note_added', 'reminder_set', etc.
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );
 
 CREATE TABLE assignment_reminders (
     id SERIAL PRIMARY KEY,
-
+    timeline_id INT NOT NULL,  -- Reference to timeline entry
+    CONSTRAINT fk_timeline_reminder
+        FOREIGN KEY (timeline_id)
+        REFERENCES assignment_timeline(id)
+        ON DELETE CASCADE,
+    
     assignment_id INT NOT NULL,
     CONSTRAINT fk_assignment_reminder
         FOREIGN KEY (assignment_id)
@@ -561,11 +559,50 @@ CREATE TABLE assignment_reminders (
 
     date_and_time TIMESTAMP NOT NULL,
     message TEXT NOT NULL,
-    assignment_status VARCHAR(25),
     status VARCHAR(25),
 
     created_by INT NOT NULL,
     updated_by INT,
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
+);
+
+CREATE TABLE assignment_notes (
+    id SERIAL PRIMARY KEY,
+    timeline_id INT NOT NULL,  -- Reference to timeline entry
+    CONSTRAINT fk_timeline_note
+        FOREIGN KEY (timeline_id)
+        REFERENCES assignment_timeline(id)
+        ON DELETE CASCADE,
+
+    assignment_id INT NOT NULL,
+    CONSTRAINT fk_assignment
+        FOREIGN KEY (assignment_id)
+        REFERENCES assignments(id)
+        ON DELETE CASCADE,
+
+    note JSONB,
+
+    created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
-    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+);
+
+CREATE TABLE assignment_statuses (
+    id SERIAL PRIMARY KEY,
+    timeline_id INT NOT NULL,  -- Reference to timeline entry
+    CONSTRAINT fk_timeline_status
+        FOREIGN KEY (timeline_id)
+        REFERENCES assignment_timeline(id)
+        ON DELETE CASCADE,
+
+    assignment_id INT NOT NULL,
+    CONSTRAINT fk_assignment
+        FOREIGN KEY (assignment_id)
+        REFERENCES assignments(id)
+        ON DELETE CASCADE,
+
+    assignment_status VARCHAR(25),
+
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );

@@ -205,31 +205,30 @@ export const updateAssignmentStatus = async (req, res) => {
   console.log('New Status:', assignment_status);
 
   try {
-    // Validate required field
     if (!assignment_status) {
       return res.status(400).json({ error: "❌ assignment_status is required" });
     }
-
-    // Insert into assignment_timeline (log the new status)
-    const { data, error } = await supabase
-      .from('assignment_timeline')
-      .insert([{
-        assignment_id: id,
-        event_type: 'status_changed',
-        assignment_status,
-        created_by,
-      }]);
-
-    console.log('Executed Supabase Insert');
-    console.log('Returned Data:', data);
-    console.log('Error:', error);
-
-    if (error) {
-      console.error(`❌ Error inserting status change for assignment ID ${id}:`, error);
-      return res.status(500).json({ error: 'Failed to log assignment status', details: error });
+    if (!created_by) {
+      return res.status(400).json({ error: "❌ created_by is required" });
     }
 
-    res.status(200).json({ message: '✅ Assignment status updated successfully (logged in timeline)', data });
+    const { data, error } = await supabase.rpc('update_assignment_status_fn', {
+      p_assignment_id: parseInt(id), // parse to INT
+      p_assignment_status: assignment_status,
+      p_created_by: parseInt(created_by) // ensure it's INT
+    });
+
+    if (error) {
+      console.error('❌ Supabase RPC error:', error);
+      return res.status(500).json({ error: 'Failed to update assignment status', details: error });
+    }
+
+    console.log('✅ Assignment status updated via SQL function:', data);
+
+    res.status(200).json({
+      message: '✅ Assignment status updated successfully (via SQL function)',
+      data: data[0]  // assuming the function returns an array with one row
+    });
   } catch (err) {
     console.error('❌ Unexpected error in updateAssignmentStatus:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -238,28 +237,23 @@ export const updateAssignmentStatus = async (req, res) => {
 
 export const addAssignmentNote = async (req, res) => {
   const { id } = req.params; // assignment_id
-  const {created_by,...notePayload} = req.body;
-
-  // console.log('Incoming note payload:', notePayload);
+  const { created_by, ...notePayload } = req.body;
 
   try {
     // ✅ Validate: at least one note must be provided
-    if (Object.keys(notePayload).length === 0) {
+    if (!notePayload || Object.keys(notePayload).length === 0) {
       return res.status(400).json({ error: '❌ At least one note must be provided' });
     }
 
-    // Insert timeline entry with JSONB notes
-    const { data, error } = await supabase
-      .from('assignment_timeline')
-      .insert([{
-        assignment_id: id,
-        event_type: 'note_added',
-        note: notePayload, // stored as JSONB
-        created_by,
-      }]);
+    // Call the PostgreSQL function via Supabase RPC
+    const { data, error } = await supabase.rpc('add_assignment_note', {
+      p_assignment_id: parseInt(id),
+      p_note: notePayload,
+      p_created_by: created_by
+    });
 
     if (error) {
-      console.error('❌ Supabase insert error:', error);
+      console.error('❌ Supabase RPC error:', error);
       return res.status(500).json({ error: '❌ Failed to add assignment note', details: error });
     }
 
@@ -272,33 +266,28 @@ export const addAssignmentNote = async (req, res) => {
 
 export const setAssignmentReminder = async (req, res) => {
   const { id } = req.params; // assignment_id
-  const { date_and_time, message, status = 'pending', assignment_status, created_by } = req.body;
-
-  // console.log(req.body);
-  
+  const { date_and_time, message, status = 'pending', created_by } = req.body;
 
   try {
-    // ✅ Validate required fields
     if (!date_and_time || !message || !message.trim()) {
       return res.status(400).json({ error: '❌ date_and_time and message are required' });
     }
 
-    // 🔄 Insert reminder into assignment_reminders table
-    const { data, error } = await supabase
-      .from('assignment_reminders')
-      .insert([
-        {
-          assignment_id: id,
-          date_and_time,
-          message,
-          status,
-          assignment_status,
-          created_by,
-        }
-      ]);
+    const query = `
+      SELECT * FROM set_assignment_reminder($1, $2, $3, $4, $5);
+    `;
+
+    // Run raw SQL RPC call
+    const { data, error } = await supabase.rpc('set_assignment_reminder', {
+      p_assignment_id: Number(id),
+      p_date_and_time: date_and_time,
+      p_message: message,
+      p_status: status,
+      p_created_by: created_by
+    });
 
     if (error) {
-      console.error('❌ Supabase insert error:', error);
+      console.error('❌ Supabase RPC error:', error);
       return res.status(500).json({ error: '❌ Failed to set assignment reminder', details: error });
     }
 
@@ -351,7 +340,7 @@ export const getAllPendingReminders = async (req, res) => {
     }
 
     if (!data || data.length === 0) {
-      return res.status(404).json({ error: 'No pending reminders found' });
+      return res.status(200).json({ error: 'No pending reminders found' });
     }
 
     return res.status(200).json({ reminders: data });
@@ -365,34 +354,27 @@ export const getAllPendingReminders = async (req, res) => {
 export const updateReminderStatus = async (req, res) => {
   try {
     const { id, updated_by } = req.body;
-    console.log(req.body);
-    
 
     if (!id || !updated_by) {
-      return res.status(400).json({ error: "Missing required fields: 'id' or 'updated_by'" });
+      return res.status(400).json({ error: "❌ Missing required fields: 'id' or 'updated_by'" });
     }
 
-    const { data, error } = await supabase
-      .from('assignment_reminders')
-      .update({
-        status: 'completed',
-        updated_by,
-        updated_at: new Date().toISOString() // Supabase will use trigger to overwrite this
-      })
-      .eq('id', id)
-      .select('*')
-      .single();
+    // Call SQL function using Supabase RPC
+    const { data, error } = await supabase.rpc('update_assignment_reminder_status', {
+      p_reminder_id: id,
+      p_updated_by: updated_by
+    });
 
     if (error) {
-      console.error("❌ Error updating reminder status:", error);
-      return res.status(500).json({ error: "Failed to update reminder status", details: error });
+      console.error("❌ Supabase RPC error:", error);
+      return res.status(500).json({ error: "❌ Failed to update reminder status", details: error });
     }
 
-    if (!data) {
-      return res.status(404).json({ error: "Reminder not found" });
-    }
-
-    return res.status(200).json({ message: "✅ Reminder status updated successfully", updatedReminder: data });
+    return res.status(200).json({
+      message: "✅ Reminder status updated successfully",
+      updatedReminderId: data?.[0]?.updated_reminder_id,
+      newTimelineEntryId: data?.[0]?.timeline_id
+    });
 
   } catch (err) {
     console.error("❌ Unexpected error in updateReminderStatus:", err);

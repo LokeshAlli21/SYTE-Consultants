@@ -67,50 +67,200 @@ $$ LANGUAGE plpgsql;
 -- Function to automatically insert the first timeline entry for a new assignment
 CREATE OR REPLACE FUNCTION insert_assignment_timeline()
 RETURNS TRIGGER AS $$
+DECLARE
+    timeline_entry_id INT;
 BEGIN
+    -- Insert the timeline entry first
     INSERT INTO assignment_timeline (
         assignment_id,
         event_type,
-        assignment_status,
-        created_by,
         created_at
     )
     VALUES (
         NEW.id,
         'assignment_created',  -- Event type for new assignment creation
+        CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'
+    )
+    RETURNING id INTO timeline_entry_id;
+    
+    -- Insert the corresponding status entry
+    INSERT INTO assignment_statuses (
+        timeline_id,
+        assignment_id,
+        assignment_status,
+        created_by,
+        created_at
+    )
+    VALUES (
+        timeline_entry_id,
+        NEW.id,
         'new',
         NEW.created_by,
         CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'
     );
+    
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
-
--- Function to set default `assignment_status` based on the last timeline entry
-CREATE OR REPLACE FUNCTION set_default_assignment_status()
-RETURNS TRIGGER AS $$
+CREATE OR REPLACE FUNCTION update_assignment_status_fn(
+  p_assignment_id INT,
+  p_assignment_status VARCHAR,
+  p_created_by INT
+)
+RETURNS TABLE (
+  timeline_id INT,
+  status_id INT
+)
+LANGUAGE plpgsql
+AS $$
 DECLARE
-    previous_status VARCHAR(25);
+  new_timeline_id INT;
+  new_status_id INT;
 BEGIN
-    -- Only set status if it's NULL or empty
-    IF NEW.assignment_status IS NULL OR NEW.assignment_status = '' THEN
-        -- Fetch the latest previous status by timeline ID
-        SELECT assignment_status
-        INTO previous_status
-        FROM assignment_timeline
-        WHERE assignment_id = NEW.assignment_id
-        ORDER BY id DESC
-        LIMIT 1;
+  -- Insert into assignment_timeline
+  INSERT INTO assignment_timeline (assignment_id, event_type)
+  VALUES (p_assignment_id, 'status_changed')
+  RETURNING id INTO new_timeline_id;
 
-        -- If a previous record exists, use its status; otherwise use 'new'
-        IF FOUND THEN
-            NEW.assignment_status := previous_status;
-        ELSE
-            NEW.assignment_status := 'new';
-        END IF;
+  -- Insert into assignment_statuses
+  INSERT INTO assignment_statuses (timeline_id, assignment_id, assignment_status, created_by)
+  VALUES (new_timeline_id, p_assignment_id, p_assignment_status, p_created_by)
+  RETURNING id INTO new_status_id;
+
+  RETURN QUERY SELECT new_timeline_id, new_status_id;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION add_assignment_note(
+    p_assignment_id INT,
+    p_note JSONB,
+    p_created_by INT
+)
+RETURNS TABLE (
+    timeline_id INT,
+    note_id INT
+) AS $$
+DECLARE
+    v_timeline_id INT;
+    v_note_id INT;
+BEGIN
+    -- Validate input
+    IF p_note IS NULL OR jsonb_typeof(p_note) IS NULL THEN
+        RAISE EXCEPTION '❌ At least one note must be provided';
     END IF;
 
-    RETURN NEW;
+    -- Step 1: Insert into assignment_timeline
+    INSERT INTO assignment_timeline (
+        assignment_id,
+        event_type,
+        created_at
+    ) VALUES (
+        p_assignment_id,
+        'note_added',
+        CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'
+    )
+    RETURNING id INTO v_timeline_id;
+
+    -- Step 2: Insert into assignment_notes
+    INSERT INTO assignment_notes (
+        timeline_id,
+        assignment_id,
+        note,
+        created_by,
+        created_at
+    ) VALUES (
+        v_timeline_id,
+        p_assignment_id,
+        p_note,
+        p_created_by,
+        CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'
+    )
+    RETURNING id INTO v_note_id;
+
+    -- Return the inserted IDs
+    RETURN QUERY SELECT v_timeline_id, v_note_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION set_assignment_reminder(
+    p_assignment_id INT,
+    p_date_and_time TIMESTAMP,
+    p_message TEXT,
+    p_status VARCHAR(25),
+    p_created_by INT
+) RETURNS TABLE (
+    reminder_id INT,
+    timeline_id INT
+) AS $$
+DECLARE
+    v_timeline_id INT;
+BEGIN
+    -- Insert into assignment_timeline and get timeline_id
+    INSERT INTO assignment_timeline (assignment_id, event_type)
+    VALUES (p_assignment_id, 'reminder_set')
+    RETURNING id INTO v_timeline_id;
+
+    -- Insert into assignment_reminders with timeline_id
+    INSERT INTO assignment_reminders (
+        timeline_id,
+        assignment_id,
+        date_and_time,
+        message,
+        status,
+        created_by
+    )
+    VALUES (
+        v_timeline_id,
+        p_assignment_id,
+        p_date_and_time,
+        p_message,
+        p_status,
+        p_created_by
+    )
+    RETURNING id INTO reminder_id;
+
+    timeline_id := v_timeline_id;
+
+    RETURN NEXT;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION update_assignment_reminder_status(
+    p_reminder_id INT,
+    p_updated_by INT
+) RETURNS TABLE (
+    updated_reminder_id INT,
+    timeline_id INT
+) AS $$
+DECLARE
+    v_assignment_id INT;
+    v_timeline_id INT;
+BEGIN
+    -- Get assignment_id from the reminder
+    SELECT assignment_id INTO v_assignment_id
+    FROM assignment_reminders
+    WHERE id = p_reminder_id;
+
+    IF v_assignment_id IS NULL THEN
+        RAISE EXCEPTION 'Reminder not found';
+    END IF;
+
+    -- Update the reminder
+    UPDATE assignment_reminders
+    SET status = 'completed',
+        updated_by = p_updated_by,
+        updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'
+    WHERE id = p_reminder_id;
+
+    -- Create timeline event
+    INSERT INTO assignment_timeline (assignment_id, event_type)
+    VALUES (v_assignment_id, 'reminder_completed')
+    RETURNING id INTO v_timeline_id;
+
+    updated_reminder_id := p_reminder_id;
+    timeline_id := v_timeline_id;
+
+    RETURN NEXT;
 END;
 $$ LANGUAGE plpgsql;

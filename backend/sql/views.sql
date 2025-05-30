@@ -6,45 +6,49 @@ CREATE VIEW vw_assignments_with_latest_timeline AS
 WITH 
 -- Get the latest timeline entry with assignment_status for each assignment
 latest_status AS (
-    SELECT DISTINCT ON (assignment_id)
-        assignment_id,
-        assignment_status,
-        created_at
+    SELECT DISTINCT ON (at.assignment_id)
+        at.assignment_id,
+        ast.assignment_status,
+        at.created_at
     FROM 
-        assignment_timeline
-    WHERE 
-        assignment_status IS NOT NULL
+        assignment_timeline at
+    INNER JOIN 
+        assignment_statuses ast ON at.id = ast.timeline_id
     ORDER BY 
-        assignment_id, created_at DESC
+        at.assignment_id, at.created_at DESC
 ),
 
 -- Get the latest timeline entry with note for each assignment
 latest_note AS (
-    SELECT DISTINCT ON (assignment_id)
-        assignment_id,
-        note,
-        created_at
+    SELECT DISTINCT ON (at.assignment_id)
+        at.assignment_id,
+        an.note,
+        at.created_at
     FROM 
-        assignment_timeline
-    WHERE 
-        note IS NOT NULL
+        assignment_timeline at
+    INNER JOIN 
+        assignment_notes an ON at.id = an.timeline_id
     ORDER BY 
-        assignment_id, created_at DESC
+        at.assignment_id, at.created_at DESC
 ),
 
 -- Get the latest timeline entry (regardless of what it contains)
 latest_timeline AS (
-    SELECT DISTINCT ON (assignment_id)
-        id,
-        assignment_id,
-        event_type,
-        assignment_status,
-        note,
-        created_at
+    SELECT DISTINCT ON (at.assignment_id)
+        at.id,
+        at.assignment_id,
+        at.event_type,
+        ast.assignment_status,
+        an.note,
+        at.created_at
     FROM 
-        assignment_timeline
+        assignment_timeline at
+    LEFT JOIN 
+        assignment_statuses ast ON at.id = ast.timeline_id
+    LEFT JOIN 
+        assignment_notes an ON at.id = an.timeline_id
     ORDER BY 
-        assignment_id, created_at DESC
+        at.assignment_id, at.created_at DESC
 ),
 
 -- ✅ Get all reminders for each assignment as a JSON array

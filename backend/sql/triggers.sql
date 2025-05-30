@@ -72,7 +72,7 @@ CREATE TRIGGER trigger_update_assignments_timestamp
     FOR EACH ROW
     EXECUTE FUNCTION update_timestamp();
 
--- Add trigger to update `updated_at` before row update on `assignment_reminders`
+-- Add trigger to update `updated_at` before row update on `    `
 DROP TRIGGER IF EXISTS trigger_update_reminders_timestamp ON assignment_reminders;
 CREATE TRIGGER trigger_update_reminders_timestamp
     BEFORE UPDATE ON assignment_reminders
@@ -127,9 +127,3 @@ CREATE TRIGGER trg_insert_assignment_timeline
     AFTER INSERT ON assignments
     FOR EACH ROW
     EXECUTE FUNCTION insert_assignment_timeline();
-
--- Trigger to set default status in `assignment_timeline` before insert
-CREATE TRIGGER trg_default_assignment_status
-    BEFORE INSERT ON assignment_timeline
-    FOR EACH ROW
-    EXECUTE FUNCTION set_default_assignment_status();

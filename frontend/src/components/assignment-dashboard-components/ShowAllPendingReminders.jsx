@@ -176,7 +176,7 @@ function ShowAllPendingReminders({ showAllReminders, setShowAllReminders }) {
                         </div>
                       </div>
                       <div className='flex flex-row items-center gap-1 justify-center'>
-                        <p className='font-medium text-gray-500'>Created on Assignment Status: </p> { getStatusBadge(reminder.assignment_status)}
+                        { getStatusBadge(reminder.status)}
                       </div>
                     </div>
 
