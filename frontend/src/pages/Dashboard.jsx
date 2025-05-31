@@ -15,6 +15,7 @@ import {
   Bar,
   Area,
   AreaChart,
+  ComposedChart,
 } from "recharts";
 import {
   Calendar,
@@ -834,93 +835,12 @@ function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
           {/* Financial Overview */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Monthly Financial Overview (₹ Lakhs)
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={financialData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip
-                  formatter={(value) => [`₹${value.toFixed(1)}L`, ""]}
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="revenue"
-                  stackId="1"
-                  stroke="#3B82F6"
-                  fill="#3B82F6"
-                  fillOpacity={0.6}
-                  name="Revenue"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="expenses"
-                  stackId="2"
-                  stroke="#EF4444"
-                  fill="#EF4444"
-                  fillOpacity={0.6}
-                  name="Expenses"
-                />
-                <Area
-                  type="monotone"
-                  dataKey="profit"
-                  stackId="3"
-                  stroke="#10B981"
-                  fill="#10B981"
-                  fillOpacity={0.6}
-                  name="Net Profit"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <FinancialChart monthlyFinancialSummary={monthlyFinancialSummary} />
           </div>
 
           {/* Assignment Monthly Trends */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Monthly Assignment & Revenue Trends
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyAssignments}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month_name" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip
-                  formatter={(value, name) => {
-                    if (name === "assignments_added")
-                      return [value, "Assignments"];
-                    if (name === "avg_consultation_charges")
-                      return [`₹${(value / 1000).toFixed(0)}K`, "Avg Charges"];
-                    return [value, name];
-                  }}
-                  contentStyle={{
-                    backgroundColor: "#fff",
-                    border: "1px solid #e5e7eb",
-                    borderRadius: "8px",
-                    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-                  }}
-                />
-                <Legend />
-                <Bar
-                  dataKey="assignments_added"
-                  fill="#3B82F6"
-                  name="Assignments"
-                />
-                <Bar
-                  dataKey="avg_consultation_charges"
-                  fill="#10B981"
-                  name="Avg Charges (₹)"
-                />
-              </BarChart>
-            </ResponsiveContainer>
+            <AssignmentTrendsChart monthlyAssignments={monthlyAssignments} />
           </div>
         </div>
 
@@ -1927,4 +1847,372 @@ const ProjectsCoverage = ({ generalStats }) => {
   );
 };
 
+const FinancialChart = ({monthlyFinancialSummary }) => {
+  const [selectedUnit, setSelectedUnit] = useState('lakhs');
+
+  // Unit configuration
+  const unitConfig = {
+    thousands: {
+      divisor: 1000,
+      symbol: 'K',
+      label: 'Thousands',
+      formatter: (value) => `₹${value.toFixed(0)}K`
+    },
+    lakhs: {
+      divisor: 100000,
+      symbol: 'L',
+      label: 'Lakhs',
+      formatter: (value) => `₹${value.toFixed(1)}L`
+    },
+    crores: {
+      divisor: 10000000,
+      symbol: 'Cr',
+      label: 'Crores',
+      formatter: (value) => `₹${value.toFixed(2)}Cr`
+    }
+  };
+
+  // Convert data based on selected unit
+  const getFinancialData = () => {
+    const config = unitConfig[selectedUnit];
+    return monthlyFinancialSummary.map((item) => ({
+      month: item.month_name.split(" ")[0],
+      revenue: item.total_consultation_revenue / config.divisor,
+      expenses: item.total_operational_costs / config.divisor,
+      profit: item.net_revenue / config.divisor,
+    }));
+  };
+
+  const financialData = getFinancialData();
+  const currentConfig = unitConfig[selectedUnit];
+
+  // Custom tooltip formatter
+  const tooltipFormatter = (value, name) => {
+    return [currentConfig.formatter(value), name];
+  };
+
+  // Y-axis label formatter
+  const yAxisFormatter = (value) => {
+    if (selectedUnit === 'crores') {
+      return value.toFixed(1);
+    } else if (selectedUnit === 'lakhs') {
+      return value.toFixed(0);
+    } else {
+      return Math.round(value);
+    }
+  };
+
+  return (
+    <div className="w-full">
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">Financial Overview</h3>
+          
+          {/* Unit Selection Dropdown */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="unit-select" className="text-sm font-medium text-gray-600">
+              Display in:
+            </label>
+            <select
+              id="unit-select"
+              value={selectedUnit}
+              onChange={(e) => setSelectedUnit(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {Object.entries(unitConfig).map(([key, config]) => (
+                <option key={key} value={key}>
+                  {config.label} ({config.symbol})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Unit Selection Buttons (Alternative) */}
+        <div className="flex gap-2 mb-4">
+          {Object.entries(unitConfig).map(([key, config]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedUnit(key)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                selectedUnit === key
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {config.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Chart */}
+      <ResponsiveContainer width="100%" height={400}>
+        <AreaChart data={financialData} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis 
+            dataKey="month" 
+            stroke="#6b7280"
+            fontSize={12}
+          />
+          <YAxis 
+            stroke="#6b7280"
+            fontSize={12}
+            tickFormatter={yAxisFormatter}
+            label={{ 
+              value: `Amount (${currentConfig.symbol})`, 
+              angle: -90, 
+              position: 'insideLeft',
+              style: { textAnchor: 'middle' }
+            }}
+          />
+          <Tooltip
+            formatter={tooltipFormatter}
+            contentStyle={{
+              backgroundColor: "#fff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+            }}
+          />
+          <Legend />
+          <Area
+            type="monotone"
+            dataKey="revenue"
+            stackId="1"
+            stroke="#3B82F6"
+            fill="#3B82F6"
+            fillOpacity={0.6}
+            name="Revenue"
+          />
+          <Area
+            type="monotone"
+            dataKey="expenses"
+            stackId="2"
+            stroke="#EF4444"
+            fill="#EF4444"
+            fillOpacity={0.6}
+            name="Expenses"
+          />
+          <Area
+            type="monotone"
+            dataKey="profit"
+            stackId="3"
+            stroke="#10B981"
+            fill="#10B981"
+            fillOpacity={0.6}
+            name="Net Profit"
+          />
+        </AreaChart>
+      </ResponsiveContainer>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        {financialData.length > 0 && (
+          <>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-blue-800">Latest Revenue</h3>
+              <p className="text-2xl font-bold text-blue-600">
+                {currentConfig.formatter(financialData[financialData.length - 1].revenue)}
+              </p>
+            </div>
+            <div className="bg-red-50 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-red-800">Latest Expenses</h3>
+              <p className="text-2xl font-bold text-red-600">
+                {currentConfig.formatter(financialData[financialData.length - 1].expenses)}
+              </p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-green-800">Latest Profit</h3>
+              <p className="text-2xl font-bold text-green-600">
+                {currentConfig.formatter(financialData[financialData.length - 1].profit)}
+              </p>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const AssignmentTrendsChart = ({ monthlyAssignments }) => {
+  const [selectedUnit, setSelectedUnit] = useState('thousands');
+
+  // Unit configuration for charges - keeping original 'actual' option plus FinancialChart alignment
+  const unitConfig = {
+    actual: {
+      divisor: 1,
+      symbol: '₹',
+      label: 'Actual',
+      formatter: (value) => `₹${value.toLocaleString()}`
+    },
+    thousands: {
+      divisor: 1000,
+      symbol: 'K',
+      label: 'Thousands',
+      formatter: (value) => `₹${value.toFixed(0)}K`
+    },
+    lakhs: {
+      divisor: 100000,
+      symbol: 'L',
+      label: 'Lakhs',
+      formatter: (value) => `₹${value.toFixed(1)}L`
+    },
+    crores: {
+      divisor: 10000000,
+      symbol: 'Cr',
+      label: 'Crores',
+      formatter: (value) => `₹${value.toFixed(2)}Cr`
+    }
+  };
+
+  // Transform data based on selected unit - keeping original logic
+  const getTransformedData = () => {
+    const config = unitConfig[selectedUnit];
+    return monthlyAssignments.map((item) => ({
+      ...item,
+      month: item.month_name.split(' ')[0], // Short month name
+      avg_consultation_charges_formatted: item.avg_consultation_charges / config.divisor,
+      // Keep original for calculations
+      original_charges: item.avg_consultation_charges
+    }));
+  };
+
+  const transformedData = getTransformedData();
+  const currentConfig = unitConfig[selectedUnit];
+
+  // Custom tooltip formatter - keeping original logic
+  const tooltipFormatter = (value, name, props) => {
+    if (name === "assignments_added") {
+      return [value, "Assignments"];
+    }
+    if (name === "avg_consultation_charges_formatted") {
+      return [currentConfig.formatter(value), "Avg Charges"];
+    }
+    return [value, name];
+  };
+
+  // Y-axis label formatter - similar to FinancialChart
+  const yAxisFormatter = (value) => {
+    if (selectedUnit === 'crores') {
+      return value.toFixed(1);
+    } else if (selectedUnit === 'lakhs') {
+      return value.toFixed(0);
+    } else {
+      return Math.round(value);
+    }
+  };
+
+  // Calculate statistics - keeping original calculations
+  const totalAssignments = transformedData.reduce((sum, item) => sum + item.assignments_added, 0);
+  const avgCharges = transformedData.reduce((sum, item) => sum + item.original_charges, 0) / transformedData.length;
+  const maxAssignments = Math.max(...transformedData.map(item => item.assignments_added));
+
+  return (
+    <div className="w-full">
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-gray-900">
+            Monthly Assignment & Revenue Trends
+          </h3>
+          
+          {/* Unit Selection Dropdown - same as FinancialChart */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="unit-select-assignments" className="text-sm font-medium text-gray-600">
+              Display in:
+            </label>
+            <select
+              id="unit-select-assignments"
+              value={selectedUnit}
+              onChange={(e) => setSelectedUnit(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              {Object.entries(unitConfig).map(([key, config]) => (
+                <option key={key} value={key}>
+                  {config.label} ({config.symbol})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Unit Selection Buttons - same as FinancialChart */}
+        <div className="flex gap-2 mb-4">
+          {Object.entries(unitConfig).map(([key, config]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedUnit(key)}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                selectedUnit === key
+                  ? 'bg-blue-500 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {config.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Chart - using ResponsiveContainer and similar styling */}
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart data={transformedData} margin={{ top: 10, right: 30, left: 20, bottom: 5 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis 
+            dataKey="month" 
+            stroke="#6b7280"
+            fontSize={12}
+          />
+          <YAxis 
+            stroke="#6b7280"
+            fontSize={12}
+            tickFormatter={yAxisFormatter}
+          />
+          <Tooltip
+            formatter={tooltipFormatter}
+            contentStyle={{
+              backgroundColor: "#fff",
+              border: "1px solid #e5e7eb",
+              borderRadius: "8px",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
+            }}
+          />
+          <Legend />
+          <Bar
+            dataKey="assignments_added"
+            fill="#3B82F6"
+            name="Assignments"
+          />
+          <Bar
+            dataKey="avg_consultation_charges_formatted"
+            fill="#10B981"
+            name={`Avg Charges (${currentConfig.symbol})`}
+          />
+        </BarChart>
+      </ResponsiveContainer>
+
+      {/* Summary Cards - same style as FinancialChart */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        {transformedData.length > 0 && (
+          <>
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-blue-800">Total Assignments</h3>
+              <p className="text-2xl font-bold text-blue-600">{totalAssignments}</p>
+            </div>
+            <div className="bg-green-50 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-green-800">Avg Charges</h3>
+              <p className="text-2xl font-bold text-green-600">
+                {currentConfig.formatter(avgCharges / currentConfig.divisor)}
+              </p>
+            </div>
+            <div className="bg-purple-50 p-4 rounded-lg">
+              <h3 className="text-sm font-medium text-purple-800">Peak Month</h3>
+              <p className="text-2xl font-bold text-purple-600">{maxAssignments}</p>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 export default Dashboard;
