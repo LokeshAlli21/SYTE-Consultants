@@ -545,11 +545,20 @@ CREATE TABLE assignment_timeline (
 
 CREATE TABLE assignment_reminders (
     id SERIAL PRIMARY KEY,
-    timeline_id INT NOT NULL,  -- Reference to timeline entry
-    CONSTRAINT fk_timeline_reminder
-        FOREIGN KEY (timeline_id)
+    
+   -- Timeline reference when reminder is set
+    timeline_set_id INT NOT NULL,
+    CONSTRAINT fk_timeline_set
+        FOREIGN KEY (timeline_set_id)
         REFERENCES assignment_timeline(id)
         ON DELETE CASCADE,
+
+    -- Timeline reference when reminder is completed
+    timeline_completed_id INT,
+    CONSTRAINT fk_timeline_completed
+        FOREIGN KEY (timeline_completed_id)
+        REFERENCES assignment_timeline(id)
+        ON DELETE SET NULL,
     
     assignment_id INT NOT NULL,
     CONSTRAINT fk_assignment_reminder

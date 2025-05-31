@@ -300,14 +300,13 @@ export const setAssignmentReminder = async (req, res) => {
 
 export const getAssignmentTimeline = async (req, res) => {
   const { id } = req.params;
-  // console.log(id);
-  
 
   try {
     const { data, error } = await supabase
       .from('assignment_timeline_view')
       .select('*')
       .eq('assignment_id', id)
+      .order('timeline_created_at', { ascending: true }); // Ensure descending
 
     if (error) {
       console.error(`❌ Error fetching timeline for assignment ID ${id}:`, error);
@@ -318,13 +317,59 @@ export const getAssignmentTimeline = async (req, res) => {
       return res.status(404).json({ error: 'No timeline events found for this assignment' });
     }
 
-    res.status(200).json({ timeline: data });
+    const timelineByStatus = [];
+    let currentGroup = null;
+    let lastSeenStatus = null;
+
+    for (const event of data) {
+      // If this event has a new assignment_status (status changed or created)
+      if (event.assignment_status) {
+        // Always start a new group, even for the same status
+        lastSeenStatus = event.assignment_status;
+        currentGroup = {
+          assignment_status: lastSeenStatus,
+          events: []
+        };
+        timelineByStatus.push(currentGroup);
+      }
+
+      // If currentGroup doesn't exist yet, skip (shouldn't happen if data is correct)
+      if (!currentGroup && lastSeenStatus) {
+        // In case first few entries don't have assignment_status, group them under last seen
+        currentGroup = {
+          assignment_status: lastSeenStatus,
+          events: []
+        };
+        timelineByStatus.push(currentGroup);
+      }
+
+      const eventItem = {
+        id: event.timeline_id,
+        event_type: event.event_type,
+        created_at: event.timeline_created_at,
+        note: event.note || event.reminder || null,
+        source_type: event.event_type.includes('reminder') ? 'reminder' : 'timeline',
+        updated_user: event.updated_user || {}
+      };
+
+      if (currentGroup) {
+        currentGroup.events.push(eventItem);
+      }
+    }
+
+    res.status(200).json([
+      {
+        assignment_id: parseInt(id),
+        timeline_by_status: timelineByStatus
+      }
+    ]);
 
   } catch (err) {
     console.error('❌ Unexpected error in getAssignmentTimeline:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 export const getAllPendingReminders = async (req, res) => {
   try {

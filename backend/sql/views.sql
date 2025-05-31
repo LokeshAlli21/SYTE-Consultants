@@ -509,3 +509,76 @@ SELECT
   ) AS updated_user
 FROM assignments a
 LEFT JOIN users u ON a.updated_by = u.id;
+
+
+CREATE OR REPLACE VIEW assignment_timeline_view AS
+SELECT 
+    -- Timeline base information
+    at.id AS timeline_id,
+    at.assignment_id,
+    at.event_type,
+    at.created_at AS timeline_created_at,
+
+-- Separate columns for different event data types
+CASE 
+    WHEN at.event_type IN ('assignment_created', 'status_changed') THEN ast.assignment_status
+    ELSE NULL
+END AS assignment_status,
+
+CASE 
+    WHEN at.event_type = 'note_added' THEN an.note
+    ELSE NULL
+END AS note,
+
+CASE 
+    WHEN at.event_type = 'reminder_set' THEN 
+        JSON_BUILD_OBJECT(
+            'message', ar.message,
+            'date_and_time', ar.date_and_time,
+            'status', ar.status
+        )
+    WHEN at.event_type = 'reminder_completed' THEN 
+        JSON_BUILD_OBJECT(
+            'message', arc.message,
+            'date_and_time', arc.date_and_time,
+            'status', arc.status
+        )
+    ELSE NULL
+END AS reminder,
+
+    -- User info based on event type
+    JSON_BUILD_OBJECT(
+        'name', u_creator.name,
+        'email', u_creator.email,
+        'phone', u_creator.phone
+    ) AS updated_user
+
+FROM assignment_timeline at
+
+-- Joins based on event_type
+LEFT JOIN assignment_statuses ast 
+    ON at.id = ast.timeline_id 
+    AND at.event_type IN ('assignment_created', 'status_changed')
+
+LEFT JOIN assignment_notes an 
+    ON at.id = an.timeline_id 
+    AND at.event_type = 'note_added'
+
+LEFT JOIN assignment_reminders ar 
+    ON at.id = ar.timeline_set_id 
+    AND at.event_type = 'reminder_set'
+
+LEFT JOIN assignment_reminders arc 
+    ON at.id = arc.timeline_completed_id 
+    AND at.event_type ='reminder_completed'
+
+LEFT JOIN users u_creator 
+    ON u_creator.id = 
+        CASE 
+            WHEN at.event_type IN ('assignment_created', 'status_changed') THEN ast.created_by
+            WHEN at.event_type = 'note_added' THEN an.created_by
+            WHEN at.event_type = 'reminder_set' THEN ar.created_by
+            WHEN at.event_type = 'reminder_completed' THEN arc.updated_by
+        END
+
+ORDER BY at.id DESC;

@@ -9,31 +9,42 @@ import { FaArrowLeft } from 'react-icons/fa6';
 function AssignmentTimeLine() {
   const { id } = useParams();
   const [timeline, setTimeline] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const navigate = useNavigate()
 
-useEffect(() => {
-  const fetchTimeline = async () => {
-    try {
-      const response = await databaseService.getAssignmentTimeline(id);
-      setTimeline(response.timeline || []);
-    } catch (err) {
-      setError('Failed to load assignment timeline.');
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchTimeline();
-}, [id]);
+  useEffect(() => {
+    const fetchTimeline = async () => {
+      try {
+        setLoading(true);
+        const response = await databaseService.getAssignmentTimeline(id);
+        console.log(response);
+
+        // Handle the response structure - it's an array of assignments
+        if (Array.isArray(response) && response.length > 0) {
+          setTimeline(response);
+        } else {
+          setTimeline([]);
+        }
+      } catch (err) {
+        console.error('Error fetching timeline:', err);
+        setError('Failed to load assignment timeline.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTimeline();
+  }, [id]);
 
   const getEventIcon = (eventType) => {
     const icons = {
       'assignment_created': <FileText className="w-4 h-4" />,
       'status_changed': <CheckCircle className="w-4 h-4" />,
       'note_added': <MessageSquare className="w-4 h-4" />,
-      'follow_up': <Bell className="w-4 h-4" />
+      'follow_up': <Bell className="w-4 h-4" />,
+      'reminder_set': <Bell className="w-4 h-4" />,
+      'reminder_completed': <Bell className="w-4 h-4" />
     };
     return icons[eventType] || <Clock className="w-4 h-4" />;
   };
@@ -116,6 +127,22 @@ useEffect(() => {
     acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
       statusAcc + status.events.length, 0), 0);
 
+  const totalNotes = timeline.reduce((acc, assignment) => 
+    acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
+      statusAcc + status.events.filter(e => e.event_type === 'note_added').length, 0), 0);
+
+  const totalFollowUps = timeline.reduce((acc, assignment) => 
+    acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
+      statusAcc + status.events.filter(e => 
+        e.event_type === 'follow_up' || 
+        e.event_type === 'reminder_set' || 
+        e.event_type === 'reminder_completed'
+      ).length, 0), 0);
+
+  const totalStatusChanges = timeline.reduce((acc, assignment) => 
+    acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
+      statusAcc + status.events.filter(e => e.event_type === 'status_changed').length, 0), 0);
+
   return (
     <div className=" mx-auto p-6">
       <div className="mb-6 pl-6">
@@ -125,6 +152,7 @@ useEffect(() => {
         </div>
         <p className="text-gray-500 mt-1">Track progress, follow up reminders and status changes </p>
       </div>
+      
       {/* Summary stats */}
       <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
@@ -140,11 +168,7 @@ useEffect(() => {
             <MessageSquare className="w-5 h-5 text-green-600 mr-2" />
             <span className="text-sm font-medium text-green-900">Notes Added</span>
           </div>
-          <p className="text-2xl font-bold text-green-600 mt-1">
-            {timeline.reduce((acc, assignment) => 
-              acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
-                statusAcc + status.events.filter(e => e.event_type === 'note_added').length, 0), 0)}
-          </p>
+          <p className="text-2xl font-bold text-green-600 mt-1">{totalNotes}</p>
         </div>
         
         <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
@@ -152,11 +176,7 @@ useEffect(() => {
             <Bell className="w-5 h-5 text-yellow-600 mr-2" />
             <span className="text-sm font-medium text-yellow-900">Follow-ups</span>
           </div>
-          <p className="text-2xl font-bold text-yellow-600 mt-1">
-            {timeline.reduce((acc, assignment) => 
-              acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
-                statusAcc + status.events.filter(e => e.event_type === 'follow_up').length, 0), 0)}
-          </p>
+          <p className="text-2xl font-bold text-yellow-600 mt-1">{totalFollowUps}</p>
         </div>
 
         <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
@@ -164,11 +184,7 @@ useEffect(() => {
             <CheckCircle className="w-5 h-5 text-purple-600 mr-2" />
             <span className="text-sm font-medium text-purple-900">Status Changes</span>
           </div>
-          <p className="text-2xl font-bold text-purple-600 mt-1">
-            {timeline.reduce((acc, assignment) => 
-              acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
-                statusAcc + status.events.filter(e => e.event_type === 'status_changed').length, 0), 0)}
-          </p>
+          <p className="text-2xl font-bold text-purple-600 mt-1">{totalStatusChanges}</p>
         </div>
       </div>
 
@@ -176,7 +192,7 @@ useEffect(() => {
         {processedTimeline.map((assignment) => (
           <div key={assignment.assignment_id} className="space-y-6">
             {assignment.timeline_by_status.map((statusGroup, statusIndex) => (
-              <div key={`${assignment.assignment_id}-${statusGroup.assignment_status}`} className="relative">
+              <div key={`${assignment.assignment_id}-${statusGroup.assignment_status}-${statusIndex}`} className="relative">
                 {/* Status Header */}
                 <div className="sticky top-0 z-20  py-4 mb-6">
                   <div className={`inline-flex items-center px-6 py-3 rounded-lg text-lg font-semibold border-2 shadow-sm ${getStatusColor(statusGroup.assignment_status)}`}>
@@ -203,7 +219,9 @@ useEffect(() => {
                           event.event_type === 'assignment_created' ? 'bg-blue-500' :
                           event.event_type === 'status_changed' ? 'bg-green-500' :
                           event.event_type === 'note_added' ? 'bg-purple-500' :
-                          event.event_type === 'follow_up' ? 'bg-yellow-500' : 'bg-gray-500'
+                          event.event_type === 'follow_up' ? 'bg-yellow-500' :
+                          event.event_type === 'reminder_set' ? 'bg-yellow-500' :
+                          event.event_type === 'reminder_completed' ? 'bg-green-500' : 'bg-gray-500'
                         }`}>
                           <div className="text-white">
                             {getEventIcon(event.event_type)}
@@ -220,9 +238,11 @@ useEffect(() => {
                                   event.event_type === 'assignment_created' ? 'bg-blue-100 text-blue-800' :
                                   event.event_type === 'status_changed' ? 'bg-green-100 text-green-800' :
                                   event.event_type === 'note_added' ? 'bg-purple-100 text-purple-800' :
-                                  event.event_type === 'follow_up' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'
+                                  event.event_type === 'follow_up' ? 'bg-yellow-100 text-yellow-800' :
+                                  event.event_type === 'reminder_set' ? 'bg-yellow-100 text-yellow-800' :
+                                  event.event_type === 'reminder_completed' ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                                 }`}>
-                                  {event.event_type.replace('_', ' ')}
+                                  {event.event_type.replace(/_/g, ' ')}
                                 </span>
                               </div>
                               <time className="text-sm text-gray-500">
@@ -241,8 +261,34 @@ useEffect(() => {
                               </div>
                             </div>
 
+                            {/* Reminder details for reminder events */}
+                            {(event.event_type === 'reminder_set' || event.event_type === 'reminder_completed') && event.note && (
+                              <div className={`mb-3 p-3 rounded-lg border-l-4 ${
+                                event.event_type === 'reminder_set' ? 'bg-yellow-50 border-yellow-400' : 'bg-green-50 border-green-400'
+                              }`}>
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className={`text-sm font-medium ${
+                                    event.event_type === 'reminder_set' ? 'text-yellow-800' : 'text-green-800'
+                                  }`}>
+                                    {event.event_type === 'reminder_set' ? '🔔 Reminder Set' : '✅ Reminder Completed'}
+                                  </span>
+                                  <span className={`text-xs px-2 py-1 rounded ${
+                                    event.note.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                                  }`}>
+                                    {event.note.status}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-700 mb-2">
+                                  <strong>Message:</strong> {event.note.message}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  <strong>Scheduled for:</strong> {formatDate(event.note.date_and_time)}
+                                </p>
+                              </div>
+                            )}
+
                             {/* Notes content */}
-                            {event.note && renderNoteContent(event.note)}
+                            {event.note && (event.event_type !== 'reminder_set' && event.event_type !== 'reminder_completed') && renderNoteContent(event.note)}
 
                             {/* Source type indicator */}
                             <div className="mt-3 flex items-center justify-between">

@@ -196,14 +196,14 @@ CREATE OR REPLACE FUNCTION set_assignment_reminder(
 DECLARE
     v_timeline_id INT;
 BEGIN
-    -- Insert into assignment_timeline and get timeline_id
+    -- Insert into assignment_timeline and get timeline_id for 'reminder_set'
     INSERT INTO assignment_timeline (assignment_id, event_type)
     VALUES (p_assignment_id, 'reminder_set')
     RETURNING id INTO v_timeline_id;
 
-    -- Insert into assignment_reminders with timeline_id
+    -- Insert into assignment_reminders with timeline_set_id
     INSERT INTO assignment_reminders (
-        timeline_id,
+        timeline_set_id,
         assignment_id,
         date_and_time,
         message,
@@ -246,17 +246,18 @@ BEGIN
         RAISE EXCEPTION 'Reminder not found';
     END IF;
 
-    -- Update the reminder
-    UPDATE assignment_reminders
-    SET status = 'completed',
-        updated_by = p_updated_by,
-        updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'
-    WHERE id = p_reminder_id;
-
-    -- Create timeline event
+    -- Create timeline event for 'reminder_completed'
     INSERT INTO assignment_timeline (assignment_id, event_type)
     VALUES (v_assignment_id, 'reminder_completed')
     RETURNING id INTO v_timeline_id;
+
+    -- Update the reminder with new status and timeline_completed_id
+    UPDATE assignment_reminders
+    SET status = 'completed',
+        updated_by = p_updated_by,
+        updated_at = CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata',
+        timeline_completed_id = v_timeline_id
+    WHERE id = p_reminder_id;
 
     updated_reminder_id := p_reminder_id;
     timeline_id := v_timeline_id;
