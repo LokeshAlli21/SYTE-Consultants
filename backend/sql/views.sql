@@ -581,4 +581,4 @@ LEFT JOIN users u_creator
             WHEN at.event_type = 'reminder_completed' THEN arc.updated_by
         END
 
-ORDER BY at.id DESC;
+ORDER BY at.id ASC;
