@@ -15,7 +15,7 @@ import {
 } from 'react-icons/fa';
 import {
   Building2, CheckCircle, Clock, BookOpen, DollarSign, TrendingUp, AlertCircle,
-  Lock, CalendarCheck, Hammer, Ban, Tag
+  Lock, CalendarCheck, Hammer, Ban, Tag,IndianRupee
 } from 'lucide-react';
 import { IoClose, IoChevronDown } from "react-icons/io5";
 import { toast } from "react-toastify";
@@ -461,7 +461,7 @@ const cardData = [
   {
     title: 'Total Value',
     value: formatCurrency(stats.totalValue),
-    icon: () => <span className="text-2xl font-medium p-0 text-white">₹</span>,
+    icon: IndianRupee,
     color: 'purple',
     bgGradient: 'from-purple-50 to-purple-100',
     iconBg: 'bg-purple-500',
