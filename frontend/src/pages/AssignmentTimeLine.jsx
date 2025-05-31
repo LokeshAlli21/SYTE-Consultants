@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Clock, User, MessageSquare, Bell, CheckCircle, AlertCircle, FileText, Calendar } from 'lucide-react';
+import { Clock, User, MessageSquare, Bell, CheckCircle, AlertCircle, FileText, Calendar, Download } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import databaseService from '../backend-services/database/database';
 import { getStatusColor, getStatusIcon } from '../components/assignment-dashboard-components/GetStatusColor&Icon'
 import { NotesDisplay, DynamicNotesDisplay } from '../components/assignment-dashboard-components/NotesDisplay';
 import { FaArrowLeft } from 'react-icons/fa6';
+import * as XLSX from 'xlsx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
+import { saveAs } from 'file-saver'
 
 function AssignmentTimeLine() {
   const { id } = useParams();
@@ -13,6 +16,449 @@ function AssignmentTimeLine() {
   const [error, setError] = useState(null);
 
   const navigate = useNavigate()
+
+  // Export functions
+  const exportToExcel = () => {
+    const exportData = [];
+    
+    timeline.forEach(assignment => {
+      assignment.timeline_by_status.forEach(statusGroup => {
+        statusGroup.events.forEach(event => {
+          const row = {
+            'Assignment ID': assignment.assignment_id,
+            'Status': formatStatusName(statusGroup.assignment_status),
+            'Event Type': event.event_type.replace(/_/g, ' '),
+            'Date & Time': formatDate(event.created_at),
+            'User Name': event.updated_user.name,
+            'User Email': event.updated_user.email,
+            'Source Type': event.source_type,
+            'Event ID': event.id
+          };
+
+          // Add note details based on event type
+          if (event.note) {
+            if (event.event_type === 'reminder_set' || event.event_type === 'reminder_completed') {
+              row['Reminder Message'] = event.note.message || '';
+              row['Reminder Date'] = event.note.date_and_time ? formatDate(event.note.date_and_time) : '';
+              row['Reminder Status'] = event.note.status || '';
+            } else {
+              // Handle other note types
+              const noteFields = Object.keys(event.note);
+              noteFields.forEach(field => {
+                row[`Note - ${field.replace(/_/g, ' ')}`] = event.note[field];
+              });
+            }
+          }
+
+          exportData.push(row);
+        });
+      });
+    });
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Timeline');
+    
+    // Auto-size columns
+    const colWidths = [];
+    const headers = Object.keys(exportData[0] || {});
+    headers.forEach(header => {
+      const maxLength = Math.max(
+        header.length,
+        ...exportData.map(row => String(row[header] || '').length)
+      );
+      colWidths.push({ wch: Math.min(maxLength + 2, 50) });
+    });
+    ws['!cols'] = colWidths;
+
+    const timestamp = new Date().toISOString().replace('T', '_').replace(/:/g, '-').replace(/\..+/, '');
+  XLSX.writeFile(wb, `Assignment_Timeline_${id}_${timestamp}.xlsx`);
+
+  };
+
+  const exportToWord = async () => {
+    try {
+      // Calculate stats
+      const totalEvents = timeline.reduce((acc, assignment) => 
+        acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
+          statusAcc + status.events.length, 0), 0);
+
+      const totalNotes = timeline.reduce((acc, assignment) => 
+        acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
+          statusAcc + status.events.filter(e => e.event_type === 'note_added').length, 0), 0);
+
+      const totalFollowUps = timeline.reduce((acc, assignment) => 
+        acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
+          statusAcc + status.events.filter(e => 
+            e.event_type === 'follow_up' || 
+            e.event_type === 'reminder_set' || 
+            e.event_type === 'reminder_completed'
+          ).length, 0), 0);
+
+      const totalStatusChanges = timeline.reduce((acc, assignment) => 
+        acc + assignment.timeline_by_status.reduce((statusAcc, status) => 
+          statusAcc + status.events.filter(e => e.event_type === 'status_changed').length, 0), 0);
+
+      // Create document sections
+      const docSections = [];
+
+      // Header section
+      docSections.push(
+        new Paragraph({
+          text: "Assignment Timeline Report",
+          heading: HeadingLevel.TITLE,
+          alignment: AlignmentType.CENTER,
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Assignment ID: ${id}`,
+              bold: true,
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: `Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}`,
+              italics: true,
+            })
+          ],
+          alignment: AlignmentType.CENTER,
+        }),
+        new Paragraph({ text: "" }), // Empty line
+      );
+
+      // Statistics table
+      const statsTable = new Table({
+        width: {
+          size: 100,
+          type: WidthType.PERCENTAGE,
+        },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                children: [new Paragraph({ 
+                  children: [new TextRun({ text: "Metric", bold: true })] 
+                })],
+                width: { size: 50, type: WidthType.PERCENTAGE },
+              }),
+              new TableCell({
+                children: [new Paragraph({ 
+                  children: [new TextRun({ text: "Count", bold: true })] 
+                })],
+                width: { size: 50, type: WidthType.PERCENTAGE },
+              }),
+            ],
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph("Total Events")] }),
+              new TableCell({ children: [new Paragraph(totalEvents.toString())] }),
+            ],
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph("Notes Added")] }),
+              new TableCell({ children: [new Paragraph(totalNotes.toString())] }),
+            ],
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph("Follow-ups")] }),
+              new TableCell({ children: [new Paragraph(totalFollowUps.toString())] }),
+            ],
+          }),
+          new TableRow({
+            children: [
+              new TableCell({ children: [new Paragraph("Status Changes")] }),
+              new TableCell({ children: [new Paragraph(totalStatusChanges.toString())] }),
+            ],
+          }),
+        ],
+      });
+
+      docSections.push(
+        new Paragraph({
+          text: "Summary Statistics",
+          heading: HeadingLevel.HEADING_1,
+        }),
+        statsTable,
+        new Paragraph({ text: "" }), // Empty line
+      );
+
+      // Timeline content
+      processedTimeline.forEach(assignment => {
+        assignment.timeline_by_status.forEach(statusGroup => {
+          // Status header
+          docSections.push(
+            new Paragraph({
+              children: [
+                new TextRun({
+                  text: `${formatStatusName(statusGroup.assignment_status)} (${statusGroup.events.length} events)`,
+                  bold: true,
+                  size: 32, // 16pt
+                })
+              ],
+              heading: HeadingLevel.HEADING_2,
+            })
+          );
+
+          // Events for this status
+          statusGroup.events.forEach((event, index) => {
+            // Event header
+            docSections.push(
+              new Paragraph({
+                children: [
+                  new TextRun({
+                    text: `${index + 1}. ${event.event_type.replace(/_/g, ' ').toUpperCase()}`,
+                    bold: true,
+                  })
+                ],
+              })
+            );
+
+            // Event details
+            docSections.push(
+              new Paragraph({
+                children: [
+                  new TextRun({ text: "Date & Time: ", bold: true }),
+                  new TextRun({ text: formatDate(event.created_at) })
+                ],
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: "User: ", bold: true }),
+                  new TextRun({ text: `${event.updated_user.name} (${event.updated_user.email})` })
+                ],
+              }),
+              new Paragraph({
+                children: [
+                  new TextRun({ text: "Source: ", bold: true }),
+                  new TextRun({ text: event.source_type })
+                ],
+              })
+            );
+
+            // Note content for reminders
+            if ((event.event_type === 'reminder_set' || event.event_type === 'reminder_completed') && event.note) {
+              docSections.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({
+                      text: event.event_type === 'reminder_set' ? "🔔 Reminder Details:" : "✅ Completed Reminder Details:",
+                      bold: true,
+                    })
+                  ],
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Message: ", bold: true }),
+                    new TextRun({ text: event.note.message || '' })
+                  ],
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Scheduled for: ", bold: true }),
+                    new TextRun({ text: event.note.date_and_time ? formatDate(event.note.date_and_time) : '' })
+                  ],
+                }),
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Status: ", bold: true }),
+                    new TextRun({ text: event.note.status || '' })
+                  ],
+                })
+              );
+            }
+
+            // Other note types
+            if (event.note && event.event_type !== 'reminder_set' && event.event_type !== 'reminder_completed') {
+              docSections.push(
+                new Paragraph({
+                  children: [
+                    new TextRun({ text: "Note Details:", bold: true })
+                  ],
+                })
+              );
+
+              Object.entries(event.note).forEach(([key, value]) => {
+                docSections.push(
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: `${key.replace(/_/g, ' ')}: `, bold: true }),
+                      new TextRun({ text: String(value) })
+                    ],
+                  })
+                );
+              });
+            }
+
+            // Event ID
+            docSections.push(
+              new Paragraph({
+                children: [
+                  new TextRun({ 
+                    text: `Event ID: ${event.id}`,
+                    italics: true,
+                    size: 20, // 10pt
+                  })
+                ],
+              }),
+              new Paragraph({ text: "" }) // Empty line between events
+            );
+          });
+
+          docSections.push(new Paragraph({ text: "" })); // Empty line between statuses
+        });
+      });
+
+      // Create the document
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: docSections,
+        }],
+      });
+
+      // Generate and download the document
+      // ✅ Use toBlob instead of toBuffer in browser
+      const blob = await Packer.toBlob(doc);
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      const timestamp = new Date().toISOString().replace('T', '_').replace(/:/g, '-').replace(/\..+/, '');
+      link.download = `Assignment_Timeline_${id}_${timestamp}.docx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error('Error exporting to Word:', error);
+      alert('Failed to export to Word. Please try again.');
+    }
+  };
+
+  const exportToPDF = () => {
+    const printWindow = window.open('', '_blank');
+    
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Assignment Timeline - ${id}</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; color: #333; }
+          .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #2F4C92; padding-bottom: 20px; }
+          .header h1 { color: #2F4C92; margin: 0; }
+          .header p { color: #666; margin: 5px 0; }
+          .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
+          .stat-card { background: #f8f9fa; padding: 15px; border-radius: 8px; text-align: center; border: 1px solid #e9ecef; }
+          .stat-number { font-size: 24px; font-weight: bold; color: #2F4C92; }
+          .stat-label { font-size: 12px; color: #666; margin-top: 5px; }
+          .status-section { margin-bottom: 30px; page-break-inside: avoid; }
+          .status-header { background: #2F4C92; color: white; padding: 15px; border-radius: 8px; font-size: 18px; font-weight: bold; margin-bottom: 15px; }
+          .event { margin-bottom: 20px; border-left: 4px solid #e9ecef; padding-left: 15px; page-break-inside: avoid; }
+          .event-header { display: flex; justify-content: between; align-items: center; margin-bottom: 10px; }
+          .event-type { background: #e9ecef; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold; }
+          .event-date { color: #666; font-size: 12px; }
+          .event-user { font-size: 14px; margin-bottom: 10px; color: #555; }
+          .event-content { background: #f8f9fa; padding: 10px; border-radius: 4px; margin-bottom: 10px; }
+          .reminder-box { background: #fff3cd; border: 1px solid #ffeaa7; padding: 10px; border-radius: 4px; margin: 10px 0; }
+          .reminder-completed { background: #d4edda; border: 1px solid #c3e6cb; }
+          @media print { 
+            body { margin: 0; } 
+            .status-section { page-break-before: auto; }
+            .event { page-break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Assignment Timeline Report</h1>
+          <p>Assignment ID: ${id}</p>
+          <p>Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
+        </div>
+        
+        <div class="stats">
+          <div class="stat-card">
+            <div class="stat-number">${totalEvents}</div>
+            <div class="stat-label">Total Events</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${totalNotes}</div>
+            <div class="stat-label">Notes Added</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${totalFollowUps}</div>
+            <div class="stat-label">Follow-ups</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">${totalStatusChanges}</div>
+            <div class="stat-label">Status Changes</div>
+          </div>
+        </div>
+
+        ${processedTimeline.map(assignment => 
+          assignment.timeline_by_status.map(statusGroup => `
+            <div class="status-section">
+              <div class="status-header">
+                ${formatStatusName(statusGroup.assignment_status)} 
+                (${statusGroup.events.length} events)
+              </div>
+              ${statusGroup.events.map(event => `
+                <div class="event">
+                  <div class="event-header">
+                    <span class="event-type">${event.event_type.replace(/_/g, ' ')}</span>
+                    <span class="event-date">${formatDate(event.created_at)}</span>
+                  </div>
+                  <div class="event-user">
+                    👤 ${event.updated_user.name} (${event.updated_user.email})
+                  </div>
+                  ${event.note ? `
+                    <div class="event-content">
+                      ${(event.event_type === 'reminder_set' || event.event_type === 'reminder_completed') ? `
+                        <div class="reminder-box ${event.event_type === 'reminder_completed' ? 'reminder-completed' : ''}">
+                          <strong>${event.event_type === 'reminder_set' ? '🔔 Reminder Set' : '✅ Reminder Completed'}</strong><br>
+                          <strong>Message:</strong> ${event.note.message || ''}<br>
+                          <strong>Scheduled for:</strong> ${event.note.date_and_time ? formatDate(event.note.date_and_time) : ''}<br>
+                          <strong>Status:</strong> ${event.note.status || ''}
+                        </div>
+                      ` : `
+                        ${Object.entries(event.note).map(([key, value]) => `
+                          <strong>${key.replace(/_/g, ' ')}:</strong> ${value}<br>
+                        `).join('')}
+                      `}
+                    </div>
+                  ` : ''}
+                  <div style="font-size: 12px; color: #666; margin-top: 10px;">
+                    Source: ${event.source_type} | ID: ${event.id}
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `).join('')
+        ).join('')}
+        
+        <script>
+          window.onload = function() {
+            window.print();
+            window.onafterprint = function() {
+              window.close();
+            };
+          };
+        </script>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+  };
 
   useEffect(() => {
     const fetchTimeline = async () => {
@@ -145,12 +591,39 @@ function AssignmentTimeLine() {
 
   return (
     <div className=" mx-auto p-6">
-      <div className="mb-6 pl-6">
-        <div className='flex flex-row items-center gap-4'>
+      <div className="mb-6 pl-6 flex flex-row items-center">
+        <div className=' flex-1'>
+          <div className='flex flex-row items-center gap-4'>
           <FaArrowLeft className="text-[#2F4C92] text-3xl cursor-pointer" onClick={() => {navigate(-1)}}/>
           <h1 className="text-2xl font-bold text-[#2F4C92]">Assignment Timeline</h1>
         </div>
         <p className="text-gray-500 mt-1">Track progress, follow up reminders and status changes </p>
+        </div>
+        
+        {/* Export buttons */}
+        <div className="flex gap-3 mt-4">
+          <button 
+            onClick={exportToExcel}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Export to Excel
+          </button>
+          <button 
+            onClick={exportToWord}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Export to Word
+          </button>
+          <button 
+            onClick={exportToPDF}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+          >
+            <Download className="w-4 h-4" />
+            Export to PDF
+          </button>
+        </div>
       </div>
       
       {/* Summary stats */}

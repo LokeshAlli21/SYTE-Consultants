@@ -865,7 +865,14 @@ const TableRow = ({
         </div>
       </td>
 
-      <td className="p-2 text-gray-600 font-medium">{index}</td>
+<td className="p-2 text-gray-600 font-medium">
+  <div className="flex flex-col gap-1">
+    <span>{index}</span>
+    <span className="bg-gray-300 rounded px-1 text-xs w-fit">
+      ID:{assignment.id}
+    </span>
+  </div>
+</td>
       
       <td className="p-2">
         <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-gradient-to-r from-teal-500 to-[#5caaab] text-white hover:shadow-md transition-shadow duration-200">
