@@ -36,6 +36,201 @@ class DatabaseService {
     return data;
   }
 
+// Admin User Management API Methods
+
+// CREATE - Add a new user
+async createUser(userData) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/admin/users`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userData),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error creating user:", error);
+    throw error;
+  }
+}
+
+// READ - Get all users with pagination and filters
+async getAllUsers(params = {}) {
+  try {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString 
+      ? `${this.baseUrl}/api/admin/users?${queryString}`
+      : `${this.baseUrl}/api/admin/users`;
+    
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error fetching all users:", error);
+    throw error;
+  }
+}
+
+// READ - Get user by ID
+async getUserById(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    throw error;
+  }
+}
+
+// UPDATE - Update user by ID
+async updateUser(id, updateData) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}`, {
+      method: "PUT",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(updateData),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error updating user:", error);
+    throw error;
+  }
+}
+
+// SOFT DELETE - Mark user as deleted
+async softDeleteUser(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}/delete`, {
+      method: "PATCH",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error soft deleting user:", error);
+    throw error;
+  }
+}
+
+// HARD DELETE - Permanently delete user
+async hardDeleteUser(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error permanently deleting user:", error);
+    throw error;
+  }
+}
+
+// RESTORE - Restore soft-deleted user
+async restoreUser(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}/restore`, {
+      method: "PATCH",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error restoring user:", error);
+    throw error;
+  }
+}
+
+// SEARCH - Search users by name or email
+async searchUsers(params = {}) {
+  try {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${this.baseUrl}/api/admin/users/search?${queryString}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    throw error;
+  }
+}
+
+// STATS - Get user statistics
+async getUserStats() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/admin/users/stats`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error fetching user statistics:", error);
+    throw error;
+  }
+}
+
+// Usage Examples:
+
+/*
+// Create a new user
+const newUser = await api.createUser({
+  name: "John Doe",
+  email: "john@example.com",
+  phone: "+1234567890",
+  password: "securepassword",
+  role: "user",
+  status: "active"
+});
+
+// Get all users with pagination and filters
+const users = await api.getAllUsers({
+  page: 1,
+  limit: 10,
+  status: "active",
+  role: "user"
+});
+
+// Get user by ID
+const user = await api.getUserById("123");
+
+// Update user
+const updatedUser = await api.updateUser("123", {
+  name: "Jane Doe",
+  email: "jane@example.com",
+  status: "inactive"
+});
+
+// Search users
+const searchResults = await api.searchUsers({
+  query: "john",
+  page: 1,
+  limit: 5
+});
+
+// Get user statistics
+const stats = await api.getUserStats();
+
+// Soft delete user
+const deletedUser = await api.softDeleteUser("123");
+
+// Restore user
+const restoredUser = await api.restoreUser("123");
+
+// Hard delete user (use with caution)
+const permanentlyDeleted = await api.hardDeleteUser("123");
+*/
+
+
+
 
   // Promoter
   async uploadPromoterData({ commonData, formData, promoterType, userId }) {
@@ -3492,10 +3687,3 @@ async getQuickStats() {
 
 const databaseService = new DatabaseService();
 export default databaseService;
-
-
-
-// now create a simple Dashboard to show all the data  for the methods i provided u
-
-//  all this methods are can accessed as   useEffect(() => {     async function fetchCitiesAndDistricts() {       try {         const { districtOptions, districtCityMap } = await databaseService.getAllCitiesAndDistricts();         setDistrictCityMap(districtCityMap);         setDistrictOptions(districtOptions);       } catch (error) {         console.error("Error fetching cities and districts:", error);         toast.error("Failed to load location data");       }     }      fetchCitiesAndDistricts();   }, []);   so create a basic dashboard , for now i dont want to focus on UI but just to ensure all the data getching is proper  so create a dashboard  see sample code i made  import React from 'react' import databaseService from "../backend-services/database/database";  function Dashboard() {   return (<>hi   ) }  export default Dashboard
-

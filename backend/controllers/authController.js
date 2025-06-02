@@ -63,6 +63,8 @@ export const getUser = async (req, res, next) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        role: user.role,
+        status: user.status,
       },
     });
   } catch (error) {

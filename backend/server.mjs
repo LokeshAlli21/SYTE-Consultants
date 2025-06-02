@@ -4,6 +4,7 @@ import cors from 'cors';
 import { loggerMiddleware } from './middlewares/loggerMiddleware.js';
 import { errorMiddleware } from './middlewares/errorMiddleware.js';
 // Importing routes
+import adminRoutes from './routes/adminRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import promoterRoutes from './routes/promoterRoutes.js';
 import projectRoutes from './routes/projectRoutes.js';
@@ -27,6 +28,7 @@ app.get('/api/test', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/promoters', promoterRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/assignments', assignmentRoutes);

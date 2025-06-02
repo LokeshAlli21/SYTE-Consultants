@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaBars, FaHome, FaClipboardList, FaRegCalendarAlt, FaUser } from 'react-icons/fa';
+import { FaBars, FaHome, FaClipboardList, FaRegCalendarAlt, FaUser, FaCog } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
 import { BiTask, BiBarChartSquare } from 'react-icons/bi';
-import { MdOutlinePeopleAlt } from 'react-icons/md';
+import { MdOutlinePeopleAlt, MdAdminPanelSettings } from 'react-icons/md';
 import { IoMdClose } from 'react-icons/io';
 import LogoutButton from '../components/LogoutButton'
 import { useSelector } from 'react-redux';
@@ -19,17 +19,29 @@ const tabs = [
   { id: 'Reports', label: 'Reports', icon: <BiBarChartSquare />, route: '/reports' },
 ];
 
+// Admin-only menu items
+const adminTabs = [
+  { id: 'Admin Panel', label: 'Admin Panel', icon: <MdAdminPanelSettings />, route: '/admin-panel' },
+];
+
 function SideBar() {
   const authStatus = useSelector(state => state.auth.status);
+  const userData = useSelector(state => state.auth.userData);
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
+  // Check if user is admin
+  const isAdmin = userData && userData.role === 'admin';
+  
+  // Combine regular tabs with admin tabs if user is admin
+  const allTabs = isAdmin ? [...tabs, ...adminTabs] : tabs;
+
   useEffect(() => {
     let matchedTab = null;
 
-    for (let tab of tabs) {
+    for (let tab of allTabs) {
       if (tab.route === "/" && location.pathname === "/") {
         matchedTab = tab;
         break;
@@ -44,9 +56,9 @@ function SideBar() {
     if (matchedTab) {
       setActiveTab(matchedTab.id);
     }
-  }, [location.pathname]);
+  }, [location.pathname, allTabs]);
 
-  if(!authStatus) return
+  if(!authStatus) return null;
 
   return (
     <>
@@ -95,6 +107,7 @@ function SideBar() {
 
           {/* Navigation */}
           <nav className='flex-1 px-4 py-4 pr-0 space-y-1 overflow-y-auto'>
+            {/* Regular Menu Items */}
             {tabs.map((tab) => (
               <div
                 key={tab.id}
@@ -115,6 +128,48 @@ function SideBar() {
                 <span>{tab.label}</span>
               </div>
             ))}
+
+            {/* Admin Section */}
+            {isAdmin && (
+              <>
+                <div className='mx-4 my-4 border-t border-gray-200'></div>
+                <div className='mx-4 mb-2'>
+                  <p className='text-xs font-semibold text-gray-500 uppercase tracking-wider'>
+                    Admin Section
+                  </p>
+                </div>
+                {adminTabs.map((tab) => (
+                  <div
+                    key={tab.id}
+                    onClick={() => {
+                      setActiveTab(tab.id);
+                      navigate(tab.route);
+                    }}
+                    className={`
+                      flex items-center px-4 py-3 mx-2 rounded-xl font-medium text-sm 
+                      cursor-pointer transition-all duration-200
+                      ${activeTab === tab.id ? 
+                        'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg' : 
+                        'text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200'
+                      }
+                    `}
+                  >
+                    <span className='text-lg mr-3'>{tab.icon}</span>
+                    <span>{tab.label}</span>
+                    {/* Admin badge */}
+                    <span className={`
+                      ml-auto text-xs px-2 py-1 rounded-full font-semibold
+                      ${activeTab === tab.id ? 
+                        'bg-white/20 text-white' : 
+                        'bg-red-100 text-red-600'
+                      }
+                    `}>
+                      ADMIN
+                    </span>
+                  </div>
+                ))}
+              </>
+            )}
           </nav>
 
           {/* Logout Button Container */}
@@ -142,8 +197,6 @@ function SideBar() {
               </div>
             </div>
             </div>
-
-
 
         </div>
       )}

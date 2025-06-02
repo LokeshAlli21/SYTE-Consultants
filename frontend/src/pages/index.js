@@ -12,6 +12,7 @@ import AddProject from './AddProject'
 import AddAssignment from "./AddAssignment";
 import AddChannelPartner from "./AddChannelPartner";
 import AssignmentTimeLine from "./AssignmentTimeLine";
+import AdminPanel from "./AdminPanel";
 
 export {
     Dashboard,
@@ -28,4 +29,5 @@ export {
     AddAssignment,
     AddChannelPartner,
     AssignmentTimeLine,
+    AdminPanel,
 }

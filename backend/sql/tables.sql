@@ -6,6 +6,9 @@ CREATE TABLE users (
   email VARCHAR(100) UNIQUE NOT NULL,
   phone VARCHAR(15),
   password VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'user',  -- e.g., 'admin', 'user', etc.
+  status VARCHAR(20) DEFAULT 'active',  -- Status of the user (default to 'active')
+  status_for_delete VARCHAR(20) DEFAULT 'active',  -- Status for deletion (default to 'active')
   created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata') 
 );
 

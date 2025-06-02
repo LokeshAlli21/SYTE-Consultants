@@ -25,6 +25,7 @@ import {
   AddAssignment,
   AddChannelPartner,
   AssignmentTimeLine,
+  AdminPanel,
 } from './pages/index.js'
 
 const router = createBrowserRouter([
@@ -186,6 +187,14 @@ const router = createBrowserRouter([
         <AuthLayout authentication>
           {" "}
           <Reports />
+         </AuthLayout>,
+      },
+      {
+        path: "/admin-panel",
+        element: 
+        <AuthLayout authentication>
+          {" "}
+          <AdminPanel />
          </AuthLayout>,
       },
     ],
