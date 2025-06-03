@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useSelector } from 'react-redux';
 import { 
   FaUsers, 
   FaUserShield, 
@@ -28,34 +27,43 @@ import {
   FaPhone,
   FaCalendarAlt,
   FaUserTag,
-  FaShieldAlt
+  FaShieldAlt,
+  FaUndo ,
 } from 'react-icons/fa';
 import { MdAdminPanelSettings, MdVerified, MdBlock, MdSecurity } from 'react-icons/md';
 import { BiRefresh, BiExport } from 'react-icons/bi';
 import { IoMdTime } from 'react-icons/io';
-import databaseService from '../backend-services/database/database';
+import databaseService from "../backend-services/database/database"; // Corrected import path
+import { useSelector } from 'react-redux';
+import { debounce } from 'lodash';
 
 function AdminPanel() {
-  const userData = useSelector(state => state.auth.userData);
+  // Mock user data - replace with actual useSelector
+  const userData = { name: 'Admin User', role: 'admin' };
+  
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showDeleted, setShowDeleted] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [showUserModal, setShowUserModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showBulkActionModal, setShowBulkActionModal] = useState(false);
   const [modalMode, setModalMode] = useState('view'); // 'view', 'edit', 'create'
+  const [bulkActionType, setBulkActionType] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [sortField, setSortField] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+  const [totalUsers, setTotalUsers] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [stats, setStats] = useState({});
   const [passwordData, setPasswordData] = useState({
     newPassword: '',
     confirmPassword: '',
@@ -75,7 +83,7 @@ function AdminPanel() {
   // Permission check
   if (userData && userData.role !== 'admin') {
     return (
-      <div className="min-h-screen  flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md">
           <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
             <FaUserShield className="text-red-600 text-3xl" />
@@ -92,80 +100,127 @@ function AdminPanel() {
       </div>
     );
   }
+useEffect(() => {
+  fetchUsers();
+  fetchStats();
+}, [currentPage, roleFilter, statusFilter, showDeleted]);
 
-  useEffect(() => {
+const fetchUsers = useCallback(async () => {
+  setLoading(true);
+  setError('');
+  try {
+    const options = {
+      page: currentPage,
+      limit: itemsPerPage,
+      role: roleFilter !== 'all' ? roleFilter : undefined,
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      includeDeleted: showDeleted
+    };
+    
+    // Filter out undefined values to clean up query params
+    const cleanOptions = Object.fromEntries(
+      Object.entries(options).filter(([_, value]) => value !== undefined)
+    );
+    
+    const response = await databaseService.getAllUsers(cleanOptions);
+    setUsers(response.users || []);
+    setTotalUsers(response.total || 0);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    setError('Failed to fetch users. Please try again.');
+    // Reset data on error to prevent stale state
+    setUsers([]);
+    setTotalUsers(0);
+  } finally {
+    setLoading(false);
+  }
+}, [currentPage, itemsPerPage, roleFilter, statusFilter, showDeleted]);
+
+const fetchStats = useCallback(async () => {
+  try {
+    const statsData = await databaseService.getUserStats();
+    console.log("Fetched stats:", statsData);
+    
+    setStats(statsData.statistics);
+  } catch (error) {
+    console.error("Error fetching stats:", error);
+    // Optionally set stats to null or empty object on error
+    setStats(null);
+  }
+}, []);
+
+// Search functionality with debouncing and proper state management
+const handleSearch = useCallback(async (query) => {
+  if (!query.trim()) {
+    // Reset to normal fetching when search is cleared
     fetchUsers();
-  }, []);
+    return;
+  }
+  
+  setLoading(true);
+  setError('');
+  try {
+    const response = await databaseService.searchUsers({
+      query: query.trim(),
+      page: 1,
+      limit: itemsPerPage,
+      // Include current filters in search
+      role: roleFilter !== 'all' ? roleFilter : undefined,
+      status: statusFilter !== 'all' ? statusFilter : undefined,
+      includeDeleted: showDeleted
+    });
+    setUsers(response.users || []);
+    setTotalUsers(response.total || 0);
+    setCurrentPage(1);
+  } catch (error) {
+    console.error("Error searching users:", error);
+    setError('Search failed. Please try again.');
+    // Reset data on search error
+    setUsers([]);
+    setTotalUsers(0);
+  } finally {
+    setLoading(false);
+  }
+}, [itemsPerPage, roleFilter, statusFilter, showDeleted, fetchUsers]);
 
-  const fetchUsers = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const usersData = await databaseService.getAllUsers();
-      console.log("Fetched Users:", usersData);
-      
-      setUsers(usersData || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      setError('Failed to fetch users. Please try again.');
-      // Enhanced fallback sample data
-      setUsers([
-        {
-          id: 1,
-          name: "John Admin",
-          email: "admin@syte.com",
-          phone: "1234567890",
-          password: "********",
-          created_at: "2025-01-15T10:30:00",
-          last_login: "2025-06-01T14:20:00",
-          role: "admin",
-          status: "active",
-          login_attempts: 0
-        },
-        {
-          id: 2,
-          name: "Jane Manager",
-          email: "manager@syte.com",
-          phone: "1234567891",
-          password: "********",
-          created_at: "2025-02-10T09:15:00",
-          last_login: "2025-05-30T16:45:00",
-          role: "manager",
-          status: "active",
-          login_attempts: 0
-        },
-        {
-          id: 3,
-          name: "Bob User",
-          email: "user@syte.com",
-          phone: "1234567892",
-          password: "********",
-          created_at: "2025-03-20T11:00:00",
-          last_login: "2025-05-28T12:30:00",
-          role: "user",
-          status: "blocked",
-          login_attempts: 3
-        }
-      ]);
-    } finally {
-      setLoading(false);
-    }
-  };
+// Optional: Add a debounced search function for better UX
+const debouncedHandleSearch = useCallback(
+  debounce((query) => handleSearch(query), 300),
+  [handleSearch]
+);
+
+// Update useEffect to use the memoized functions
+useEffect(() => {
+  fetchUsers();
+  fetchStats();
+}, [fetchUsers, fetchStats]);
+
+  // Debounced search
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchTerm) {
+        handleSearch(searchTerm);
+      } else {
+        fetchUsers();
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   // Sorting and filtering
   const filteredAndSortedUsers = users
     .filter(user => {
+      if (!searchTerm) return true;
       const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            user.email.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-      const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
-      return matchesSearch && matchesRole && matchesStatus;
+      return matchesSearch;
     })
     .sort((a, b) => {
       let aValue = a[sortField];
       let bValue = b[sortField];
       
-      if (sortField === 'created_at' || sortField === 'last_login') {
+      if (sortField === 'created_at' ) {
         aValue = new Date(aValue).getTime();
         bValue = new Date(bValue).getTime();
       } else if (typeof aValue === 'string') {
@@ -181,9 +236,7 @@ function AdminPanel() {
     });
 
   // Pagination
-  const totalPages = Math.ceil(filteredAndSortedUsers.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedUsers = filteredAndSortedUsers.slice(startIndex, startIndex + itemsPerPage);
+  const totalPages = Math.ceil(totalUsers / itemsPerPage);
 
   const handleSort = (field) => {
     if (sortField === field) {
@@ -232,15 +285,70 @@ function AdminPanel() {
     setShowPasswordModal(true);
   };
 
+  // Updated block/unblock handler using dedicated API methods
   const handleBlockUser = async (user) => {
     try {
       setLoading(true);
-      // Update user status
-      await databaseService.updateUserStatus(user.id, user.status === 'blocked' ? 'active' : 'blocked');
-      setSuccess(`User ${user.status === 'blocked' ? 'unblocked' : 'blocked'} successfully`);
+      
+      if (user.status === 'blocked') {
+        await databaseService.unblockUser(user.id);
+        setSuccess('User unblocked successfully');
+      } else {
+        await databaseService.blockUser(user.id);
+        setSuccess('User blocked successfully');
+      }
+      
       fetchUsers();
+      fetchStats(); // Update stats as blocking changes user counts
     } catch (error) {
-      setError('Failed to update user status');
+      console.error('Error updating user block status:', error);
+      setError(`Failed to ${user.status === 'blocked' ? 'unblock' : 'block'} user`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Separate handlers for individual block/unblock actions
+  const handleBlockUserAction = async (user) => {
+    try {
+      setLoading(true);
+      await databaseService.blockUser(user.id);
+      setSuccess('User blocked successfully');
+      fetchUsers();
+      fetchStats();
+    } catch (error) {
+      console.error('Error blocking user:', error);
+      setError('Failed to block user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUnblockUserAction = async (user) => {
+    try {
+      setLoading(true);
+      await databaseService.unblockUser(user.id);
+      setSuccess('User unblocked successfully');
+      fetchUsers();
+      fetchStats();
+    } catch (error) {
+      console.error('Error unblocking user:', error);
+      setError('Failed to unblock user');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestoreUser = async (user) => {
+    try {
+      setLoading(true);
+      await databaseService.restoreUser(user.id);
+      setSuccess('User restored successfully');
+      fetchUsers();
+      fetchStats();
+    } catch (error) {
+      console.error('Error restoring user:', error);
+      setError('Failed to restore user');
     } finally {
       setLoading(false);
     }
@@ -251,7 +359,45 @@ function AdminPanel() {
       setError('Please select users first');
       return;
     }
+    setBulkActionType(action);
     setShowBulkActionModal(true);
+  };
+
+  // Updated bulk action handler with proper block/unblock methods
+  const executeBulkAction = async () => {
+    try {
+      setLoading(true);
+      
+      for (const userId of selectedUsers) {
+        switch (bulkActionType) {
+          case 'block':
+            await databaseService.blockUser(userId);
+            break;
+          case 'unblock':
+            await databaseService.unblockUser(userId);
+            break;
+          case 'delete':
+            await databaseService.softDeleteUser(userId);
+            break;
+          case 'restore':
+            await databaseService.restoreUser(userId);
+            break;
+          default:
+            break;
+        }
+      }
+      
+      setSuccess(`Bulk ${bulkActionType} completed successfully`);
+      setSelectedUsers([]);
+      fetchUsers();
+      fetchStats();
+    } catch (error) {
+      console.error(`Bulk ${bulkActionType} error:`, error);
+      setError(`Bulk ${bulkActionType} failed`);
+    } finally {
+      setLoading(false);
+      setShowBulkActionModal(false);
+    }
   };
 
   const handleSelectUser = (userId) => {
@@ -263,10 +409,10 @@ function AdminPanel() {
   };
 
   const handleSelectAll = () => {
-    if (selectedUsers.length === paginatedUsers.length) {
+    if (selectedUsers.length === filteredAndSortedUsers.length) {
       setSelectedUsers([]);
     } else {
-      setSelectedUsers(paginatedUsers.map(user => user.id));
+      setSelectedUsers(filteredAndSortedUsers.map(user => user.id));
     }
   };
 
@@ -289,7 +435,9 @@ function AdminPanel() {
       }
       closeModal();
       fetchUsers();
+      fetchStats();
     } catch (error) {
+      console.error('Form submit error:', error);
       setError('Operation failed. Please try again.');
     } finally {
       setLoading(false);
@@ -319,6 +467,7 @@ function AdminPanel() {
       setShowPasswordModal(false);
       setPasswordData({ newPassword: '', confirmPassword: '', sendEmail: true });
     } catch (error) {
+      console.error('Password change error:', error);
       setError('Failed to change password');
     } finally {
       setLoading(false);
@@ -328,11 +477,12 @@ function AdminPanel() {
   const handleDeleteUser = async () => {
     try {
       setLoading(true);
-      await databaseService.deleteUser(userToDelete.id);
+      await databaseService.softDeleteUser(userToDelete.id);
       setSuccess('User deleted successfully');
       setShowDeleteModal(false);
       setUserToDelete(null);
       fetchUsers();
+      fetchStats();
     } catch (error) {
       setError('Failed to delete user');
     } finally {
@@ -395,13 +545,13 @@ function AdminPanel() {
     const styles = {
       active: 'bg-green-100 text-green-800 border-green-200',
       blocked: 'bg-red-100 text-red-800 border-red-200',
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      inactive: 'bg-yellow-100 text-yellow-800 border-yellow-200'
     };
     
     const icons = {
       active: <FaCheckCircle className="w-3 h-3 mr-1" />,
       blocked: <FaBan className="w-3 h-3 mr-1" />,
-      pending: <IoMdTime className="w-3 h-3 mr-1" />
+      inactive: <IoMdTime className="w-3 h-3 mr-1" />
     };
     
     return (
@@ -421,7 +571,7 @@ function AdminPanel() {
       Role: user.role,
       Status: user.status,
       'Created At': formatDate(user.created_at),
-      'Last Login': formatDate(user.last_login)
+      'Is Deleted': user.is_deleted ? 'Yes' : 'No'
     }));
     
     const csvString = [
@@ -438,7 +588,6 @@ function AdminPanel() {
     window.URL.revokeObjectURL(url);
   };
 
-  // Form input handlers - memoized to prevent recreation
   const handleFormDataChange = useCallback((field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   }, []);
@@ -452,7 +601,7 @@ function AdminPanel() {
       {/* Header */}
       <div className="">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6 pb-0">
+          <div className="flex justify-between items-center py-6 pb-0 px-2">
             <div className="flex items-center space-x-4">
               <div className="w-12 h-12 bg-gradient-to-br from-[#5caaab] to-[#4a9a9b] rounded-xl flex items-center justify-center shadow-lg">
                 <MdAdminPanelSettings className="text-white text-2xl" />
@@ -479,377 +628,447 @@ function AdminPanel() {
         </div>
       </div>
 
-      {/* Main Content */}
+{/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-[#5caaab]/20 rounded-lg flex items-center justify-center">
-                <FaUserShield className="text-[#5caaab] text-xl" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Users</p>
-                <p className="text-2xl font-bold text-gray-900">{users.length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-[#5caaab]/20 rounded-lg flex items-center justify-center">
-                <FaUserShield className="text-[#5caaab] text-xl" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Admin Users</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.role === 'admin').length}
-                </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
+          {[
+            { label: 'Total Users', value: stats.total, icon: FaUsers, color: 'from-blue-500 to-blue-600', bg: 'bg-blue-50' },
+            { label: 'Active Users', value: stats.active, icon: FaUserCheck, color: 'from-green-500 to-green-600', bg: 'bg-green-50' },
+            { label: 'Blocked Users', value: stats.blocked, icon: FaUserTimes, color: 'from-red-500 to-red-600', bg: 'bg-red-50' },
+            { label: 'Admins', value: stats.admins, icon: FaUserShield, color: 'from-purple-500 to-purple-600', bg: 'bg-purple-50' },
+            { label: 'Deleted', value: stats.deleted, icon: FaTrash, color: 'from-gray-500 to-gray-600', bg: 'bg-gray-50' }
+          ].map((stat, index) => (
+            <div key={index} className="group">
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm p-6 border border-gray-200/50 hover:shadow-lg hover:shadow-blue-500/10 transition-all duration-300 hover:-translate-y-1">
+                <div className="flex items-center">
+                  <div className={`w-14 h-14 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center shadow-lg`}>
+                    <stat.icon className="text-white text-xl" />
+                  </div>
+                  <div className="ml-4">
+                    <p className="text-sm font-medium text-gray-600">{stat.label}</p>
+                    <p className="text-3xl font-bold text-gray-900">{stat.value?.toLocaleString()}</p>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <FaUserCheck className="text-green-600 text-xl" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Active Users</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.status === 'active').length}
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <FaUserTimes className="text-yellow-600 text-xl" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Blocked Users</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {users.filter(u => u.status === 'blocked').length}
-                </p>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
 
-        {/* User Management */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="px-6 py-4 border-b border-gray-200">
+        {/* User Management Panel */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/50 overflow-hidden">
+          {/* Panel Header */}
+          <div className="px-8 py-6 border-b border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-blue-50/50">
             <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
               <div>
-                <h2 className="text-xl font-bold text-gray-900">User Management</h2>
-                <p className="text-sm text-gray-500 mt-1">Manage user accounts, roles, and permissions</p>
+                <h2 className="text-2xl font-bold text-gray-900">User Directory</h2>
+                <p className="text-gray-600 mt-1">Manage user accounts, roles, and permissions</p>
               </div>
               
+              {/* Controls */}
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
                 {/* Search and Filters */}
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                  {/* Search Input */}
                   <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm" />
+                    <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Search users..."
-                      className="pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent w-full sm:w-64 bg-white/50 backdrop-blur-sm"
                     />
                   </div>
+                  
+                  {/* Role Filter */}
                   <select
-                    className="px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
+                    className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent bg-white/50 backdrop-blur-sm"
                   >
                     <option value="all">All Roles</option>
-                    <option value="admin">Admin</option>
                     <option value="manager">Manager</option>
                     <option value="user">User</option>
                   </select>
+                  
+                  {/* Status Filter */}
                   <select
-                    className="px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
+                    className="px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent bg-white/50 backdrop-blur-sm"
                   >
                     <option value="all">All Status</option>
                     <option value="active">Active</option>
                     <option value="blocked">Blocked</option>
+                    <option value="inactive">Inactive</option>
                   </select>
                 </div>
                 
                 {/* Action Buttons */}
-                <div className="flex space-x-2">
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                  <label className="flex items-center space-x-2 px-4 py-3 text-sm text-gray-700 bg-white/50 backdrop-blur-sm rounded-xl border border-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={showDeleted}
+                      onChange={(e) => setShowDeleted(e.target.checked)}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-[#5caaab] outline-none"
+                    />
+                    <span>Show Deleted</span>
+                  </label>
+                  
                   <button
                     onClick={fetchUsers}
-                    className="px-4 py-2.5 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-2"
+                    className="px-6 py-3 text-gray-700 bg-white/70 backdrop-blur-sm rounded-xl hover:bg-gray-100 transition-all duration-200 flex items-center space-x-2 border border-gray-300 hover:shadow-md"
                   >
-                    <BiRefresh />
+                    <BiRefresh className="w-4 h-4" />
                     <span>Refresh</span>
                   </button>
+                  
                   <button
                     onClick={() => handleUserAction(null, 'create')}
-                    className="px-4 py-2.5 bg-[#5caaab] text-white rounded-lg hover:bg-[#4a9a9b] transition-colors flex items-center space-x-2"
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
                   >
-                    <FaPlus />
+                    <FaPlus className="w-4 h-4" />
                     <span>Add User</span>
                   </button>
                 </div>
               </div>
             </div>
-            
-            {/* Bulk Actions */}
-            {selectedUsers.length > 0 && (
-              <div className="mt-4 p-4 bg-blue-50 rounded-lg flex items-center justify-between">
-                <span className="text-sm text-blue-800">
-                  {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected
-                </span>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={() => handleBulkAction('block')}
-                    className="px-3 py-1.5 bg-red-600 text-white text-sm rounded-md hover:bg-red-700 transition-colors"
-                  >
-                    Block Selected
-                  </button>
-                  <button
-                    onClick={() => handleBulkAction('unblock')}
-                    className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-md hover:bg-green-700 transition-colors"
-                  >
-                    Unblock Selected
-                  </button>
+          </div>
+
+          {/* Bulk Actions */}
+          {selectedUsers.length > 0 && (
+            <div className="px-8 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm font-medium text-blue-800">
+                    {selectedUsers.length} user{selectedUsers.length > 1 ? 's' : ''} selected
+                  </span>
                   <button
                     onClick={() => setSelectedUsers([])}
-                    className="px-3 py-1.5 bg-gray-600 text-white text-sm rounded-md hover:bg-gray-700 transition-colors"
+                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
                   >
-                    Clear Selection
+                    Clear selection
                   </button>
                 </div>
+                <div className="flex space-x-2">
+                  {[
+                    { action: 'block', label: 'Block Selected', color: 'from-red-100 to-red-200 text-red-800 hover:from-red-200 hover:to-red-300' },
+                    { action: 'unblock', label: 'Unblock Selected', color: 'from-green-100 to-green-200 text-green-800 hover:from-green-200 hover:to-green-300' },
+                    { action: 'delete', label: 'Delete Selected', color: 'from-gray-100 to-gray-200 text-gray-800 hover:from-gray-200 hover:to-gray-300' }
+                  ].map((btn) => (
+                    <button
+                      key={btn.action}
+                      onClick={() => handleBulkAction(btn.action)}
+                      className={`px-4 py-2 text-sm bg-gradient-to-r ${btn.color} rounded-lg transition-all duration-200 font-medium`}
+                    >
+                      {btn.label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+
+          {/* Messages */}
+          {error && (
+            <div className="px-8 py-4 bg-gradient-to-r from-red-50 to-pink-50 border-b border-red-200">
+              <div className="flex items-center space-x-3 text-red-800">
+                <FaExclamationTriangle className="w-5 h-5" />
+                <span className="text-sm font-medium">{error}</span>
+                <button onClick={() => setError('')} className="ml-auto">
+                  <FaTimes className="w-4 h-4 text-red-600 hover:text-red-800" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {success && (
+            <div className="px-8 py-4 bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200">
+              <div className="flex items-center space-x-3 text-green-800">
+                <FaCheckCircle className="w-5 h-5" />
+                <span className="text-sm font-medium">{success}</span>
+                <button onClick={() => setSuccess('')} className="ml-auto">
+                  <FaTimes className="w-4 h-4 text-green-600 hover:text-green-800" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Users Table */}
           <div className="overflow-x-auto">
-            {loading ? (
-              <div className="flex justify-center items-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              </div>
-            ) : error && users.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-                <FaExclamationTriangle className="text-4xl mb-4 text-red-400" />
-                <p className="text-lg mb-2">Failed to load users</p>
-                <button
-                  onClick={fetchUsers}
-                  className="px-4 py-2 bg-[#5caaab] text-white rounded-lg hover:bg-[#4a9a9b] transition-colors"
-                >
-                  Try Again
-                </button>
-              </div>
-            ) : filteredAndSortedUsers.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-                <FaUsers className="text-4xl mb-4" />
-                <p className="text-lg">No users found</p>
-                <p className="text-sm">Try adjusting your search or filter criteria</p>
-              </div>
-            ) : (
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <table className="w-full">
+              <thead className="bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-200">
+                <tr>
+                  <th scope="col" className="px-8 py-4 text-left">
+                    <input
+                      type="checkbox"
+                      checked={selectedUsers.length === filteredAndSortedUsers.length && filteredAndSortedUsers.length > 0}
+                      onChange={handleSelectAll}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-[#5caaab] outline-none w-4 h-4"
+                    />
+                  </th>
+                  {[
+                    { key: 'name', label: 'User' },
+                    { key: 'role', label: 'Role' },
+                    { key: 'status', label: 'Status' },
+                    { key: 'created_at', label: 'Created' }
+                  ].map((header) => (
+                    <th
+                      key={header.key}
+                      scope="col"
+                      className="px-8 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider cursor-pointer hover:bg-gray-100/50 transition-colors"
+                      onClick={() => handleSort(header.key)}
+                    >
+                      <div className="flex items-center space-x-2">
+                        <span>{header.label}</span>
+                        {getSortIcon(header.key)}
+                      </div>
+                    </th>
+                  ))}
+                  <th scope="col" className="px-8 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white/50 backdrop-blur-sm divide-y divide-gray-200/50">
+                {loading ? (
                   <tr>
-                    <th className="px-6 py-3 text-left">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.length === paginatedUsers.length && paginatedUsers.length > 0}
-                        onChange={handleSelectAll}
-                        className="w-4 h-4 accent-[#5caaab] text-[#5caaab] border-gray-300 rounded focus:ring-[#5caaab]"
-                      />
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('name')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>User</span>
-                        {getSortIcon('name')}
+                    <td colSpan="6" className="px-8 py-16 text-center">
+                      <div className="flex items-center justify-center space-x-3">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                        <span className="text-gray-600 font-medium">Loading users...</span>
                       </div>
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('email')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Contact</span>
-                        {getSortIcon('email')}
-                      </div>
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('role')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Role</span>
-                        {getSortIcon('role')}
-                      </div>
-                    </th>
-                    <th 
-                      className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
-                      onClick={() => handleSort('status')}
-                    >
-                      <div className="flex items-center space-x-1">
-                        <span>Status</span>
-                        {getSortIcon('status')}
-                      </div>
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    </td>
                   </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {paginatedUsers.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
+                ) : filteredAndSortedUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" className="px-8 py-16 text-center">
+                      <div className="flex flex-col items-center space-y-4">
+                        <FaUsers className="text-gray-400 text-5xl" />
+                        <div>
+                          <p className="text-gray-600 font-medium text-lg">No users found</p>
+                          <p className="text-gray-500 text-sm">Try adjusting your search or filters</p>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredAndSortedUsers.map((user) => (
+                    <tr key={user.id} className="hover:bg-blue-50/50 group transition-colors duration-200">
+                      <td className="px-8 py-6 whitespace-nowrap">
                         <input
                           type="checkbox"
                           checked={selectedUsers.includes(user.id)}
                           onChange={() => handleSelectUser(user.id)}
-                          className="w-4 h-4 accent-[#5caaab] text-[#5caaab] border-gray-300 rounded focus:ring-[#5caaab]"
+                          className="rounded border-gray-300 text-blue-600 focus:ring-[#5caaab] outline-none w-4 h-4"
                         />
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-8 py-6 whitespace-nowrap">
                         <div className="flex items-center">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-r from-[#5caaab] to-[#4a9a9b] flex items-center justify-center text-white font-semibold text-sm">
+                          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
                             {user.name.charAt(0).toUpperCase()}
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                            <div className="text-sm text-gray-500">ID: {user.id}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col space-y-1">
-                          <div className="flex items-center text-sm text-gray-900">
-                            <FaEnvelope className="w-3 h-3 mr-2 text-gray-400" />
-                            {user.email}
-                          </div>
-                          {user.phone && (
-                            <div className="flex items-center text-sm text-gray-500">
-                              <FaPhone className="w-3 h-3 mr-2 text-gray-400" />
-                              {user.phone}
+                            <div className="flex items-center space-x-3">
+                              <div className="text-sm font-semibold text-gray-900">{user.name}</div>
+                              {user.is_deleted && (
+                                <span className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full font-medium">
+                                  Deleted
+                                </span>
+                              )}
                             </div>
-                          )}
+                            <div className="text-sm text-gray-600 flex items-center space-x-2 mt-1">
+                              <FaEnvelope className="w-3 h-3" />
+                              <span>{user.email}</span>
+                            </div>
+                            {user.phone && (
+                              <div className="text-sm text-gray-600 flex items-center space-x-2 mt-1">
+                                <FaPhone className="w-3 h-3" />
+                                <span>{user.phone}</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center w-fit ">
+                      <td className="px-8 py-6 whitespace-nowrap">
                         {getRoleBadge(user.role)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex flex-col space-y-2">
-                          {getStatusBadge(user.status)}
-                          {user.login_attempts > 0 && (
-                            <div className="text-xs text-red-600 flex items-center">
-                              <FaExclamationTriangle className="w-3 h-3 mr-1" />
-                              {user.login_attempts} failed attempts
-                            </div>
-                          )}
+                      <td className="px-8 py-6 whitespace-nowrap">
+                        {getStatusBadge(user.status)}
+                      </td>
+                      <td className="px-8 py-6 whitespace-nowrap text-sm text-gray-600">
+                        <div className="flex items-center space-x-2">
+                          <FaCalendarAlt className="w-3 h-3" />
+                          <span>{formatDate(user.created_at)}</span>
                         </div>
                       </td>
-<td className="p-2">
-  <div className="flex items-center w-fit gap-2 p-2 rounded-xl bg-white/80 border border-gray-200/50 hover:shadow-md transition-all duration-300 group-hover:border-gray-300/60">
-    {/* View */}
-    <button
-      title="View Details"
-      onClick={() => handleUserAction(user, 'view')}
-      className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
-    >
-      <FaEye className="w-3.5 h-3.5" />
-    </button>
+                      <td className="px-8 py-6 whitespace-nowrap">
+                        <div className="flex items-center justify-center">
+                          <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-gray-200/50 hover:shadow-lg transition-all duration-300 group-hover:border-gray-300/60">
+                            {/* View */}
+                            <button
+                              title="View User"
+                              onClick={() => handleUserAction(user, 'view')}
+                              className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+                            >
+                              <FaEye className="w-3.5 h-3.5" />
+                            </button>
 
-    {/* Edit */}
-    <button
-      title="Edit User"
-      onClick={() => handleUserAction(user, 'edit')}
-      className="p-2.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
-    >
-      <FaEdit className="w-3.5 h-3.5" />
-    </button>
+                            {/* Edit */}
+                            <button
+                              title="Edit User"
+                              onClick={() => handleUserAction(user, 'edit')}
+                              className="p-2.5 rounded-lg bg-gradient-to-br from-green-500 to-green-600 text-white hover:from-green-600 hover:to-green-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+                            >
+                              <FaEdit className="w-3.5 h-3.5" />
+                            </button>
 
-    {/* Change Password */}
-    <button
-      title="Change Password"
-      onClick={() => handlePasswordChange(user)}
-      className="p-2.5 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
-    >
-      <FaKey className="w-3.5 h-3.5" />
-    </button>
+                            {/* Conditional Actions */}
+                            {user.status_for_delete === 'deleted' ? (
+                              <button
+                                title="Restore User"
+                                onClick={() => handleRestoreUser(user)}
+                                className="p-2.5 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 text-white hover:from-teal-600 hover:to-teal-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+                              >
+                                <FaUndo className="w-3.5 h-3.5" />
+                              </button>
+                            ) : (
+                              <>
+                                {/* Change Password */}
+                                <button
+                                  title="Change Password"
+                                  onClick={() => handlePasswordChange(user)}
+                                  className="p-2.5 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 text-white hover:from-orange-500 hover:to-orange-600 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+                                >
+                                  <FaKey className="w-3.5 h-3.5" />
+                                </button>
 
-    {/* Block/Unblock */}
-    <button
-      title={user.status === 'blocked' ? 'Unblock User' : 'Block User'}
-      onClick={() => handleBlockUser(user)}
-      className={`p-2.5 rounded-lg text-white hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md ${
-        user.status === 'blocked'
-          ? 'bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
-          : 'bg-gradient-to-br from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'
-      }`}
-    >
-      {user.status === 'blocked' ? (
-        <FaUnlock className="w-3.5 h-3.5" />
-      ) : (
-        <FaBan className="w-3.5 h-3.5" />
-      )}
-    </button>
+                                {/* Block/Unblock */}
+                                <button
+                                  title={user.status === 'blocked' ? 'Unblock User' : 'Block User'}
+                                  onClick={() => handleBlockUser(user)}
+                                  className={`p-2.5 rounded-lg text-white hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg ${
+                                    user.status === 'blocked'
+                                      ? 'bg-gradient-to-br from-green-500 to-green-600 hover:from-green-600 hover:to-green-700'
+                                      : 'bg-gradient-to-br from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600'
+                                  }`}
+                                >
+                                  {user.status === 'blocked' ? (
+                                    <FaUnlock className="w-3.5 h-3.5" />
+                                  ) : (
+                                    <FaBan className="w-3.5 h-3.5" />
+                                  )}
+                                </button>
 
-    {/* Delete */}
-    <button
-      title="Delete User"
-      onClick={() => handleUserAction(user, 'delete')}
-      className="p-2.5 rounded-lg bg-gradient-to-br from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
-    >
-      <FaTrash className="w-3.5 h-3.5" />
-    </button>
-  </div>
-</td>
-
+                                {/* Delete */}
+                                <button
+                                  title="Delete User"
+                                  onClick={() => handleUserAction(user, 'delete')}
+                                  className="p-2.5 rounded-lg bg-gradient-to-br from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+                                >
+                                  <FaTrash className="w-3.5 h-3.5" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
 
           {/* Pagination */}
+          <div className="px-8 py-6 border-t border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-blue-50/50">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700 font-medium">
+                Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalUsers)} of {totalUsers} users
+              </div>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white/70 backdrop-blur-sm transition-all duration-200 font-medium"
+                >
+                  Previous
+                </button>
+                
+                <div className="flex space-x-1">
+                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                    const pageNum = i + 1;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`px-4 py-2 text-sm rounded-lg font-medium transition-all duration-200 ${
+                          currentPage === pageNum
+                            ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
+                            : 'border border-gray-300 hover:bg-gray-50 bg-white/70 backdrop-blur-sm'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed bg-white/70 backdrop-blur-sm transition-all duration-200 font-medium"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+
+                {/* Pagination */}
           {(
             <div className="px-6 py-4 border-t border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-gray-700">
-                  Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredAndSortedUsers.length)} of {filteredAndSortedUsers.length} results
+                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalUsers)} of {totalUsers} users
                 </div>
                 <div className="flex items-center space-x-2">
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Previous
                   </button>
-                  {[...Array(totalPages)].map((_, index) => (
-                    <button
-                      key={index + 1}
-                      onClick={() => setCurrentPage(index + 1)}
-                      className={`px-3 py-2 text-sm border rounded-md ${
-                        currentPage === index + 1
-                          ? 'bg-[#5caaab] text-white border-[#5caaab]'
-                          : 'border-gray-300 hover:bg-gray-50'
-                      }`}
-                    >
-                      {index + 1}
-                    </button>
-                  ))}
+                  
+                  <div className="flex space-x-1">
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={`px-3 py-2 text-sm rounded-lg ${
+                            currentPage === pageNum
+                              ? 'bg-[#5caaab] text-white'
+                              : 'border border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={currentPage === totalPages}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Next
                   </button>
@@ -857,325 +1076,269 @@ function AdminPanel() {
               </div>
             </div>
           )}
-        </div>
-      </div>
-
-      {/* Alerts */}
-      {error && (
-        <div className="fixed top-4 right-4 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-lg z-50">
-          <div className="flex items-center">
-            <FaExclamationTriangle className="mr-2" />
-            <span>{error}</span>
-            <button
-              onClick={() => setError('')}
-              className="ml-4 text-red-500 hover:text-red-700"
-            >
-              <FaTimes />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {success && (
-        <div className="fixed top-4 right-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg shadow-lg z-50">
-          <div className="flex items-center">
-            <FaCheckCircle className="mr-2" />
-            <span>{success}</span>
-            <button
-              onClick={() => setSuccess('')}
-              className="ml-4 text-green-500 hover:text-green-700"
-            >
-              <FaTimes />
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* User Modal */}
       {showUserModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm  flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">
+                <h3 className="text-lg font-bold text-gray-900">
                   {modalMode === 'create' ? 'Create New User' : 
                    modalMode === 'edit' ? 'Edit User' : 'User Details'}
                 </h3>
                 <button
                   onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600 p-1"
+                  className="text-gray-400 hover:text-gray-600"
                 >
                   <FaTimes />
                 </button>
               </div>
             </div>
-
-            <div className="px-6 py-4">
-              {modalMode === 'view' ? (
-                <div className="space-y-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#5caaab] to-[#4a9a9b] flex items-center justify-center text-white font-bold text-xl">
-                      {selectedUser?.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900">{selectedUser?.name}</h3>
-                      <p className="text-gray-500">{selectedUser?.email}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
-                      <p className="text-gray-900">{selectedUser?.phone || 'Not provided'}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
-                      <div>{getRoleBadge(selectedUser?.role)}</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                      <div>{getStatusBadge(selectedUser?.status)}</div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Created At</label>
-                      <p className="text-gray-900">{formatDate(selectedUser?.created_at)}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Last Login</label>
-                      <p className="text-gray-900">{formatDate(selectedUser?.last_login)}</p>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Login Attempts</label>
-                      <p className={`font-medium ${selectedUser?.login_attempts > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                        {selectedUser?.login_attempts || 0}
-                      </p>
-                    </div>
-                  </div>
+            
+            <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => handleFormDataChange('name', e.target.value)}
+                  disabled={modalMode === 'view'}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent disabled:bg-gray-50"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleFormDataChange('email', e.target.value)}
+                  disabled={modalMode === 'view'}
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent disabled:bg-gray-50"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone Number
+                </label>
+                <input
+                  type="tel"
+                  value={formData.phone}
+                  onChange={(e) => handleFormDataChange('phone', e.target.value)}
+                  disabled={modalMode === 'view'}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent disabled:bg-gray-50"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Role
+                </label>
+                <select
+                  value={formData.role}
+                  onChange={(e) => handleFormDataChange('role', e.target.value)}
+                  disabled={modalMode === 'view'}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent disabled:bg-gray-50"
+                >
+                  <option value="user">User</option>
+                  <option value="manager">Manager</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => handleFormDataChange('status', e.target.value)}
+                  disabled={modalMode === 'view'}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent disabled:bg-gray-50"
+                >
+                  <option value="active">Active</option>
+                  <option value="blocked">Blocked</option>
+                  <option value="inactive">Inactive</option>
+                </select>
+              </div>
+              
+              {modalMode === 'create' && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Password
+                  </label>
+                  <input
+                    type="password"
+                    value={formData.password}
+                    onChange={(e) => handleFormDataChange('password', e.target.value)}
+                    required
+                    minLength={8}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Minimum 8 characters required</p>
                 </div>
-              ) : (
-                <form onSubmit={handleFormSubmit} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Full Name <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
-                        value={formData.name}
-                        onChange={(e) => handleFormDataChange('name', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="email"
-                        required
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
-                        value={formData.email}
-                        onChange={(e) => handleFormDataChange('email', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                      <input
-                        type="tel"
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
-                        value={formData.phone}
-                        onChange={(e) => handleFormDataChange('phone', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
-                      <select
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
-                        value={formData.role}
-                        onChange={(e) => handleFormDataChange('role', e.target.value)}
-                      >
-                        <option value="user">User</option>
-                        <option value="manager">Manager</option>
-                        <option value="admin">Admin</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-                      <select
-                        className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
-                        value={formData.status}
-                        onChange={(e) => handleFormDataChange('status', e.target.value)}
-                      >
-                        <option value="active">Active</option>
-                        <option value="blocked">Blocked</option>
-                        <option value="pending">Pending</option>
-                      </select>
-                    </div>
-                    {modalMode === 'create' && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Password <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="password"
-                          required
-                          className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
-                          value={formData.password}
-                          onChange={(e) => handleFormDataChange('password', e.target.value)}
-                          placeholder="Minimum 8 characters"
-                        />
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                    <button
-                      type="button"
-                      onClick={closeModal}
-                      className="px-4 py-2.5 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      className="px-4 py-2.5 bg-[#5caaab] text-white rounded-lg hover:bg-[#4a9a9b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {loading ? 'Processing...' : modalMode === 'create' ? 'Create User' : 'Update User'}
-                    </button>
-                  </div>
-                </form>
               )}
-            </div>
+              
+              {modalMode !== 'view' && (
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex-1 px-4 py-2 bg-[#5caaab] text-white rounded-lg hover:bg-[#4a9a9b] transition-colors disabled:opacity-50"
+                  >
+                    {loading ? 'Saving...' : modalMode === 'create' ? 'Create User' : 'Update User'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              )}
+            </form>
           </div>
         </div>
       )}
 
       {/* Password Change Modal */}
       {showPasswordModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm  flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Change Password</h3>
+                <h3 className="text-lg font-bold text-gray-900">Change Password</h3>
                 <button
                   onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600 p-1"
+                  className="text-gray-400 hover:text-gray-600"
                 >
                   <FaTimes />
                 </button>
               </div>
             </div>
-
-            <div className="px-6 py-4">
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    New Password <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
-                    value={passwordData.newPassword}
-                    onChange={(e) => handlePasswordDataChange('newPassword', e.target.value)}
-                    placeholder="Minimum 8 characters"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Confirm Password <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab] focus:border-transparent"
-                    value={passwordData.confirmPassword}
-                    onChange={(e) => handlePasswordDataChange('confirmPassword', e.target.value)}
-                    placeholder="Repeat new password"
-                  />
-                </div>
-                <div className="flex items-center">
-                  <input
-                    type="checkbox"
-                    id="sendEmail"
-                    checked={passwordData.sendEmail}
-                    onChange={(e) => handlePasswordDataChange('sendEmail', e.target.checked)}
-                    className="w-4 h-4 accent-[#5caaab] text-[#5caaab] border-gray-300 rounded focus:ring-[#5caaab]"
-                  />
-                  <label htmlFor="sendEmail" className="ml-2 text-sm text-gray-700">
-                    Send notification email to user
-                  </label>
-                </div>
-                
-                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="px-4 py-2.5 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2.5 bg-[#5caaab] text-white rounded-lg hover:bg-[#4a9a9b] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? 'Changing...' : 'Change Password'}
-                  </button>
-                </div>
-              </form>
-            </div>
+            
+            <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  Changing password for: <strong>{selectedUser?.name}</strong>
+                </p>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.newPassword}
+                  onChange={(e) => handlePasswordDataChange('newPassword', e.target.value)}
+                  required
+                  minLength={8}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Confirm Password
+                </label>
+                <input
+                  type="password"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => handlePasswordDataChange('confirmPassword', e.target.value)}
+                  required
+                  minLength={8}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent"
+                />
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="sendEmail"
+                  checked={passwordData.sendEmail}
+                  onChange={(e) => handlePasswordDataChange('sendEmail', e.target.checked)}
+                  className="rounded border-gray-300 text-[#5caaab] focus:ring-[#5caaab] outline-none"
+                />
+                <label htmlFor="sendEmail" className="text-sm text-gray-700">
+                  Send email notification to user
+                </label>
+              </div>
+              
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-[#5caaab] text-white rounded-lg hover:bg-[#4a9a9b] transition-colors disabled:opacity-50"
+                >
+                  {loading ? 'Changing...' : 'Change Password'}
+                </button>
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && userToDelete && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm  flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Confirm Delete</h3>
+                <h3 className="text-lg font-bold text-gray-900">Confirm Delete</h3>
                 <button
                   onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600 p-1"
+                  className="text-gray-400 hover:text-gray-600"
                 >
                   <FaTimes />
                 </button>
               </div>
             </div>
-
-            <div className="px-6 py-4">
-              <div className="flex items-center space-x-4 mb-4">
+            
+            <div className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
                 <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
                   <FaExclamationTriangle className="text-red-600 text-xl" />
                 </div>
                 <div>
-                  <p className="text-gray-900 font-medium">Delete User Account</p>
+                  <h4 className="font-medium text-gray-900">Delete User</h4>
                   <p className="text-sm text-gray-500">This action cannot be undone</p>
                 </div>
               </div>
               
               <p className="text-gray-700 mb-6">
                 Are you sure you want to delete <strong>{userToDelete.name}</strong>? 
-                This will permanently remove their account and all associated data.
+                This will move the user to the deleted state and they will no longer be able to access the system.
               </p>
               
-              <div className="flex justify-end space-x-3">
-                <button
-                  onClick={closeModal}
-                  className="px-4 py-2.5 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
+              <div className="flex space-x-3">
                 <button
                   onClick={handleDeleteUser}
                   disabled={loading}
-                  className="px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
                   {loading ? 'Deleting...' : 'Delete User'}
+                </button>
+                <button
+                  onClick={closeModal}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
                 </button>
               </div>
             </div>
@@ -1183,42 +1346,50 @@ function AdminPanel() {
         </div>
       )}
 
-      {/* Bulk Action Modal */}
+      {/* Bulk Action Confirmation Modal */}
       {showBulkActionModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm  flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Bulk Action</h3>
+                <h3 className="text-lg font-bold text-gray-900">Confirm Bulk Action</h3>
                 <button
                   onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600 p-1"
+                  className="text-gray-400 hover:text-gray-600"
                 >
                   <FaTimes />
                 </button>
               </div>
             </div>
 
-            <div className="px-6 py-4">
+            <div className="p-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <FaExclamationTriangle className="text-red-600 text-xl" />
+                </div>
+                <div>
+                  <h4 className="font-medium text-gray-900">Bulk Action</h4>
+                  <p className="text-sm text-gray-500">This action cannot be undone</p>
+                </div>
+              </div>
+
               <p className="text-gray-700 mb-6">
-                Are you sure you want to perform this action on {selectedUsers.length} selected user{selectedUsers.length > 1 ? 's' : ''}?
+                Are you sure you want to perform the bulk action on the selected users?
               </p>
-              
-              <div className="flex justify-end space-x-3">
+
+              <div className="flex space-x-3">
                 <button
-                  onClick={closeModal}
-                  className="px-4 py-2.5 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={handleBulkAction}
+                  disabled={loading}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                 >
-                  Cancel
+                  {loading ? 'Processing...' : 'Confirm Bulk Action'}
                 </button>
                 <button
-                  onClick={() => {
-                    // Handle bulk action here
-                    closeModal();
-                  }}
-                  className="px-4 py-2.5 bg-[#5caaab] text-white rounded-lg hover:bg-[#4a9a9b] transition-colors"
+                  onClick={closeModal}
+                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
                 >
-                  Confirm
+                  Cancel
                 </button>
               </div>
             </div>

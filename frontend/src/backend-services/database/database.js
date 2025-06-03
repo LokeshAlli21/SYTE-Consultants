@@ -36,6 +36,10 @@ class DatabaseService {
     return data;
   }
 
+
+  
+// Admin User Management API Methods
+
 // Admin User Management API Methods
 
 // CREATE - Add a new user
@@ -121,20 +125,6 @@ async softDeleteUser(id) {
   }
 }
 
-// HARD DELETE - Permanently delete user
-async hardDeleteUser(id) {
-  try {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}`, {
-      method: "DELETE",
-      headers: this.getAuthHeaders(),
-    });
-    return this.handleResponse(response);
-  } catch (error) {
-    console.error("Error permanently deleting user:", error);
-    throw error;
-  }
-}
-
 // RESTORE - Restore soft-deleted user
 async restoreUser(id) {
   try {
@@ -145,6 +135,34 @@ async restoreUser(id) {
     return this.handleResponse(response);
   } catch (error) {
     console.error("Error restoring user:", error);
+    throw error;
+  }
+}
+
+// BLOCK - Block a user
+async blockUser(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}/block`, {
+      method: "PATCH",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error blocking user:", error);
+    throw error;
+  }
+}
+
+// UNBLOCK - Unblock a user
+async unblockUser(id) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}/unblock`, {
+      method: "PATCH",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error unblocking user:", error);
     throw error;
   }
 }
@@ -177,57 +195,6 @@ async getUserStats() {
     throw error;
   }
 }
-
-// Usage Examples:
-
-/*
-// Create a new user
-const newUser = await api.createUser({
-  name: "John Doe",
-  email: "john@example.com",
-  phone: "+1234567890",
-  password: "securepassword",
-  role: "user",
-  status: "active"
-});
-
-// Get all users with pagination and filters
-const users = await api.getAllUsers({
-  page: 1,
-  limit: 10,
-  status: "active",
-  role: "user"
-});
-
-// Get user by ID
-const user = await api.getUserById("123");
-
-// Update user
-const updatedUser = await api.updateUser("123", {
-  name: "Jane Doe",
-  email: "jane@example.com",
-  status: "inactive"
-});
-
-// Search users
-const searchResults = await api.searchUsers({
-  query: "john",
-  page: 1,
-  limit: 5
-});
-
-// Get user statistics
-const stats = await api.getUserStats();
-
-// Soft delete user
-const deletedUser = await api.softDeleteUser("123");
-
-// Restore user
-const restoredUser = await api.restoreUser("123");
-
-// Hard delete user (use with caution)
-const permanentlyDeleted = await api.hardDeleteUser("123");
-*/
 
 
 

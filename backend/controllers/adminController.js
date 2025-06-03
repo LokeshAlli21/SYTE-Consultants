@@ -49,21 +49,25 @@ export const createUser = async (req, res) => {
   }
 };
 
-// READ - Get all users (excluding admins and soft-deleted users)
+// READ - Get all users (with option to include soft-deleted users)
 export const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, status, role } = req.query;
+    const { page = 1, limit = 10, status, role, includeDeleted = false } = req.query;
     const offset = (page - 1) * limit;
 
     let query = supabase
       .from('users')
-      .select('id, name, email, phone, role, status, status_for_delete, created_at')
+      .select('id, name, email, phone, role, status, status_for_delete, created_at', { count: 'exact' })
       .neq('role', 'admin')
-      .neq('status_for_delete', 'deleted')
       .range(offset, offset + limit - 1)
       .order('created_at', { ascending: false });
 
-    // Add filters if provided
+    // Exclude soft-deleted users unless includeDeleted=true
+    if (includeDeleted !== 'true') {
+      query = query.neq('status_for_delete', 'deleted');
+    }
+
+    // Apply optional filters
     if (status) {
       query = query.eq('status', status);
     }
@@ -89,6 +93,7 @@ export const getAllUsers = async (req, res) => {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
+
 
 // READ - Get user by ID
 export const getUserById = async (req, res) => {
@@ -307,46 +312,174 @@ export const searchUsers = async (req, res) => {
 // GET USER STATISTICS
 export const getUserStats = async (req, res) => {
   try {
-    const { data: totalUsers, error: totalError } = await supabase
-      .from('users')
-      .select('id', { count: 'exact' })
-      .neq('role', 'admin')
-      .neq('status_for_delete', 'deleted');
+    const queries = await Promise.all([
+      supabase
+        .from('users')
+        .select('id', { count: 'exact' })
+        .neq('role', 'admin')
+        .neq('status_for_delete', 'deleted'),
 
-    const { data: activeUsers, error: activeError } = await supabase
-      .from('users')
-      .select('id', { count: 'exact' })
-      .neq('role', 'admin')
-      .neq('status_for_delete', 'deleted')
-      .eq('status', 'active');
+      supabase
+        .from('users')
+        .select('id', { count: 'exact' })
+        .neq('role', 'admin')
+        .neq('status_for_delete', 'deleted')
+        .eq('status', 'active'),
 
-    const { data: inactiveUsers, error: inactiveError } = await supabase
-      .from('users')
-      .select('id', { count: 'exact' })
-      .neq('role', 'admin')
-      .neq('status_for_delete', 'deleted')
-      .eq('status', 'inactive');
+      supabase
+        .from('users')
+        .select('id', { count: 'exact' })
+        .neq('role', 'admin')
+        .neq('status_for_delete', 'deleted')
+        .eq('status', 'inactive'),
 
-    const { data: deletedUsers, error: deletedError } = await supabase
-      .from('users')
-      .select('id', { count: 'exact' })
-      .neq('role', 'admin')
-      .eq('status_for_delete', 'deleted');
+      supabase
+        .from('users')
+        .select('id', { count: 'exact' })
+        .neq('role', 'admin')
+        .eq('status_for_delete', 'deleted'),
 
-    if (totalError || activeError || inactiveError || deletedError) {
-      throw totalError || activeError || inactiveError || deletedError;
+      supabase
+        .from('users')
+        .select('id', { count: 'exact' })
+        .eq('role', 'admin'),
+
+      supabase
+        .from('users')
+        .select('id', { count: 'exact' })
+        .neq('role', 'admin')
+        .neq('status_for_delete', 'deleted')
+        .eq('status', 'blocked')
+    ]);
+
+    const [
+      totalUsersRes,
+      activeUsersRes,
+      inactiveUsersRes,
+      deletedUsersRes,
+      adminUsersRes,
+      blockedUsersRes
+    ] = queries;
+
+    const hasError = queries.some((q) => q.error);
+    if (hasError) {
+      throw new Error('Error in one or more queries');
     }
 
     res.status(200).json({
       statistics: {
-        total: totalUsers.length,
-        active: activeUsers.length,
-        inactive: inactiveUsers.length,
-        deleted: deletedUsers.length
+        total: totalUsersRes.count,
+        active: activeUsersRes.count,
+        inactive: inactiveUsersRes.count,
+        blocked: blockedUsersRes.count,
+        deleted: deletedUsersRes.count,
+        admins: adminUsersRes.count
       }
     });
   } catch (error) {
     console.error('Error fetching user statistics:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+
+// BLOCK USER - Block a user (set status to blocked)
+export const blockUser = async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    // Check if user exists and is not soft-deleted
+    const { data: existingUser, error: fetchError } = await supabase
+      .from('users')
+      .select('id, status, status_for_delete, name, email')
+      .eq('id', id)
+      .neq('status_for_delete', 'deleted')
+      .single();
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      throw fetchError;
+    }
+
+    // Check if user is already blocked
+    if (existingUser.status === 'blocked') {
+      return res.status(400).json({ error: 'User is already blocked' });
+    }
+
+    // Check if trying to block an admin
+    const { data: adminCheck, error: adminError } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', id)
+      .single();
+
+    if (adminError) throw adminError;
+
+    if (adminCheck.role === 'admin') {
+      return res.status(403).json({ error: 'Cannot block admin users' });
+    }
+
+    // Update user status to blocked
+    const { data, error } = await supabase
+      .from('users')
+      .update({ status: 'blocked' })
+      .eq('id', id)
+      .select('id, name, email, phone, role, status, status_for_delete, created_at');
+
+    if (error) throw error;
+
+    res.status(200).json({
+      message: 'User blocked successfully',
+      user: data[0]
+    });
+  } catch (error) {
+    console.error('Error blocking user:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+// UNBLOCK USER - Unblock a user (set status to active)
+export const unblockUser = async (req, res) => {
+  const { id } = req.params;
+  
+  try {
+    // Check if user exists and is not soft-deleted
+    const { data: existingUser, error: fetchError } = await supabase
+      .from('users')
+      .select('id, status, status_for_delete, name, email')
+      .eq('id', id)
+      .neq('status_for_delete', 'deleted')
+      .single();
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      throw fetchError;
+    }
+
+    // Check if user is not blocked
+    if (existingUser.status !== 'blocked') {
+      return res.status(400).json({ error: 'User is not blocked' });
+    }
+
+    // Update user status to active
+    const { data, error } = await supabase
+      .from('users')
+      .update({ status: 'active' })
+      .eq('id', id)
+      .select('id, name, email, phone, role, status, status_for_delete, created_at');
+
+    if (error) throw error;
+
+    res.status(200).json({
+      message: 'User unblocked successfully',
+      user: data[0]
+    });
+  } catch (error) {
+    console.error('Error unblocking user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
