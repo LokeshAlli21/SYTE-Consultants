@@ -1,5 +1,25 @@
 import { supabase } from '../supabase/supabaseClient.js';
 import { generateToken } from '../utils/generateToken.js';
+import bcrypt from 'bcrypt';
+
+// Function to generate hash for a password
+const generatePasswordHash = async (password) => {
+  try {
+    const saltRounds = 10;
+    const hash = await bcrypt.hash(password, saltRounds);
+    console.log(`Password: ${password}`);
+    console.log(`Hash: ${hash}`);
+    return hash;
+  } catch (error) {
+    console.error('Error generating hash:', error);
+  }
+};
+
+// Generate hash 
+// generatePasswordHash('sample@123');
+
+// You can also create a one-liner for quick testing:
+// console.log(await bcrypt.hash('12345678', 10));
 
 // LOGIN an Existing User
 export const loginUser = async (req, res, next) => {
@@ -8,14 +28,15 @@ export const loginUser = async (req, res, next) => {
 
     console.log('🚀 Logging in user:', email);
 
+    // Validate required fields
     if (!email || !password) {
-      return res.status(400).json({ message: 'All fields are required' });
+      return res.status(400).json({ message: 'Email and password are required' });
     }
 
     // Fetch user from Supabase
     const { data: user, error } = await supabase
       .from('users')
-      .select('*')
+      .select('id, name, email, phone, password, role, status, status_for_delete')
       .eq('email', email)
       .single();
 
@@ -23,18 +44,32 @@ export const loginUser = async (req, res, next) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    // Check password
-    const validPassword = (password === user.password)
+    // Check if user account is active
+    if (user.status !== 'active') {
+      return res.status(403).json({ 
+        message: user.status === 'blocked' ? 'Your account has been blocked' : 'Account is not active' 
+      });
+    }
+
+    // Check if user is not soft deleted
+    if (user.status_for_delete === 'deleted') {
+      return res.status(403).json({ message: 'Account not found' });
+    }
+
+    // Verify password using bcrypt
+    const validPassword = await bcrypt.compare(password, user.password);
 
     if (!validPassword) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    console.log('✅ User logged in:', user);
+    console.log('✅ User logged in:', { id: user.id, email: user.email, role: user.role });
 
-    const token =  generateToken(user.id)
-    console.log("token: ",token);
+    // Generate JWT token
+    const token = generateToken(user.id);
+    console.log("Token generated for user:", user.id);
     
+    // Return user data without password
     res.json({
       success: true,
       user: {
@@ -42,13 +77,16 @@ export const loginUser = async (req, res, next) => {
         name: user.name,
         email: user.email,
         phone: user.phone,
+        role: user.role,
+        status: user.status,
         token: token,
       },
       message: 'User logged in successfully',
     });
+
   } catch (error) {
     console.error('Login Error:', error);
-    next(error);
+    res.status(500).json({ message: 'Internal Server Error' });
   }
 };
 

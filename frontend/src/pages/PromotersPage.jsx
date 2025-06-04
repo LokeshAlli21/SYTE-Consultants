@@ -815,29 +815,36 @@ const PromotersPage = () => {
                       <td className="p-4 text-gray-700 font-medium text-sm">{promoter.contact_number}</td>
                       <td className="p-4 text-gray-700 font-medium text-sm">{promoter.district}</td>
                       <td className="p-4 text-gray-700 font-medium text-sm">{promoter.city}</td>
-<td className="p-4">
-  <div className="flex items-center justify-center gap-2">
-    <button
-      onClick={() => handleView(promoter.id)}
-      className="p-2 text-blue-600 hover:bg-blue-100 rounded-full transition-colors"
-      title="View Promoter"
-    >
-      <FaEye className="w-4 h-4" />
-    </button>
-    <button
-      onClick={() => handleEdit(promoter.id)}
-      className="p-2 text-yellow-600 hover:bg-yellow-100 rounded-full transition-colors"
-      title="Edit Promoter"
-    >
-      <FaEdit className="w-4 h-4" />
-    </button>
-    <button
-      onClick={() => showDeleteConfirm(promoter.id, promoter.promoter_name)}
-      className="p-2 text-red-600 hover:bg-red-100 rounded-full transition-colors"
-      title="Delete Promoter"
-    >
-      <FaTrash className="w-4 h-4" />
-    </button>
+<td className="px-8 py-6 whitespace-nowrap">
+  <div className="flex items-center justify-center">
+    <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-gray-200/50 hover:shadow-lg transition-all duration-300">
+      {/* View */}
+      <button
+        title="View Promoter"
+        onClick={() => handleView(promoter.id)}
+        className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+      >
+        <FaEye className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Edit */}
+      <button
+        title="Edit Promoter"
+        onClick={() => handleEdit(promoter.id)}
+        className="p-2.5 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 text-white hover:from-yellow-500 hover:to-yellow-600 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+      >
+        <FaEdit className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Delete */}
+      <button
+        title="Delete Promoter"
+        onClick={() => showDeleteConfirm(promoter.id, promoter.promoter_name)}
+        className="p-2.5 rounded-lg bg-gradient-to-br from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+      >
+        <FaTrash className="w-3.5 h-3.5" />
+      </button>
+    </div>
   </div>
 </td>
 

@@ -661,31 +661,39 @@ let filtered = projects.filter(project => {
                           {getProjectStatus(project)}
                         </span>
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center justify-center  gap-2 ">
-                          <button 
-                            onClick={() => handleView(project.id)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 bg-blue-50 rounded-full transition-colors"
-                            title="View Project"
-                          >
-                            <FaEye />
-                          </button>
-                          <button 
-                            onClick={() => handleEdit(project.id)}
-                            className="p-2 text-yellow-600 hover:bg-yellow-100 bg-yellow-50 rounded-full transition-colors"
-                            title="Edit Project"
-                          >
-                            <FaEdit />
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(project.id, project.project_name)}
-                            className="p-2 text-red-600 hover:bg-red-100 bg-red-50 rounded-full transition-colors"
-                            title="Delete Project"
-                          >
-                            <FaTrash />
-                          </button>
-                        </div>
-                      </td>
+<td className="px-8 py-6 whitespace-nowrap">
+  <div className="flex items-center justify-center">
+    <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-gray-200/50 hover:shadow-lg transition-all duration-300">
+      {/* View */}
+      <button
+        title="View Project"
+        onClick={() => handleView(project.id)}
+        className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+      >
+        <FaEye className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Edit */}
+      <button
+        title="Edit Project"
+        onClick={() => handleEdit(project.id)}
+        className="p-2.5 rounded-lg bg-gradient-to-br from-yellow-400 to-yellow-500 text-white hover:from-yellow-500 hover:to-yellow-600 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+      >
+        <FaEdit className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Delete */}
+      <button
+        title="Delete Project"
+        onClick={() => handleDelete(project.id, project.project_name)}
+        className="p-2.5 rounded-lg bg-gradient-to-br from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+      >
+        <FaTrash className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  </div>
+</td>
+
                     </tr>
                   ))}
                 </tbody>

@@ -111,6 +111,23 @@ async updateUser(id, updateData) {
   }
 }
 
+async changeUserPassword(userId, newPassword) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/admin/users/${userId}/password`, {
+      method: "PUT",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ password: newPassword }),
+    });
+    return this.handleResponse(response);
+  } catch (error) {
+    console.error("Error changing user password:", error);
+    throw error;
+  }
+}
+
 // SOFT DELETE - Mark user as deleted
 async softDeleteUser(id) {
   try {

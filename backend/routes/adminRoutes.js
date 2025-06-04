@@ -4,6 +4,7 @@ import {
   getAllUsers, 
   getUserById,
   updateUser,
+  changeUserPassword,
   softDeleteUser,
   restoreUser,
   searchUsers,
@@ -25,6 +26,8 @@ router.get('/users/search', searchUsers);             // SEARCH - Search users b
 router.get('/users/stats', getUserStats);             // STATS - Get user statistics
 router.get('/users/:id', getUserById);                // READ - Get specific user by ID
 router.put('/users/:id', updateUser);                 // UPDATE - Update user by ID
+
+router.put('/users/:id/password', changeUserPassword);  // UPDATE - Change user password by ID
 
 // User Status Management
 router.patch('/users/:id/delete', softDeleteUser);    // SOFT DELETE - Mark user as deleted

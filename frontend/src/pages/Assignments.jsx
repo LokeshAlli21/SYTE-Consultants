@@ -933,92 +933,94 @@ const TableRow = ({
         />
       </td>
       
-      <td className="p-2">
-        <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-gray-200/50  hover:shadow-md transition-all duration-300 group-hover:border-gray-300/60">
-          {/* View */}
-          <button
-            title="View Details"
-            onClick={() => onView(assignment.id)}
-            className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            <FaEye className="w-3.5 h-3.5" />
-          </button>
+<td className="px-6 py-4 whitespace-nowrap">
+  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-gray-200/60 group-hover:border-gray-300  hover:shadow-lg transition-all duration-300">
+    
+    {/* View */}
+    <button
+      title="View Details"
+      onClick={() => onView(assignment.id)}
+      className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+    >
+      <FaEye className="w-3.5 h-3.5" />
+    </button>
 
-          {/* Edit */}
-          <button
-            title="Edit Assignment"
-            onClick={() => onEdit(assignment.id)}
-            className="p-2.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            <FaEdit className="w-3.5 h-3.5" />
-          </button>
+    {/* Edit */}
+    <button
+      title="Edit Assignment"
+      onClick={() => onEdit(assignment.id)}
+      className="p-2.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+    >
+      <FaEdit className="w-3.5 h-3.5" />
+    </button>
 
-          {/* Delete */}
-          <button
-            title="Delete Assignment"
-            onClick={() => onDelete(assignment.id)}
-            className="p-2.5 rounded-lg bg-gradient-to-br from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            <FaTrash className="w-3.5 h-3.5" />
-          </button>
+    {/* Delete */}
+    <button
+      title="Delete Assignment"
+      onClick={() => onDelete(assignment.id)}
+      className="p-2.5 rounded-lg bg-gradient-to-br from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+    >
+      <FaTrash className="w-3.5 h-3.5" />
+    </button>
 
-          {/* Reminder */}
-          <div className="relative group/reminder">
-            <button
-              onClick={() => onReminder(assignment.id)}
-              className="relative p-2.5 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 text-white hover:from-orange-500 hover:to-orange-600 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
-              title="Set Reminder"
-            >
-              <FaBell className="w-3.5 h-3.5" />
+    {/* Reminder */}
+    <div className="relative group/reminder">
+      <button
+        onClick={() => onReminder(assignment.id)}
+        className="relative p-2.5 rounded-lg bg-gradient-to-br from-orange-400 to-orange-500 text-white hover:from-orange-500 hover:to-orange-600 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+        title="Set Reminder"
+      >
+        <FaBell className="w-3.5 h-3.5" />
+        {assignment.reminders?.length > 0 && (
+          <span className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full shadow animate-bounce">
+            {assignment.reminders.length}
+          </span>
+        )}
+      </button>
 
-              {assignment.reminders?.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] leading-none font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-lg animate-bounce">
-                  {assignment.reminders.length}
-                </span>
-              )}
-            </button>
-
-            {/* Enhanced Tooltip */}
-            {assignment.reminders?.length > 0 && (
-              <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-xs opacity-0 group-hover/reminder:opacity-100 transition-all duration-300 z-50">
-                <div className="bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-700/50 p-4">
-                  <div className="flex flex-col gap-3 max-h-40 overflow-y-auto">
-                    {assignment.reminders.map((reminder, index) => (
-                      <div key={index} className="border-b border-gray-700/50 pb-2 last:border-b-0 last:pb-0">
-                        <div className="text-[11px] font-semibold text-orange-300 mb-1">
-                          {new Date(reminder.date_and_time).toLocaleString()}
-                        </div>
-                        <div className="text-[11px] text-gray-200">
-                          {reminder.message}
-                        </div>
-                      </div>
-                    ))}
+      {/* Tooltip Popup */}
+      {assignment.reminders?.length > 0 && (
+        <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-xs opacity-0 group-hover/reminder:opacity-100 transition-opacity duration-300 z-50">
+          <div className="bg-gray-900/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-700/50 p-4 relative">
+            <div className="flex flex-col gap-3 max-h-40 overflow-y-auto">
+              {assignment.reminders.map((reminder, index) => (
+                <div key={index} className="border-b border-gray-700/50 pb-2 last:border-b-0 last:pb-0">
+                  <div className="text-[11px] font-semibold text-orange-300 mb-1">
+                    {new Date(reminder.date_and_time).toLocaleString()}
                   </div>
-                  {/* Arrow */}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/95"></div>
+                  <div className="text-[11px] text-gray-200">
+                    {reminder.message}
+                  </div>
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
+            {/* Tooltip arrow */}
+            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900/95"></div>
           </div>
-
-          {showReminderForm && (
-            <ReminderForm 
-              setShowReminderForm={setShowReminderForm}
-              assignmentId={assignment.id}
-              currentAssignmentStatus={assignment?.assignment_status}
-            />
-          )}
-
-          {/* Timeline */}
-          <button
-            title="View Timeline"
-            onClick={() => onTimeline(assignment.id)}
-            className="p-2.5 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
-          >
-            <FaRegClock className="w-3.5 h-3.5" />
-          </button>
         </div>
-      </td>
+      )}
+    </div>
+
+    {/* Optional Reminder Form */}
+    {showReminderForm && (
+      <ReminderForm
+        setShowReminderForm={setShowReminderForm}
+        assignmentId={assignment.id}
+        currentAssignmentStatus={assignment.assignment_status}
+      />
+    )}
+
+    {/* Timeline */}
+    <button
+      title="View Timeline"
+      onClick={() => onTimeline(assignment.id)}
+      className="p-2.5 rounded-lg bg-gradient-to-br from-purple-500 to-purple-600 text-white hover:from-purple-600 hover:to-purple-700 hover:scale-105 transition-all duration-200 shadow-md hover:shadow-lg"
+    >
+      <FaRegClock className="w-3.5 h-3.5" />
+    </button>
+  </div>
+</td>
+
     </tr>
   );
 };

@@ -382,6 +382,66 @@ export const getUserStats = async (req, res) => {
   }
 };
 
+// UPDATE - Change user password
+export const changeUserPassword = async (req, res) => {
+  const { id } = req.params;
+  const { password } = req.body;
+  
+  try {
+    // Validate required fields
+    if (!password) {
+      return res.status(400).json({ error: 'Password is required' });
+    }
+
+    // Validate password strength (optional - adjust as needed)
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
+    // Check if user exists and is not deleted
+    const { data: existingUser, error: fetchError } = await supabase
+      .from('users')
+      .select('id, name, email, status_for_delete')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !existingUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    if (existingUser.status_for_delete === 'deleted') {
+      return res.status(400).json({ error: 'Cannot change password for deleted user' });
+    }
+
+    // Hash the new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Update user password
+    const { data, error } = await supabase
+      .from('users')
+      .update({ password: hashedPassword })
+      .eq('id', id)
+      .select('id, name, email, role, status, created_at');
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.status(200).json({
+      message: 'Password changed successfully',
+      user: data[0]
+    });
+
+  } catch (error) {
+    console.error('Error changing user password:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
 
 // BLOCK USER - Block a user (set status to blocked)
 export const blockUser = async (req, res) => {

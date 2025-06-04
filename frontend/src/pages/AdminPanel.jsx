@@ -10,6 +10,7 @@ import {
   FaDownload,
   FaEye,
   FaTimes,
+  FaTimes as FaTimesCircle,
   FaKey,
   FaBan,
   FaUnlock,
@@ -27,9 +28,12 @@ import {
   FaPhone,
   FaCalendarAlt,
   FaUserTag,
+  FaCheck,
   FaShieldAlt,
+  FaEyeSlash,
   FaUndo ,
 } from 'react-icons/fa';
+import { IoClose } from "react-icons/io5";
 import { MdAdminPanelSettings, MdVerified, MdBlock, MdSecurity } from 'react-icons/md';
 import { BiRefresh, BiExport } from 'react-icons/bi';
 import { IoMdTime } from 'react-icons/io';
@@ -38,8 +42,8 @@ import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
 
 function AdminPanel() {
-  // Mock user data - replace with actual useSelector
-  const userData = { name: 'Admin User', role: 'admin' };
+
+  const userData = useSelector((state) => state.auth.userData);
   
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -67,8 +71,12 @@ function AdminPanel() {
   const [passwordData, setPasswordData] = useState({
     newPassword: '',
     confirmPassword: '',
-    sendEmail: true
   });
+
+
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [toast, setToast] = useState(null);
   
   // Form data for create/edit
   const [formData, setFormData] = useState({
@@ -139,7 +147,7 @@ const fetchUsers = useCallback(async () => {
 const fetchStats = useCallback(async () => {
   try {
     const statsData = await databaseService.getUserStats();
-    console.log("Fetched stats:", statsData);
+    // console.log("Fetched stats:", statsData);
     
     setStats(statsData.statistics);
   } catch (error) {
@@ -447,28 +455,27 @@ useEffect(() => {
   const handlePasswordSubmit = async (e) => {
     e.preventDefault();
     
+    // Validation
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      setError('Passwords do not match');
+      showToast('Passwords do not match', 'error');
       return;
     }
     
-    if (passwordData.newPassword.length < 8) {
-      setError('Password must be at least 8 characters long');
+    const passwordErrors = validatePassword(passwordData.newPassword);
+    if (passwordErrors.length > 0) {
+      showToast(`Password must contain: ${passwordErrors.join(', ')}`, 'error');
       return;
     }
     
     try {
       setLoading(true);
       await databaseService.changeUserPassword(selectedUser.id, passwordData.newPassword);
-      if (passwordData.sendEmail) {
-        await databaseService.sendPasswordChangeNotification(selectedUser.email);
-      }
-      setSuccess('Password changed successfully');
+      showToast('Password changed successfully!', 'success');
       setShowPasswordModal(false);
       setPasswordData({ newPassword: '', confirmPassword: '', sendEmail: true });
     } catch (error) {
       console.error('Password change error:', error);
-      setError('Failed to change password');
+      showToast('Failed to change password. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -493,6 +500,9 @@ useEffect(() => {
   const closeModal = () => {
     setShowUserModal(false);
     setShowPasswordModal(false);
+    setPasswordData({ newPassword: '', confirmPassword: '', sendEmail: true });
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
     setShowBulkActionModal(false);
     setShowDeleteModal(false);
     setSelectedUser(null);
@@ -596,6 +606,20 @@ useEffect(() => {
     setPasswordData(prev => ({ ...prev, [field]: value }));
   }, []);
 
+    const showToast = (message, type) => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 5000);
+  };
+
+    const validatePassword = (password) => {
+    const errors = [];
+    if (password.length < 8) errors.push('At least 8 characters');
+    if (!/[a-z]/.test(password)) errors.push('One lowercase letter');
+    if (!/[A-Z]/.test(password)) errors.push('One uppercase letter');
+    if (!/[0-9]/.test(password)) errors.push('One number');
+    return errors;
+  };
+
   return (
     <div className="min-h-screen ">
       {/* Header */}
@@ -612,13 +636,16 @@ useEffect(() => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 px-4 py-2 bg-green-50 rounded-lg border border-green-200">
-                <MdVerified className="text-green-500" />
-                <span className="text-sm font-medium text-gray-700">Welcome, {userData?.name}</span>
+              <div className="flex items-center space-x-3 px-6 py-3 bg-green-50 rounded-xl border border-green-300  ">
+                <MdVerified className="text-green-500 text-xl" />
+                <span className="text-base font-semibold text-gray-700">
+                  Welcome, {userData?.name}
+                </span>
               </div>
+
               <button
                 onClick={exportUsers}
-                className="px-4 py-2 bg-[#5caaab] text-white rounded-lg hover:bg-[#4a9a9b] transition-colors flex items-center space-x-2"
+                className="px-6 py-3 bg-[#5caaab] shadow-xl text-white rounded-lg hover:bg-[#4a9a9b] transition-colors flex items-center space-x-2"
               >
                 <BiExport />
                 <span>Export</span>
@@ -658,28 +685,36 @@ useEffect(() => {
         {/* User Management Panel */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-sm border border-gray-200/50 overflow-hidden">
           {/* Panel Header */}
-          <div className="px-8 py-6 border-b border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-blue-50/50">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">User Directory</h2>
-                <p className="text-gray-600 mt-1">Manage user accounts, roles, and permissions</p>
-              </div>
-              
               {/* Controls */}
-              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 px-8 py-6 border-b border-gray-200/50 bg-gradient-to-r from-gray-50/50 to-blue-50/50">
                 {/* Search and Filters */}
-                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
+                <div className="flex flex-1 flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
                   {/* Search Input */}
-                  <div className="relative">
-                    <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search users..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent w-full sm:w-64 bg-white/50 backdrop-blur-sm"
-                    />
-                  </div>
+<div className="relative flex-1 w-full sm:w-64">
+  {/* Search Icon */}
+  <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+
+  {/* Search Input */}
+  <input
+    type="text"
+    placeholder="Search users..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    className="w-full pl-12 pr-12 py-3 rounded-xl border outline-none border-gray-200 focus:border-[#5CAAAB] focus:ring-2 focus:ring-[#5CAAAB] text-gray-700 placeholder-gray-400 transition-all duration-200 bg-white"
+  />
+
+  {/* Clear Button */}
+  {searchTerm && (
+    <button
+      type="button"
+      onClick={() => setSearchTerm("")}
+      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-red-500 transition"
+    >
+      <IoClose size={20} />
+    </button>
+  )}
+</div>
+
                   
                   {/* Role Filter */}
                   <select
@@ -712,7 +747,7 @@ useEffect(() => {
                       type="checkbox"
                       checked={showDeleted}
                       onChange={(e) => setShowDeleted(e.target.checked)}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-[#5caaab] outline-none"
+                      className="rounded h-4 w-4 border-gray-300 text-blue-600 accent-[#5caaab] focus:ring-[#5caaab] outline-none"
                     />
                     <span>Show Deleted</span>
                   </label>
@@ -727,15 +762,13 @@ useEffect(() => {
                   
                   <button
                     onClick={() => handleUserAction(null, 'create')}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+                    className="bg-teal-600 hover:bg-teal-700 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
                     <FaPlus className="w-4 h-4" />
                     <span>Add User</span>
                   </button>
                 </div>
               </div>
-            </div>
-          </div>
 
           {/* Bulk Actions */}
           {selectedUsers.length > 0 && (
@@ -806,8 +839,11 @@ useEffect(() => {
                       type="checkbox"
                       checked={selectedUsers.length === filteredAndSortedUsers.length && filteredAndSortedUsers.length > 0}
                       onChange={handleSelectAll}
-                      className="rounded border-gray-300 text-blue-600 focus:ring-[#5caaab] outline-none w-4 h-4"
+                      className="rounded border-gray-300 text-blue-600 accent-[#5caaab] focus:ring-[#5caaab] outline-none w-4 h-4"
                     />
+                  </th>
+                  <th scope="col" className="px-2 py-4 text-left text-xs font-semibold text-gray-600">
+                    Sr No.
                   </th>
                   {[
                     { key: 'name', label: 'User' },
@@ -862,8 +898,16 @@ useEffect(() => {
                           type="checkbox"
                           checked={selectedUsers.includes(user.id)}
                           onChange={() => handleSelectUser(user.id)}
-                          className="rounded border-gray-300 text-blue-600 focus:ring-[#5caaab] outline-none w-4 h-4"
+                          className="rounded border-gray-300 text-blue-600 accent-[#5caaab] focus:ring-[#5caaab] outline-none w-4 h-4"
                         />
+                      </td>
+                      <td className="px-2 py-6 whitespace-nowrap text-sm text-gray-600">
+                        <div className="flex flex-col gap-1">
+                          <span>{filteredAndSortedUsers.indexOf(user) + 1}</span>
+                          <span className="bg-gray-300 rounded px-1 text-xs w-fit">
+                            ID:{user.id}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-8 py-6 whitespace-nowrap">
                         <div className="flex items-center">
@@ -1030,53 +1074,6 @@ useEffect(() => {
       </div>
       
 
-                {/* Pagination */}
-          {(
-            <div className="px-6 py-4 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700">
-                  Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalUsers)} of {totalUsers} users
-                </div>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  
-                  <div className="flex space-x-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      const pageNum = i + 1;
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`px-3 py-2 text-sm rounded-lg ${
-                            currentPage === pageNum
-                              ? 'bg-[#5caaab] text-white'
-                              : 'border border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
-                  </div>
-                  
-                  <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className="px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
       {/* User Modal */}
       {showUserModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
@@ -1209,82 +1206,138 @@ useEffect(() => {
         </div>
       )}
 
+      {/* Toast */}
+      {toast && (
+        <Toast 
+          message={toast.message} 
+          type={toast.type} 
+          onClose={() => setToast(null)} 
+        />
+      )}
+
       {/* Password Change Modal */}
-      {showPasswordModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full">
-            <div className="px-6 py-4 border-b border-gray-200">
+{showPasswordModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-2xl transform transition-all">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-[#5caaab] to-[#4a9a9b] rounded-t-xl">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900">Change Password</h3>
+                <h3 className="text-lg font-bold text-white">Change Password</h3>
                 <button
                   onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-white/80 hover:text-white transition-colors"
                 >
-                  <FaTimes />
+                  <FaTimes className="w-5 h-5" />
                 </button>
               </div>
             </div>
             
-            <form onSubmit={handlePasswordSubmit} className="p-6 space-y-4">
-              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+            <form onSubmit={handlePasswordSubmit} className="p-6 space-y-5">
+              {/* User Info */}
+              <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
                 <p className="text-sm text-blue-800">
-                  Changing password for: <strong>{selectedUser?.name}</strong>
+                  Changing password for: <strong className="text-blue-900">{selectedUser?.name}</strong>
                 </p>
               </div>
               
+              {/* New Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   New Password
                 </label>
-                <input
-                  type="password"
-                  value={passwordData.newPassword}
-                  onChange={(e) => handlePasswordDataChange('newPassword', e.target.value)}
-                  required
-                  minLength={8}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent"
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={(e) => handlePasswordDataChange('newPassword', e.target.value)}
+                    required
+                    className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent transition-all"
+                    placeholder="Enter new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showNewPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+                <PasswordStrength password={passwordData.newPassword} />
               </div>
               
+              {/* Confirm Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Confirm Password
                 </label>
-                <input
-                  type="password"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => handlePasswordDataChange('confirmPassword', e.target.value)}
-                  required
-                  minLength={8}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => handlePasswordDataChange('confirmPassword', e.target.value)}
+                    required
+                    className={`w-full px-4 py-3 pr-12 border rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent transition-all ${
+                      passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword 
+                        ? 'border-red-300 bg-red-50' 
+                        : passwordData.confirmPassword && passwordData.newPassword === passwordData.confirmPassword
+                        ? 'border-green-300 bg-green-50'
+                        : 'border-gray-300'
+                    }`}
+                    placeholder="Confirm new password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                  >
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+                {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+                  <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
+                )}
+                {passwordData.confirmPassword && passwordData.newPassword === passwordData.confirmPassword && (
+                  <p className="text-green-500 text-xs mt-1 flex items-center">
+                    <FaCheck className="w-3 h-3 mr-1" /> Passwords match
+                  </p>
+                )}
               </div>
-              
-              <div className="flex items-center space-x-2">
+
+              {/* Email Notification */}
+              {/* <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                 <input
                   type="checkbox"
                   id="sendEmail"
                   checked={passwordData.sendEmail}
                   onChange={(e) => handlePasswordDataChange('sendEmail', e.target.checked)}
-                  className="rounded border-gray-300 text-[#5caaab] focus:ring-[#5caaab] outline-none"
+                  className="w-4 h-4 text-[#5caaab] border-gray-300 rounded focus:ring-[#5caaab]"
                 />
                 <label htmlFor="sendEmail" className="text-sm text-gray-700">
                   Send email notification to user
                 </label>
-              </div>
+              </div> */}
               
-              <div className="flex space-x-3 pt-4">
+              {/* Action Buttons */}
+              <div className="flex space-x-3 pt-2">
                 <button
                   type="submit"
-                  disabled={loading}
-                  className="flex-1 px-4 py-2 bg-[#5caaab] text-white rounded-lg hover:bg-[#4a9a9b] transition-colors disabled:opacity-50"
+                  disabled={loading || !passwordData.newPassword || !passwordData.confirmPassword}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-[#5caaab] to-[#4a9a9b] text-white rounded-lg hover:from-[#4a9a9b] hover:to-[#3d8b8c] transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg"
                 >
-                  {loading ? 'Changing...' : 'Change Password'}
+                  {loading ? (
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Changing...
+                    </div>
+                  ) : (
+                    'Change Password'
+                  )}
                 </button>
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                  disabled={loading}
+                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -1396,8 +1449,85 @@ useEffect(() => {
           </div>
         </div>
       )}
+            
+         <style jsx>{`
+        @keyframes slide-in {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+        .animate-slide-in {
+          animation: slide-in 0.3s ease-out;
+        }
+      `}</style>
+
     </div>
   );
 }
+
+// ============== STEP 1: Create Toast Component (components/Toast.js) ==============
+
+export const Toast = ({ message, type, onClose }) => {
+  const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+  const icon = type === 'success' ? <FaCheck className="w-4 h-4" /> : <FaTimes className="w-4 h-4" />;
+
+  return (
+    <div className={`fixed top-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 z-50 animate-slide-in`}>
+      {icon}
+      <span>{message}</span>
+      <button onClick={onClose} className="ml-2 hover:opacity-75">
+        <FaTimes className="w-3 h-3" />
+      </button>
+    </div>
+  );
+};
+
+// ============== STEP 2: Create Password Strength Component ==============
+export const PasswordStrength = ({ password }) => {
+  const getStrength = (pass) => {
+    let score = 0;
+    if (pass.length >= 8) score++;
+    if (/[a-z]/.test(pass)) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass)) score++;
+    if (/[^A-Za-z0-9]/.test(pass)) score++;
+    return score;
+  };
+
+  const strength = getStrength(password);
+  const getStrengthText = () => {
+    if (strength <= 1) return { text: 'Very Weak', color: 'bg-red-500' };
+    if (strength === 2) return { text: 'Weak', color: 'bg-orange-500' };
+    if (strength === 3) return { text: 'Medium', color: 'bg-yellow-500' };
+    if (strength === 4) return { text: 'Strong', color: 'bg-green-500' };
+    return { text: 'Very Strong', color: 'bg-green-600' };
+  };
+
+  const { text, color } = getStrengthText();
+
+  if (!password) return null;
+
+  return (
+    <div className="mt-2">
+      <div className="flex justify-between text-xs mb-1">
+        <span className="text-gray-600">Password Strength</span>
+        <span className={`font-medium ${strength >= 3 ? 'text-green-600' : 'text-orange-600'}`}>
+          {text}
+        </span>
+      </div>
+      <div className="w-full bg-gray-200 rounded-full h-2">
+        <div 
+          className={`h-2 rounded-full transition-all duration-300 ${color}`}
+          style={{ width: `${(strength / 5) * 100}%` }}
+        ></div>
+      </div>
+    </div>
+  );
+};
 
 export default AdminPanel;
