@@ -166,7 +166,7 @@ useEffect(() => {
     <form
     onSubmit={handleSubmit}
      className="flex flex-col gap-4 ">
-        <div className='flex flex-col gap-4 bg-white p-0 rounded-2xl shadow-md'>
+        <div className='flex flex-col gap-4 bg-white p-0 rounded-2xl shadow-lg '>
         <div className='py-2 px-6 relative rounded-t-2xl bg-[#5CAAAB] flex flex-row items-center justify-around'>
           <h1 className='text-2xl font-bold text-white flex-1'>{activeTab}</h1>
           {formData?.updated_by && <UpdateInfoComponent formData={formData} /> }
@@ -560,7 +560,7 @@ disabled={disabled}
         {!disabled &&
         <button
         type="submit"
-        className="w-fit px-5 m-0 bg-[#5CAAAB] hover:bg-[#489496] text-lg shadow-xl text-white py-3 rounded-xl self-end font-semibold transition"
+        className="w-fit px-5 shadow-xl border border-white/20  m-0 bg-[#5CAAAB] hover:bg-[#489496] text-lg  text-white py-3 rounded-xl self-end font-semibold transition"
       >
         Save
       </button>

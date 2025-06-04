@@ -524,7 +524,9 @@ const cardData = [
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
-        <div className="py-6 px-2 pt-0 mb-0">
+<div className=' bg-white/80 rounded-2xl shadow-md flex flex-col mb-6'>
+
+        <div className="py-4 pb-0 px-4 mb-0">
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">Unit Management</h1>
@@ -542,7 +544,7 @@ const cardData = [
         </div>
 
         {/* Stats Cards */}
-<div className="flex max-w-6xl gap-4 overflow-x-scroll p-0 pb-4 mb-2" style={{
+<div className="flex max-w-6xl gap-4 overflow-x-scroll py-4 mb-2 mx-auto" style={{
     scrollbarWidth: 'none',        // Firefox
     msOverflowStyle: 'none'        // IE 10+
   }}>
@@ -625,8 +627,10 @@ const cardData = [
       ))}
     </div>
 
+</div>
+
         {/* Search and Filters */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-md border border-white/20 p-6 mb-6">
           <div className="flex flex-col lg:flex-row gap-4">
             
             {/* Search Bar */}
@@ -813,7 +817,7 @@ const cardData = [
         </div>
 
         {/* Content */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-lg border border-white/20 overflow-hidden">
           
           {/* Table Header */}
           <div className="p-6 border-b border-gray-200">

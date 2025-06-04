@@ -845,60 +845,88 @@ const handleSubmitProjectCommonAreasProgresss = async () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="fixed inset-0 min-h-screen bg-gray-500 bg-opacity-50 flex justify-center items-center z-50">
-        <div className="flex items-center space-x-2 text-white">
-          <FaSpinner className="animate-spin text-4xl" />
-          <span className="text-xl">Loading...</span>
+if (loading) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
+      <div className="bg-white/90 backdrop-blur-md rounded-2xl p-8 shadow-2xl border border-white/20">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="relative">
+            <div className="w-12 h-12 border-4 border-teal-200 rounded-full animate-spin">
+              <div className="absolute top-0 left-0 w-12 h-12 border-4 border-transparent border-t-[#5caaab] rounded-full animate-spin"></div>
+            </div>
+          </div>
+          <span className="text-lg font-medium text-gray-700 animate-pulse">Loading...</span>
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
-  return (
-    <div className="min-h-screen p-8 pt-3">
-      <div className="flex items-center justify-between mb-6 pl-6">
-        <div className="flex items-center gap-2">
-          <FaArrowLeft
-            className="text-[#2F4C92] text-3xl cursor-pointer"
+return (
+  <div className="min-h-screen ">
+    <div className="container mx-auto px-6 py-8">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4">
+          <button
             onClick={handleBack}
-          />
-          <h1 className="text-[24px] font-bold text-[#2F4C92]">
-            Add {tabs[activeTabIndex]}
-          </h1>
+            className="group flex items-center justify-center w-12 h-12 rounded-xl bg-white shadow-lg border border-gray-100 hover:shadow-xl hover:scale-105 transition-all duration-200"
+          >
+            <FaArrowLeft className="text-[#5caaab] text-xl group-hover:text-[#4a9499] transition-colors" />
+          </button>
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-[#5caaab] to-[#4a9499] bg-clip-text text-transparent">
+              Add {tabs[activeTabIndex]}
+            </h1>
+            {/* <p className="text-gray-500 text-sm mt-1">Create new entry</p> */}
+          </div>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="text-right">
-            <p className="text-sm font-medium">Admin Name</p>
-            <p className="text-xs text-gray-500">Admin</p>
+        {/* User Profile */}
+        <div className="flex items-center gap-4">
+          <div className="text-right hidden sm:block">
+            <p className="text-sm font-semibold text-gray-800">Admin Name</p>
+            <p className="text-xs text-gray-500 flex items-center gap-1">
+              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
+              Admin
+            </p>
           </div>
-          <div className="w-10 h-10 bg-[#C2C2FF] rounded-full" />
+          <div className="relative">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#5caaab] to-[#4a9499] rounded-xl shadow-lg ring-4 ring-white/50"></div>
+            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
+          </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-4 bg-white rounded-md w-fit border-b-2 border-[#5caaab] mb-6">
-        {tabs.map((tab, index) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTabIndex(index)}
-            className={`py-2 px-5 rounded-t-md font-medium transition duration-200 ${
-              activeTabIndex === index
-                ? "text-white border-0 border-b-0  bg-[#5caaab] font-bold border-[#5caaab]"
-                : "text-gray-500 hover:text-[#5caaab]"
-            }`}
-          >
-            {tab}
-          </button>
-        ))}
+      <div className="mb-8">
+        <div className="flex gap-2 p-2 bg-white/60 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 w-fit">
+          {tabs.map((tab, index) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTabIndex(index)}
+              className={`relative px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                activeTabIndex === index
+                  ? "bg-gradient-to-r from-[#5caaab] to-[#4a9499] text-white shadow-lg transform scale-105"
+                  : "text-gray-600 hover:text-[#5caaab] hover:bg-white/80"
+              }`}
+            >
+              {tab}
+              {activeTabIndex === index && (
+                <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#5caaab] to-[#4a9499] opacity-20 blur-xl"></div>
+              )}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Form */}
-      {renderForm()}
+      {/* Form Container */}
+      <div className=" rounded-3xl  p-0">
+        {renderForm()}
+      </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default AddProject;

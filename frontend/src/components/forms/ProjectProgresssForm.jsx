@@ -78,7 +78,7 @@ const inputRefs = useRef({});
   };
 
   const inputStyles = "w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5caaab]";
-  const sectionBox = "bg-white p-6 rounded-xl shadow-md";
+  const sectionBox = "bg-white p-6 rounded-xl shadow-lg border border-white/20";
 
   const ProgressBar = () => {
     // Define the steps
@@ -197,7 +197,7 @@ const inputRefs = useRef({});
       {!disabled && (
         <button
           type="submit"
-          className="self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-white text-lg rounded-xl font-semibold shadow-lg transition"
+          className="self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] border border-white/20 text-white text-lg rounded-xl font-semibold shadow-lg transition"
         >
           Save Building Progress
         </button>
@@ -288,7 +288,7 @@ disabled={disabled}
   {!disabled &&
   <button
     type="submit"
-    className="self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] text-white text-lg rounded-xl font-semibold shadow-lg transition"
+    className="self-end px-5 py-3 bg-[#5CAAAB] hover:bg-[#489496] border border-white/20 text-white text-lg rounded-xl font-semibold shadow-lg transition"
   >
     Save Common Area Progress
   </button>

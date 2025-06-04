@@ -164,7 +164,7 @@ function ProjectProfessionalDetailsForm({
       };
     
       return (
-        <div className="bg-white p-6 rounded-xl shadow-md">
+        <div className="bg-white p-6 rounded-xl shadow-lg border border-white/20">
           <h2 className="text-xl font-bold text-[#4a9899] mb-4">{roleLabel}</h2>
     
           {!disabled && (
@@ -344,7 +344,7 @@ function ProjectProfessionalDetailsForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="py-2 px-6 bg-[#5CAAAB] rounded-t-xl flex flex-row items-center justify-around">
+      <div className="py-2 px-6 bg-[#5CAAAB] rounded-xl flex flex-row items-center shadow-lg justify-around">
         <h1 className="text-2xl font-bold text-white flex-1">{activeTab}</h1>
         {formData.updated_by && <UpdateInfoComponent formData={formData} />}
       </div>
@@ -357,7 +357,7 @@ function ProjectProfessionalDetailsForm({
       {!disabled &&
       <button
         type="submit"
-        className="mt-6 bg-[#5caaab] hover:bg-[#4a9899] text-white px-6 py-3 rounded-lg font-semibold"
+        className="mt-6 bg-[#5caaab] shadow-lg border border-white/20 hover:bg-[#4a9899] text-white px-6 py-3 rounded-lg font-semibold"
       >
         Save All
       </button>
