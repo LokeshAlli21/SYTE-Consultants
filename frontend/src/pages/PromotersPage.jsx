@@ -22,6 +22,7 @@ import { IoClose, IoChevronDown } from "react-icons/io5";
 import { toast } from "react-toastify";
 import databaseService from "../backend-services/database/database";
 import Select from "react-select";
+import { UserProfile } from '../components/index';
 
 const PromotersPage = () => {
   const navigate = useNavigate();
@@ -399,19 +400,20 @@ const PromotersPage = () => {
   return (
     <div className="min-h-screen">
       {/* Header */}
-          <div className="flex items-center justify-between p-6 pb-0">
-            <div className="px-6">
+          <div className="flex items-center justify-between p-6 pb-0 gap-4 mr-6">
+            <div className="px-6 flex-1">
               <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">Promoters</h1>
               <p className="text-gray-500">Manage all promoters</p>
             </div>
-            <div className="bg-teal-50 p-4 rounded-xl flex flex-row gap-4 border border-teal-200 mx-6">
-              <p className="text-2xl font-bold text-teal-600 mt-1">
+            <div className="bg-teal-50 p-4 py-2 rounded-xl flex flex-row gap-2 border border-teal-200">
+              <p className="text-2xl font-bold text-teal-600">
                 {promoters.length}
               </p>
               <div className="flex items-center">
-                <span className="text-sm font-medium text-teal-900">Total Projects</span>
+                <span className="text-sm font-medium text-teal-900">Total Promoters</span>
               </div>
             </div>
+                        <UserProfile />
           </div>
 
       <div className="max-w-7xl mx-auto p-4 md:p-6">

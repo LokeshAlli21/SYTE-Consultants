@@ -13,6 +13,7 @@ import ShowAllPendingReminders from "../components/assignment-dashboard-componen
 import NoteCell from "../components/assignment-dashboard-components/NoteCell";     // Corrected import path
 import { HiEye, HiEyeOff } from 'react-icons/hi'
 import { useSelector } from "react-redux";
+import UserProfile from "../components/UserProfile"; // Corrected import path
 
 // Constants
 const ASSIGNMENT_TYPES = [
@@ -552,7 +553,7 @@ const DashboardHeader = ({ stats, viewMode, setViewMode, totalPendingReminders }
           </div>
 
           {/* View Toggle */}
-          <div className="bg-white flex flex-row gap-1 items-center rounded-lg p-2">
+          <div className="bg-white flex flex-row gap-1 items-center rounded-lg p-2 mr-2">
             <button
               onClick={() => setViewMode("table")}
               className={`px-3 py-2.5 rounded ${
@@ -574,6 +575,7 @@ const DashboardHeader = ({ stats, viewMode, setViewMode, totalPendingReminders }
               <FaChartBar className="text-lg" />
             </button>
           </div>
+          <UserProfile />
         </div>
       </div>
 

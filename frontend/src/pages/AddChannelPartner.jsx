@@ -6,6 +6,7 @@ import { FaArrowLeft } from "react-icons/fa6";
 
 import { ChannelPartnerForm } from "../components/index.js";
 import databaseService from "../backend-services/database/database.js";
+import UserProfile from "../components/UserProfile.jsx";
 
 // Constants
 const INITIAL_FORM_DATA = {
@@ -222,21 +223,7 @@ function AddChannelPartner({ viewOnly = false }) {
           </h1>
         </div>
 
-        <div className="flex items-center gap-6">
-          <div className="text-right">
-            <p className="text-sm font-medium">
-              {userData?.name || "Admin Name"}
-            </p>
-            <p className="text-xs text-gray-500">
-              {userData?.role || "Admin"}
-            </p>
-          </div>
-          <div className="w-10 h-10 bg-[#C2C2FF] rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-[#2F4C92]">
-              {(userData?.name || "A").charAt(0).toUpperCase()}
-            </span>
-          </div>
-        </div>
+        <UserProfile/>
       </header>
 
       {/* Form */}

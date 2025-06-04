@@ -8,6 +8,7 @@ import { FaArrowLeft } from 'react-icons/fa6';
 import * as XLSX from 'xlsx';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, Table, TableRow, TableCell, WidthType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver'
+import { UserProfile } from '../components';
 
 function AssignmentTimeLine() {
   const { id } = useParams();
@@ -601,7 +602,7 @@ function AssignmentTimeLine() {
         </div>
         
         {/* Export buttons */}
-        <div className="flex gap-3 mt-4">
+        <div className="flex gap-3 m-4">
           <button 
             onClick={exportToExcel}
             className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -624,6 +625,7 @@ function AssignmentTimeLine() {
             Export to PDF
           </button>
         </div>
+        {/* <UserProfile /> */}
       </div>
       
       {/* Summary stats */}

@@ -17,6 +17,7 @@ import { IoClose, IoChevronDown } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import databaseService from "../backend-services/database/database";
+import { UserProfile } from '../components/index';
 
 const AA = () => {
   const navigate = useNavigate();
@@ -268,20 +269,21 @@ let filtered = projects.filter(project => {
         
         {/* Header */}
         <div className="  p-6 pt-0 mb-0">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-4">
+            <div className=' flex-1'>
               <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">AA</h1>
               <p className="text-gray-500">Manage and monitor all your projects AA </p>
             </div>
-<div className="bg-teal-50 p-4 rounded-xl flex flex-row gap-4 border border-teal-200">
+<div className="bg-teal-50 px-4 py-2 rounded-xl flex flex-row gap-2 border border-teal-200">
   
-  <p className="text-2xl font-bold text-teal-600 mt-1">
+  <p className="text-2xl font-bold text-teal-600 ">
     {filteredAndSortedProjects.length}
   </p>
   <div className="flex items-center">
     <span className="text-sm font-medium text-teal-900">Total Projects</span>
   </div>
 </div>
+          <UserProfile />
           </div>
         </div>
 

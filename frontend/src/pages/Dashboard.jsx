@@ -37,6 +37,7 @@ import {
 } from "lucide-react";
 import databaseService from "../backend-services/database/database";
 import { useNavigate } from "react-router-dom";
+import { UserProfile } from "../components";
 
 // Updated database service to match SQL views structure
 // const databaseService = {
@@ -594,12 +595,15 @@ function Dashboard() {
     <div className="min-h-screen  p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#2F4C92] mb-2"> Dashboard</h1>
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-[#2F4C92] mb-2"> Dashboard</h1>
           <p className="text-gray-600">
             Comprehensive insights and analytics for your real estate business
             operations
           </p>
+          </div>
+          <UserProfile />
         </div>
 
         {/* Key Metrics Cards */}

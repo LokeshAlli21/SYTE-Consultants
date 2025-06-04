@@ -5,6 +5,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import databaseService from '../backend-services/database/database.js';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
+import UserProfile from '../components/UserProfile.jsx';
 
 function AddAssignment({viewOnly}) {
 
@@ -122,13 +123,7 @@ function AddAssignment({viewOnly}) {
               <h1 className="text-[24px] font-bold text-[#2F4C92]">Add New Assignment</h1>
             </div>
     
-            <div className="flex items-center gap-6">
-              <div className="text-right">
-                <p className="text-sm font-medium">Admin Name</p>
-                <p className="text-xs text-gray-500">Admin</p>
-              </div>
-              <div className="w-10 h-10 bg-[#C2C2FF] rounded-full" />
-            </div>
+<UserProfile />
           </div>
     <AssignmentForm
     formData={assignment}

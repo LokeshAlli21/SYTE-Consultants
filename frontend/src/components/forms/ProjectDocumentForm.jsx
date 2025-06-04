@@ -92,7 +92,7 @@ function ProjectDocumentForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <div className="bg-white p-0 rounded-xl shadow-lg ">
+      <div className="bg-white p-0 rounded-xl shadow-md">
 <div className="py-2 px-6 bg-[#5CAAAB] rounded-t-xl flex flex-row items-center justify-around">
   <h1 className="text-2xl font-bold text-white flex-1">{activeTab}</h1>
   {formData.updated_by && <UpdateInfoComponent formData={formData} />}

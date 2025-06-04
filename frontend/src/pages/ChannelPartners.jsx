@@ -15,6 +15,7 @@ import { IoClose, IoChevronDown } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import databaseService from "../backend-services/database/database";
+import { UserProfile } from '../components';
 
 const ChannelPartners = () => {
   const navigate = useNavigate();
@@ -219,19 +220,20 @@ const ChannelPartners = () => {
         
         {/* Header */}
         <div className="p-6 pt-0 mb-0">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex items-center justify-between gap-4">
+            <div className='flex-1'>
               <h1 className="text-3xl font-bold text-[#2F4C92] mb-2">Channel Partners</h1>
               <p className="text-gray-500">Manage and monitor all your channel partners in one place</p>
             </div>
-            <div className="bg-teal-50 p-4 rounded-xl flex flex-row gap-4 border border-teal-200">
-              <p className="text-2xl font-bold text-teal-600 mt-1">
+            <div className="bg-teal-50 p-4 py-2 rounded-xl flex flex-row gap-2 border border-teal-200">
+              <p className="text-2xl font-bold text-teal-600 ">
                 {filteredAndSortedPartners.length}
               </p>
               <div className="flex items-center">
-                <span className="text-sm font-medium text-teal-900">Total Partners</span>
+                <span className="text-md font-medium text-teal-900">Total Partners</span>
               </div>
             </div>
+            <UserProfile />
           </div>
         </div>
 

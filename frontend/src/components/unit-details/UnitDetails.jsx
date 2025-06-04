@@ -552,7 +552,7 @@ const cardData = [
         <div
           key={index}
           className={`
-            min-w-[200px]
+            min-w-[200px] w-fit max-w-[400px] flex-shrink-0
             group relative overflow-hidden rounded-2xl shadow-sm border border-gray-200/50 
             bg-gradient-to-br ${card.bgGradient} backdrop-blur-sm
             hover:shadow-lg hover:shadow-${card.color}-500/10 hover:-translate-y-1 
@@ -1012,35 +1012,42 @@ const cardData = [
                       <td className="p-4 text-red-600 font-medium">
                         {formatCurrency(unit.balance_amount)}
                       </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => handleView(unit.id)}
-                            className="p-2 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors"
-                            title="View Unit"
-                          >
-                            <FaEye />
-                          </button>
-                          {!disabled && (
-                            <>
-                              <button
-                                onClick={() => handleEdit(unit.id)}
-                                className="p-2 text-yellow-600 hover:bg-yellow-100 rounded-lg transition-colors"
-                                title="Edit Unit"
-                              >
-                                <FaEdit />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(unit.id, unit.unit_name)}
-                                className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                                title="Delete Unit"
-                              >
-                                <FaTrash />
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
+<td className="p-2">
+  <div className="flex items-center gap-2 p-2 rounded-xl bg-white/80 border border-gray-200/50 hover:shadow-lg transition-all duration-300 group-hover:border-gray-300/60">
+    
+    {/* View Unit */}
+    <button
+      onClick={() => handleView(unit.id)}
+      className="p-2.5 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
+      title="View Unit"
+    >
+      <FaEye className="w-3.5 h-3.5" />
+    </button>
+
+    {/* Edit & Delete - only if not disabled */}
+    {!disabled && (
+      <>
+        {/* Edit Unit */}
+        <button
+          onClick={() => handleEdit(unit.id)}
+          className="p-2.5 rounded-lg bg-gradient-to-br from-amber-500 to-orange-500 text-white hover:from-amber-600 hover:to-orange-600 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
+          title="Edit Unit"
+        >
+          <FaEdit className="w-3.5 h-3.5" />
+        </button>
+
+        {/* Delete Unit */}
+        <button
+          onClick={() => handleDelete(unit.id, unit.unit_name)}
+          className="p-2.5 rounded-lg bg-gradient-to-br from-red-500 to-red-600 text-white hover:from-red-600 hover:to-red-700 hover:scale-105 transition-all duration-200 shadow-sm hover:shadow-md"
+          title="Delete Unit"
+        >
+          <FaTrash className="w-3.5 h-3.5" />
+        </button>
+      </>
+    )}
+  </div>
+</td>
                     </tr>
                   ))}
                 </tbody>

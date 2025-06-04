@@ -144,7 +144,7 @@ const FileInputWithPreview = ({ label, name, onChange, filePreview, onDelete, di
 
 {/* Fullscreen Preview Modal */}
 {fullScreenPreview && (
-  <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-70 flex items-center justify-center z-50">
+  <div className="fixed top-0 left-0 w-full h-full inset-0 bg-black/50 mx-auto backdrop-blur-sm flex items-center justify-center z-50">
     <div className="relative max-w-full max-h-full">
       {fullScreenPreview.match(/\.(jpeg|jpg|png|gif|webp|png)$/i) ? (
         <img

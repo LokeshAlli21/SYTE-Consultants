@@ -615,13 +615,16 @@ export const uploadProjectUnits = async (req, res) => {
 
     // Loop through the unit and sanitize the values
     Object.entries(unit).forEach(([key, value]) => {
-      // Skip numerical fields with 0
-      if (numFields.includes(key) && Number(value) === 0 || value === '') return;
+      // For numerical fields: set to 0 if empty or null, otherwise keep the value
+      if (numFields.includes(key)) {
+        sanitizedUnit[key] = (value === '' || value === null || value === undefined) ? 0 : Number(value);
+        return;
+      }
 
-      // Skip empty strings
+      // Skip empty strings for string fields
       if (stringFields.includes(key) && value === '') return;
 
-      // Always keep required fields
+      // Always keep other fields (including required fields)
       sanitizedUnit[key] = value;
     });
 
@@ -674,11 +677,20 @@ export const updateProjectUnits = async (req, res) => {
     const sanitizedUnit = {};
 
     Object.entries(unit).forEach(([key, value]) => {
-      if (numFields.includes(key) && Number(value) === 0 || value === '') return;
+      // For numerical fields: set to 0 if empty or null, otherwise keep the value
+      if (numFields.includes(key)) {
+        sanitizedUnit[key] = (value === '' || value === null || value === undefined) ? 0 : Number(value);
+        return;
+      }
+
+      // Skip empty strings for string fields
       if (stringFields.includes(key) && value === '') return;
+
+      // Always keep other fields
       sanitizedUnit[key] = value;
     });
-const {updated_user, ...dataToUpload} = sanitizedUnit
+
+    const {updated_user, ...dataToUpload} = sanitizedUnit
     // Perform update operation
     const {data, error } = await supabase
       .from('project_units')

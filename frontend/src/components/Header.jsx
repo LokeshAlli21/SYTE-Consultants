@@ -1,5 +1,7 @@
+import { User } from 'lucide-react';
 import { FaArrowLeft, FaBell, FaRegCircleUser } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
+import UserProfile from './UserProfile';
 
 const Header = () => {
   const navigate = useNavigate()
@@ -20,11 +22,7 @@ const Header = () => {
           <span className="absolute top-2.5 left-3 text-gray-400">🔍</span>
         </div> */}
 
-        <div className="text-right">
-          <p className="text-sm font-medium">Admin Name</p>
-          <p className="text-xs text-gray-500">Admin</p>
-        </div>
-        <div className="w-10 h-10 bg-[#C2C2FF] rounded-full"></div> 
+        <UserProfile /> 
       </div>
     </div>
   );

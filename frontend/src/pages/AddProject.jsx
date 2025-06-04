@@ -8,11 +8,13 @@ import {
   UnitDetails,
   ProjectDocumentForm,
   ProjectProgresssForm,
+  UserProfile,
 } from "../components/index.js";
 import databaseService from "../backend-services/database/database";
 import { toast } from "react-toastify";
 import { validateFormDataForProject } from "../components/forms/validateFormDataForProject.jsx";
 import { useSelector } from "react-redux";
+import { User } from "lucide-react";
 
 const tabs = [
   "Project Details",
@@ -864,7 +866,7 @@ if (loading) {
 
 return (
   <div className="min-h-screen ">
-    <div className="container mx-auto px-6 py-8">
+    <div className="container mx-auto px-6 py-8 pt-4" >
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-4">
@@ -882,20 +884,7 @@ return (
           </div>
         </div>
 
-        {/* User Profile */}
-        <div className="flex items-center gap-4">
-          <div className="text-right hidden sm:block">
-            <p className="text-sm font-semibold text-gray-800">Admin Name</p>
-            <p className="text-xs text-gray-500 flex items-center gap-1">
-              <span className="w-2 h-2 bg-green-400 rounded-full"></span>
-              Admin
-            </p>
-          </div>
-          <div className="relative">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#5caaab] to-[#4a9499] rounded-xl shadow-lg ring-4 ring-white/50"></div>
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white"></div>
-          </div>
-        </div>
+<UserProfile />
       </div>
 
       {/* Tabs */}
