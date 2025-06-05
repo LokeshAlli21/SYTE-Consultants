@@ -10,9 +10,11 @@ import {
   searchUsers,
   getUserStats,
   blockUser,
-  unblockUser
+  unblockUser,
+  uploadUserPhoto,
 } from '../controllers/adminController.js';
 import { protect } from '../middlewares/protect.js';
+import {upload} from '../supabase/supabaseClient.js'
 
 const router = express.Router();
 
@@ -26,6 +28,8 @@ router.get('/users/search', searchUsers);             // SEARCH - Search users b
 router.get('/users/stats', getUserStats);             // STATS - Get user statistics
 router.get('/users/:id', getUserById);                // READ - Get specific user by ID
 router.put('/users/:id', updateUser);                 // UPDATE - Update user by ID
+
+router.post('/users/upload-photo', upload.any(), uploadUserPhoto);  // UPLOAD - Upload user photo
 
 router.put('/users/:id/password', changeUserPassword);  // UPDATE - Change user password by ID
 

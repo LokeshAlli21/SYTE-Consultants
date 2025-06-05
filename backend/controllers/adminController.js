@@ -3,8 +3,8 @@ import bcrypt from 'bcrypt';
 
 // CREATE - Add a new user
 export const createUser = async (req, res) => {
-  const { name, email, phone, password, role = 'user', status = 'active' } = req.body;
-  
+  const { name, email, phone, password, role = 'user', status = 'active',photo_url } = req.body;
+  console.log('Creating user with data:', req.body);
   try {
     // Validate required fields
     if (!name || !email || !password) {
@@ -25,6 +25,7 @@ export const createUser = async (req, res) => {
           password: hashedPassword,
           role,
           status,
+          photo_url: photo_url || null, // Optional field
           status_for_delete: 'active'
         }
       ])
@@ -57,7 +58,7 @@ export const getAllUsers = async (req, res) => {
 
     let query = supabase
       .from('users')
-      .select('id, name, email, phone, role, status, status_for_delete, created_at', { count: 'exact' })
+      .select('id, name, email, phone, role, status, status_for_delete, photo_url, created_at', { count: 'exact' })
       .neq('role', 'admin')
       .range(offset, offset + limit - 1)
       .order('created_at', { ascending: false });
@@ -102,7 +103,7 @@ export const getUserById = async (req, res) => {
   try {
     const { data, error } = await supabase
       .from('users')
-      .select('id, name, email, phone, role, status, status_for_delete, created_at')
+      .select('id, name, email, phone, role, status, status_for_delete, photo_url, created_at')
       .eq('id', id)
       .neq('status_for_delete', 'deleted')
       .single();
@@ -124,8 +125,8 @@ export const getUserById = async (req, res) => {
 // UPDATE - Update user by ID
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { name, email, phone, role, status, password } = req.body;
-  
+  const { name, email, phone, role, status, password, photo_url } = req.body;
+
   try {
     // Check if user exists and is not soft-deleted
     const { data: existingUser, error: fetchError } = await supabase
@@ -149,6 +150,7 @@ export const updateUser = async (req, res) => {
     if (phone !== undefined) updateData.phone = phone;
     if (role !== undefined) updateData.role = role;
     if (status !== undefined) updateData.status = status;
+    if (photo_url !== undefined) updateData.photo_url = photo_url;
 
     // Hash password if provided
     if (password) {
@@ -165,7 +167,7 @@ export const updateUser = async (req, res) => {
       .from('users')
       .update(updateData)
       .eq('id', id)
-      .select('id, name, email, phone, role, status, status_for_delete, created_at');
+      .select('id, name, email, phone, role, status, status_for_delete, photo_url, created_at');
 
     if (error) {
       if (error.code === '23505') { // Unique constraint violation
@@ -284,7 +286,7 @@ export const searchUsers = async (req, res) => {
 
     const { data, error, count } = await supabase
       .from('users')
-      .select('id, name, email, phone, role, status, status_for_delete, created_at', { count: 'exact' })
+      .select('id, name, email, phone, role, status, status_for_delete, photo_url, created_at', { count: 'exact' })
       .neq('role', 'admin')
       .neq('status_for_delete', 'deleted')
       .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
@@ -541,5 +543,85 @@ export const unblockUser = async (req, res) => {
   } catch (error) {
     console.error('Error unblocking user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+
+export const uploadUserPhoto = async (req, res) => {
+  try {
+    console.log('📸 Uploading user photo...');
+    const files = req.files;
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: 'No photo uploaded.' });
+    }
+
+    // We expect only one file with fieldname 'photo_url'
+    const photoFile = files.find(file => file.fieldname === 'photo_url');
+    
+    if (!photoFile) {
+      return res.status(400).json({ message: 'Photo file not found. Expected fieldname: photo_url' });
+    }
+
+    const uploadedUrls = {};
+
+    // Extract user role from filename
+    // Expected filename format: {role}_{UserName}_Photo_{timestamp}.{ext}
+    let userRole = 'user'; // default role
+    
+    const originalName = photoFile.originalname;
+    const filenameParts = originalName.split('_');
+    
+    if (filenameParts.length >= 3) {
+      // Extract role from first part of filename
+      const extractedRole = filenameParts[0].toLowerCase();
+      
+      // Validate if it's a valid role
+      const validRoles = ['admin', 'user', 'manager', 'supervisor', 'moderator'];
+      if (validRoles.includes(extractedRole)) {
+        userRole = extractedRole;
+      }
+    }
+
+    console.log(`📋 Extracted role from filename: ${userRole}`);
+
+    // Create folder path based on role
+    const folderPath = `${userRole}`;
+    const filePath = `${folderPath}/${originalName}`;
+
+    console.log(`📁 Uploading photo to folder: ${folderPath}`);
+    console.log(`📄 File path: ${filePath}`);
+
+    // Upload to Supabase Storage in 'user-profile-photos' bucket
+    const { data, error } = await supabase.storage
+      .from('user-profile-photos')
+      .upload(filePath, photoFile.buffer, {
+        contentType: photoFile.mimetype,
+        upsert: true, // Replace if file already exists
+      });
+
+    if (error) {
+      console.error(`Error uploading photo:`, error);
+      return res.status(500).json({ 
+        message: `Failed to upload photo: ${error.message}` 
+      });
+    }
+
+    // Get public URL for the uploaded photo
+    const { data: publicUrlData } = supabase.storage
+      .from('user-profile-photos')
+      .getPublicUrl(filePath);
+
+    uploadedUrls.photo_url = publicUrlData.publicUrl;
+    
+    console.log(`✅ Photo uploaded successfully to: ${publicUrlData.publicUrl}`);
+
+    return res.status(200).json(uploadedUrls);
+
+  } catch (error) {
+    console.error('❌ Unexpected error in uploadUserPhoto:', error);
+    return res.status(500).json({ 
+      message: 'Server error while uploading user photo.' 
+    });
   }
 };

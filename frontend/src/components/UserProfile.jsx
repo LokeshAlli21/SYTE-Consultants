@@ -40,7 +40,7 @@ function UserProfile() {
         );
     }
 
-    const shouldShowImage = userData?.img_url && !imageError;
+    const shouldShowImage = userData?.photo_url && !imageError;
     const initials = getInitials(userData?.name);
 
     return (
@@ -71,7 +71,7 @@ function UserProfile() {
                     {/* Profile Picture */}
                     {shouldShowImage && (
                         <img
-                            src={userData.img_url}
+                            src={userData.photo_url}
                             alt={`${userData?.name || 'User'} Profile`}
                             className={`w-full h-full object-cover transition-opacity duration-200 ${
                                 imageLoading ? 'opacity-0' : 'opacity-100'

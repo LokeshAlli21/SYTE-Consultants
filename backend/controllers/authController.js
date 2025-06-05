@@ -103,6 +103,8 @@ export const getUser = async (req, res, next) => {
         phone: user.phone,
         role: user.role,
         status: user.status,
+        photo_url: user.photo_url || null, // Handle optional photo_url
+        created_at: user.created_at || null,
       },
     });
   } catch (error) {

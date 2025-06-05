@@ -45,6 +45,52 @@ class DatabaseService {
 // CREATE - Add a new user
 async createUser(userData) {
   try {
+    // Check if photo_url is a File object that needs to be uploaded
+    if (userData.photo_url && userData.photo_url instanceof File) {
+      console.log("📦 Photo file detected:", userData.photo_url);
+
+      const fileFormData = new FormData();
+      const file = userData.photo_url;
+      
+      // Generate filename with timestamp
+      const userName = userData.name?.replace(/\s+/g, "_") || "UnknownUser";
+      const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
+      const ext = file.name?.split(".").pop() || "jpg";
+      
+     const renamedFile = new File(
+        [file],
+        `${userData.role || 'user'}_${userName}_Photo_${timestamp}.${ext}`,
+        { type: file.type }
+      );
+
+      fileFormData.append("photo_url", renamedFile);
+
+      // ⬆️ Upload the photo file
+      const uploadRes = await fetch(`${this.baseUrl}/api/admin/users/upload-photo`, {
+        method: "POST",
+        headers: this.getAuthHeaders(true), // Assuming this excludes Content-Type for FormData
+        body: fileFormData,
+      });
+
+      if (!uploadRes.ok) {
+        const errorRes = await uploadRes.json();
+        throw new Error(errorRes.message || "Photo upload failed.");
+      }
+
+      const uploadedUrls = await uploadRes.json();
+      console.log("🧾 Uploaded photo URL:", uploadedUrls);
+
+      if (!uploadedUrls.photo_url) {
+        throw new Error("Missing uploaded URL for photo");
+      }
+
+      // 🔁 Replace the File object with the uploaded URL
+      userData.photo_url = uploadedUrls.photo_url;
+    }
+
+    console.log("📤 Final User Payload:", userData);
+
+    // 📨 Submit final user data
     const response = await fetch(`${this.baseUrl}/api/admin/users`, {
       method: "POST",
       headers: {
@@ -53,11 +99,19 @@ async createUser(userData) {
       },
       body: JSON.stringify(userData),
     });
+
     return this.handleResponse(response);
   } catch (error) {
-    console.error("Error creating user:", error);
-    throw error;
+  console.error("❌ Error creating user:", error);
+
+  if (error.response && error.response.status === 409) {
+    toast.error("⚠️ User already exists!", { position: "top-right" });
+  } else {
+    toast.error("❌ Failed to create user. Please try again.", { position: "top-right" });
   }
+
+  throw error;
+}
 }
 
 // READ - Get all users with pagination and filters
@@ -96,6 +150,48 @@ async getUserById(id) {
 // UPDATE - Update user by ID
 async updateUser(id, updateData) {
   try {
+    // 📸 Handle photo upload if `photo_url` is a File
+    if (updateData.photo_url && updateData.photo_url instanceof File) {
+      console.log("📦 Photo file detected:", updateData.photo_url);
+
+      const fileFormData = new FormData();
+      const file = updateData.photo_url;
+
+      const userName = updateData.name?.replace(/\s+/g, "_") || "UnknownUser";
+      const timestamp = dayjs().tz("Asia/Kolkata").format("YYYY-MM-DD_HH-mm-ss");
+      const ext = file.name?.split(".").pop() || "jpg";
+
+      const renamedFile = new File(
+        [file],
+        `${updateData.role || 'user'}_${userName}_Photo_${timestamp}.${ext}`,
+        { type: file.type }
+      );
+
+      fileFormData.append("photo_url", renamedFile);
+
+      const uploadRes = await fetch(`${this.baseUrl}/api/admin/users/upload-photo`, {
+        method: "POST",
+        headers: this.getAuthHeaders(true), // FormData: don't set Content-Type manually
+        body: fileFormData,
+      });
+
+      if (!uploadRes.ok) {
+        const errorRes = await uploadRes.json();
+        throw new Error(errorRes.message || "Photo upload failed.");
+      }
+
+      const uploadedUrls = await uploadRes.json();
+      console.log("🧾 Uploaded photo URL:", uploadedUrls);
+
+      if (!uploadedUrls.photo_url) {
+        throw new Error("Missing uploaded URL for photo");
+      }
+
+      updateData.photo_url = uploadedUrls.photo_url; // Replace File with URL
+    }
+
+    console.log("📤 Final Update Payload:", updateData);
+
     const response = await fetch(`${this.baseUrl}/api/admin/users/${id}`, {
       method: "PUT",
       headers: {
@@ -104,9 +200,17 @@ async updateUser(id, updateData) {
       },
       body: JSON.stringify(updateData),
     });
+
     return this.handleResponse(response);
   } catch (error) {
-    console.error("Error updating user:", error);
+    console.error("❌ Error updating user:", error);
+
+    if (error.response?.status === 409) {
+      toast.error("⚠️ Update conflict! User already exists.", { position: "top-right" });
+    } else {
+      toast.error("❌ Failed to update user. Please try again.", { position: "top-right" });
+    }
+
     throw error;
   }
 }

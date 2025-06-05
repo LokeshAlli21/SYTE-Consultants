@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, use } from 'react';
 import { 
   FaUsers, 
   FaUserShield, 
@@ -40,6 +40,7 @@ import { IoMdTime } from 'react-icons/io';
 import databaseService from "../backend-services/database/database"; // Corrected import path
 import { useSelector } from 'react-redux';
 import { debounce } from 'lodash';
+import FileInputWithPreview from "../components/forms/FileInputWithPreview "; // Assuming you have a component for file input with preview
 
 function AdminPanel() {
 
@@ -85,8 +86,39 @@ function AdminPanel() {
     phone: '',
     role: 'user',
     status: 'active',
-    password: ''
+    password: '',
+    photo_url: '',
   });
+
+  
+    const [filePreviews, setFilePreviews] = useState({});
+
+      const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    const file = files[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, [name]: file }));
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreviews((prev) => ({
+          ...prev,
+          [name]: { url: reader.result, type: file.type },
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+    const handleFileDelete = (name) => {
+    setFormData((prev) => ({ ...prev, [name]: null }));
+
+    setFilePreviews((prev) => {
+      const updatedPreviews = { ...prev };
+      delete updatedPreviews[name];
+      return updatedPreviews;
+    });
+  };
 
   // Permission check
   if (userData && userData.role !== 'admin') {
@@ -131,6 +163,8 @@ const fetchUsers = useCallback(async () => {
     );
     
     const response = await databaseService.getAllUsers(cleanOptions);
+    // console.log("Fetched users:", response);
+    
     setUsers(response.users || []);
     setTotalUsers(response.total || 0);
   } catch (error) {
@@ -261,14 +295,37 @@ useEffect(() => {
   };
 
   const resetFormData = useCallback((user = null) => {
+    // console.log("Resetting form data with user:", user);
+    
     setFormData({
       name: user?.name || '',
       email: user?.email || '',
       phone: user?.phone || '',
       role: user?.role || 'user',
       status: user?.status || 'active',
+      photo_url: user?.photo_url || '',
       password: ''
     });
+      const uploadedUrls = {};
+
+      Object.entries(user || {}).forEach(([key, value]) => {
+        if (
+          typeof key === "string" &&
+          key.endsWith("_url") &&
+          
+          typeof value === "string" &&
+          value.startsWith("http")
+        ) {
+          uploadedUrls[key] = value;
+        }
+      });
+
+        // console.log("✅ Uploaded URLs:", uploadedUrls);
+
+        if (Object.keys(uploadedUrls).length > 0) {
+          setFilePreviews(uploadedUrls);
+        }
+
   }, []);
 
   const handleUserAction = useCallback((user, action) => {
@@ -288,7 +345,6 @@ useEffect(() => {
     setPasswordData({
       newPassword: '',
       confirmPassword: '',
-      sendEmail: true
     });
     setShowPasswordModal(true);
   };
@@ -472,7 +528,7 @@ useEffect(() => {
       await databaseService.changeUserPassword(selectedUser.id, passwordData.newPassword);
       showToast('Password changed successfully!', 'success');
       setShowPasswordModal(false);
-      setPasswordData({ newPassword: '', confirmPassword: '', sendEmail: true });
+      setPasswordData({ newPassword: '', confirmPassword: ''});
     } catch (error) {
       console.error('Password change error:', error);
       showToast('Failed to change password. Please try again.', 'error');
@@ -500,7 +556,7 @@ useEffect(() => {
   const closeModal = () => {
     setShowUserModal(false);
     setShowPasswordModal(false);
-    setPasswordData({ newPassword: '', confirmPassword: '', sendEmail: true });
+    setPasswordData({ newPassword: '', confirmPassword: ''});
     setShowNewPassword(false);
     setShowConfirmPassword(false);
     setShowBulkActionModal(false);
@@ -515,8 +571,10 @@ useEffect(() => {
       phone: '',
       role: 'user',
       status: 'active',
+      photo_url: '',
       password: ''
     });
+    setFilePreviews({});
   };
 
   const formatDate = (dateString) => {
@@ -635,22 +693,69 @@ useEffect(() => {
                 <p className="text-sm text-gray-500">Manage users, roles, and system settings</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-3 px-6 py-3 bg-green-50 rounded-xl border border-green-300  ">
-                <MdVerified className="text-green-500 text-xl" />
-                <span className="text-base font-semibold text-gray-700">
-                  Welcome, {userData?.name}
-                </span>
-              </div>
+<div className="flex items-center-safe justify-between gap-4">
+  
+  {/* Export Button */}
+  <button
+    onClick={exportUsers}
+    className="group flex items-center space-x-3 px-6 py-3 bg-gradient-to-r from-[#5caaab] to-[#4a9499] hover:from-[#4a9a9b] hover:to-[#3d8084] text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-[#5caaab]/30"
+  >
+    <BiExport className="text-lg group-hover:rotate-12 transition-transform duration-300" />
+    <span className="font-semibold">Export Users</span>
+  </button>
 
-              <button
-                onClick={exportUsers}
-                className="px-6 py-3 bg-[#5caaab] shadow-xl text-white rounded-lg hover:bg-[#4a9a9b] transition-colors flex items-center space-x-2"
-              >
-                <BiExport />
-                <span>Export</span>
-              </button>
+  <div className="flex items-baseline-last space-x-4">
+    {/* Welcome Card */}
+    <div className="flex items-center space-x-4 px-6 py-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200  hover:shadow-lg shadow-gray-300/30 transition-all duration-300 group">
+      {/* Verified Icon */}
+      <div className="flex-shrink-0">
+        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center group-hover:bg-green-200 transition-colors duration-200">
+          <MdVerified className="text-green-600 text-xl" />
+        </div>
+      </div>
+      
+      {/* Welcome Text */}
+      <div className="flex flex-col">
+        <span className="text-sm font-medium text-green-600 uppercase tracking-wide">
+          Welcome Back
+        </span>
+        <span className="text-lg font-bold text-gray-800">
+          {userData?.name || 'User'}
+        </span>
+      </div>
+      
+      {/* Profile Photo */}
+      {userData?.photo_url && (
+        <div className="flex-shrink-0 ml-4">
+          <div className="relative">
+            <div className="w-14 h-14 bg-gradient-to-br from-[#5caaab] to-[#4a9499] rounded-2xl shadow-lg ring-4 ring-white/60 hover:ring-white/80 transition-all duration-300 flex items-center justify-center overflow-hidden cursor-pointer group-hover:shadow-xl group-hover:scale-105">
+              <img
+                src={userData.photo_url}
+                alt={`${userData?.name || 'User'} Profile`}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                loading="lazy"
+              />
             </div>
+            {/* Online Indicator */}
+            {/* <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm"></div> */}
+          </div>
+        </div>
+      )}
+      
+      {/* Fallback Avatar if no photo */}
+      {!userData?.photo_url && (
+        <div className="flex-shrink-0 ml-4">
+          <div className="w-14 h-14 bg-gradient-to-br from-[#5caaab] to-[#4a9499] rounded-2xl shadow-lg ring-4 ring-white/60 hover:ring-white/80 transition-all duration-300 flex items-center justify-center cursor-pointer group-hover:shadow-xl group-hover:scale-105">
+            <span className="text-white font-bold text-lg">
+              {userData?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </span>
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+
+</div>
           </div>
         </div>
       </div>
@@ -1095,6 +1200,19 @@ useEffect(() => {
             </div>
             
             <form onSubmit={handleFormSubmit} className="p-6 space-y-4">
+
+              <div >
+                <FileInputWithPreview
+                label="User Photo"
+                name="photo_url"
+                onChange={handleFileChange}
+                disabled={modalMode === 'view'}
+                className={' w-[150px] h-[150px]'}
+                filePreview={filePreviews.photo_url}
+                onDelete={() => handleFileDelete("photo_url")}
+                />
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
