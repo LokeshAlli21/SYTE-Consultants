@@ -785,21 +785,22 @@ useEffect(() => {
                     Clear selection
                   </button>
                 </div>
-                <div className="flex space-x-2">
-                  {[
-                    { action: 'block', label: 'Block Selected', color: 'from-red-100 to-red-200 text-red-800 hover:from-red-200 hover:to-red-300' },
-                    { action: 'unblock', label: 'Unblock Selected', color: 'from-green-100 to-green-200 text-green-800 hover:from-green-200 hover:to-green-300' },
-                    { action: 'delete', label: 'Delete Selected', color: 'from-gray-100 to-gray-200 text-gray-800 hover:from-gray-200 hover:to-gray-300' }
-                  ].map((btn) => (
-                    <button
-                      key={btn.action}
-                      onClick={() => handleBulkAction(btn.action)}
-                      className={`px-4 py-2 text-sm bg-gradient-to-r ${btn.color} rounded-lg transition-all duration-200 font-medium`}
-                    >
-                      {btn.label}
-                    </button>
-                  ))}
-                </div>
+<div className="flex space-x-2">
+  {[
+    { action: 'block', label: 'Block Selected', color: 'from-red-100 to-red-200 text-red-800 hover:from-red-200 hover:to-red-300' },
+    { action: 'unblock', label: 'Unblock Selected', color: 'from-green-100 to-green-200 text-green-800 hover:from-green-200 hover:to-green-300' },
+    { action: 'delete', label: 'Delete Selected', color: 'from-gray-100 to-gray-200 text-gray-800 hover:from-gray-200 hover:to-gray-300' },
+    { action: 'restore', label: 'Restore Selected', color: 'from-blue-100 to-blue-200 text-blue-800 hover:from-blue-200 hover:to-blue-300' }
+  ].map((btn) => (
+    <button
+      key={btn.action}
+      onClick={() => handleBulkAction(btn.action)}
+      className={`px-4 py-2 text-sm bg-gradient-to-r ${btn.color} rounded-lg transition-all duration-200 font-medium`}
+    >
+      {btn.label}
+    </button>
+  ))}
+</div>
               </div>
             </div>
           )}
@@ -1399,56 +1400,110 @@ useEffect(() => {
         </div>
       )}
 
-      {/* Bulk Action Confirmation Modal */}
-      {showBulkActionModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-md w-full">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-900">Confirm Bulk Action</h3>
-                <button
-                  onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <FaTimes />
-                </button>
-              </div>
-            </div>
+{/* Bulk Action Confirmation Modal */}
+{showBulkActionModal && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-xl max-w-md w-full">
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-bold text-gray-900">
+            Confirm {bulkActionType && typeof bulkActionType === 'string' ? bulkActionType.charAt(0).toUpperCase() + bulkActionType.slice(1) : 'Bulk Action'}
+          </h3>
+          <button
+            onClick={closeModal}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            <FaTimes />
+          </button>
+        </div>
+      </div>
 
-            <div className="p-6">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
-                  <FaExclamationTriangle className="text-red-600 text-xl" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-gray-900">Bulk Action</h4>
-                  <p className="text-sm text-gray-500">This action cannot be undone</p>
-                </div>
-              </div>
-
-              <p className="text-gray-700 mb-6">
-                Are you sure you want to perform the bulk action on the selected users?
-              </p>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleBulkAction}
-                  disabled={loading}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-                >
-                  {loading ? 'Processing...' : 'Confirm Bulk Action'}
-                </button>
-                <button
-                  onClick={closeModal}
-                  className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
+      <div className="p-6">
+        <div className="flex items-center space-x-3 mb-4">
+          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+            bulkActionType === 'delete' 
+              ? 'bg-red-100' 
+              : bulkActionType === 'suspend' || bulkActionType === 'deactivate'
+              ? 'bg-orange-100'
+              : bulkActionType === 'activate' || bulkActionType === 'restore'
+              ? 'bg-green-100'
+              : 'bg-blue-100'
+          }`}>
+            {bulkActionType === 'delete' && (
+              <FaTrash className="text-red-600 text-xl" />
+            )}
+            {(bulkActionType === 'suspend' || bulkActionType === 'deactivate') && (
+              <FaPause className="text-orange-600 text-xl" />
+            )}
+            {(bulkActionType === 'activate' || bulkActionType === 'restore') && (
+              <FaCheck className="text-green-600 text-xl" />
+            )}
+            {(!bulkActionType || !['delete', 'suspend', 'deactivate', 'activate', 'restore'].includes(bulkActionType)) && (
+              <FaExclamationTriangle className="text-blue-600 text-xl" />
+            )}
+          </div>
+          <div>
+            <h4 className="font-medium text-gray-900">
+              {bulkActionType && typeof bulkActionType === 'string' ? `${bulkActionType.charAt(0).toUpperCase() + bulkActionType.slice(1)} Users` : 'Bulk Action'}
+            </h4>
+            <p className="text-sm text-gray-500">
+              {bulkActionType === 'delete' 
+                ? 'This action cannot be undone' 
+                : bulkActionType === 'suspend' || bulkActionType === 'deactivate'
+                ? 'Users will be temporarily disabled'
+                : bulkActionType === 'activate' || bulkActionType === 'restore'
+                ? 'Users will be re-enabled'
+                : 'This action may affect multiple users'
+              }
+            </p>
           </div>
         </div>
-      )}
+
+        <p className="text-gray-700 mb-6">
+          {bulkActionType === 'delete' && 
+            'Are you sure you want to permanently delete the selected users? This action cannot be undone.'
+          }
+          {(bulkActionType === 'suspend' || bulkActionType === 'deactivate') && 
+            'Are you sure you want to suspend the selected users? They will lose access to the system.'
+          }
+          {(bulkActionType === 'activate' || bulkActionType === 'restore') && 
+            'Are you sure you want to activate the selected users? They will regain access to the system.'
+          }
+          {(!bulkActionType || !['delete', 'suspend', 'deactivate', 'activate', 'restore'].includes(bulkActionType)) && 
+            'Are you sure you want to perform this bulk action on the selected users?'
+          }
+        </p>
+
+        <div className="flex space-x-3">
+          <button
+            onClick={executeBulkAction}
+            disabled={loading}
+            className={`flex-1 px-4 py-2 text-white rounded-lg transition-colors disabled:opacity-50 ${
+              bulkActionType === 'delete'
+                ? 'bg-red-600 hover:bg-red-700'
+                : bulkActionType === 'suspend' || bulkActionType === 'deactivate'
+                ? 'bg-orange-600 hover:bg-orange-700'
+                : bulkActionType === 'activate' || bulkActionType === 'restore'
+                ? 'bg-green-600 hover:bg-green-700'
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
+          >
+            {loading 
+              ? 'Processing...' 
+              : `Confirm ${bulkActionType && typeof bulkActionType === 'string' ? bulkActionType.charAt(0).toUpperCase() + bulkActionType.slice(1) : 'Action'}`
+            }
+          </button>
+          <button
+            onClick={closeModal}
+            className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
             
          <style>{`
         @keyframes slide-in {

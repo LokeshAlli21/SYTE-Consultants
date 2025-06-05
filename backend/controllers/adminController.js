@@ -204,7 +204,7 @@ export const softDeleteUser = async (req, res) => {
     }
 
     if (existingUser.status_for_delete === 'deleted') {
-      return res.status(400).json({ error: 'User is already deleted' });
+      return res.status(200).json({ error: 'User is already deleted' });
     }
 
     const { data, error } = await supabase
@@ -248,7 +248,7 @@ export const restoreUser = async (req, res) => {
     }
 
     if (existingUser.status_for_delete !== 'deleted') {
-      return res.status(400).json({ error: 'User is not deleted' });
+      return res.status(200).json({ error: 'User is not deleted' });
     }
 
     const { data, error } = await supabase
@@ -465,7 +465,7 @@ export const blockUser = async (req, res) => {
 
     // Check if user is already blocked
     if (existingUser.status === 'blocked') {
-      return res.status(400).json({ error: 'User is already blocked' });
+      return res.status(200).json({ error: 'User is already blocked' });
     }
 
     // Check if trying to block an admin
@@ -522,7 +522,7 @@ export const unblockUser = async (req, res) => {
 
     // Check if user is not blocked
     if (existingUser.status !== 'blocked') {
-      return res.status(400).json({ error: 'User is not blocked' });
+      return res.status(200).json({ error: 'User is already not blocked' });
     }
 
     // Update user status to active

@@ -45,6 +45,7 @@ export default function NoteCellWithModal({ currentNote = {}, onChange }) {
 
     if (validNotes.length === 0) {
       toast.info('Please enter at least one note.');
+      setNote(currentNote)
       return;
     }
 
