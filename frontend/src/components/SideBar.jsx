@@ -1,23 +1,68 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaBars, FaHome, FaClipboardList, FaRegCalendarAlt, FaUser, FaCog } from 'react-icons/fa';
+import { FaBars, FaHome, FaClipboardList, FaRegCalendarAlt, FaUser, FaWallet, FaPlus, FaUsers, FaCog, FaFileAlt, FaChartLine } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
 import { BiTask, BiBarChartSquare } from 'react-icons/bi';
 import { MdOutlinePeopleAlt, MdAdminPanelSettings } from 'react-icons/md';
 import { IoMdClose } from 'react-icons/io';
+import { IoIosArrowDown, IoIosArrowForward } from 'react-icons/io';
 import LogoutButton from '../components/LogoutButton'
 import { useSelector } from 'react-redux';
 
 const tabs = [
   { id: 'Dashboard', label: 'Dashboard', icon: <FaHome />, route: '/', accessKey: 'dashboard' },
-  { id: 'Promoters', label: 'Promoters', icon: <HiUserGroup />, route: '/promoters', accessKey: 'promoters' },
-  { id: 'Projects', label: 'Projects', icon: <BiTask />, route: '/projects', accessKey: 'projects' },
-  { id: 'Assignments', label: 'Assignments', icon: <FaUser />, route: '/assignments', accessKey: 'assignments' },
-  { id: 'Channel Partners', label: 'Channel Partners', icon: <MdOutlinePeopleAlt />, route: '/channel-partners', accessKey: 'channel partners' },
+  { 
+    id: 'Promoters', 
+    label: 'Promoters', 
+    icon: <HiUserGroup />, 
+    route: '/promoters', 
+    accessKey: 'promoters',
+    hasSubMenu: true,
+    subItems: [
+      { id: 'add-promoter', label: 'Add Promoter', icon: <FaPlus />, route: '/promoters/add' }
+    ]
+  },
+  { 
+    id: 'Projects', 
+    label: 'Projects', 
+    icon: <BiTask />, 
+    route: '/projects', 
+    accessKey: 'projects',
+    hasSubMenu: true,
+    subItems: [
+      { id: 'add-project', label: 'Add Project', icon: <FaPlus />, route: '/projects/add' },
+      { id: 'professionals', label: 'Professionals', icon: <FaUsers />, route: '/projects/professionals' },
+      { id: 'unit-management', label: 'Unit Management', icon: <FaCog />, route: '/projects/unit-management' },
+      { id: 'documents', label: 'Documents', icon: <FaFileAlt />, route: '/projects/documents' },
+      { id: 'progress', label: 'Progress', icon: <FaChartLine />, route: '/projects/progress' }
+    ]
+  },
+  { 
+    id: 'Assignments', 
+    label: 'Assignments', 
+    icon: <FaUser />, 
+    route: '/assignments', 
+    accessKey: 'assignments',
+    hasSubMenu: true,
+    subItems: [
+      { id: 'add-assignment', label: 'Add Assignment', icon: <FaPlus />, route: '/assignments/add' }
+    ]
+  },
+  { 
+    id: 'Channel Partners', 
+    label: 'Channel Partners', 
+    icon: <MdOutlinePeopleAlt />, 
+    route: '/channel-partners', 
+    accessKey: 'channel partners',
+    hasSubMenu: true,
+    subItems: [
+      { id: 'add-channel-partner', label: 'Add Channel Partner', icon: <FaPlus />, route: '/channel-partners/add' }
+    ]
+  },
   { id: 'QPR', label: 'QPR', icon: <FaClipboardList />, route: '/qpr', accessKey: 'qpr' },
   { id: 'AA', label: 'AA', icon: <FaRegCalendarAlt />, route: '/aa', accessKey: 'aa' },
   { id: 'Reports', label: 'Reports', icon: <BiBarChartSquare />, route: '/reports', accessKey: 'reports' },
-  { id: 'Accounts', label: 'Accounts', icon: <FaCog />, route: '/accounts', accessKey: 'accounts' },
+  { id: 'Accounts', label: 'Accounts', icon: <FaWallet />, route: '/accounts', accessKey: 'accounts' },
 ];
 
 // Admin-only menu items
@@ -31,42 +76,106 @@ function SideBar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('');
+  const [activeSubTab, setActiveSubTab] = useState('');
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [expandedMenus, setExpandedMenus] = useState({});
 
   // Check if user is admin
   const isAdmin = userData && userData.role === 'admin';
 
   const userAccessFields = userData?.access_fields || [];
 
-  // Filter tabs based on user access fields
-  const filteredTabs = tabs.filter(tab => {
-    // If user is admin, show all tabs
-    if (isAdmin) return true;
-    
-    // Check if user has access to this tab
-    return userAccessFields.includes(tab.accessKey);
-  });
+  // Memoize the filtered tabs to prevent recreation on every render
+  const filteredTabs = useMemo(() => {
+    return tabs.filter(tab => {
+      // If user is admin, show all tabs
+      if (isAdmin) return true;
+      
+      // Check if user has access to this tab
+      return userAccessFields.includes(tab.accessKey);
+    });
+  }, [isAdmin, userAccessFields]);
 
-  // Combine filtered tabs with admin tabs if user is admin
-  const allTabs = isAdmin ? [...filteredTabs, ...adminTabs] : filteredTabs;
+  // Memoize the combined tabs to prevent recreation on every render
+  const allTabs = useMemo(() => {
+    return isAdmin ? [...filteredTabs, ...adminTabs] : filteredTabs;
+  }, [isAdmin, filteredTabs]);
+
+  // Toggle submenu expansion - only one submenu open at a time
+  const toggleSubMenu = (tabId) => {
+    setExpandedMenus(prev => {
+      const isCurrentlyExpanded = prev[tabId];
+      // Close all submenus first, then open the clicked one if it wasn't already open
+      const newState = {};
+      if (!isCurrentlyExpanded) {
+        newState[tabId] = true;
+      }
+      return newState;
+    });
+  };
+
+  // Handle main tab click
+  const handleTabClick = (tab) => {
+    if (tab.hasSubMenu) {
+      // Always toggle the submenu and set as active
+      toggleSubMenu(tab.id);
+      setActiveTab(tab.id);
+      setActiveSubTab('');
+      navigate(tab.route);
+    } else {
+      // Close all submenus when clicking a non-submenu tab
+      setExpandedMenus({});
+      setActiveTab(tab.id);
+      setActiveSubTab('');
+      navigate(tab.route);
+    }
+  };
+
+  // Handle sub tab click
+  const handleSubTabClick = (parentTab, subTab) => {
+    setActiveTab(parentTab.id);
+    setActiveSubTab(subTab.id);
+    navigate(subTab.route);
+  };
 
   useEffect(() => {
     let matchedTab = null;
+    let matchedSubTab = null;
 
     for (let tab of allTabs) {
+      // Check sub-items first if they exist
+      if (tab.hasSubMenu && tab.subItems) {
+        for (let subItem of tab.subItems) {
+          if (location.pathname === subItem.route || 
+              (subItem.route !== "/" && location.pathname.startsWith(subItem.route))) {
+            matchedTab = tab;
+            matchedSubTab = subItem;
+            // Auto-expand the parent menu
+            setExpandedMenus(prev => ({ ...prev, [tab.id]: true }));
+            break;
+          }
+        }
+        if (matchedSubTab) break;
+      }
+
+      // Check main routes
       if (tab.route === "/" && location.pathname === "/") {
         matchedTab = tab;
         break;
       }
 
       if (tab.route !== "/" && location.pathname.startsWith(tab.route)) {
-        matchedTab = tab;
-        break;
+        // Only match if it's not a sub-route that we already handled
+        if (!tab.hasSubMenu || location.pathname === tab.route) {
+          matchedTab = tab;
+          break;
+        }
       }
     }
 
     if (matchedTab) {
       setActiveTab(matchedTab.id);
+      setActiveSubTab(matchedSubTab ? matchedSubTab.id : '');
     }
   }, [location.pathname, allTabs]);
 
@@ -121,23 +230,66 @@ function SideBar() {
           <nav className='flex-1 px-4 py-4 pr-0 space-y-1 overflow-y-auto'>
             {/* Regular Menu Items */}
             {filteredTabs.map((tab) => (
-              <div
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id);
-                  navigate(tab.route);
-                }}
-                className={`
-                  flex items-center px-4 py-3 mx-2 rounded-xl font-medium text-sm 
-                  cursor-pointer transition-all duration-200
-                  ${activeTab === tab.id ? 
-                    'bg-[#5CAAAB] text-white shadow-md' : 
-                    'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-                  }
-                `}
-              >
-                <span className='text-lg mr-3'>{tab.icon}</span>
-                <span>{tab.label}</span>
+              <div key={tab.id} className="mb-1">
+                {/* Main Tab */}
+                <div
+                  onClick={() => handleTabClick(tab)}
+                  className={`
+                    flex items-center px-4 py-3 mx-2 rounded-xl font-medium text-sm 
+                    cursor-pointer transition-all duration-300 ease-in-out
+                    ${activeTab === tab.id && !activeSubTab ? 
+                      'bg-[#5CAAAB] text-white shadow-md transform scale-[1.02]' : 
+                      'text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:transform hover:scale-[1.01]'
+                    }
+                  `}
+                >
+                  <span className='text-lg mr-3'>{tab.icon}</span>
+                  <span className='flex-1'>{tab.label}</span>
+                  {tab.hasSubMenu && (
+                    <span className={`transition-all duration-300 ease-in-out ${expandedMenus[tab.id] ? 'rotate-90' : ''}`}>
+                      <IoIosArrowForward size={16} />
+                    </span>
+                  )}
+                </div>
+
+                {/* Sub Menu with smooth animation */}
+                {tab.hasSubMenu && (
+                  <div 
+                    className={`
+                      overflow-hidden transition-all duration-300 ease-in-out z-50
+                      ${expandedMenus[tab.id] ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}
+                    `}
+                  >
+                    <div className='ml-6 mr-2 mt-2 mb-2 space-y-1 pl-4 border-l-2 border-gray-200'>
+                      {tab.subItems.map((subItem, index) => (
+                        <div
+                          key={subItem.id}
+                          onClick={() => handleSubTabClick(tab, subItem)}
+                          className={`
+                            flex items-center px-3 py-2 rounded-lg font-medium text-xs
+                            cursor-pointer transition-all duration-300 ease-in-out
+                            transform ${expandedMenus[tab.id] ? 'translate-x-0' : '-translate-x-4'}
+                            ${activeSubTab === subItem.id ? 
+                              'bg-gradient-to-r from-[#4A9A9B] to-[#5CAAAB] text-white shadow-lg border-l-4 border-white' : 
+                              'text-gray-500 hover:text-gray-700 hover:bg-gradient-to-r hover:from-gray-50 hover:to-gray-100 hover:border-l-4 hover:border-[#5CAAAB] border-l-4 border-transparent'
+                            }
+                          `}
+                          style={{
+                            transitionDelay: expandedMenus[tab.id] ? `${index * 50}ms` : '0ms'
+                          }}
+                        >
+                          <span className='text-sm mr-3 opacity-80'>{subItem.icon}</span>
+                          <span className='font-semibold'>{subItem.label}</span>
+                          {activeSubTab === subItem.id && (
+                            <span className='ml-auto'>
+                              <div className='w-2 h-2 bg-white rounded-full animate-pulse'></div>
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
 
@@ -154,15 +306,18 @@ function SideBar() {
                   <div
                     key={tab.id}
                     onClick={() => {
+                      // Close all submenus when clicking admin tab
+                      setExpandedMenus({});
                       setActiveTab(tab.id);
+                      setActiveSubTab('');
                       navigate(tab.route);
                     }}
                     className={`
                       flex items-center px-4 py-3 mx-2 rounded-xl font-medium text-sm 
-                      cursor-pointer transition-all duration-200
+                      cursor-pointer transition-all duration-300 ease-in-out
                       ${activeTab === tab.id ? 
-                        'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg' : 
-                        'text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200'
+                        'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg transform scale-[1.02]' : 
+                        'text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:transform hover:scale-[1.01]'
                       }
                     `}
                   >
@@ -170,7 +325,7 @@ function SideBar() {
                     <span>{tab.label}</span>
                     {/* Admin badge */}
                     <span className={`
-                      ml-auto text-xs px-2 py-1 rounded-full font-semibold
+                      ml-auto text-xs px-2 py-1 rounded-full font-semibold transition-all duration-300
                       ${activeTab === tab.id ? 
                         'bg-white/20 text-white' : 
                         'bg-red-100 text-red-600'
