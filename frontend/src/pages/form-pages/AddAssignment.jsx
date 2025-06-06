@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { FaArrowLeft } from 'react-icons/fa6';
-import {AssignmentForm} from '../components/index.js'
+import {AssignmentForm} from '../../components/index.js'
 import { useNavigate, useParams } from 'react-router-dom';
-import databaseService from '../backend-services/database/database.js';
+import databaseService from '../../backend-services/database/database.js';
 import { toast } from 'react-toastify';
 import { useSelector } from 'react-redux';
-import UserProfile from '../components/UserProfile.jsx';
+import UserProfile from '../../components/UserProfile.jsx';
 
 function AddAssignment({viewOnly}) {
 

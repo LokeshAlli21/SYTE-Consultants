@@ -9,10 +9,10 @@ import {
   ProjectDocumentForm,
   ProjectProgresssForm,
   UserProfile,
-} from "../components/index.js";
-import databaseService from "../backend-services/database/database";
+} from "../../components/index.js";
+import databaseService from "../../backend-services/database/database";
 import { toast } from "react-toastify";
-import { validateFormDataForProject } from "../components/forms/validateFormDataForProject.jsx";
+import { validateFormDataForProject } from "../../components/forms/validateFormDataForProject.jsx";
 import { useSelector } from "react-redux";
 import { User } from "lucide-react";
 

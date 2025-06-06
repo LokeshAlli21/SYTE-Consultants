@@ -6,11 +6,11 @@ import QPR from "./QPR";
 import AA from "./AA";
 import Reports from "./Reports";
 import Login from "./Login";
-import AddPromoter from "./AddPromoter";
+import AddPromoter from "./form-pages/AddPromoter";
 import PromotersPage from './PromotersPage'
-import AddProject from './AddProject'
-import AddAssignment from "./AddAssignment";
-import AddChannelPartner from "./AddChannelPartner";
+import AddProject from './form-pages/AddProject'
+import AddAssignment from "./form-pages/AddAssignment";
+import AddChannelPartner from "./form-pages/AddChannelPartner";
 import AssignmentTimeLine from "./AssignmentTimeLine";
 import AdminPanel from "./AdminPanel";
 import Accounts from "./Accounts";

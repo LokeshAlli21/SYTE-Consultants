@@ -3,7 +3,7 @@ import {
     PromoterForm,
     Header,
     Button,
-} from '../components/index'
+} from '../../components/index'
 import { useParams } from 'react-router-dom'
 
   
