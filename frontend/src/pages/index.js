@@ -13,6 +13,7 @@ import AddAssignment from "./AddAssignment";
 import AddChannelPartner from "./AddChannelPartner";
 import AssignmentTimeLine from "./AssignmentTimeLine";
 import AdminPanel from "./AdminPanel";
+import Accounts from "./Accounts";
 
 export {
     Dashboard,
@@ -30,4 +31,5 @@ export {
     AddChannelPartner,
     AssignmentTimeLine,
     AdminPanel,
+    Accounts,
 }

@@ -34,10 +34,13 @@ import {
   IndianRupee,
   Layers,
   Target,
+  Phone,
+  Mail,
 } from "lucide-react";
 import databaseService from "../backend-services/database/database";
 import { useNavigate } from "react-router-dom";
 import { UserProfile } from "../components";
+import { useSelector } from "react-redux";
 
 // Updated database service to match SQL views structure
 // const databaseService = {
@@ -426,6 +429,21 @@ function Dashboard() {
   const [recentActivity, setRecentActivity] = useState([]);
   const [reraExpiryAlerts, setReraExpiryAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const userData = useSelector(state => state.auth.userData);
+  const isAdmin = userData && userData.role === 'admin';
+  const userAccessFields = userData?.access_fields || [];
+
+  if (!isAdmin && !userAccessFields.includes('dashboard')) {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="text-center p-8 bg-white rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
+        <p className="text-gray-600">You don't have permission to access the Dashboard.</p>
+      </div>
+    </div>
+  );
+}
 
   // Colors for charts
   const COLORS = [
@@ -899,7 +917,7 @@ function Dashboard() {
                     {generalStats?.promoter_cities_covered || "0"}
                   </div>
                   <div className="text-xs text-emerald-600 mt-1">
-                    Urban Centers
+                    Urban and Rural Centers
                   </div>
                 </div>
                 <div className="w-12 h-12 bg-emerald-200 rounded-full flex items-center justify-center">
@@ -1567,7 +1585,7 @@ const ChannelPartnerCoverage = ({ generalStats }) => {
               <div className="text-2xl font-bold text-indigo-900">
                 {citiesCovered}
               </div>
-              <div className="text-xs text-indigo-600 mt-1">Urban Centers</div>
+              <div className="text-xs text-indigo-600 mt-1">Urban and Rural Centers</div>
             </div>
             <div className="w-12 h-12 bg-indigo-200 rounded-full flex items-center justify-center">
               <Building2 className="w-6 h-6 text-indigo-600" />

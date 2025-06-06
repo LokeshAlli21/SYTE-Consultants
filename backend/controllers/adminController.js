@@ -3,7 +3,7 @@ import bcrypt from 'bcrypt';
 
 // CREATE - Add a new user
 export const createUser = async (req, res) => {
-  const { name, email, phone, password, role = 'user', status = 'active',photo_url } = req.body;
+  const { name, email, phone, password, role = 'user', status = 'active',photo_url, access_fields } = req.body;
   console.log('Creating user with data:', req.body);
   try {
     // Validate required fields
@@ -26,7 +26,8 @@ export const createUser = async (req, res) => {
           role,
           status,
           photo_url: photo_url || null, // Optional field
-          status_for_delete: 'active'
+          status_for_delete: 'active',
+          access_fields: access_fields || null
         }
       ])
       .select();
@@ -53,12 +54,12 @@ export const createUser = async (req, res) => {
 // READ - Get all users (with option to include soft-deleted users)
 export const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, status, role, includeDeleted = false } = req.query;
+    const { page = 1, limit = 20, status, role, includeDeleted = false } = req.query;
     const offset = (page - 1) * limit;
 
     let query = supabase
       .from('users')
-      .select('id, name, email, phone, role, status, status_for_delete, photo_url, created_at', { count: 'exact' })
+      .select('id, name, email, phone, role, status, status_for_delete, photo_url, created_at, access_fields', { count: 'exact' })
       .neq('role', 'admin')
       .range(offset, offset + limit - 1)
       .order('created_at', { ascending: false });
@@ -77,6 +78,7 @@ export const getAllUsers = async (req, res) => {
     }
 
     const { data, error, count } = await query;
+    // console.log(await query); // Log the query for debugging
 
     if (error) throw error;
 
@@ -125,7 +127,8 @@ export const getUserById = async (req, res) => {
 // UPDATE - Update user by ID
 export const updateUser = async (req, res) => {
   const { id } = req.params;
-  const { name, email, phone, role, status, password, photo_url } = req.body;
+  const { name, email, phone, role, status, password, photo_url, access_fields } = req.body;
+  console.log('Updating user with ID:', id, 'and data:', req.body);
 
   try {
     // Check if user exists and is not soft-deleted
@@ -151,6 +154,7 @@ export const updateUser = async (req, res) => {
     if (role !== undefined) updateData.role = role;
     if (status !== undefined) updateData.status = status;
     if (photo_url !== undefined) updateData.photo_url = photo_url;
+    if (access_fields !== undefined) updateData.access_fields = access_fields;
 
     // Hash password if provided
     if (password) {

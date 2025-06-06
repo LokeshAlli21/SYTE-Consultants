@@ -8,6 +8,7 @@ CREATE TABLE users (
   password VARCHAR(255) NOT NULL,
   photo_url TEXT,  -- URL to the user's photo
   role VARCHAR(20) NOT NULL DEFAULT 'user',  -- e.g., 'admin', 'user', etc.
+  access_fields TEXT[] DEFAULT ARRAY['dashboard'],  -- Array of fields the user has access to
   status VARCHAR(20) DEFAULT 'active',  -- Status of the user (default to 'active')
   status_for_delete VARCHAR(20) DEFAULT 'active',  -- Status for deletion (default to 'active')
   created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata') 

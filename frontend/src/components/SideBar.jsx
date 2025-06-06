@@ -9,14 +9,15 @@ import LogoutButton from '../components/LogoutButton'
 import { useSelector } from 'react-redux';
 
 const tabs = [
-  { id: 'Dashboard', label: 'Dashboard', icon: <FaHome />, route: '/' },
-  { id: 'Promoters', label: 'Promoters', icon: <HiUserGroup />, route: '/promoters' },
-  { id: 'Projects', label: 'Projects', icon: <BiTask />, route: '/projects' },
-  { id: 'Assignments', label: 'Assignments', icon: <FaUser />, route: '/assignments' },
-  { id: 'Channel Partners', label: 'Channel Partners', icon: <MdOutlinePeopleAlt />, route: '/channel-partners' },
-  { id: 'QPR', label: 'QPR', icon: <FaClipboardList />, route: '/qpr' },
-  { id: 'AA', label: 'AA', icon: <FaRegCalendarAlt />, route: '/aa' },
-  { id: 'Reports', label: 'Reports', icon: <BiBarChartSquare />, route: '/reports' },
+  { id: 'Dashboard', label: 'Dashboard', icon: <FaHome />, route: '/', accessKey: 'dashboard' },
+  { id: 'Promoters', label: 'Promoters', icon: <HiUserGroup />, route: '/promoters', accessKey: 'promoters' },
+  { id: 'Projects', label: 'Projects', icon: <BiTask />, route: '/projects', accessKey: 'projects' },
+  { id: 'Assignments', label: 'Assignments', icon: <FaUser />, route: '/assignments', accessKey: 'assignments' },
+  { id: 'Channel Partners', label: 'Channel Partners', icon: <MdOutlinePeopleAlt />, route: '/channel-partners', accessKey: 'channel partners' },
+  { id: 'QPR', label: 'QPR', icon: <FaClipboardList />, route: '/qpr', accessKey: 'qpr' },
+  { id: 'AA', label: 'AA', icon: <FaRegCalendarAlt />, route: '/aa', accessKey: 'aa' },
+  { id: 'Reports', label: 'Reports', icon: <BiBarChartSquare />, route: '/reports', accessKey: 'reports' },
+  { id: 'Accounts', label: 'Accounts', icon: <FaCog />, route: '/accounts', accessKey: 'accounts' },
 ];
 
 // Admin-only menu items
@@ -34,9 +35,20 @@ function SideBar() {
 
   // Check if user is admin
   const isAdmin = userData && userData.role === 'admin';
-  
-  // Combine regular tabs with admin tabs if user is admin
-  const allTabs = isAdmin ? [...tabs, ...adminTabs] : tabs;
+
+  const userAccessFields = userData?.access_fields || [];
+
+  // Filter tabs based on user access fields
+  const filteredTabs = tabs.filter(tab => {
+    // If user is admin, show all tabs
+    if (isAdmin) return true;
+    
+    // Check if user has access to this tab
+    return userAccessFields.includes(tab.accessKey);
+  });
+
+  // Combine filtered tabs with admin tabs if user is admin
+  const allTabs = isAdmin ? [...filteredTabs, ...adminTabs] : filteredTabs;
 
   useEffect(() => {
     let matchedTab = null;
@@ -108,7 +120,7 @@ function SideBar() {
           {/* Navigation */}
           <nav className='flex-1 px-4 py-4 pr-0 space-y-1 overflow-y-auto'>
             {/* Regular Menu Items */}
-            {tabs.map((tab) => (
+            {filteredTabs.map((tab) => (
               <div
                 key={tab.id}
                 onClick={() => {
@@ -169,6 +181,14 @@ function SideBar() {
                   </div>
                 ))}
               </>
+            )}
+
+            {/* Show a message if user has no access to any tabs */}
+            {!isAdmin && filteredTabs.length === 0 && (
+              <div className='px-4 py-6 text-center'>
+                <p className='text-gray-500 text-sm'>No accessible modules found.</p>
+                <p className='text-gray-400 text-xs mt-1'>Contact admin for access.</p>
+              </div>
             )}
           </nav>
 

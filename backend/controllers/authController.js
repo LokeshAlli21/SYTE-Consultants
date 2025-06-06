@@ -36,7 +36,7 @@ export const loginUser = async (req, res, next) => {
     // Fetch user from Supabase
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, name, email, phone, password, role, status, status_for_delete')
+      .select('id, name, email, phone, password, role, status, status_for_delete, photo_url, created_at, access_fields')
       .eq('email', email)
       .single();
 
@@ -80,6 +80,9 @@ export const loginUser = async (req, res, next) => {
         role: user.role,
         status: user.status,
         token: token,
+        photo_url: user.photo_url || null, // Handle optional photo_url
+        created_at: user.created_at || null,
+        access_fields: user.access_fields || null, // Handle optional access_fields
       },
       message: 'User logged in successfully',
     });
@@ -105,6 +108,7 @@ export const getUser = async (req, res, next) => {
         status: user.status,
         photo_url: user.photo_url || null, // Handle optional photo_url
         created_at: user.created_at || null,
+        access_fields: user.access_fields || null, // Handle optional access_fields
       },
     });
   } catch (error) {

@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import databaseService from "../backend-services/database/database";
 import { UserProfile } from '../components';
+import { useSelector } from 'react-redux';
 
 const ChannelPartners = () => {
   const navigate = useNavigate();
@@ -39,6 +40,21 @@ const ChannelPartners = () => {
   const [districtOptions, setDistrictOptions] = useState([]);
   const [cityOptions, setCityOptions] = useState([]);
   const [districtCityMap, setDistrictCityMap] = useState({});
+  
+    const userData = useSelector(state => state.auth.userData);
+  const isAdmin = userData && userData.role === 'admin';
+  const userAccessFields = userData?.access_fields || [];
+
+if (!isAdmin && !userAccessFields.includes('channel partners')) {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="text-center p-8 bg-white rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
+        <p className="text-gray-600">You don't have permission to access Channel Partners.</p>
+      </div>
+    </div>
+  );
+}
 
   // Fetch cities and districts
   useEffect(() => {

@@ -56,6 +56,21 @@ function Assignments() {
   });
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [totalPendingReminders,setTotalPendingReminders] = useState(0)
+
+    const isAdmin = userData && userData.role === 'admin';
+    const userAccessFields = userData?.access_fields || [];
+  
+if (!isAdmin && !userAccessFields.includes('assignments')) {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="text-center p-8 bg-white rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
+        <p className="text-gray-600">You don't have permission to access Assignments.</p>
+      </div>
+    </div>
+  );
+}
+
         // console.log(assignments);
   // Fetch assignments data
 useEffect(() => {

@@ -64,7 +64,7 @@ function AdminPanel() {
   const [sortField, setSortField] = useState('created_at');
   const [sortOrder, setSortOrder] = useState('desc');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
+  const [itemsPerPage] = useState(20);
   const [totalUsers, setTotalUsers] = useState(0);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
@@ -88,8 +88,48 @@ function AdminPanel() {
     status: 'active',
     password: '',
     photo_url: '',
+    access_fields: [],
   });
 
+  const [accessDropdownOpen, setAccessDropdownOpen] = useState(false);
+
+const accessOptions = [
+  'dashboard',
+  'promoters', 
+  'projects',
+  'assignments',
+  'channel partners',
+  'qpr',
+  'aa',
+  'reports',
+  'accounts'
+];
+
+const handleAccessToggle = (option) => {
+  const currentAccess = formData.access_fields || []; // Changed from formData.access
+  
+  if (currentAccess.includes(option)) {
+    // Remove the option
+    handleFormDataChange('access_fields', currentAccess.filter(item => item !== option));
+  } else {
+    // Add the option
+    handleFormDataChange('access_fields', [...currentAccess, option]);
+  }
+};
+
+// Close dropdown when clicking outside (add this useEffect):
+useEffect(() => {
+  const handleClickOutside = (event) => {
+    if (accessDropdownOpen && !event.target.closest('.relative')) {
+      setAccessDropdownOpen(false);
+    }
+  };
+
+  document.addEventListener('mousedown', handleClickOutside);
+  return () => {
+    document.removeEventListener('mousedown', handleClickOutside);
+  };
+}, [accessDropdownOpen]);
   
     const [filePreviews, setFilePreviews] = useState({});
 
@@ -163,7 +203,7 @@ const fetchUsers = useCallback(async () => {
     );
     
     const response = await databaseService.getAllUsers(cleanOptions);
-    // console.log("Fetched users:", response);
+    console.log("Fetched users:", response);
     
     setUsers(response.users || []);
     setTotalUsers(response.total || 0);
@@ -304,7 +344,8 @@ useEffect(() => {
       role: user?.role || 'user',
       status: user?.status || 'active',
       photo_url: user?.photo_url || '',
-      password: ''
+      password: '',
+      access_fields: user?.access_fields || [],
     });
       const uploadedUrls = {};
 
@@ -482,9 +523,16 @@ useEffect(() => {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    
+
+    if (!formData.access_fields?.length) {
+      setError('Access fields are required for all users');
+      showToast('Access fields are required for all users', 'error');
+      return;
+    }
+
     if (modalMode === 'create' && !formData.password) {
       setError('Password is required for new users');
+      showToast('Password is required for new users', 'error');
       return;
     }
     
@@ -493,9 +541,11 @@ useEffect(() => {
       if (modalMode === 'create') {
         await databaseService.createUser(formData);
         setSuccess('User created successfully');
+        showToast('User created successfully', 'success');
       } else if (modalMode === 'edit') {
         await databaseService.updateUser(selectedUser.id, formData);
         setSuccess('User updated successfully');
+        showToast('User updated successfully', 'success');
       }
       closeModal();
       fetchUsers();
@@ -503,6 +553,7 @@ useEffect(() => {
     } catch (error) {
       console.error('Form submit error:', error);
       setError('Operation failed. Please try again.');
+      showToast('Operation failed. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -572,7 +623,8 @@ useEffect(() => {
       role: 'user',
       status: 'active',
       photo_url: '',
-      password: ''
+      password: '',
+      access_fields: [],
     });
     setFilePreviews({});
   };
@@ -1252,6 +1304,114 @@ useEffect(() => {
                   disabled={modalMode === 'view'}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent disabled:bg-gray-50"
                 />
+              </div>
+
+                            {/* New Access Fields Multiselect */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Access Fields
+                </label>
+                <div className="relative">
+                  <div
+                    onClick={() => {
+                              if (modalMode !== 'view') { 
+                                setAccessDropdownOpen(!accessDropdownOpen);
+                              }
+                            }}
+                    className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#5caaab] outline-none focus:border-transparent cursor-pointer ${
+                      modalMode === 'view' ? 'bg-gray-50 cursor-not-allowed' : 'bg-white'
+                    } min-h-[42px] flex items-center justify-between`}
+                  >
+                    <div className="flex flex-wrap gap-1">
+                      {formData.access_fields && formData.access_fields.length > 0 ? (
+                        formData.access_fields.map((access_fields) => (
+                          <span
+                            key={access_fields}
+                            className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-[#5caaab] text-white"
+                          >
+                            {access_fields}
+                            {modalMode !== 'view' && (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAccessToggle(access_fields);
+                                }}
+                                className="ml-1 hover:bg-[#4a9a9b] rounded-full p-0.5"
+                              >
+                                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path
+                                    fillRule="evenodd"
+                                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                                    clipRule="evenodd"
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                          </span>
+                        ))
+                      ) : (
+                        <span className="text-gray-500">Select access fields...</span>
+                      )}
+                    </div>
+                    {modalMode !== 'view' && (
+                      <svg
+                        className={`h-5 w-5 text-gray-400 transition-transform ${
+                          accessDropdownOpen ? 'rotate-180' : ''
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    )}
+                  </div>
+
+{accessDropdownOpen && modalMode !== 'view' && (
+  <div 
+    className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-auto flex flex-col gap-1 p-2"
+    style={{
+      scrollbarWidth: 'none',
+      msOverflowStyle: 'none'
+    }}
+  >
+    {accessOptions.map((option) => (
+      <div
+        key={option}
+        onClick={() => handleAccessToggle(option)}
+        className={`
+          px-4 py-3 rounded-lg cursor-pointer 
+          flex items-center justify-between text-sm font-medium
+          transition-all duration-200 ease-in-out
+          ${formData.access_fields && formData.access_fields.includes(option) 
+            ? 'bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-800 ring-2 ring-emerald-200 shadow-sm' 
+            : 'bg-gradient-to-r from-gray-50 to-slate-50 text-gray-700 hover:from-indigo-50 hover:to-teal-50 hover:font-medium hover:text-zinc-800'
+          }
+          hover:scale-[0.98] active:scale-95
+        `}
+      >
+        <span className="text-sm font-medium">{option}</span>
+        {formData.access_fields && formData.access_fields.includes(option) && (
+          <div className="flex items-center justify-center w-5 h-5 bg-emerald-100 rounded-full">
+            <svg 
+              className="h-3 w-3 text-emerald-600" 
+              fill="currentColor" 
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+)}
+                </div>
               </div>
               
               <div>

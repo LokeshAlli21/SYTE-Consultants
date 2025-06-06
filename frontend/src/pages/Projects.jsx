@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from "react-toastify";
 import databaseService from "../backend-services/database/database";
 import { UserProfile } from '../components/index';
+import { useSelector } from 'react-redux';
 
 const ProjectsPage = () => {
   const navigate = useNavigate();
@@ -50,6 +51,20 @@ const [filters, setFilters] = useState({
     { value: 'Active', label: 'Active' },
     { value: 'Expired', label: 'Expired' },
   ];
+
+    const userData = useSelector(state => state.auth.userData);
+  const isAdmin = userData && userData.role === 'admin';
+  const userAccessFields = userData?.access_fields || [];
+  if (!isAdmin && !userAccessFields.includes('projects')) {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="text-center p-8 bg-white rounded-lg shadow-md">
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
+        <p className="text-gray-600">You don't have permission to access Projects.</p>
+      </div>
+    </div>
+  );
+}
 
   // Fetch cities and districts
   useEffect(() => {
