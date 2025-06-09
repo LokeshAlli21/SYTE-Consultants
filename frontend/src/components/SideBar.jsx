@@ -31,10 +31,10 @@ const tabs = [
     hasSubMenu: true,
     subItems: [
       { id: 'add-project', label: 'Add Project', icon: <FaPlus />, route: '/projects/add' },
-      { id: 'professionals', label: 'Professionals', icon: <FaUsers />, route: '/projects/professionals' },
-      { id: 'unit-management', label: 'Unit Management', icon: <FaCog />, route: '/projects/unit-management' },
-      { id: 'documents', label: 'Documents', icon: <FaFileAlt />, route: '/projects/documents' },
-      { id: 'progress', label: 'Progress', icon: <FaChartLine />, route: '/projects/progress' }
+      // { id: 'professionals', label: 'Professionals', icon: <FaUsers />, route: '/projects/professionals' },
+      // { id: 'unit-management', label: 'Unit Management', icon: <FaCog />, route: '/projects/unit-management' },
+      // { id: 'documents', label: 'Documents', icon: <FaFileAlt />, route: '/projects/documents' },
+      // { id: 'progress', label: 'Progress', icon: <FaChartLine />, route: '/projects/progress' }
     ]
   },
   { 
