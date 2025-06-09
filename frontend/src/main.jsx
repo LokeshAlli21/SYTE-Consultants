@@ -27,6 +27,7 @@ import {
   AssignmentTimeLine,
   AdminPanel,
   Accounts,
+  SyteDocuments,
 } from './pages/index.js'
 
 const router = createBrowserRouter([
@@ -204,6 +205,14 @@ const router = createBrowserRouter([
         <AuthLayout authentication>
           {" "}
           <AdminPanel />
+         </AuthLayout>,
+      },
+      {
+        path: "/syte-documents",
+        element: 
+        <AuthLayout authentication>
+          {" "}
+          <SyteDocuments />
          </AuthLayout>,
       },
     ],

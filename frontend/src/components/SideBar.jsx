@@ -68,6 +68,7 @@ const tabs = [
 // Admin-only menu items
 const adminTabs = [
   { id: 'Admin Panel', label: 'Admin Panel', icon: <MdAdminPanelSettings />, route: '/admin-panel' },
+  { id: 'Syte Documents', label: 'Syte Documents', icon: <FaFileAlt />, route: '/syte-documents' },
 ];
 
 function SideBar() {
@@ -315,24 +316,56 @@ function SideBar() {
                     className={`
                       flex items-center px-4 py-3 mx-2 rounded-xl font-medium text-sm 
                       cursor-pointer transition-all duration-300 ease-in-out
-                      ${activeTab === tab.id ? 
-                        'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg transform scale-[1.02]' : 
-                        'text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:transform hover:scale-[1.01]'
+                      ${tab.id === 'Syte Documents' ? 
+                        // Special styling for Syte Documents
+                        (activeTab === tab.id ? 
+                          'bg-gradient-to-r mt-1.5 from-blue-600 via-purple-600 to-teal-600 text-white transform scale-[1.02]  ' : 
+                          'bg-gradient-to-r mt-1.5 from-blue-50 to-purple-50 text-transparent bg-clip-text border-2 border-gradient-to-r border-purple-200 hover:from-blue-100 hover:to-purple-100 hover:bg-white hover:text-purple-700 hover:border-purple-300 hover:transform hover:scale-[1.02] relative overflow-hidden'
+                        )
+                        :
+                        // Regular admin panel styling
+                        (activeTab === tab.id ? 
+                          'bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg transform scale-[1.02]' : 
+                          'text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 hover:transform hover:scale-[1.01]'
+                        )
                       }
                     `}
                   >
-                    <span className='text-lg mr-3'>{tab.icon}</span>
-                    <span>{tab.label}</span>
-                    {/* Admin badge */}
-                    <span className={`
-                      ml-auto text-xs px-2 py-1 rounded-full font-semibold transition-all duration-300
-                      ${activeTab === tab.id ? 
-                        'bg-white/20 text-white' : 
-                        'bg-red-100 text-red-600'
-                      }
-                    `}>
-                      ADMIN
+                    {/* Background animation for Syte Documents when not active */}
+                    {tab.id === 'Syte Documents' && activeTab !== tab.id && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-100 via-purple-100 to-teal-100 opacity-0 hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+                    )}
+                    
+                    <span className={`text-lg mr-3 relative z-10 ${tab.id === 'Syte Documents' && activeTab !== tab.id ? 'text-purple-600' : ''}`}>
+                      {tab.icon}
                     </span>
+                    <span className={`relative z-10 ${tab.id === 'Syte Documents' && activeTab !== tab.id ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-teal-600 bg-clip-text text-transparent font-bold' : ''}`}>
+                      {tab.label}
+                    </span>
+                    
+                    {/* Special badge for Syte Documents */}
+                    {tab.id === 'Syte Documents' ? (
+                      <span className={`
+                        ml-auto text-xs px-2 py-1 rounded-full font-bold transition-all duration-300 relative z-10
+                        ${activeTab === tab.id ? 
+                          'bg-white/20 text-white backdrop-blur-sm' : 
+                          'bg-gradient-to-r from-blue-500 to-purple-500 text-white '
+                        }
+                      `}>
+                        📚 DOCS
+                      </span>
+                    ) : (
+                      // Regular admin badge
+                      <span className={`
+                        ml-auto text-xs px-2 py-1 rounded-full font-semibold transition-all duration-300
+                        ${activeTab === tab.id ? 
+                          'bg-white/20 text-white' : 
+                          'bg-red-100 text-red-600'
+                        }
+                      `}>
+                        ADMIN
+                      </span>
+                    )}
                   </div>
                 ))}
               </>

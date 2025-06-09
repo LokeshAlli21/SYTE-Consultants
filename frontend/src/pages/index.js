@@ -14,6 +14,7 @@ import AddChannelPartner from "./form-pages/AddChannelPartner";
 import AssignmentTimeLine from "./AssignmentTimeLine";
 import AdminPanel from "./AdminPanel";
 import Accounts from "./Accounts";
+import SyteDocuments from "./SyteDocuments";
 
 export {
     Dashboard,
@@ -32,4 +33,5 @@ export {
     AssignmentTimeLine,
     AdminPanel,
     Accounts,
+    SyteDocuments,
 }

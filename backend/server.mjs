@@ -11,6 +11,7 @@ import projectRoutes from './routes/projectRoutes.js';
 import channelPartnerRoutes from './routes/channelPartnerRoutes.js'
 import assignmentRoutes from './routes/assignmentRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
+import bucketRoutes from './routes/bucketRoutes.js';
 dotenv.config();
 
 const app = express();
@@ -34,6 +35,7 @@ app.use('/api/projects', projectRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/channel-partners',channelPartnerRoutes );
 app.use('/api/dashboard',dashboardRoutes );
+app.use('/api/bucket',bucketRoutes );
 
 // Main route
 app.get('/', (req, res) => {
