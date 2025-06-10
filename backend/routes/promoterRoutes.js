@@ -3,7 +3,7 @@ import { protect } from '../middlewares/protect.js';
 import { uploadPromoterData, uploadPromoterFiles, getAllPromoters, softDeletePromoterById, getPromoterById,
   updatePromoter,
 } from '../controllers/promoterController.js';
-import {upload} from '../supabase/supabaseClient.js'
+import { upload } from '../aws/awsClient.js'; // Changed from supabase to awsClient
 
 const router = express.Router();
 
@@ -13,7 +13,7 @@ router.post(
     uploadPromoterData,
   );
 
-  router.put(
+router.put(
     '/update/:id',
     protect,
     updatePromoter

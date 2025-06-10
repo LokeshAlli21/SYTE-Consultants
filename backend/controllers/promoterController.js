@@ -1,9 +1,13 @@
 // controllers/promoterController.js
-import { supabase } from '../supabase/supabaseClient.js';
-import getCurrentISTTimestamp from './timestampt.js'
+import { query, getClient, uploadToS3, deleteFromS3 } from '../aws/awsClient.js'; // Changed from supabase to awsClient
+import getCurrentISTTimestamp from './timestampt.js';
 
 export const uploadPromoterData = async (req, res) => {
+  const client = await getClient();
+  
   try {
+    await client.query('BEGIN');
+
     // Step 1: Extract data from request body
     const {
       promoter_name,
@@ -20,6 +24,7 @@ export const uploadPromoterData = async (req, res) => {
     } = req.body;
 
     if (!userId) {
+      await client.query('ROLLBACK');
       return res.status(400).json({
         success: false,
         message: "User ID is required",
@@ -27,40 +32,34 @@ export const uploadPromoterData = async (req, res) => {
     }
 
     // Step 2: Insert into 'promoters' table
-    const promoterInsertRes = await supabase
-      .from('promoters')
-      .insert([{
-        promoter_name,
-        contact_number,
-        email_id,
-        district,
-        city,
-        promoter_type,
-        created_by:userId,
-        created_at: getCurrentISTTimestamp(),
-      }])
-      .select('id');
+    const promoterInsertQuery = `
+      INSERT INTO promoters (
+        promoter_name, contact_number, email_id, district, city, 
+        promoter_type, created_by, created_at, status_for_delete
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+      RETURNING id
+    `;
 
-    const { data: promoterData, error: promoterError, status, statusText } = promoterInsertRes;
+    const promoterValues = [
+      promoter_name,
+      contact_number,
+      email_id,
+      district,
+      city,
+      promoter_type,
+      userId,
+      getCurrentISTTimestamp(),
+      'active'
+    ];
 
-    if (promoterError) {
-      console.error('❌ Error inserting into Promoters:', promoterError);
-      return res.status(500).json({
-        error: 'Failed to insert promoter data',
-        details: promoterError,
-        status,
-        statusText,
-      });
-    }
+    const promoterResult = await client.query(promoterInsertQuery, promoterValues);
 
-    if (!promoterData || promoterData.length === 0) {
+    if (!promoterResult.rows || promoterResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(500).json({ error: 'No promoter data returned' });
     }
 
-    const promoterId = promoterData[0].id;
-    if (!promoterId) {
-      return res.status(500).json({ error: 'Failed to retrieve promoter ID after insert' });
-    }
+    const promoterId = promoterResult.rows[0].id;
 
     // Step 3: Build promoter_details object
     const promoterDetails = {
@@ -78,38 +77,35 @@ export const uploadPromoterData = async (req, res) => {
       }
     });
 
-    const insertData = {
-      ...filteredPromoterDetails,
-      created_by: userId,
-    };
-
     // Step 5: Insert into 'promoter_details' table
-    const { data: detailsData, error: detailsError } = await supabase
-      .from('promoter_details')
-      .insert([insertData])
-      .select('id');
+    const detailsColumns = Object.keys({ ...filteredPromoterDetails, created_by: userId });
+    const detailsValues = Object.values({ ...filteredPromoterDetails, created_by: userId });
+    const detailsPlaceholders = detailsValues.map((_, index) => `$${index + 1}`).join(', ');
 
-    if (detailsError) {
-      console.error('❌ Error inserting into PromoterDetails:', detailsError);
-      return res.status(500).json({
-        error: 'Failed to insert promoter details',
-        details: detailsError,
-      });
-    }
+    const detailsInsertQuery = `
+      INSERT INTO promoter_details (${detailsColumns.join(', ')}) 
+      VALUES (${detailsPlaceholders}) 
+      RETURNING id
+    `;
 
-    if (!detailsData || detailsData.length === 0) {
+    const detailsResult = await client.query(detailsInsertQuery, detailsValues);
+
+    if (!detailsResult.rows || detailsResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(500).json({ error: 'No details data returned' });
     }
 
-    const promoterDetailsId = detailsData[0].id;
+    const promoterDetailsId = detailsResult.rows[0].id;
 
     // Step 6: Filter promoter_details object
     const filteredAdditionalDetails = {};
-    Object.entries(promoter_details).forEach(([key, value]) => {
-      if (value && value !== 'null' && value !== 'undefined' && value !== '') {
-        filteredAdditionalDetails[key] = value;
-      }
-    });
+    if (promoter_details && typeof promoter_details === 'object') {
+      Object.entries(promoter_details).forEach(([key, value]) => {
+        if (value && value !== 'null' && value !== 'undefined' && value !== '') {
+          filteredAdditionalDetails[key] = value;
+        }
+      });
+    }
 
     // Step 7: Insert additional details based on promoter_type
     const tableMap = {
@@ -129,32 +125,47 @@ export const uploadPromoterData = async (req, res) => {
     const targetTable = tableMap[promoter_type];
 
     if (!targetTable) {
+      await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Invalid promoter type' });
     }
 
-    const additionalInsertRes = await supabase
-      .from(targetTable)
-      .insert([{ promoter_details_id: detailsData[0].id, ...filteredAdditionalDetails }]);
+    if (Object.keys(filteredAdditionalDetails).length > 0) {
+      const additionalColumns = Object.keys({ promoter_details_id: promoterDetailsId, ...filteredAdditionalDetails });
+      const additionalValues = Object.values({ promoter_details_id: promoterDetailsId, ...filteredAdditionalDetails });
+      const additionalPlaceholders = additionalValues.map((_, index) => `$${index + 1}`).join(', ');
 
-    if (additionalInsertRes.error) {
-      console.error('Error inserting additional promoter details:', additionalInsertRes.error);
-      return res.status(500).json({
-        error: 'Failed to insert additional promoter details',
-        details: additionalInsertRes.error
-      });
+      const additionalInsertQuery = `
+        INSERT INTO ${targetTable} (${additionalColumns.join(', ')}) 
+        VALUES (${additionalPlaceholders})
+      `;
+
+      await client.query(additionalInsertQuery, additionalValues);
+    } else {
+      // Insert with just promoter_details_id
+      const additionalInsertQuery = `
+        INSERT INTO ${targetTable} (promoter_details_id) 
+        VALUES ($1)
+      `;
+      await client.query(additionalInsertQuery, [promoterDetailsId]);
     }
 
-    // Step 7: Success response
+    await client.query('COMMIT');
+
+    // Step 8: Success response
     return res.status(201).json({
       message: '✅ Promoter and details uploaded successfully',
-      promoterData,
-      detailsData,
-      additionalInsertRes,
+      promoterData: promoterResult.rows[0],
+      detailsData: detailsResult.rows[0],
+      promoterId,
+      promoterDetailsId
     });
 
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('❌ Unexpected error in uploadPromoterData:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
+  } finally {
+    client.release();
   }
 };
 
@@ -170,7 +181,7 @@ export const uploadPromoterFiles = async (req, res) => {
 
     // Define folder mapping for each specific fieldname
     const folderMap = {
-      promoter_photo_uploaded_url:'photo',
+      promoter_photo_uploaded_url: 'photo',
       aadhar_uploaded_url: "individual/aadhar",
       pan_uploaded_url: "individual/pan",
       proprietor_pan_uploaded_url: "proprietor/pan",
@@ -191,35 +202,25 @@ export const uploadPromoterFiles = async (req, res) => {
 
     for (const file of files) {
       const fieldName = file.fieldname;
-      // console.log("fieldName :",fieldName);
-      
       const originalName = file.originalname;
 
       // Determine folder from map or fallback to "others"
       const folder = folderMap[fieldName] || "others";
 
       const fileExt = originalName.split('.').pop();
-      const filePath = `promoter-files/${folder}/${originalName}`;
+      const timestamp = Date.now();
+      const fileName = `${timestamp}-${originalName}`;
+      const s3Key = `promoter-files/${folder}/${fileName}`;
 
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('uploaded-documents')
-        .upload(filePath, file.buffer, {
-          contentType: file.mimetype,
-          upsert: true,
-        });
-
-      if (error) {
-        console.error(`Error uploading ${fieldName}:`, error);
+      try {
+        // Upload to AWS S3
+        const fileUrl = await uploadToS3(file, s3Key);
+        uploadedUrls[fieldName] = fileUrl;
+        console.log(`${fieldName} uploaded to ${fileUrl}`);
+      } catch (uploadError) {
+        console.error(`Error uploading ${fieldName}:`, uploadError);
         return res.status(500).json({ message: `Failed to upload ${fieldName}` });
       }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('uploaded-documents')
-        .getPublicUrl(filePath);
-
-      uploadedUrls[fieldName] = publicUrlData.publicUrl;
-      console.log(`${fieldName} uploaded to ${publicUrlData.publicUrl}`);
     }
 
     return res.status(200).json(uploadedUrls);
@@ -232,20 +233,21 @@ export const uploadPromoterFiles = async (req, res) => {
 
 export const getAllPromoters = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('promoters')
-      .select('id, promoter_name, contact_number, email_id, district, city, created_at, updated_at, promoter_type, created_by, updated_by, update_action, created_at')
-      .eq('status_for_delete','active');
+    const getAllQuery = `
+      SELECT id, promoter_name, contact_number, email_id, district, city, 
+             created_at, updated_at, promoter_type, created_by, updated_by, 
+             update_action, created_at
+      FROM promoters 
+      WHERE status_for_delete = 'active'
+      ORDER BY created_at DESC
+    `;
 
-    if (error) {
-      console.error('❌ Error fetching promoters:', error);
-      return res.status(500).json({ error: 'Failed to fetch promoters', details: error });
-    }
+    const result = await query(getAllQuery);
 
-    res.status(200).json({ promoters: data });
+    res.status(200).json({ promoters: result.rows });
   } catch (err) {
     console.error('❌ Unexpected error in getAllPromoters:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 };
 
@@ -253,20 +255,22 @@ export const softDeletePromoterById = async (req, res) => {
   const promoterId = req.params.id;
 
   try {
-    const { error } = await supabase
-      .from('promoters')
-      .update({ status_for_delete: 'inactive' })
-      .eq('id', promoterId);
+    const softDeleteQuery = `
+      UPDATE promoters 
+      SET status_for_delete = 'inactive', updated_at = $1
+      WHERE id = $2
+    `;
 
-    if (error) {
-      console.error('❌ Error soft deleting promoter:', error);
-      return res.status(500).json({ error: 'Failed to delete promoter', details: error });
+    const result = await query(softDeleteQuery, [new Date().toISOString(), promoterId]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Promoter not found' });
     }
 
     res.status(200).json({ message: '✅ Promoter marked as inactive' });
   } catch (err) {
     console.error('❌ Unexpected error in softDeletePromoterById:', err);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 };
 
@@ -274,42 +278,57 @@ export const getPromoterById = async (req, res) => {
   const { id } = req.params;
 
   try {
-    // Fetch base promoter and promoter_details
-    const { data: promoterData, error: promoterError } = await supabase
-       .from('view_promoter_full')
-      .select('*')
-      .eq('id', id)
-      .single();
-      
-
-    if (promoterError) {
-      console.error(`❌ Error fetching promoter:`, promoterError);
-      return res.status(500).json({ error: 'Failed to fetch promoter' });
-    }
-
-    if (!promoterData) {
-      return res.status(404).json({ error: 'Promoter not found' });
-    }
-
-    // console.log(promoterData);
+    // First, try to get from view if it exists, otherwise use individual queries
+    let promoterData;
     
+    try {
+      // Try using the view first
+      const viewQuery = `SELECT * FROM view_promoter_full WHERE id = $1`;
+      const viewResult = await query(viewQuery, [id]);
+      
+      if (viewResult.rows.length > 0) {
+        promoterData = viewResult.rows[0];
+      }
+    } catch (viewError) {
+      console.log('View not available, using individual queries');
+    }
 
-    const promoterDetailsId = promoterData.promoter_details[0]?.id;
+    // If view doesn't exist or didn't return data, use individual queries
+    if (!promoterData) {
+      // Fetch base promoter info
+      const promoterQuery = `
+        SELECT p.*, pd.office_address, pd.contact_person_name, pd.promoter_photo_uploaded_url
+        FROM promoters p
+        LEFT JOIN promoter_details pd ON p.id = pd.promoter_id
+        WHERE p.id = $1 AND p.status_for_delete = 'active'
+      `;
+
+      const promoterResult = await query(promoterQuery, [id]);
+
+      if (!promoterResult.rows || promoterResult.rows.length === 0) {
+        return res.status(404).json({ error: 'Promoter not found' });
+      }
+
+      promoterData = promoterResult.rows[0];
+    }
+
+    // Get promoter_details_id for fetching specific type details
+    const detailsQuery = `SELECT id FROM promoter_details WHERE promoter_id = $1`;
+    const detailsResult = await query(detailsQuery, [id]);
+    
+    const promoterDetailsId = detailsResult.rows[0]?.id;
     const promoterType = promoterData.promoter_type;
 
     let specificDetails = {};
 
-    // console.log(promoterDetailsId);
-    
-
     if (promoterDetailsId) {
       const tableMap = {
         individual: 'individual_promoters',
-        huf: 'huf_promoters',
+        hindu_undivided_family: 'huf_promoters',
         proprietor: 'proprietor_promoters',
         company: 'company_promoters',
         partnership: 'partnership_promoters',
-        llp: 'llp_promoters',
+        limited_liability_partnership: 'llp_promoters',
         trust: 'trust_promoters',
         society: 'society_promoters',
         public_authority: 'public_authority_promoters',
@@ -318,47 +337,47 @@ export const getPromoterById = async (req, res) => {
       };
 
       const tableName = tableMap[promoterType?.toLowerCase()];
-      console.log(tableName);
       
       if (tableName) {
-        const { data: typeDetails, error: typeError } = await supabase
-          .from(tableName)
-          .select('*')
-          .eq('promoter_details_id', promoterDetailsId)
-          .single();
-
-          // console.log(typeDetails);
+        try {
+          const typeQuery = `SELECT * FROM ${tableName} WHERE promoter_details_id = $1`;
+          const typeResult = await query(typeQuery, [promoterDetailsId]);
           
-        if (typeError) {
+          if (typeResult.rows.length > 0) {
+            specificDetails = typeResult.rows[0];
+          }
+        } catch (typeError) {
           console.error(`❌ Error fetching ${tableName} data:`, typeError);
-        } else {
-          specificDetails = typeDetails;
         }
       }
     }
 
-  const response = {
-    ...promoterData,
-    promoter_details: {
-      ...(promoterData.promoter_details?.[0] || {}),
-      [promoterType]: {
-        ...specificDetails,
+    const response = {
+      ...promoterData,
+      promoter_details: {
+        office_address: promoterData.office_address,
+        contact_person_name: promoterData.contact_person_name,
+        promoter_photo_uploaded_url: promoterData.promoter_photo_uploaded_url,
+        [promoterType]: {
+          ...specificDetails,
+        },
       },
-    },
-  };
+    };
 
     return res.status(200).json({ promoter: response });
   } catch (err) {
     console.error('❌ Unexpected error in getPromoterById:', err);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', details: err.message });
   }
 };
 
-
 export const updatePromoter = async (req, res) => {
   const { id } = req.params;
+  const client = await getClient();
 
   try {
+    await client.query('BEGIN');
+
     const {
       promoter_name,
       contact_number,
@@ -375,6 +394,7 @@ export const updatePromoter = async (req, res) => {
     } = req.body;
 
     if (!userId) {
+      await client.query('ROLLBACK');
       return res.status(400).json({
         success: false,
         message: "User ID is required",
@@ -382,49 +402,51 @@ export const updatePromoter = async (req, res) => {
     }
 
     // Step 1: Update 'promoters' table
-    const { data: promoterData, error: promoterError } = await supabase
-      .from('promoters')
-      .update({
-        promoter_name,
-        contact_number,
-        email_id,
-        district,
-        city,
-        promoter_type,
-        updated_by:userId,
-        update_action,
-      })
-      .eq('id', id)
-      .select('id');
+    const updatePromoterQuery = `
+      UPDATE promoters 
+      SET promoter_name = $1, contact_number = $2, email_id = $3, 
+          district = $4, city = $5, promoter_type = $6, 
+          updated_by = $7, update_action = $8, updated_at = $9
+      WHERE id = $10
+      RETURNING id
+    `;
 
-    if (promoterError) {
-      console.error('❌ Error updating Promoters table:', promoterError);
-      return res.status(500).json({ error: 'Failed to update promoter', details: promoterError });
-    }
+    const promoterValues = [
+      promoter_name,
+      contact_number,
+      email_id,
+      district,
+      city,
+      promoter_type,
+      userId,
+      update_action,
+      new Date().toISOString(),
+      id
+    ];
 
-    if (!promoterData || promoterData.length === 0) {
+    const promoterResult = await client.query(updatePromoterQuery, promoterValues);
+
+    if (!promoterResult.rows || promoterResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: 'Promoter not found for update' });
     }
 
-    // Step 2: Fetch promoter_details ID
-    const { data: existingDetails, error: detailsFetchError } = await supabase
-      .from('promoter_details')
-      .select('id')
-      .eq('promoter_id', id)
-      .single();
+    // Step 2: Get promoter_details ID
+    const getDetailsIdQuery = `SELECT id FROM promoter_details WHERE promoter_id = $1`;
+    const detailsIdResult = await client.query(getDetailsIdQuery, [id]);
 
-    if (detailsFetchError || !existingDetails) {
-      return res.status(404).json({ error: 'Promoter details not found', details: detailsFetchError });
+    if (!detailsIdResult.rows || detailsIdResult.rows.length === 0) {
+      await client.query('ROLLBACK');
+      return res.status(404).json({ error: 'Promoter details not found' });
     }
 
-    const promoterDetailsId = existingDetails.id;
+    const promoterDetailsId = detailsIdResult.rows[0].id;
 
     // Step 3: Update promoter_details table
     const detailsToUpdate = {
       office_address,
       contact_person_name,
       promoter_photo_uploaded_url,
-      updated_at: new Date().toISOString()
     };
 
     const filteredDetails = {};
@@ -434,21 +456,21 @@ export const updatePromoter = async (req, res) => {
       }
     });
 
-    const insertData = {
-      ...filteredDetails,
-      updated_by: userId,
-      update_action,
-    };
-    
-    const { data: updatedDetails, error: detailsUpdateError } = await supabase
-      .from('promoter_details')
-      .update(insertData)
-      .eq('id', promoterDetailsId)
-      .select();
+    if (Object.keys(filteredDetails).length > 0) {
+      const updateColumns = Object.keys(filteredDetails);
+      const updateValues = Object.values(filteredDetails);
+      const updatePlaceholders = updateColumns.map((col, index) => `${col} = $${index + 1}`).join(', ');
 
-    if (detailsUpdateError) {
-      console.error('❌ Error updating promoter_details:', detailsUpdateError);
-      return res.status(500).json({ error: 'Failed to update promoter details', details: detailsUpdateError });
+      const updateDetailsQuery = `
+        UPDATE promoter_details 
+        SET ${updatePlaceholders}, updated_by = $${updateValues.length + 1}, 
+            update_action = $${updateValues.length + 2}, updated_at = $${updateValues.length + 3}
+        WHERE id = $${updateValues.length + 4}
+        RETURNING id
+      `;
+
+      const detailsUpdateValues = [...updateValues, userId, update_action, new Date().toISOString(), promoterDetailsId];
+      await client.query(updateDetailsQuery, detailsUpdateValues);
     }
 
     // Step 4: Update additional promoter type table
@@ -469,51 +491,56 @@ export const updatePromoter = async (req, res) => {
     const targetTable = tableMap[promoter_type];
 
     if (!targetTable) {
+      await client.query('ROLLBACK');
       return res.status(400).json({ error: 'Invalid promoter type' });
     }
 
     const filteredAdditionalDetails = {};
-    Object.entries(promoter_details || {}).forEach(([key, value]) => {
-      if (value && value !== 'null' && value !== 'undefined' && value !== '') {
-        filteredAdditionalDetails[key] = value;
-      }
-    });
+    if (promoter_details && typeof promoter_details === 'object') {
+      Object.entries(promoter_details).forEach(([key, value]) => {
+        if (value && value !== 'null' && value !== 'undefined' && value !== '') {
+          filteredAdditionalDetails[key] = value;
+        }
+      });
+    }
 
-    const { data: existingEntry, error: entryFetchError } = await supabase
-      .from(targetTable)
-      .select('*')
-      .eq('promoter_details_id', promoterDetailsId)
-      .single();
+    // Check if entry exists in the target table
+    const checkExistingQuery = `SELECT * FROM ${targetTable} WHERE promoter_details_id = $1`;
+    const existingResult = await client.query(checkExistingQuery, [promoterDetailsId]);
 
-    if (entryFetchError) {
-      console.error(`❌ Could not find existing entry in ${targetTable}:`, entryFetchError);
+    if (existingResult.rows.length === 0) {
+      await client.query('ROLLBACK');
       return res.status(404).json({ error: `No existing entry found in ${targetTable}` });
     }
 
-    // console.log("existingEntry :",existingEntry);
-    
+    if (Object.keys(filteredAdditionalDetails).length > 0) {
+      const additionalColumns = Object.keys(filteredAdditionalDetails);
+      const additionalValues = Object.values(filteredAdditionalDetails);
+      const additionalPlaceholders = additionalColumns.map((col, index) => `${col} = $${index + 1}`).join(', ');
 
-    const { data: updatedAdditionalData, error: updateAdditionalError } = await supabase
-      .from(targetTable)
-      .update(filteredAdditionalDetails)
-      .eq('promoter_details_id', promoterDetailsId)
-      .select();
+      const updateAdditionalQuery = `
+        UPDATE ${targetTable} 
+        SET ${additionalPlaceholders}
+        WHERE promoter_details_id = $${additionalValues.length + 1}
+      `;
 
-    if (updateAdditionalError) {
-      console.error(`❌ Error updating ${targetTable}:`, updateAdditionalError);
-      return res.status(500).json({ error: `Failed to update ${targetTable}`, details: updateAdditionalError });
+      await client.query(updateAdditionalQuery, [...additionalValues, promoterDetailsId]);
     }
+
+    await client.query('COMMIT');
 
     // Step 5: Final success response
     return res.status(200).json({
       message: '✅ Promoter and details updated successfully',
-      promoterData,
-      updatedDetails,
-      updatedAdditionalData
+      promoterData: promoterResult.rows[0],
+      promoterDetailsId
     });
 
   } catch (error) {
+    await client.query('ROLLBACK');
     console.error('❌ Unexpected error in updatePromoter:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
+  } finally {
+    client.release();
   }
 };

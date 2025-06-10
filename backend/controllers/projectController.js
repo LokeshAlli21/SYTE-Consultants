@@ -1,5 +1,5 @@
-import { supabase } from '../supabase/supabaseClient.js';
-import getCurrentISTTimestamp from './timestampt.js'
+import { query, getClient, uploadToS3, deleteFromS3 } from '../aws/awsClient.js';
+import getCurrentISTTimestamp from './timestampt.js';
 
 export const uploadProjectData = async (req, res) => {
   try {
@@ -22,41 +22,32 @@ export const uploadProjectData = async (req, res) => {
       userId,
     } = req.body;
     
-    // Build insert object with conditional fields
-    const insertData = {
-      channel_partner_id,
-      promoter_id,
-      promoter_name,
-      project_name,
-      project_type,
-      project_address,
-      login_id,
-      password,
-      district,
-      city,
-      rera_number,
-      rera_certificate_uploaded_url,
-      registration_date: registration_date || null,
-      expiry_date: expiry_date || null,
-      created_by:userId,
-    };
+    // Build insert query with conditional fields
+    let insertQuery = `
+      INSERT INTO projects (
+        channel_partner_id, promoter_id, promoter_name, project_name, project_type,
+        project_address, login_id, password, district, city, rera_number,
+        rera_certificate_uploaded_url, registration_date, expiry_date, created_by
+        ${project_pincode ? ', project_pincode' : ''}
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15
+        ${project_pincode ? ', $16' : ''}
+      ) RETURNING *
+    `;
     
-    // Only add project_pincode if it’s not empty (undefined, null, or empty string)
+    let params = [
+      channel_partner_id, promoter_id, promoter_name, project_name, project_type,
+      project_address, login_id, password, district, city, rera_number,
+      rera_certificate_uploaded_url, registration_date || null, expiry_date || null, userId
+    ];
+    
     if (project_pincode) {
-      insertData.project_pincode = project_pincode;
+      params.push(project_pincode);
     }
     
-    const { data, error } = await supabase
-      .from('projects')
-      .insert([insertData])
-      .select();
+    const result = await query(insertQuery, params);
 
-    if (error) {
-      console.error('❌ Error inserting project data:', error);
-      return res.status(500).json({ error: 'Failed to insert project data', details: error });
-    }
-
-    res.status(201).json({ message: '✅ Project added successfully', data });
+    res.status(201).json({ message: '✅ Project added successfully', data: result.rows[0] });
 
   } catch (error) {
     console.error('❌ Unexpected error in uploadProjectData:', error);
@@ -88,56 +79,43 @@ export const updateProjectData = async (req, res) => {
       update_action,
     } = req.body;
 
-    console.log(userId, update_action);
-    
+    let updateQuery = `
+      UPDATE projects SET
+        channel_partner_id = $1, promoter_id = $2, promoter_name = $3, project_name = $4,
+        project_type = $5, project_address = $6, login_id = $7, password = $8,
+        district = $9, city = $10, rera_number = $11, rera_certificate_uploaded_url = $12,
+        registration_date = $13, expiry_date = $14, updated_at = NOW(), updated_by = $15,
+        update_action = $16
+        ${project_pincode ? ', project_pincode = $17' : ''}
+      WHERE id = $${project_pincode ? '18' : '17'}
+      RETURNING *
+    `;
 
-    const updateData = {
-      channel_partner_id,
-      promoter_id,
-      promoter_name,
-      project_name,
-      project_type,
-      project_address,
-      login_id,
-      password,
-      district,
-      city,
-      rera_number,
-      rera_certificate_uploaded_url,
-      registration_date: registration_date || null,
-      expiry_date: expiry_date || null,
-      updated_at: new Date().toISOString(),
-      updated_by:userId,
-      update_action,
-    };
+    let params = [
+      channel_partner_id, promoter_id, promoter_name, project_name, project_type,
+      project_address, login_id, password, district, city, rera_number,
+      rera_certificate_uploaded_url, registration_date || null, expiry_date || null,
+      userId, update_action
+    ];
 
     if (project_pincode) {
-      updateData.project_pincode = project_pincode;
+      params.push(project_pincode);
     }
+    params.push(projectId);
 
-    const { data, error } = await supabase
-      .from('projects')
-      .update(updateData)
-      .eq('id', projectId)
-      .select();
+    const result = await query(updateQuery, params);
 
-    if (error) {
-      console.error('❌ Error updating project data:', error);
-      return res.status(500).json({ error: 'Failed to update project data', details: error });
-    }
-
-    if (data.length === 0) {
+    if (result.rowCount === 0) {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    res.status(200).json({ message: '✅ Project updated successfully', data });
+    res.status(200).json({ message: '✅ Project updated successfully', data: result.rows[0] });
 
   } catch (error) {
     console.error('❌ Unexpected error in updateProjectData:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
-
 
 export const uploadProjectFiles = async (req, res) => {
   try {
@@ -160,24 +138,13 @@ export const uploadProjectFiles = async (req, res) => {
       const fileExt = originalName.split('.').pop();
       const filePath = `project-files/${folder}/${originalName}`;
 
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('uploaded-documents')
-        .upload(filePath, file.buffer, {
-          contentType: file.mimetype,
-          upsert: true,
-        });
-
-      if (error) {
+      try {
+        const s3Url = await uploadToS3(file, filePath);
+        uploadedUrls[fieldName] = s3Url;
+      } catch (error) {
         console.error(`Error uploading ${fieldName}:`, error);
         return res.status(500).json({ message: `Failed to upload ${fieldName}` });
       }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('uploaded-documents')
-        .getPublicUrl(filePath);
-
-      uploadedUrls[fieldName] = publicUrlData.publicUrl;
     }
 
     return res.status(200).json(uploadedUrls);
@@ -190,55 +157,51 @@ export const uploadProjectFiles = async (req, res) => {
 
 export const getAllProjects = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('id, project_name, promoter_name, rera_number, district, city, registration_date, expiry_date')
-      .eq('status_for_delete','active');
+    const queryText = `
+      SELECT id, project_name, promoter_name, rera_number, district, city, registration_date, expiry_date
+      FROM projects
+      WHERE status_for_delete = 'active'
+    `;
+    
+    const result = await query(queryText);
 
-    if (error) {
-      console.error('❌ Error fetching projects:', error);
-      return res.status(500).json({ error: 'Failed to fetch projects', details: error });
-    }
-
-    res.status(200).json({ projects: data });
+    res.status(200).json({ projects: result.rows });
   } catch (err) {
     console.error('❌ Unexpected error in getAllProjects:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 export const getAllProjectsForQPR = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('id, project_name, rera_number, district, city,login_id')
-      .eq('status_for_delete','active');
+    const queryText = `
+      SELECT id, project_name, rera_number, district, city, login_id
+      FROM projects
+      WHERE status_for_delete = 'active'
+    `;
+    
+    const result = await query(queryText);
 
-    if (error) {
-      console.error('❌ Error fetching projects:', error);
-      return res.status(500).json({ error: 'Failed to fetch projects', details: error });
-    }
-
-    res.status(200).json({ projects: data });
+    res.status(200).json({ projects: result.rows });
   } catch (err) {
-    console.error('❌ Unexpected error in getAllProjects:', err);
+    console.error('❌ Unexpected error in getAllProjectsForQPR:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 export const getAllProjectsForAA = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('projects')
-      .select('id, project_name, rera_number, district, city,login_id')
-      .eq('status_for_delete','active');
+    const queryText = `
+      SELECT id, project_name, rera_number, district, city, login_id
+      FROM projects
+      WHERE status_for_delete = 'active'
+    `;
+    
+    const result = await query(queryText);
 
-    if (error) {
-      console.error('❌ Error fetching projects:', error);
-      return res.status(500).json({ error: 'Failed to fetch projects', details: error });
-    }
-
-    res.status(200).json({ projects: data });
+    res.status(200).json({ projects: result.rows });
   } catch (err) {
-    console.error('❌ Unexpected error in getAllProjects:', err);
+    console.error('❌ Unexpected error in getAllProjectsForAA:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -251,21 +214,16 @@ export const getAllUnitsForProject = async (req, res) => {
       return res.status(400).json({ error: "Missing project-id in query params" });
     }
 
-    const { data, error } = await supabase
-      .from('project_units')
-      .select(
-        `id, project_id, unit_name, unit_type, carpet_area, unit_status, customer_name,
-         agreement_value, total_received, balance_amount, created_at, updated_at`
-      )
-      .eq('project_id', projectId)
-      .eq('status_for_delete', 'active');
+    const queryText = `
+      SELECT id, project_id, unit_name, unit_type, carpet_area, unit_status, customer_name,
+             agreement_value, total_received, balance_amount, created_at, updated_at
+      FROM project_units
+      WHERE project_id = $1 AND status_for_delete = 'active'
+    `;
+    
+    const result = await query(queryText, [projectId]);
 
-    if (error) {
-      console.error('❌ Error fetching units:', error);
-      return res.status(500).json({ error: 'Failed to fetch units', details: error });
-    }
-
-    res.status(200).json({ units: data });
+    res.status(200).json({ units: result.rows });
   } catch (err) {
     console.error('❌ Unexpected error in getAllUnitsForProject:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -274,21 +232,17 @@ export const getAllUnitsForProject = async (req, res) => {
 
 export const getAllEngineers = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('engineers')
-      .select(`
-        id, name, contact_number, email_id, office_address,
-        licence_number, licence_uploaded_url,
-        pan_number, pan_uploaded_url,
-        letter_head_uploaded_url, sign_stamp_uploaded_url
-      `);
+    const queryText = `
+      SELECT id, name, contact_number, email_id, office_address,
+             licence_number, licence_uploaded_url,
+             pan_number, pan_uploaded_url,
+             letter_head_uploaded_url, sign_stamp_uploaded_url
+      FROM engineers
+    `;
+    
+    const result = await query(queryText);
 
-    if (error) {
-      console.error('❌ Error fetching engineers:', error);
-      return res.status(500).json({ error: 'Failed to fetch engineers', details: error });
-    }
-
-    res.status(200).json({ engineers: data });
+    res.status(200).json({ engineers: result.rows });
   } catch (err) {
     console.error('❌ Unexpected error in getAllEngineers:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -297,21 +251,17 @@ export const getAllEngineers = async (req, res) => {
 
 export const getAllArchitects = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('architects')
-      .select(`
-        id, name, contact_number, email_id, office_address,
-        licence_number, licence_uploaded_url,
-        pan_number, pan_uploaded_url,
-        letter_head_uploaded_url, sign_stamp_uploaded_url
-      `);
+    const queryText = `
+      SELECT id, name, contact_number, email_id, office_address,
+             licence_number, licence_uploaded_url,
+             pan_number, pan_uploaded_url,
+             letter_head_uploaded_url, sign_stamp_uploaded_url
+      FROM architects
+    `;
+    
+    const result = await query(queryText);
 
-    if (error) {
-      console.error('❌ Error fetching architects:', error);
-      return res.status(500).json({ error: 'Failed to fetch architects', details: error });
-    }
-
-    res.status(200).json({ architects: data });
+    res.status(200).json({ architects: result.rows });
   } catch (err) {
     console.error('❌ Unexpected error in getAllArchitects:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -320,21 +270,17 @@ export const getAllArchitects = async (req, res) => {
 
 export const getAllCAs = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('cas')
-      .select(`
-        id, name, contact_number, email_id, office_address,
-        licence_number, licence_uploaded_url,
-        pan_number, pan_uploaded_url,
-        letter_head_uploaded_url, sign_stamp_uploaded_url
-      `);
+    const queryText = `
+      SELECT id, name, contact_number, email_id, office_address,
+             licence_number, licence_uploaded_url,
+             pan_number, pan_uploaded_url,
+             letter_head_uploaded_url, sign_stamp_uploaded_url
+      FROM cas
+    `;
+    
+    const result = await query(queryText);
 
-    if (error) {
-      console.error('❌ Error fetching CAs:', error);
-      return res.status(500).json({ error: 'Failed to fetch CAs', details: error });
-    }
-
-    res.status(200).json({ cas: data });
+    res.status(200).json({ cas: result.rows });
   } catch (err) {
     console.error('❌ Unexpected error in getAllCAs:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -345,18 +291,14 @@ export const getProjectProfessionalData = async (req, res) => {
   try {
     const { id: project_id } = req.params;
 
-    const { data, error } = await supabase
-      .from('view_project_professional_details_full')
-      .select('*')
-      .eq('project_id', project_id)
-      .maybeSingle();
+    const queryText = `
+      SELECT * FROM view_project_professional_details_full
+      WHERE project_id = $1
+    `;
+    
+    const result = await query(queryText, [project_id]);
 
-    if (error) {
-      console.error("❌ Error fetching project professional data:", error);
-      return res.status(500).json({ error: "Failed to fetch project professional data", details: error });
-    }
-
-    res.status(200).json({ professionalData: data });
+    res.status(200).json({ professionalData: result.rows[0] || null });
   } catch (err) {
     console.error("❌ Unexpected error in getProjectProfessionalData:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -367,20 +309,18 @@ export const getSiteProgress = async (req, res) => {
   try {
     const { id: project_id } = req.params;
 
-    const { data, error } = await supabase
-      .from('view_site_progress_full')
-      .select('*')
-      .eq('project_id', project_id)
-      .maybeSingle();
+    const queryText = `
+      SELECT * FROM view_site_progress_full
+      WHERE project_id = $1
+    `;
+    
+    const result = await query(queryText, [project_id]);
 
-    if (error) {
-      console.error("❌ Supabase error fetching site progress:", error.message);
-      return res.status(500).json({ error: "Failed to fetch site progress." });
-    }
-
-    if (!data) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: "No site progress found for this project." });
     }
+
+    const data = result.rows[0];
 
     res.status(200).json({
       siteProgress: {
@@ -396,33 +336,25 @@ export const getSiteProgress = async (req, res) => {
   }
 };
 
-
 export const getDocuments = async (req, res) => {
   try {
     const { id: project_id } = req.params;
 
-    const { data, error } = await supabase
-      .from('view_project_documents_full')
-      .select('*')
-      .eq('project_id', project_id)
-      .maybeSingle();
+    const queryText = `
+      SELECT * FROM view_project_documents_full
+      WHERE project_id = $1
+    `;
+    
+    const result = await query(queryText, [project_id]);
 
-    if (error) {
-      console.error("❌ Supabase error fetching documents:", error.message);
-      return res.status(500).json({
-        error: "Failed to fetch documents from the database.",
-        details: error.message || "Something went wrong while fetching the documents.",
-      });
-    }
-
-    if (!data) {
+    if (result.rows.length === 0) {
       console.log("⚠️ No documents found for project ID:", project_id);
       return res.status(404).json({
         error: "No documents found for this project.",
       });
     }
 
-    res.status(200).json({ documents: data });
+    res.status(200).json({ documents: result.rows[0] });
   } catch (error) {
     console.error("❌ Unexpected error fetching documents:", error);
     res.status(500).json({
@@ -436,22 +368,18 @@ export const getProject = async (req, res) => {
   try {
     const { id: project_id } = req.params;
 
-    const { data, error } = await supabase
-      .from('view_projects_with_updated_user') // use view instead of raw table
-      .select('*')
-      .eq('id', project_id)
-      .single(); // use single to get a single row directly
+    const queryText = `
+      SELECT * FROM view_projects_with_updated_user
+      WHERE id = $1
+    `;
+    
+    const result = await query(queryText, [project_id]);
 
-    if (error) {
-      console.error("❌ Supabase error fetching project:", error.message);
-      return res.status(500).json({ error: "Failed to fetch project." });
-    }
-
-    if (!data) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: "Project not found." });
     }
 
-    res.status(200).json({ project: data });
+    res.status(200).json({ project: result.rows[0] });
   } catch (error) {
     console.error("❌ Unexpected error fetching project:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -478,24 +406,13 @@ export const uploadProjectProfessionalFiles = async (req, res) => {
 
       const filePath = `project-professionals/${role}/${fileType}/${originalName}`;
 
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('uploaded-documents')
-        .upload(filePath, file.buffer, {
-          contentType: file.mimetype,
-          upsert: true,
-        });
-
-      if (error) {
+      try {
+        const s3Url = await uploadToS3(file, filePath);
+        uploadedUrls[fieldName] = s3Url;
+      } catch (error) {
         console.error(`Error uploading ${fieldName}:`, error);
         return res.status(500).json({ message: `Failed to upload ${fieldName}` });
       }
-
-      const { data: publicUrlData } = supabase.storage
-        .from('uploaded-documents')
-        .getPublicUrl(filePath);
-
-      uploadedUrls[fieldName] = publicUrlData.publicUrl;
     }
 
     return res.status(200).json(uploadedUrls);
@@ -506,35 +423,33 @@ export const uploadProjectProfessionalFiles = async (req, res) => {
   }
 };
 
-
 export const adddProjectProfessionals = async (req, res) => {
   try {
     const { project_id, engineer, architect, ca, engineer_id, architect_id, ca_id,
-            userId,update_action } = req.body;
+            userId, update_action } = req.body;
 
     if (!project_id) {
       return res.status(400).json({ message: "Missing project_id" });
     }
 
-    const { data: linkData, error: linkError } = await supabase
-      .from('project_professional_details')
-      .upsert([
-        {
-          project_id,
-          engineer_id: parseInt(engineer_id),
-          architect_id: parseInt(architect_id),
-          ca_id: parseInt(ca_id),
-          updated_by: userId,
-          update_action
-        }
-      ], { onConflict: 'project_id' })
-      .select()
-      .single();
+    const upsertQuery = `
+      INSERT INTO project_professional_details (
+        project_id, engineer_id, architect_id, ca_id, updated_by, update_action
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      ON CONFLICT (project_id) DO UPDATE SET
+        engineer_id = EXCLUDED.engineer_id,
+        architect_id = EXCLUDED.architect_id,
+        ca_id = EXCLUDED.ca_id,
+        updated_by = EXCLUDED.updated_by,
+        update_action = EXCLUDED.update_action,
+        updated_at = NOW()
+      RETURNING *
+    `;
 
-    if (linkError) {
-      console.error('❌ Error linking professional details to project:', linkError);
-      return res.status(500).json({ message: 'Failed to link professional details', error: linkError });
-    }
+    const result = await query(upsertQuery, [
+      project_id, parseInt(engineer_id), parseInt(architect_id), 
+      parseInt(ca_id), userId, update_action
+    ]);
 
     res.status(201).json({
       message: "✅ Project professional details uploaded successfully",
@@ -542,7 +457,7 @@ export const adddProjectProfessionals = async (req, res) => {
         engineer_id: engineer_id,
         architect_id: architect_id,
         ca_id: ca_id,
-        project_professional_details_id: linkData?.id
+        project_professional_details_id: result.rows[0]?.id
       }
     });
 
@@ -564,17 +479,14 @@ export const uploadUnitFiles = async (req, res) => {
       const field = file.fieldname.replace('_uploaded_url', '');
       console.log(field); // sale_deed
       
-      // e.g., afs_uploaded_url
       const filePath = `unit-documents/${field}/${file.originalname}`;
 
-      const { error } = await supabase.storage.from('uploaded-documents').upload(filePath, file.buffer, {
-        contentType: file.mimetype,
-        upsert: true,
-      });
-      if (error) return res.status(500).json({ message: `Upload failed for ${file.originalname}` });
-
-      const { data: publicUrlData } = supabase.storage.from('uploaded-documents').getPublicUrl(filePath);
-      uploadedUrls[file.fieldname] = publicUrlData.publicUrl;
+      try {
+        const s3Url = await uploadToS3(file, filePath);
+        uploadedUrls[file.fieldname] = s3Url;
+      } catch (error) {
+        return res.status(500).json({ message: `Upload failed for ${file.originalname}` });
+      }
     }
 
     return res.status(200).json(uploadedUrls);
@@ -584,12 +496,9 @@ export const uploadUnitFiles = async (req, res) => {
   }
 };
 
-
 export const uploadProjectUnits = async (req, res) => {
   try {
     const unit = req.body;
-    // console.log(req.body);
-    
     
     if (!unit || !unit.project_id) {
       return res.status(400).json({ message: 'Missing project_id or unit data' });
@@ -628,18 +537,20 @@ export const uploadProjectUnits = async (req, res) => {
       sanitizedUnit[key] = value;
     });
 
-    
-    const {updated_user, ...dataToUpload} = sanitizedUnit
-    // console.log("sanitizedUnit: ",dataToUpload);
-    // Perform the insert operation (not upsert)
-    const { error } = await supabase
-      .from('project_units')
-      .insert([dataToUpload]);
-console.log(error);
+    const { updated_user, ...dataToUpload } = sanitizedUnit;
 
-    if (error) {
-      return res.status(500).json({ message: '❌ Failed to insert unit data', error });
-    }
+    // Build dynamic insert query
+    const columns = Object.keys(dataToUpload);
+    const values = Object.values(dataToUpload);
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
+
+    const insertQuery = `
+      INSERT INTO project_units (${columns.join(', ')})
+      VALUES (${placeholders})
+      RETURNING *
+    `;
+
+    const result = await query(insertQuery, values);
 
     res.status(201).json({ message: '✅ Project unit inserted successfully' });
   } catch (error) {
@@ -652,10 +563,6 @@ export const updateProjectUnits = async (req, res) => {
   try {
     const unit = req.body;
     const { id } = req.params;
-    console.log(id);
-    // console.log(unit);
-    
-    
 
     if (!id || !unit || !unit.project_id) {
       return res.status(400).json({ message: 'Missing id or required unit data' });
@@ -690,18 +597,24 @@ export const updateProjectUnits = async (req, res) => {
       sanitizedUnit[key] = value;
     });
 
-    const {updated_user, ...dataToUpload} = sanitizedUnit
-    // Perform update operation
-    const {data, error } = await supabase
-      .from('project_units')
-      .update(dataToUpload)
-      .eq('id', id);
-// console.log("dataToUpload: ",dataToUpload);
-// console.log("error: ",error);
-// console.log("data: ",data);
+    const { updated_user, ...dataToUpload } = sanitizedUnit;
 
-    if (error) {
-      return res.status(500).json({ message: '❌ Failed to update unit data', error });
+    // Build dynamic update query
+    const columns = Object.keys(dataToUpload);
+    const values = Object.values(dataToUpload);
+    const setClause = columns.map((col, index) => `${col} = $${index + 1}`).join(', ');
+
+    const updateQuery = `
+      UPDATE project_units 
+      SET ${setClause}, updated_at = NOW()
+      WHERE id = $${columns.length + 1}
+      RETURNING *
+    `;
+
+    const result = await query(updateQuery, [...values, id]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Unit not found' });
     }
 
     res.status(200).json({ message: '✅ Project unit updated successfully' });
@@ -710,8 +623,6 @@ export const updateProjectUnits = async (req, res) => {
     res.status(500).json({ message: 'Internal server error' });
   }
 };
-
-
 
 export const uploadDocumentFiles = async (req, res) => {
   try {
@@ -724,16 +635,12 @@ export const uploadDocumentFiles = async (req, res) => {
       const field = file.fieldname.replace('_uploaded_url', '');
       const filePath = `project-documents/${field}/${file.originalname}`;
 
-      const { error } = await supabase.storage.from('uploaded-documents').upload(filePath, file.buffer, {
-        contentType: file.mimetype,
-        upsert: true,
-      });
-      if (error) return res.status(500).json({ message: `Upload failed for ${file.originalname}` });
-
-      const { data: publicUrlData } = supabase.storage.from('uploaded-documents').getPublicUrl(filePath);
-      console.log(publicUrlData);
-      
-      uploadedUrls[file.fieldname] = publicUrlData.publicUrl;
+      try {
+        const s3Url = await uploadToS3(file, filePath);
+        uploadedUrls[file.fieldname] = s3Url;
+      } catch (error) {
+        return res.status(500).json({ message: `Upload failed for ${file.originalname}` });
+      }
     }
 
     res.status(200).json(uploadedUrls);
@@ -743,11 +650,9 @@ export const uploadDocumentFiles = async (req, res) => {
   }
 };
 
-
 export const uploadProjectDocuments = async (req, res) => {
   try {
     const { project_id, userId, update_action, ...documentData } = req.body;
-    // console.log(req.body);
     
     if (!project_id) return res.status(400).json({ message: 'Missing project_id' });
 
@@ -757,11 +662,28 @@ export const uploadProjectDocuments = async (req, res) => {
       filtered[key] = value;
     });
 
-    const { data, error } = await supabase.from('project_documents').upsert([{ project_id, ...filtered,updated_by: userId,update_action }], { onConflict: 'project_id' });
-    // console.log('data: ',data);
-    // console.log('error: ',error);
+    // Add tracking fields
+    filtered.updated_by = userId;
+    filtered.update_action = update_action;
+
+    // Build dynamic upsert query
+    const columns = ['project_id', ...Object.keys(filtered)];
+    const values = [project_id, ...Object.values(filtered)];
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
     
-    if (error) return res.status(500).json({ message: 'Failed to insert documents', error });
+    const updateColumns = Object.keys(filtered);
+    const updateSet = updateColumns.map(col => `${col} = EXCLUDED.${col}`).join(', ');
+
+    const upsertQuery = `
+      INSERT INTO project_documents (${columns.join(', ')})
+      VALUES (${placeholders})
+      ON CONFLICT (project_id) DO UPDATE SET
+        ${updateSet},
+        updated_at = NOW()
+      RETURNING *
+    `;
+
+    const result = await query(upsertQuery, values);
 
     res.status(201).json({ message: '✅ Project documents uploaded successfully' });
   } catch (error) {
@@ -773,33 +695,27 @@ export const uploadProjectDocuments = async (req, res) => {
 // Helper to get or create site_progress entry and return its id
 const getOrCreateSiteProgressId = async (project_id) => {
   // Try to fetch existing entry
-  const { data: existing, error: fetchError } = await supabase
-    .from('site_progress')
-    .select('id')
-    .eq('project_id', project_id)
-    .single();
+  const selectQuery = `SELECT id FROM site_progress WHERE project_id = $1`;
+  const selectResult = await query(selectQuery, [project_id]);
 
-  if (fetchError && fetchError.code !== 'PGRST116') throw fetchError;
-
-  if (existing) return existing.id;
+  if (selectResult.rows.length > 0) {
+    return selectResult.rows[0].id;
+  }
 
   // Insert new if not exists
-  const { data: inserted, error: insertError } = await supabase
-    .from('site_progress')
-    .insert({ project_id })
-    .select('id')
-    .single();
-
-  if (insertError) throw insertError;
-
-  return inserted.id;
+  const insertQuery = `
+    INSERT INTO site_progress (project_id)
+    VALUES ($1)
+    RETURNING id
+  `;
+  const insertResult = await query(insertQuery, [project_id]);
+  
+  return insertResult.rows[0].id;
 };
 
 export const addBuildingProgress = async (req, res) => {
   try {
     const { project_id, ...progressData } = req.body;
-    // console.log(req.body);
-    
 
     if (!project_id) {
       return res.status(400).json({ message: 'Missing project_id' });
@@ -819,20 +735,24 @@ export const addBuildingProgress = async (req, res) => {
 
     const site_progress_id = await getOrCreateSiteProgressId(project_id);
 
-    console.log('site_progress_id :',site_progress_id);
+    // Build dynamic upsert query
+    const columns = ['site_progress_id', ...Object.keys(filtered)];
+    const values = [site_progress_id, ...Object.values(filtered)];
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
     
-    const { error } = await supabase
-      .from('building_progress')
-      .upsert([{ site_progress_id, ...filtered }], {
-        onConflict: 'site_progress_id',
-      });
+    const updateColumns = Object.keys(filtered);
+    const updateSet = updateColumns.map(col => `${col} = EXCLUDED.${col}`).join(', ');
 
-      console.log('error :',error);
-      
+    const upsertQuery = `
+      INSERT INTO building_progress (${columns.join(', ')})
+      VALUES (${placeholders})
+      ON CONFLICT (site_progress_id) DO UPDATE SET
+        ${updateSet},
+        updated_at = NOW()
+      RETURNING *
+    `;
 
-    if (error) {
-      return res.status(500).json({ message: 'Failed to save building progress', error });
-    }
+    const result = await query(upsertQuery, values);
 
     res.status(201).json({ message: '✅ Building progress uploaded successfully' });
   } catch (error) {
@@ -843,9 +763,7 @@ export const addBuildingProgress = async (req, res) => {
 
 export const addCommonAreasProgress = async (req, res) => {
   try {
-    const { project_id, updated_at, updated_by, update_action , ...commonData } = req.body;
-    // console.log(req.body);
-    
+    const { project_id, updated_at, updated_by, update_action, ...commonData } = req.body;
 
     if (!project_id) {
       return res.status(400).json({ message: 'Missing project_id' });
@@ -854,7 +772,7 @@ export const addCommonAreasProgress = async (req, res) => {
     const filtered = {};
     Object.entries(commonData).forEach(([key, value]) => {
       if (value && typeof value === 'object' && Object.keys(value).length > 0) {
-        filtered[key] = value;
+        filtered[key] = JSON.stringify(value); // Store as JSON string
       }
     });
 
@@ -863,18 +781,29 @@ export const addCommonAreasProgress = async (req, res) => {
     }
 
     const site_progress_id = await getOrCreateSiteProgressId(project_id);
-    // console.log(filtered);
+
+    // Add tracking fields
+    filtered.updated_by = updated_by;
+    filtered.update_action = update_action;
+
+    // Build dynamic upsert query
+    const columns = ['site_progress_id', ...Object.keys(filtered)];
+    const values = [site_progress_id, ...Object.values(filtered)];
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
     
+    const updateColumns = Object.keys(filtered);
+    const updateSet = updateColumns.map(col => `${col} = EXCLUDED.${col}`).join(', ');
 
-    const { error } = await supabase
-      .from('common_areas_progress')
-      .upsert([{ site_progress_id, updated_at, updated_by, update_action, ...filtered }], {
-        onConflict: 'site_progress_id',
-      });
+    const upsertQuery = `
+      INSERT INTO common_areas_progress (${columns.join(', ')})
+      VALUES (${placeholders})
+      ON CONFLICT (site_progress_id) DO UPDATE SET
+        ${updateSet},
+        updated_at = NOW()
+      RETURNING *
+    `;
 
-    if (error) {
-      return res.status(500).json({ message: 'Failed to save common areas progress', error });
-    }
+    const result = await query(upsertQuery, values);
 
     res.status(201).json({ message: '✅ Common areas progress uploaded successfully' });
   } catch (error) {
@@ -887,14 +816,13 @@ export const softDeleteProjectById = async (req, res) => {
   const projectId = req.params.id;
 
   try {
-    const { error } = await supabase
-      .from('projects')
-      .update({ status_for_delete: 'inactive' })
-      .eq('id', projectId);
+    const result = await query(
+      'UPDATE projects SET status_for_delete = $1 WHERE id = $2',
+      ['inactive', projectId]
+    );
 
-    if (error) {
-      console.error('❌ Error soft deleting project:', error);
-      return res.status(500).json({ error: 'Failed to delete project', details: error });
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Project not found' });
     }
 
     res.status(200).json({ message: '✅ Project marked as inactive' });
@@ -908,14 +836,13 @@ export const softDeleteProjectUnitById = async (req, res) => {
   const unitId = req.params.id;
 
   try {
-    const { error } = await supabase
-      .from('project_units')
-      .update({ status_for_delete: 'inactive' })
-      .eq('id', unitId);
+    const result = await query(
+      'UPDATE project_units SET status_for_delete = $1 WHERE id = $2',
+      ['inactive', unitId]
+    );
 
-    if (error) {
-      console.error('❌ Error soft deleting project unit:', error);
-      return res.status(500).json({ error: 'Failed to delete unit', details: error });
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Unit not found' });
     }
 
     res.status(200).json({ message: '✅ Unit marked as inactive' });
@@ -925,37 +852,28 @@ export const softDeleteProjectUnitById = async (req, res) => {
   }
 };
 
-
 export const getUnitById = async (req, res) => {
   const unitId = req.params.id;
 
   try {
-    const { data, error } = await supabase
-      .from('view_unit_with_updated_user')
-      .select('*')
-      .eq('id', unitId)
-      .eq('status_for_delete', 'active')
-      .single();
+    const result = await query(
+      'SELECT * FROM view_unit_with_updated_user WHERE id = $1 AND status_for_delete = $2',
+      [unitId, 'active']
+    );
 
-    if (error) {
-      console.error("❌ Error fetching unit:", error);
-      return res.status(500).json({ message: "Failed to fetch unit", details: error });
-    }
-
-    if (!data) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ message: "Unit not found" });
     }
 
-    res.status(200).json({ unit: data });
+    res.status(200).json({ unit: result.rows[0] });
   } catch (err) {
     console.error("❌ Unexpected error in getUnitById:", err);
     res.status(500).json({ message: "Internal server error" });
   }
 };
 
-
 export const addEngineer = async (req, res) => {
-  const  engineer  = req.body;
+  const engineer = req.body;
 
   const hasAnyValue = (obj) =>
     Object.values(obj || {}).some(
@@ -967,27 +885,39 @@ export const addEngineer = async (req, res) => {
       return res.status(400).json({ message: 'No valid engineer data provided' });
     }
 
-    const { data, error } = await supabase
-      .from('engineers')
-      .insert([engineer])
-      .select()
-      .single();
+    // Dynamically build the INSERT query based on the engineer object
+    const columns = Object.keys(engineer).filter(key => engineer[key] !== undefined && engineer[key] !== null);
+    const values = columns.map(key => engineer[key]);
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
+    const columnNames = columns.join(', ');
 
-    if (error) {
-      console.error('❌ Error inserting engineer:', error);
-      return res.status(500).json({ message: 'Failed to insert engineer', error });
+    const insertQuery = `
+      INSERT INTO engineers (${columnNames}) 
+      VALUES (${placeholders}) 
+      RETURNING id
+    `;
+
+    const result = await query(insertQuery, values);
+
+    if (result.rows.length === 0) {
+      throw new Error('Failed to insert engineer - no ID returned');
     }
 
-    return res.status(200).json({ message: 'Engineer added successfully', id: data.id });
+    return res.status(200).json({ 
+      message: 'Engineer added successfully', 
+      id: result.rows[0].id 
+    });
   } catch (err) {
     console.error('❌ Unexpected error:', err);
-    return res.status(500).json({ message: 'Unexpected error occurred', error: err.message });
+    return res.status(500).json({ 
+      message: 'Unexpected error occurred', 
+      error: err.message 
+    });
   }
 };
 
-
 export const addArchitect = async (req, res) => {
-  const  architect  = req.body;
+  const architect = req.body;
 
   const hasAnyValue = (obj) =>
     Object.values(obj || {}).some(
@@ -999,51 +929,33 @@ export const addArchitect = async (req, res) => {
       return res.status(400).json({ message: 'No valid architect data provided' });
     }
 
-    const { data, error } = await supabase
-      .from('architects')
-      .insert([architect])
-      .select()
-      .single();
+    // Dynamically build the INSERT query based on the architect object
+    const columns = Object.keys(architect).filter(key => architect[key] !== undefined && architect[key] !== null);
+    const values = columns.map(key => architect[key]);
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
+    const columnNames = columns.join(', ');
 
-    if (error) {
-      console.error('❌ Error inserting architect:', error);
-      return res.status(500).json({ message: 'Failed to insert architect', error });
+    const insertQuery = `
+      INSERT INTO architects (${columnNames}) 
+      VALUES (${placeholders}) 
+      RETURNING id
+    `;
+
+    const result = await query(insertQuery, values);
+
+    if (result.rows.length === 0) {
+      throw new Error('Failed to insert architect - no ID returned');
     }
 
-    return res.status(200).json({ message: 'Architect added successfully', id: data.id });
+    return res.status(200).json({ 
+      message: 'Architect added successfully', 
+      id: result.rows[0].id 
+    });
   } catch (err) {
     console.error('❌ Unexpected error:', err);
-    return res.status(500).json({ message: 'Unexpected error occurred', error: err.message });
-  }
-};
-
-export const addCA = async (req, res) => {
-  const  ca  = req.body;
-
-  const hasAnyValue = (obj) =>
-    Object.values(obj || {}).some(
-      (val) => val && typeof val === 'string' && val.trim() !== ''
-    );
-
-  try {
-    if (!hasAnyValue(ca)) {
-      return res.status(400).json({ message: 'No valid CA data provided' });
-    }
-
-    const { data, error } = await supabase
-      .from('cas')
-      .insert([ca])
-      .select()
-      .single();
-
-    if (error) {
-      console.error('❌ Error inserting CA:', error);
-      return res.status(500).json({ message: 'Failed to insert CA', error });
-    }
-
-    return res.status(200).json({ message: 'CA added successfully', id: data.id });
-  } catch (err) {
-    console.error('❌ Unexpected error:', err);
-    return res.status(500).json({ message: 'Unexpected error occurred', error: err.message });
+    return res.status(500).json({ 
+      message: 'Unexpected error occurred', 
+      error: err.message 
+    });
   }
 };

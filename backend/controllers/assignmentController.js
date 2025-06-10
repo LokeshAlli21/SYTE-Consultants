@@ -1,136 +1,7 @@
-import { supabase } from '../supabase/supabaseClient.js';
+import { query, getClient } from '../aws/awsClient.js';
 
 export const createNewAssignment = async (req, res) => {
-    try {
-      const {
-        project_id,
-        assignment_type,
-        payment_date,
-        application_number,
-        consultation_charges,
-        govt_fees,
-        ca_fees,
-        engineer_fees,
-        arch_fees,
-        liasioning_fees,
-        remarks,
-        created_by,
-      } = req.body;
-  
-      // Ensure project_id exists
-      if (!project_id) {
-        return res.status(400).json({ error: "❌ project_id is required" });
-      }
-  
-      // Construct sanitized assignment object by including only available (truthy or numeric) values
-      const assignmentData = {
-        project_id,
-        ...(assignment_type && { assignment_type }),
-        ...(payment_date && { payment_date }),
-        ...(application_number && { application_number }),
-        ...(typeof consultation_charges === "number" && consultation_charges !== 0 && { consultation_charges }),
-        ...(typeof govt_fees === "number" && govt_fees !== 0 && { govt_fees }),
-        ...(typeof ca_fees === "number" && ca_fees !== 0 && { ca_fees }),
-        ...(typeof engineer_fees === "number" && engineer_fees !== 0 && { engineer_fees }),
-        ...(typeof arch_fees === "number" && arch_fees !== 0 && { arch_fees }),
-        ...(typeof liasioning_fees === "number" && liasioning_fees !== 0 && { liasioning_fees }),
-        ...(remarks && { remarks }),
-      };
-  
-      // If only project_id is present and no other field, don't insert
-      if (Object.keys(assignmentData).length === 1) {
-        return res.status(400).json({ error: "❌ No valid assignment data provided." });
-      }
-  
-      const { error } = await supabase
-        .from('assignments')
-        .insert([{...assignmentData,created_by}]);
-  
-      if (error) {
-        console.error('❌ Error inserting assignment:', error);
-        return res.status(500).json({ error: 'Failed to insert assignment', details: error });
-      }
-  
-      res.status(201).json({ message: '✅ Assignment created successfully' });
-  
-    } catch (error) {
-      console.error('❌ Unexpected error in createNewAssignment:', error);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  };
-  
-export const getAllAssignments = async (req, res) => {
   try {
-    const { data: assignmentsWithTimeline, error } = await supabase
-      .from('vw_assignments_with_latest_timeline') 
-      .select('*');
-
-    if (error) {
-      console.error('❌ Error fetching assignments:', error);
-      return res.status(500).json({ error: 'Failed to fetch assignments', details: error });
-    }
-
-    res.status(200).json({ assignments: assignmentsWithTimeline });
-  } catch (err) {
-    console.error('❌ Unexpected error in getAllAssignments:', err);
-    res.status(500).json({ error: 'Internal server error' });
-  }
-};
-  
-  export const softDeleteAssignmentById = async (req, res) => {
-    const assignmentId = req.params.id;
-  
-    try {
-      const { error } = await supabase
-        .from('assignments')
-        .update({ status_for_delete: 'inactive' })
-        .eq('id', assignmentId);
-  
-      if (error) {
-        console.error('❌ Error soft deleting assignment:', error);
-        return res.status(500).json({ error: 'Failed to delete assignment', details: error });
-      }
-  
-      res.status(200).json({ message: '✅ Assignment marked as inactive' });
-    } catch (err) {
-      console.error('❌ Unexpected error in softDeleteAssignmentById:', err);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  };
-  
-
-  export const getAssignmentById = async (req, res) => {
-    const { id } = req.params;
-  
-    try {
-      // Fetch assignment data from the database
-      const { data, error } = await supabase
-        .from('assignment_with_updated_user')
-        .select('*')
-        .eq('id', id)
-        .single();
-  
-      if (error) {
-        console.error(`❌ Error fetching assignment with ID ${id}:`, error);
-        return res.status(500).json({ error: 'Failed to fetch assignment', details: error });
-      }
-  
-      if (!data) {
-        return res.status(404).json({ error: 'Assignment not found or inactive' });
-      }
-  
-      res.status(200).json({ assignment: data });
-  
-    } catch (err) {
-      console.error('❌ Unexpected error in getAssignmentById:', err);
-      res.status(500).json({ error: 'Internal server error' });
-    }
-  };
-  
-  export const updateAssignment = async (req, res) => {
-    const { id } = req.params;
-    console.log(id);
-    
     const {
       project_id,
       assignment_type,
@@ -143,60 +14,259 @@ export const getAllAssignments = async (req, res) => {
       arch_fees,
       liasioning_fees,
       remarks,
-      updated_by,
-      update_action,
+      created_by,
     } = req.body;
-  
-    try {
-      // Ensure project_id exists
-      if (!project_id) {
-        return res.status(400).json({ error: "❌ project_id is required" });
-      }
-  
-      // Construct sanitized assignment object by including only available (truthy or numeric) values
-      const assignmentData = {
-        project_id,
-        ...(assignment_type && { assignment_type }),
-        ...(payment_date && { payment_date }),
-        ...(application_number && { application_number }),
-        ...(typeof consultation_charges === "number" && consultation_charges !== 0 && { consultation_charges }),
-        ...(typeof govt_fees === "number" && govt_fees !== 0 && { govt_fees }),
-        ...(typeof ca_fees === "number" && ca_fees !== 0 && { ca_fees }),
-        ...(typeof engineer_fees === "number" && engineer_fees !== 0 && { engineer_fees }),
-        ...(typeof arch_fees === "number" && arch_fees !== 0 && { arch_fees }),
-        ...(typeof liasioning_fees === "number" && liasioning_fees !== 0 && { liasioning_fees }),
-        ...(remarks && { remarks }),
-        updated_by,
-        update_action,
-      };
-  
-      console.log('Assignment Data:', assignmentData);  // Log assignment data to check for unexpected values
-  
-      // Perform the update operation
-      const { data, error } = await supabase
-        .from('assignments')
-        .update(assignmentData)
-        .eq('id', id)
-  
-      // Log data and error for debugging
-      console.log('Executed Supabase Query');
-      console.log('Returned Data:', data);
-      console.log('Error:', error);
-  
-      // Handle any error
-      if (error) {
-        console.error(`❌ Error updating assignment with ID ${id}:`, error);
-        return res.status(500).json({ error: 'Failed to update assignment', details: error });
-      }
-  
-  
-      res.status(200).json({ message: '✅ Assignment updated successfully', data });
-    } catch (err) {
-      console.error('❌ Unexpected error in updateAssignment:', err);
-      res.status(500).json({ error: 'Internal server error' });
+
+    // Ensure project_id exists
+    if (!project_id) {
+      return res.status(400).json({ error: "❌ project_id is required" });
     }
-  };
+
+    // Build dynamic query based on available fields
+    const fields = ['project_id', 'created_by'];
+    const values = [project_id, created_by];
+    const placeholders = ['$1', '$2'];
+    let paramCount = 2;
+
+    if (assignment_type) {
+      fields.push('assignment_type');
+      values.push(assignment_type);
+      placeholders.push(`$${++paramCount}`);
+    }
+    if (payment_date) {
+      fields.push('payment_date');
+      values.push(payment_date);
+      placeholders.push(`$${++paramCount}`);
+    }
+    if (application_number) {
+      fields.push('application_number');
+      values.push(application_number);
+      placeholders.push(`$${++paramCount}`);
+    }
+    if (typeof consultation_charges === "number" && consultation_charges !== 0) {
+      fields.push('consultation_charges');
+      values.push(consultation_charges);
+      placeholders.push(`$${++paramCount}`);
+    }
+    if (typeof govt_fees === "number" && govt_fees !== 0) {
+      fields.push('govt_fees');
+      values.push(govt_fees);
+      placeholders.push(`$${++paramCount}`);
+    }
+    if (typeof ca_fees === "number" && ca_fees !== 0) {
+      fields.push('ca_fees');
+      values.push(ca_fees);
+      placeholders.push(`$${++paramCount}`);
+    }
+    if (typeof engineer_fees === "number" && engineer_fees !== 0) {
+      fields.push('engineer_fees');
+      values.push(engineer_fees);
+      placeholders.push(`$${++paramCount}`);
+    }
+    if (typeof arch_fees === "number" && arch_fees !== 0) {
+      fields.push('arch_fees');
+      values.push(arch_fees);
+      placeholders.push(`$${++paramCount}`);
+    }
+    if (typeof liasioning_fees === "number" && liasioning_fees !== 0) {
+      fields.push('liasioning_fees');
+      values.push(liasioning_fees);
+      placeholders.push(`$${++paramCount}`);
+    }
+    if (remarks) {
+      fields.push('remarks');
+      values.push(remarks);
+      placeholders.push(`$${++paramCount}`);
+    }
+
+    // If only project_id and created_by are present, don't insert
+    if (fields.length === 2) {
+      return res.status(400).json({ error: "❌ No valid assignment data provided." });
+    }
+
+    const insertQuery = `
+      INSERT INTO assignments (${fields.join(', ')})
+      VALUES (${placeholders.join(', ')})
+      RETURNING id
+    `;
+
+    const result = await query(insertQuery, values);
+
+    res.status(201).json({ 
+      message: '✅ Assignment created successfully',
+      assignment_id: result.rows[0].id
+    });
+
+  } catch (error) {
+    console.error('❌ Unexpected error in createNewAssignment:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAllAssignments = async (req, res) => {
+  try {
+    const selectQuery = `
+      SELECT * FROM vw_assignments_with_latest_timeline
+      ORDER BY created_at DESC
+    `;
+
+    const result = await query(selectQuery);
+
+    res.status(200).json({ assignments: result.rows });
+  } catch (err) {
+    console.error('❌ Unexpected error in getAllAssignments:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const softDeleteAssignmentById = async (req, res) => {
+  const assignmentId = req.params.id;
+
+  try {
+    const updateQuery = `
+      UPDATE assignments 
+      SET status_for_delete = 'inactive'
+      WHERE id = $1
+    `;
+
+    const result = await query(updateQuery, [assignmentId]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+
+    res.status(200).json({ message: '✅ Assignment marked as inactive' });
+  } catch (err) {
+    console.error('❌ Unexpected error in softDeleteAssignmentById:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const getAssignmentById = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const selectQuery = `
+      SELECT * FROM assignment_with_updated_user
+      WHERE id = $1
+    `;
+
+    const result = await query(selectQuery, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Assignment not found or inactive' });
+    }
+
+    res.status(200).json({ assignment: result.rows[0] });
+
+  } catch (err) {
+    console.error('❌ Unexpected error in getAssignmentById:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const updateAssignment = async (req, res) => {
+  const { id } = req.params;
+  console.log(id);
   
+  const {
+    project_id,
+    assignment_type,
+    payment_date,
+    application_number,
+    consultation_charges,
+    govt_fees,
+    ca_fees,
+    engineer_fees,
+    arch_fees,
+    liasioning_fees,
+    remarks,
+    updated_by,
+    update_action,
+  } = req.body;
+
+  try {
+    // Ensure project_id exists
+    if (!project_id) {
+      return res.status(400).json({ error: "❌ project_id is required" });
+    }
+
+    // Build dynamic update query
+    const updateFields = ['project_id = $1', 'updated_by = $2', 'update_action = $3'];
+    const values = [project_id, updated_by, update_action];
+    let paramCount = 3;
+
+    if (assignment_type) {
+      updateFields.push(`assignment_type = $${++paramCount}`);
+      values.push(assignment_type);
+    }
+    if (payment_date) {
+      updateFields.push(`payment_date = $${++paramCount}`);
+      values.push(payment_date);
+    }
+    if (application_number) {
+      updateFields.push(`application_number = $${++paramCount}`);
+      values.push(application_number);
+    }
+    if (typeof consultation_charges === "number" && consultation_charges !== 0) {
+      updateFields.push(`consultation_charges = $${++paramCount}`);
+      values.push(consultation_charges);
+    }
+    if (typeof govt_fees === "number" && govt_fees !== 0) {
+      updateFields.push(`govt_fees = $${++paramCount}`);
+      values.push(govt_fees);
+    }
+    if (typeof ca_fees === "number" && ca_fees !== 0) {
+      updateFields.push(`ca_fees = $${++paramCount}`);
+      values.push(ca_fees);
+    }
+    if (typeof engineer_fees === "number" && engineer_fees !== 0) {
+      updateFields.push(`engineer_fees = $${++paramCount}`);
+      values.push(engineer_fees);
+    }
+    if (typeof arch_fees === "number" && arch_fees !== 0) {
+      updateFields.push(`arch_fees = $${++paramCount}`);
+      values.push(arch_fees);
+    }
+    if (typeof liasioning_fees === "number" && liasioning_fees !== 0) {
+      updateFields.push(`liasioning_fees = $${++paramCount}`);
+      values.push(liasioning_fees);
+    }
+    if (remarks) {
+      updateFields.push(`remarks = $${++paramCount}`);
+      values.push(remarks);
+    }
+
+    // Add the WHERE clause parameter
+    values.push(id);
+    const whereClause = `$${++paramCount}`;
+
+    const updateQuery = `
+      UPDATE assignments 
+      SET ${updateFields.join(', ')}, updated_at = NOW()
+      WHERE id = ${whereClause}
+      RETURNING *
+    `;
+
+    console.log('Update Query:', updateQuery);
+    console.log('Values:', values);
+
+    const result = await query(updateQuery, values);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Assignment not found' });
+    }
+
+    res.status(200).json({ 
+      message: '✅ Assignment updated successfully', 
+      data: result.rows[0] 
+    });
+  } catch (err) {
+    console.error('❌ Unexpected error in updateAssignment:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
 export const updateAssignmentStatus = async (req, res) => {
   const { id } = req.params;
   const { assignment_status, created_by } = req.body;
@@ -212,22 +282,20 @@ export const updateAssignmentStatus = async (req, res) => {
       return res.status(400).json({ error: "❌ created_by is required" });
     }
 
-    const { data, error } = await supabase.rpc('update_assignment_status_fn', {
-      p_assignment_id: parseInt(id), // parse to INT
-      p_assignment_status: assignment_status,
-      p_created_by: parseInt(created_by) // ensure it's INT
-    });
+    // Call PostgreSQL function directly
+    const functionQuery = `SELECT * FROM update_assignment_status_fn($1, $2, $3)`;
+    
+    const result = await query(functionQuery, [
+      parseInt(id),
+      assignment_status,
+      parseInt(created_by)
+    ]);
 
-    if (error) {
-      console.error('❌ Supabase RPC error:', error);
-      return res.status(500).json({ error: 'Failed to update assignment status', details: error });
-    }
-
-    console.log('✅ Assignment status updated via SQL function:', data);
+    console.log('✅ Assignment status updated via SQL function:', result.rows);
 
     res.status(200).json({
       message: '✅ Assignment status updated successfully (via SQL function)',
-      data: data[0]  // assuming the function returns an array with one row
+      data: result.rows[0]
     });
   } catch (err) {
     console.error('❌ Unexpected error in updateAssignmentStatus:', err);
@@ -245,19 +313,19 @@ export const addAssignmentNote = async (req, res) => {
       return res.status(400).json({ error: '❌ At least one note must be provided' });
     }
 
-    // Call the PostgreSQL function via Supabase RPC
-    const { data, error } = await supabase.rpc('add_assignment_note', {
-      p_assignment_id: parseInt(id),
-      p_note: notePayload,
-      p_created_by: created_by
+    // Call the PostgreSQL function directly
+    const functionQuery = `SELECT * FROM add_assignment_note($1, $2, $3)`;
+    
+    const result = await query(functionQuery, [
+      parseInt(id),
+      JSON.stringify(notePayload), // Convert object to JSON string
+      created_by
+    ]);
+
+    res.status(200).json({ 
+      message: '✅ Note added successfully', 
+      data: result.rows[0] 
     });
-
-    if (error) {
-      console.error('❌ Supabase RPC error:', error);
-      return res.status(500).json({ error: '❌ Failed to add assignment note', details: error });
-    }
-
-    res.status(200).json({ message: '✅ Note added successfully', data });
   } catch (err) {
     console.error('❌ Unexpected error in addAssignmentNote:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -273,25 +341,21 @@ export const setAssignmentReminder = async (req, res) => {
       return res.status(400).json({ error: '❌ date_and_time and message are required' });
     }
 
-    const query = `
-      SELECT * FROM set_assignment_reminder($1, $2, $3, $4, $5);
-    `;
+    // Call PostgreSQL function directly
+    const functionQuery = `SELECT * FROM set_assignment_reminder($1, $2, $3, $4, $5)`;
+    
+    const result = await query(functionQuery, [
+      Number(id),
+      date_and_time,
+      message,
+      status,
+      created_by
+    ]);
 
-    // Run raw SQL RPC call
-    const { data, error } = await supabase.rpc('set_assignment_reminder', {
-      p_assignment_id: Number(id),
-      p_date_and_time: date_and_time,
-      p_message: message,
-      p_status: status,
-      p_created_by: created_by
+    res.status(200).json({ 
+      message: '✅ Reminder set successfully', 
+      data: result.rows[0] 
     });
-
-    if (error) {
-      console.error('❌ Supabase RPC error:', error);
-      return res.status(500).json({ error: '❌ Failed to set assignment reminder', details: error });
-    }
-
-    res.status(200).json({ message: '✅ Reminder set successfully', data });
   } catch (err) {
     console.error('❌ Unexpected error in setAssignmentReminder:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -302,21 +366,19 @@ export const getAssignmentTimeline = async (req, res) => {
   const { id } = req.params;
 
   try {
-    const { data, error } = await supabase
-      .from('assignment_timeline_view')
-      .select('*')
-      .eq('assignment_id', id)
-      .order('timeline_created_at', { ascending: true }); // Ensure descending
+    const selectQuery = `
+      SELECT * FROM assignment_timeline_view
+      WHERE assignment_id = $1
+      ORDER BY timeline_created_at ASC
+    `;
 
-    if (error) {
-      console.error(`❌ Error fetching timeline for assignment ID ${id}:`, error);
-      return res.status(500).json({ error: 'Failed to fetch assignment timeline', details: error });
-    }
+    const result = await query(selectQuery, [id]);
 
-    if (!data || data.length === 0) {
+    if (!result.rows || result.rows.length === 0) {
       return res.status(404).json({ error: 'No timeline events found for this assignment' });
     }
 
+    const data = result.rows;
     const timelineByStatus = [];
     let currentGroup = null;
     let lastSeenStatus = null;
@@ -370,25 +432,21 @@ export const getAssignmentTimeline = async (req, res) => {
   }
 };
 
-
 export const getAllPendingReminders = async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('assignment_reminders')
-      .select('*')
-      .eq('status', 'pending')
-      .order('date_and_time', { ascending: true });
+    const selectQuery = `
+      SELECT * FROM assignment_reminders
+      WHERE status = 'pending'
+      ORDER BY date_and_time ASC
+    `;
 
-    if (error) {
-      console.error('❌ Error fetching pending reminders:', error);
-      return res.status(500).json({ error: 'Failed to fetch pending reminders', details: error });
-    }
+    const result = await query(selectQuery);
 
-    if (!data || data.length === 0) {
+    if (!result.rows || result.rows.length === 0) {
       return res.status(200).json({ error: 'No pending reminders found' });
     }
 
-    return res.status(200).json({ reminders: data });
+    return res.status(200).json({ reminders: result.rows });
 
   } catch (err) {
     console.error('❌ Unexpected error in getAllPendingReminders:', err);
@@ -404,21 +462,15 @@ export const updateReminderStatus = async (req, res) => {
       return res.status(400).json({ error: "❌ Missing required fields: 'id' or 'updated_by'" });
     }
 
-    // Call SQL function using Supabase RPC
-    const { data, error } = await supabase.rpc('update_assignment_reminder_status', {
-      p_reminder_id: id,
-      p_updated_by: updated_by
-    });
-
-    if (error) {
-      console.error("❌ Supabase RPC error:", error);
-      return res.status(500).json({ error: "❌ Failed to update reminder status", details: error });
-    }
+    // Call SQL function directly
+    const functionQuery = `SELECT * FROM update_assignment_reminder_status($1, $2)`;
+    
+    const result = await query(functionQuery, [id, updated_by]);
 
     return res.status(200).json({
       message: "✅ Reminder status updated successfully",
-      updatedReminderId: data?.[0]?.updated_reminder_id,
-      newTimelineEntryId: data?.[0]?.timeline_id
+      updatedReminderId: result.rows[0]?.updated_reminder_id,
+      newTimelineEntryId: result.rows[0]?.timeline_id
     });
 
   } catch (err) {

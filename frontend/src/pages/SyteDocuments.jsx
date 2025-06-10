@@ -231,10 +231,9 @@ const SyteDocuments = () => {
   }, []);
 
   const handleDownload = useCallback((fileUrl, fileName) => {
-    const previewUrl = buildPreviewURL(fileUrl);
-    console.log('Downloading file:', previewUrl);
+    console.log('Downloading file:', fileUrl);
     const link = document.createElement('a');
-    link.href = previewUrl;
+    link.href = fileUrl;
     link.download = fileName;
     link.click();
   }, []);
@@ -346,15 +345,6 @@ const SyteDocuments = () => {
     return files;
   }, [folderFiles, documents, userPhotos, selectedBucket, selectedFolder, searchQuery, sortBy, sortOrder]);
 
-  const supabaseBaseURL = env.supabaseUrl;
-
-const buildPreviewURL = (url) => {
-  const path = url.replace(/^https:\/\/+/, ""); // removes "https://"
-  console.log('Building preview URL for:', `https://${supabaseBaseURL}/${path}`);
-
-  return `https://${supabaseBaseURL}/${path}`;
-};
-
   // Loading state
   if (loading) {
     return (
@@ -441,7 +431,7 @@ const buildPreviewURL = (url) => {
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="inline-flex items-center px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl focus:outline-none focus:ring-4 outline-none focus:ring-teal-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-gray-300/30 hover:shadow-xl shadow-gray-300/30"
+                className="inline-flex items-center px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl focus:outline-none focus:ring-4 outline-none focus:ring-teal-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-gray-300/30 hover:shadow-xl "
               >
                 <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
                 {refreshing ? 'Refreshing...' : 'Refresh'}
@@ -936,13 +926,13 @@ const buildPreviewURL = (url) => {
       <div className="bg-white rounded-2xl shadow-2xl shadow-gray-300/30 max-h-[90vh] overflow-auto">
         {isImageFile(fullScreenPreview) ? (
           <img
-            src={buildPreviewURL(fullScreenPreview)}
+            src={fullScreenPreview}
             alt="Preview"
             className="max-w-fit max-h-[80vh] object-contain"
           />
         ) : isPdfFile(fullScreenPreview) ? (
           <iframe
-            src={buildPreviewURL(fullScreenPreview)}
+            src={fullScreenPreview}
             className="w-[80vw] h-[80vh]"
             title="PDF Preview"
           />

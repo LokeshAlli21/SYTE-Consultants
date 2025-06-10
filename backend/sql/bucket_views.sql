@@ -1,18 +1,32 @@
--- ===== UPLOADED DOCUMENTS BUCKET VIEWS =====
+-- ===== ENHANCED UPLOADED DOCUMENTS BUCKET VIEWS FOR NESTED FOLDERS =====
 
--- View to get all files from uploaded-documents bucket with organized structure
-CREATE OR REPLACE VIEW uploaded_documents_files AS
+-- Enhanced view to handle nested folder structures
+CREATE OR REPLACE VIEW uploaded_documents_files_nested AS
 SELECT 
     obj.id,
     obj.name,
     obj.bucket_id,
-    obj.path_tokens[1] as top_level_folder,
-    obj.path_tokens as full_path_array,
+    obj.path_tokens,
+    
+    -- Root level folder (first directory)
+    obj.path_tokens[1] as root_folder,
+    
+    -- Parent folder (direct parent)
     CASE 
         WHEN array_length(obj.path_tokens, 1) = 1 THEN 'root'
-        ELSE obj.path_tokens[1]
-    END as folder,
-    array_to_string(obj.path_tokens[1:array_length(obj.path_tokens, 1)-1], '/') as folder_path,
+        WHEN array_length(obj.path_tokens, 1) = 2 THEN obj.path_tokens[1]
+        ELSE obj.path_tokens[array_length(obj.path_tokens, 1) - 1]
+    END as parent_folder,
+    
+    -- Full folder path (excluding filename)
+    array_to_string(obj.path_tokens[1:array_length(obj.path_tokens, 1)-1], '/') as full_folder_path,
+    
+    -- Nested level depth
+    array_length(obj.path_tokens, 1) - 1 as folder_depth,
+    
+    -- Folder hierarchy as array
+    obj.path_tokens[1:array_length(obj.path_tokens, 1)-1] as folder_hierarchy,
+    
     obj.metadata->>'size' as size,
     obj.metadata->>'mimetype' as mime_type,
     obj.created_at,
@@ -22,176 +36,118 @@ SELECT
         current_setting('app.settings.supabase_url', true), 
         '/storage/v1/object/public/uploaded-documents/', 
         array_to_string(obj.path_tokens, '/')
-    ) as public_url,
-    array_length(obj.path_tokens, 1) as depth_level
+    ) as public_url
 FROM storage.objects obj
 WHERE obj.bucket_id = 'uploaded-documents'
     AND obj.metadata IS NOT NULL
     AND obj.name LIKE '%.%'  -- Has file extension
 ORDER BY obj.created_at DESC;
 
--- View to get folder summary for uploaded documents
-CREATE OR REPLACE VIEW uploaded_documents_folder_summary AS
+-- Recursive folder structure view
+CREATE OR REPLACE VIEW uploaded_documents_folder_tree AS
+WITH RECURSIVE folder_tree AS (
+    -- Base case: get all unique folder paths
+    SELECT DISTINCT
+        array_to_string(path_tokens[1:level], '/') as folder_path,
+        path_tokens[level] as folder_name,
+        level as depth,
+        CASE 
+            WHEN level = 1 THEN 'root'
+            ELSE array_to_string(path_tokens[1:level-1], '/')
+        END as parent_path,
+        path_tokens[1:level] as path_array
+    FROM (
+        SELECT 
+            path_tokens,
+            generate_series(1, array_length(path_tokens, 1) - 1) as level
+        FROM storage.objects 
+        WHERE bucket_id = 'uploaded-documents' 
+            AND metadata IS NOT NULL 
+            AND name LIKE '%.%'
+    ) paths
+)
 SELECT 
+    ft.folder_path,
+    ft.folder_name,
+    ft.depth,
+    ft.parent_path,
+    ft.path_array,
+    
+    -- Count files directly in this folder (not subfolders)
+    COALESCE(direct_files.file_count, 0) as direct_file_count,
+    
+    -- Count total files including subfolders
+    COALESCE(total_files.total_file_count, 0) as total_file_count,
+    
+    -- Total size of files in this folder and subfolders
+    COALESCE(total_files.total_size, 0) as total_size,
+    
+    -- Check if folder has subfolders
     CASE 
-        WHEN array_length(obj.path_tokens, 1) = 1 THEN 'root'
-        ELSE obj.path_tokens[1]
-    END as folder_name,
-    COUNT(*) as file_count,
-    SUM(CAST(obj.metadata->>'size' AS BIGINT)) as total_size,
-    MIN(obj.created_at) as oldest_file,
-    MAX(obj.created_at) as newest_file,
-    array_agg(DISTINCT obj.metadata->>'mimetype') as mime_types
-FROM storage.objects obj
-WHERE obj.bucket_id = 'uploaded-documents'
-    AND obj.metadata IS NOT NULL
-    AND obj.name LIKE '%.%'
-GROUP BY 
-    CASE 
-        WHEN array_length(obj.path_tokens, 1) = 1 THEN 'root'
-        ELSE obj.path_tokens[1]
-    END
-ORDER BY file_count DESC;
+        WHEN EXISTS (
+            SELECT 1 FROM folder_tree ft2 
+            WHERE ft2.parent_path = ft.folder_path
+        ) THEN true 
+        ELSE false 
+    END as has_subfolders
 
--- ===== USER PROFILE PHOTOS BUCKET VIEWS =====
+FROM folder_tree ft
 
--- View to get all user profile photos organized by role
-CREATE OR REPLACE VIEW user_profile_photos AS
-SELECT 
-    obj.id,
-    obj.name,
-    obj.bucket_id,
-    obj.path_tokens[1] as role_folder,
-    obj.path_tokens as full_path_array,
-    array_to_string(obj.path_tokens[1:array_length(obj.path_tokens, 1)-1], '/') as folder_path,
-    obj.metadata->>'size' as size,
-    obj.metadata->>'mimetype' as mime_type,
-    obj.created_at,
-    obj.updated_at,
-    CONCAT(
-        'https://', 
-        current_setting('app.settings.supabase_url', true), 
-        '/storage/v1/object/public/user-profile-photos/', 
-        array_to_string(obj.path_tokens, '/')
-    ) as public_url,
-    array_length(obj.path_tokens, 1) as depth_level
-FROM storage.objects obj
-WHERE obj.bucket_id = 'user-profile-photos'
-    AND obj.metadata IS NOT NULL
-    AND obj.name LIKE '%.%'  -- Has file extension
-ORDER BY obj.created_at DESC;
+-- Count direct files (files directly in this folder, not subfolders)
+LEFT JOIN (
+    SELECT 
+        array_to_string(path_tokens[1:array_length(path_tokens, 1)-1], '/') as folder_path,
+        COUNT(*) as file_count
+    FROM storage.objects
+    WHERE bucket_id = 'uploaded-documents'
+        AND metadata IS NOT NULL
+        AND name LIKE '%.%'
+    GROUP BY array_to_string(path_tokens[1:array_length(path_tokens, 1)-1], '/')
+) direct_files ON direct_files.folder_path = ft.folder_path
 
--- View to get role summary for user profile photos
-CREATE OR REPLACE VIEW user_profile_photos_role_summary AS
-SELECT 
-    obj.path_tokens[1] as role_name,
-    COUNT(*) as photo_count,
-    SUM(CAST(obj.metadata->>'size' AS BIGINT)) as total_size,
-    MIN(obj.created_at) as oldest_photo,
-    MAX(obj.created_at) as newest_photo,
-    array_agg(DISTINCT obj.metadata->>'mimetype') as mime_types
-FROM storage.objects obj
-WHERE obj.bucket_id = 'user-profile-photos'
-    AND obj.metadata IS NOT NULL
-    AND obj.name LIKE '%.%'
-    AND array_length(obj.path_tokens, 1) > 1
-GROUP BY obj.path_tokens[1]
-ORDER BY photo_count DESC;
+-- Count total files (including subfolders)
+LEFT JOIN (
+    SELECT 
+        array_to_string(path_tokens[1:depth], '/') as folder_path,
+        COUNT(*) as total_file_count,
+        SUM(CAST(metadata->>'size' AS BIGINT)) as total_size
+    FROM (
+        SELECT 
+            so.path_tokens,
+            so.metadata,
+            generate_series(1, array_length(so.path_tokens, 1) - 1) as depth
+        FROM storage.objects so
+        WHERE so.bucket_id = 'uploaded-documents'
+            AND so.metadata IS NOT NULL
+            AND so.name LIKE '%.%'
+    ) expanded
+    GROUP BY array_to_string(path_tokens[1:depth], '/')
+) total_files ON total_files.folder_path = ft.folder_path
 
--- ===== COMBINED BUCKET VIEWS =====
+ORDER BY ft.depth, ft.folder_name;
 
--- View to get complete bucket structure overview
-CREATE OR REPLACE VIEW all_buckets_structure AS
-SELECT 
-    'uploaded-documents' as bucket_name,
-    'document' as file_type,
-    CASE 
-        WHEN array_length(obj.path_tokens, 1) = 1 THEN 'root'
-        ELSE obj.path_tokens[1]
-    END as category,
-    COUNT(*) as file_count,
-    SUM(CAST(obj.metadata->>'size' AS BIGINT)) as total_size,
-    array_agg(DISTINCT obj.metadata->>'mimetype') as mime_types
-FROM storage.objects obj
-WHERE obj.bucket_id = 'uploaded-documents'
-    AND obj.metadata IS NOT NULL
-    AND obj.name LIKE '%.%'
-GROUP BY 
-    CASE 
-        WHEN array_length(obj.path_tokens, 1) = 1 THEN 'root'
-        ELSE obj.path_tokens[1]
-    END
+-- ===== ENHANCED FUNCTIONS FOR NESTED FOLDER SUPPORT =====
 
-UNION ALL
-
-SELECT 
-    'user-profile-photos' as bucket_name,
-    'photo' as file_type,
-    obj.path_tokens[1] as category,
-    COUNT(*) as file_count,
-    SUM(CAST(obj.metadata->>'size' AS BIGINT)) as total_size,
-    array_agg(DISTINCT obj.metadata->>'mimetype') as mime_types
-FROM storage.objects obj
-WHERE obj.bucket_id = 'user-profile-photos'
-    AND obj.metadata IS NOT NULL
-    AND obj.name LIKE '%.%'
-    AND array_length(obj.path_tokens, 1) > 1
-GROUP BY obj.path_tokens[1]
-ORDER BY bucket_name, file_count DESC;
-
--- View for overall bucket statistics
-CREATE OR REPLACE VIEW bucket_statistics AS
-SELECT 
-    bucket_id as bucket_name,
-    COUNT(*) as total_files,
-    SUM(CAST(metadata->>'size' AS BIGINT)) as total_size_bytes,
-    ROUND(SUM(CAST(metadata->>'size' AS BIGINT)) / 1024.0 / 1024.0, 2) as total_size_mb,
-    COUNT(DISTINCT path_tokens[1]) as total_categories,
-    MIN(created_at) as oldest_file,
-    MAX(created_at) as newest_file,
-    array_agg(DISTINCT metadata->>'mimetype') as all_mime_types
-FROM storage.objects
-WHERE metadata IS NOT NULL
-    AND name LIKE '%.%'
-    AND bucket_id IN ('uploaded-documents', 'user-profile-photos')
-GROUP BY bucket_id
-
-UNION ALL
-
-SELECT 
-    'total' as bucket_name,
-    COUNT(*) as total_files,
-    SUM(CAST(metadata->>'size' AS BIGINT)) as total_size_bytes,
-    ROUND(SUM(CAST(metadata->>'size' AS BIGINT)) / 1024.0 / 1024.0, 2) as total_size_mb,
-    COUNT(DISTINCT CONCAT(bucket_id, ':', path_tokens[1])) as total_categories,
-    MIN(created_at) as oldest_file,
-    MAX(created_at) as newest_file,
-    array_agg(DISTINCT metadata->>'mimetype') as all_mime_types
-FROM storage.objects
-WHERE metadata IS NOT NULL
-    AND name LIKE '%.%'
-    AND bucket_id IN ('uploaded-documents', 'user-profile-photos')
-ORDER BY bucket_name;
-
--- ===== UTILITY FUNCTIONS FOR CONTROLLERS =====
-
--- Function to get paginated files from uploaded-documents
-CREATE OR REPLACE FUNCTION get_uploaded_documents_paginated(
+-- Function to get files with nested folder support
+CREATE OR REPLACE FUNCTION get_files_by_folder_path(
+    folder_path_param TEXT DEFAULT NULL,
+    include_subfolders BOOLEAN DEFAULT FALSE,
     page_num INTEGER DEFAULT 1,
-    page_size INTEGER DEFAULT 100,
-    folder_filter TEXT DEFAULT NULL
+    page_size INTEGER DEFAULT 100
 )
 RETURNS TABLE (
     id UUID,
     name TEXT,
-    folder TEXT,
-    folder_path TEXT,
+    root_folder TEXT,
+    parent_folder TEXT,
+    full_folder_path TEXT,
+    folder_depth INTEGER,
+    folder_hierarchy TEXT[],
     size TEXT,
     mime_type TEXT,
     created_at TIMESTAMPTZ,
     updated_at TIMESTAMPTZ,
     public_url TEXT,
-    depth_level INTEGER,
     total_count BIGINT
 ) AS $$
 BEGIN
@@ -199,68 +155,111 @@ BEGIN
     SELECT 
         udf.id,
         udf.name,
-        udf.folder,
-        udf.folder_path,
+        udf.root_folder,
+        udf.parent_folder,
+        udf.full_folder_path,
+        udf.folder_depth,
+        udf.folder_hierarchy,
         udf.size,
         udf.mime_type,
         udf.created_at,
         udf.updated_at,
         udf.public_url,
-        udf.depth_level,
         COUNT(*) OVER() as total_count
-    FROM uploaded_documents_files udf
-    WHERE (folder_filter IS NULL OR udf.folder = folder_filter)
-    ORDER BY udf.created_at DESC
+    FROM uploaded_documents_files_nested udf
+    WHERE (
+        folder_path_param IS NULL OR
+        (include_subfolders = TRUE AND udf.full_folder_path LIKE folder_path_param || '%') OR
+        (include_subfolders = FALSE AND udf.full_folder_path = folder_path_param)
+    )
+    ORDER BY udf.folder_depth, udf.created_at DESC
     OFFSET ((page_num - 1) * page_size)
     LIMIT page_size;
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to get paginated user photos
-CREATE OR REPLACE FUNCTION get_user_photos_paginated(
-    page_num INTEGER DEFAULT 1,
-    page_size INTEGER DEFAULT 100,
-    role_filter TEXT DEFAULT NULL
+-- Function to get folder structure tree
+CREATE OR REPLACE FUNCTION get_folder_tree(
+    parent_path_param TEXT DEFAULT NULL,
+    max_depth INTEGER DEFAULT NULL
 )
 RETURNS TABLE (
-    id UUID,
-    name TEXT,
-    role_folder TEXT,
     folder_path TEXT,
-    size TEXT,
-    mime_type TEXT,
-    created_at TIMESTAMPTZ,
-    updated_at TIMESTAMPTZ,
-    public_url TEXT,
-    depth_level INTEGER,
-    total_count BIGINT
+    folder_name TEXT,
+    depth INTEGER,
+    parent_path TEXT,
+    path_array TEXT[],
+    direct_file_count BIGINT,
+    total_file_count BIGINT,
+    total_size BIGINT,
+    has_subfolders BOOLEAN
 ) AS $$
 BEGIN
     RETURN QUERY
     SELECT 
-        upp.id,
-        upp.name,
-        upp.role_folder,
-        upp.folder_path,
-        upp.size,
-        upp.mime_type,
-        upp.created_at,
-        upp.updated_at,
-        upp.public_url,
-        upp.depth_level,
-        COUNT(*) OVER() as total_count
-    FROM user_profile_photos upp
-    WHERE (role_filter IS NULL OR upp.role_folder = role_filter)
-    ORDER BY upp.created_at DESC
-    OFFSET ((page_num - 1) * page_size)
-    LIMIT page_size;
+        ft.folder_path,
+        ft.folder_name,
+        ft.depth,
+        ft.parent_path,
+        ft.path_array,
+        ft.direct_file_count,
+        ft.total_file_count,
+        ft.total_size,
+        ft.has_subfolders
+    FROM uploaded_documents_folder_tree ft
+    WHERE (
+        parent_path_param IS NULL OR
+        ft.parent_path = parent_path_param
+    )
+    AND (max_depth IS NULL OR ft.depth <= max_depth)
+    ORDER BY ft.depth, ft.folder_name;
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to search files across both buckets
-CREATE OR REPLACE FUNCTION search_all_files(
+-- Function to get breadcrumb navigation
+CREATE OR REPLACE FUNCTION get_folder_breadcrumbs(folder_path_param TEXT)
+RETURNS TABLE (
+    level INTEGER,
+    folder_name TEXT,
+    folder_path TEXT,
+    is_current BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    WITH path_parts AS (
+        SELECT 
+            unnest(string_to_array(folder_path_param, '/')) as part,
+            generate_subscripts(string_to_array(folder_path_param, '/'), 1) as level
+    ),
+    breadcrumbs AS (
+        SELECT 
+            pp.level,
+            pp.part as folder_name,
+            array_to_string(
+                (string_to_array(folder_path_param, '/'))[1:pp.level], 
+                '/'
+            ) as folder_path,
+            pp.level = array_length(string_to_array(folder_path_param, '/'), 1) as is_current
+        FROM path_parts pp
+    )
+    SELECT 
+        0 as level,
+        'Home' as folder_name,
+        '' as folder_path,
+        folder_path_param = '' as is_current
+    
+    UNION ALL
+    
+    SELECT * FROM breadcrumbs
+    ORDER BY level;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to search files with folder context
+CREATE OR REPLACE FUNCTION search_files_with_folders(
     search_term TEXT DEFAULT NULL,
-    bucket_filter TEXT DEFAULT NULL,
+    folder_path_filter TEXT DEFAULT NULL,
+    include_subfolders BOOLEAN DEFAULT TRUE,
     mime_type_filter TEXT DEFAULT NULL,
     page_num INTEGER DEFAULT 1,
     page_size INTEGER DEFAULT 50
@@ -268,9 +267,9 @@ CREATE OR REPLACE FUNCTION search_all_files(
 RETURNS TABLE (
     id UUID,
     name TEXT,
-    bucket_name TEXT,
-    category TEXT,
-    full_path TEXT,
+    full_folder_path TEXT,
+    folder_hierarchy TEXT[],
+    folder_depth INTEGER,
     size TEXT,
     mime_type TEXT,
     created_at TIMESTAMPTZ,
@@ -281,66 +280,47 @@ RETURNS TABLE (
 BEGIN
     RETURN QUERY
     SELECT 
-        obj.id,
-        obj.name,
-        obj.bucket_id as bucket_name,
-        CASE 
-            WHEN obj.bucket_id = 'uploaded-documents' THEN 
-                CASE WHEN array_length(obj.path_tokens, 1) = 1 THEN 'root' ELSE obj.path_tokens[1] END
-            ELSE obj.path_tokens[1]
-        END as category,
-        array_to_string(obj.path_tokens, '/') as full_path,
-        obj.metadata->>'size' as size,
-        obj.metadata->>'mimetype' as mime_type,
-        obj.created_at,
-        obj.updated_at,
-        CONCAT(
-            'https://', 
-            current_setting('app.settings.supabase_url', true), 
-            '/storage/v1/object/public/', 
-            obj.bucket_id, 
-            '/', 
-            array_to_string(obj.path_tokens, '/')
-        ) as public_url,
+        udf.id,
+        udf.name,
+        udf.full_folder_path,
+        udf.folder_hierarchy,
+        udf.folder_depth,
+        udf.size,
+        udf.mime_type,
+        udf.created_at,
+        udf.updated_at,
+        udf.public_url,
         COUNT(*) OVER() as total_count
-    FROM storage.objects obj
-    WHERE obj.metadata IS NOT NULL
-        AND obj.name LIKE '%.%'
-        AND obj.bucket_id IN ('uploaded-documents', 'user-profile-photos')
-        AND (bucket_filter IS NULL OR obj.bucket_id = bucket_filter)
-        AND (search_term IS NULL OR obj.name ILIKE '%' || search_term || '%')
-        AND (mime_type_filter IS NULL OR obj.metadata->>'mimetype' LIKE mime_type_filter || '%')
-    ORDER BY obj.created_at DESC
+    FROM uploaded_documents_files_nested udf
+    WHERE (search_term IS NULL OR udf.name ILIKE '%' || search_term || '%')
+        AND (mime_type_filter IS NULL OR udf.mime_type LIKE mime_type_filter || '%')
+        AND (
+            folder_path_filter IS NULL OR
+            (include_subfolders = TRUE AND udf.full_folder_path LIKE folder_path_filter || '%') OR
+            (include_subfolders = FALSE AND udf.full_folder_path = folder_path_filter)
+        )
+    ORDER BY udf.folder_depth, udf.created_at DESC
     OFFSET ((page_num - 1) * page_size)
     LIMIT page_size;
 END;
 $$ LANGUAGE plpgsql;
 
--- ===== EXAMPLE QUERIES =====
+-- ===== EXAMPLE QUERIES FOR TESTING =====
 
--- Get all uploaded documents with pagination
--- SELECT * FROM get_uploaded_documents_paginated(1, 50);
+-- Get all folders in tree structure
+-- SELECT * FROM get_folder_tree();
 
--- Get files from specific folder
--- SELECT * FROM get_uploaded_documents_paginated(1, 50, 'contracts');
+-- Get immediate children of a specific folder
+-- SELECT * FROM get_folder_tree('documents/contracts');
 
--- Get all user photos with pagination  
--- SELECT * FROM get_user_photos_paginated(1, 50);
+-- Get files in a specific folder (not including subfolders)
+-- SELECT * FROM get_files_by_folder_path('documents/contracts', false);
 
--- Get photos from specific role
--- SELECT * FROM get_user_photos_paginated(1, 50, 'admin');
+-- Get files in a folder including all subfolders
+-- SELECT * FROM get_files_by_folder_path('documents', true);
 
--- Get folder summary
--- SELECT * FROM uploaded_documents_folder_summary;
+-- Get breadcrumb navigation for a folder
+-- SELECT * FROM get_folder_breadcrumbs('documents/contracts/2024');
 
--- Get role summary
--- SELECT * FROM user_profile_photos_role_summary;
-
--- Get overall statistics
--- SELECT * FROM bucket_statistics;
-
--- Search across all files
--- SELECT * FROM search_all_files('contract', NULL, 'application/pdf', 1, 20);
-
--- Get complete bucket structure
--- SELECT * FROM all_buckets_structure;
+-- Search files with folder filtering
+-- SELECT * FROM search_files_with_folders('invoice', 'documents/invoices', true);

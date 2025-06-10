@@ -136,14 +136,14 @@ function Login() {
             </div>
 
             {/* Forgot Password Link */}
-            <div className="w-full text-left text-sm mb-4">
+            {/* <div className="w-full text-left text-sm mb-4">
               <p className="text-gray-600">
                 Forgot your password?{' '}
                 <span className="text-[#5CAAAB] cursor-pointer hover:underline">
                   Request
                 </span>
               </p>
-            </div>
+            </div> */}
 
             {/* Login Button */}
             <button

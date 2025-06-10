@@ -1,10 +1,11 @@
-import { supabase } from '../supabase/supabaseClient.js';
+import { query, getClient, uploadToS3, deleteFromS3 } from '../aws/awsClient.js';
 import bcrypt from 'bcrypt';
 
 // CREATE - Add a new user
 export const createUser = async (req, res) => {
-  const { name, email, phone, password, role = 'user', status = 'active',photo_url, access_fields } = req.body;
+  const { name, email, phone, password, role = 'user', status = 'active', photo_url, access_fields } = req.body;
   console.log('Creating user with data:', req.body);
+  
   try {
     // Validate required fields
     if (!name || !email || !password) {
@@ -15,38 +16,42 @@ export const createUser = async (req, res) => {
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    const { data, error } = await supabase
-      .from('users')
-      .insert([
-        {
-          name,
-          email,
-          phone,
-          password: hashedPassword,
-          role,
-          status,
-          photo_url: photo_url || null, // Optional field
-          status_for_delete: 'active',
-          access_fields: access_fields || null
-        }
-      ])
-      .select();
+    const insertQuery = `
+      INSERT INTO users (name, email, phone, password, role, status, photo_url, status_for_delete, access_fields, created_at)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+      RETURNING id, name, email, phone, role, status, photo_url, status_for_delete, access_fields, created_at
+    `;
 
-    if (error) {
-      if (error.code === '23505') { // Unique constraint violation
-        return res.status(409).json({ error: 'Email already exists' });
-      }
-      throw error;
-    }
+    const values = [
+      name,
+      email,
+      phone || null,
+      hashedPassword,
+      role,
+      status,
+      photo_url || null,
+      'active',
+      access_fields ? JSON.stringify(access_fields) : null
+    ];
+
+    const result = await query(insertQuery, values);
+    const user = result.rows[0];
 
     // Remove password from response
-    const { password: _, ...userWithoutPassword } = data[0];
+    const { password: _, ...userWithoutPassword } = user;
+    
     res.status(201).json({
       message: 'User created successfully',
       user: userWithoutPassword
     });
   } catch (error) {
     console.error('Error creating user:', error);
+    
+    // Handle unique constraint violation (duplicate email)
+    if (error.code === '23505' && error.constraint === 'users_email_key') {
+      return res.status(409).json({ error: 'Email already exists' });
+    }
+    
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
@@ -57,38 +62,66 @@ export const getAllUsers = async (req, res) => {
     const { page = 1, limit = 20, status, role, includeDeleted = false } = req.query;
     const offset = (page - 1) * limit;
 
-    let query = supabase
-      .from('users')
-      .select('id, name, email, phone, role, status, status_for_delete, photo_url, created_at, access_fields', { count: 'exact' })
-      .neq('role', 'admin')
-      .range(offset, offset + limit - 1)
-      .order('created_at', { ascending: false });
+    let whereConditions = ['role != $1'];
+    let queryParams = ['admin'];
+    let paramIndex = 2;
 
     // Exclude soft-deleted users unless includeDeleted=true
     if (includeDeleted !== 'true') {
-      query = query.neq('status_for_delete', 'deleted');
+      whereConditions.push(`status_for_delete != $${paramIndex}`);
+      queryParams.push('deleted');
+      paramIndex++;
     }
 
     // Apply optional filters
     if (status) {
-      query = query.eq('status', status);
+      whereConditions.push(`status = $${paramIndex}`);
+      queryParams.push(status);
+      paramIndex++;
     }
+    
     if (role) {
-      query = query.eq('role', role);
+      whereConditions.push(`role = $${paramIndex}`);
+      queryParams.push(role);
+      paramIndex++;
     }
 
-    const { data, error, count } = await query;
-    // console.log(await query); // Log the query for debugging
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
-    if (error) throw error;
+    // Get total count
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM users
+      ${whereClause}
+    `;
+    const countResult = await query(countQuery, queryParams);
+    const total = parseInt(countResult.rows[0].total);
+
+    // Get paginated users
+    const usersQuery = `
+      SELECT id, name, email, phone, role, status, status_for_delete, photo_url, created_at, access_fields
+      FROM users
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+    `;
+    
+    queryParams.push(limit, offset);
+    const usersResult = await query(usersQuery, queryParams);
+
+    // Parse access_fields JSON for each user
+    const users = usersResult.rows.map(user => ({
+      ...user,
+      access_fields: user.access_fields ? JSON.parse(user.access_fields) : null
+    }));
 
     res.status(200).json({
-      users: data,
+      users: users,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
-        total: count,
-        totalPages: Math.ceil(count / limit)
+        total: total,
+        totalPages: Math.ceil(total / limit)
       }
     });
   } catch (error) {
@@ -97,27 +130,28 @@ export const getAllUsers = async (req, res) => {
   }
 };
 
-
 // READ - Get user by ID
 export const getUserById = async (req, res) => {
   const { id } = req.params;
   
   try {
-    const { data, error } = await supabase
-      .from('users')
-      .select('id, name, email, phone, role, status, status_for_delete, photo_url, created_at')
-      .eq('id', id)
-      .neq('status_for_delete', 'deleted')
-      .single();
+    const selectQuery = `
+      SELECT id, name, email, phone, role, status, status_for_delete, photo_url, created_at, access_fields
+      FROM users
+      WHERE id = $1 AND status_for_delete != 'deleted'
+    `;
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      throw error;
+    const result = await query(selectQuery, [id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    res.status(200).json(data);
+    const user = result.rows[0];
+    // Parse access_fields JSON
+    user.access_fields = user.access_fields ? JSON.parse(user.access_fields) : null;
+
+    res.status(200).json(user);
   } catch (error) {
     console.error('Error fetching user:', error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -132,60 +166,106 @@ export const updateUser = async (req, res) => {
 
   try {
     // Check if user exists and is not soft-deleted
-    const { data: existingUser, error: fetchError } = await supabase
-      .from('users')
-      .select('id')
-      .eq('id', id)
-      .neq('status_for_delete', 'deleted')
-      .single();
+    const checkQuery = `
+      SELECT id FROM users
+      WHERE id = $1 AND status_for_delete != 'deleted'
+    `;
+    const checkResult = await query(checkQuery, [id]);
 
-    if (fetchError) {
-      if (fetchError.code === 'PGRST116') {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      throw fetchError;
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    // Prepare update object
-    const updateData = {};
-    if (name !== undefined) updateData.name = name;
-    if (email !== undefined) updateData.email = email;
-    if (phone !== undefined) updateData.phone = phone;
-    if (role !== undefined) updateData.role = role;
-    if (status !== undefined) updateData.status = status;
-    if (photo_url !== undefined) updateData.photo_url = photo_url;
-    if (access_fields !== undefined) updateData.access_fields = access_fields;
+    // Prepare update fields and values
+    const updateFields = [];
+    const updateValues = [];
+    let paramIndex = 1;
+
+    if (name !== undefined) {
+      updateFields.push(`name = $${paramIndex}`);
+      updateValues.push(name);
+      paramIndex++;
+    }
+    if (email !== undefined) {
+      updateFields.push(`email = $${paramIndex}`);
+      updateValues.push(email);
+      paramIndex++;
+    }
+    if (phone !== undefined) {
+      updateFields.push(`phone = $${paramIndex}`);
+      updateValues.push(phone);
+      paramIndex++;
+    }
+    if (role !== undefined) {
+      updateFields.push(`role = $${paramIndex}`);
+      updateValues.push(role);
+      paramIndex++;
+    }
+    if (status !== undefined) {
+      updateFields.push(`status = $${paramIndex}`);
+      updateValues.push(status);
+      paramIndex++;
+    }
+    if (photo_url !== undefined) {
+      updateFields.push(`photo_url = $${paramIndex}`);
+      updateValues.push(photo_url);
+      paramIndex++;
+    }
+    if (access_fields !== undefined) {
+      updateFields.push(`access_fields = $${paramIndex}`);
+      updateValues.push(JSON.stringify(access_fields));
+      paramIndex++;
+    }
 
     // Hash password if provided
     if (password) {
       const saltRounds = 10;
-      updateData.password = await bcrypt.hash(password, saltRounds);
+      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      updateFields.push(`password = $${paramIndex}`);
+      updateValues.push(hashedPassword);
+      paramIndex++;
     }
 
     // If no fields to update
-    if (Object.keys(updateData).length === 0) {
+    if (updateFields.length === 0) {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .update(updateData)
-      .eq('id', id)
-      .select('id, name, email, phone, role, status, status_for_delete, photo_url, created_at');
+    // Add updated_at field
+    updateFields.push(`updated_at = NOW()`);
 
-    if (error) {
-      if (error.code === '23505') { // Unique constraint violation
-        return res.status(409).json({ error: 'Email already exists' });
-      }
-      throw error;
+    // Add user ID for WHERE clause
+    updateValues.push(id);
+
+    const updateQuery = `
+      UPDATE users
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramIndex}
+      RETURNING id, name, email, phone, role, status, status_for_delete, photo_url, created_at, access_fields
+    `;
+
+    const result = await query(updateQuery, updateValues);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
     }
+
+    const user = result.rows[0];
+    // Parse access_fields JSON
+    user.access_fields = user.access_fields ? JSON.parse(user.access_fields) : null;
 
     res.status(200).json({
       message: 'User updated successfully',
-      user: data[0]
+      user: user
     });
   } catch (error) {
     console.error('Error updating user:', error);
+    
+    // Handle unique constraint violation (duplicate email)
+    if (error.code === '23505' && error.constraint === 'users_email_key') {
+      return res.status(409).json({ error: 'Email already exists' });
+    }
+    
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
@@ -195,38 +275,32 @@ export const softDeleteUser = async (req, res) => {
   const { id } = req.params;
   
   try {
-    // Check if user exists and is not already soft-deleted
-    const { data: existingUser, error: fetchError } = await supabase
-      .from('users')
-      .select('id, status_for_delete')
-      .eq('id', id)
-      .single();
+    // Check if user exists
+    const checkQuery = `
+      SELECT id, status_for_delete FROM users WHERE id = $1
+    `;
+    const checkResult = await query(checkQuery, [id]);
 
-    if (fetchError) {
-      if (fetchError.code === 'PGRST116') {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      throw fetchError;
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    if (existingUser.status_for_delete === 'deleted') {
+    if (checkResult.rows[0].status_for_delete === 'deleted') {
       return res.status(200).json({ error: 'User is already deleted' });
     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .update({ 
-        status_for_delete: 'deleted',
-        status: 'inactive'
-      })
-      .eq('id', id)
-      .select('id, name, email');
+    const updateQuery = `
+      UPDATE users
+      SET status_for_delete = 'deleted', status = 'inactive', updated_at = NOW()
+      WHERE id = $1
+      RETURNING id, name, email
+    `;
 
-    if (error) throw error;
+    const result = await query(updateQuery, [id]);
 
     res.status(200).json({
       message: 'User deleted successfully',
-      user: data[0]
+      user: result.rows[0]
     });
   } catch (error) {
     console.error('Error deleting user:', error);
@@ -239,38 +313,34 @@ export const restoreUser = async (req, res) => {
   const { id } = req.params;
   
   try {
-    // Check if user exists and is soft-deleted
-    const { data: existingUser, error: fetchError } = await supabase
-      .from('users')
-      .select('id, status_for_delete')
-      .eq('id', id)
-      .single();
+    // Check if user exists
+    const checkQuery = `
+      SELECT id, status_for_delete FROM users WHERE id = $1
+    `;
+    const checkResult = await query(checkQuery, [id]);
 
-    if (fetchError) {
-      if (fetchError.code === 'PGRST116') {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      throw fetchError;
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
-    if (existingUser.status_for_delete !== 'deleted') {
+    if (checkResult.rows[0].status_for_delete !== 'deleted') {
       return res.status(200).json({ error: 'User is not deleted' });
     }
 
-    const { data, error } = await supabase
-      .from('users')
-      .update({ 
-        status_for_delete: 'active',
-        status: 'active'
-      })
-      .eq('id', id)
-      .select('id, name, email, phone, role, status, status_for_delete, created_at');
+    const updateQuery = `
+      UPDATE users
+      SET status_for_delete = 'active', status = 'active', updated_at = NOW()
+      WHERE id = $1
+      RETURNING id, name, email, phone, role, status, status_for_delete, created_at, access_fields
+    `;
 
-    if (error) throw error;
+    const result = await query(updateQuery, [id]);
+    const user = result.rows[0];
+    user.access_fields = user.access_fields ? JSON.parse(user.access_fields) : null;
 
     res.status(200).json({
       message: 'User restored successfully',
-      user: data[0]
+      user: user
     });
   } catch (error) {
     console.error('Error restoring user:', error);
@@ -280,34 +350,55 @@ export const restoreUser = async (req, res) => {
 
 // SEARCH - Search users by name or email
 export const searchUsers = async (req, res) => {
-  const { query, page = 1, limit = 10 } = req.query;
+  const { query: searchQuery, page = 1, limit = 10 } = req.query;
   const offset = (page - 1) * limit;
   
   try {
-    if (!query) {
+    if (!searchQuery) {
       return res.status(400).json({ error: 'Search query is required' });
     }
 
-    const { data, error, count } = await supabase
-      .from('users')
-      .select('id, name, email, phone, role, status, status_for_delete, photo_url, created_at', { count: 'exact' })
-      .neq('role', 'admin')
-      .neq('status_for_delete', 'deleted')
-      .or(`name.ilike.%${query}%,email.ilike.%${query}%`)
-      .range(offset, offset + limit - 1)
-      .order('created_at', { ascending: false });
+    const searchPattern = `%${searchQuery}%`;
 
-    if (error) throw error;
+    // Get total count
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM users
+      WHERE role != 'admin'
+        AND status_for_delete != 'deleted'
+        AND (name ILIKE $1 OR email ILIKE $1)
+    `;
+    const countResult = await query(countQuery, [searchPattern]);
+    const total = parseInt(countResult.rows[0].total);
+
+    // Get paginated results
+    const searchSql = `
+      SELECT id, name, email, phone, role, status, status_for_delete, photo_url, created_at, access_fields
+      FROM users
+      WHERE role != 'admin'
+        AND status_for_delete != 'deleted'
+        AND (name ILIKE $1 OR email ILIKE $1)
+      ORDER BY created_at DESC
+      LIMIT $2 OFFSET $3
+    `;
+
+    const result = await query(searchSql, [searchPattern, limit, offset]);
+
+    // Parse access_fields JSON for each user
+    const users = result.rows.map(user => ({
+      ...user,
+      access_fields: user.access_fields ? JSON.parse(user.access_fields) : null
+    }));
 
     res.status(200).json({
-      users: data,
+      users: users,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
-        total: count,
-        totalPages: Math.ceil(count / limit)
+        total: total,
+        totalPages: Math.ceil(total / limit)
       },
-      searchQuery: query
+      searchQuery: searchQuery
     });
   } catch (error) {
     console.error('Error searching users:', error);
@@ -318,68 +409,28 @@ export const searchUsers = async (req, res) => {
 // GET USER STATISTICS
 export const getUserStats = async (req, res) => {
   try {
-    const queries = await Promise.all([
-      supabase
-        .from('users')
-        .select('id', { count: 'exact' })
-        .neq('role', 'admin')
-        .neq('status_for_delete', 'deleted'),
+    const statsQuery = `
+      SELECT 
+        COUNT(*) FILTER (WHERE role != 'admin' AND status_for_delete != 'deleted') as total,
+        COUNT(*) FILTER (WHERE role != 'admin' AND status_for_delete != 'deleted' AND status = 'active') as active,
+        COUNT(*) FILTER (WHERE role != 'admin' AND status_for_delete != 'deleted' AND status = 'inactive') as inactive,
+        COUNT(*) FILTER (WHERE role != 'admin' AND status_for_delete != 'deleted' AND status = 'blocked') as blocked,
+        COUNT(*) FILTER (WHERE role != 'admin' AND status_for_delete = 'deleted') as deleted,
+        COUNT(*) FILTER (WHERE role = 'admin') as admins
+      FROM users
+    `;
 
-      supabase
-        .from('users')
-        .select('id', { count: 'exact' })
-        .neq('role', 'admin')
-        .neq('status_for_delete', 'deleted')
-        .eq('status', 'active'),
-
-      supabase
-        .from('users')
-        .select('id', { count: 'exact' })
-        .neq('role', 'admin')
-        .neq('status_for_delete', 'deleted')
-        .eq('status', 'inactive'),
-
-      supabase
-        .from('users')
-        .select('id', { count: 'exact' })
-        .neq('role', 'admin')
-        .eq('status_for_delete', 'deleted'),
-
-      supabase
-        .from('users')
-        .select('id', { count: 'exact' })
-        .eq('role', 'admin'),
-
-      supabase
-        .from('users')
-        .select('id', { count: 'exact' })
-        .neq('role', 'admin')
-        .neq('status_for_delete', 'deleted')
-        .eq('status', 'blocked')
-    ]);
-
-    const [
-      totalUsersRes,
-      activeUsersRes,
-      inactiveUsersRes,
-      deletedUsersRes,
-      adminUsersRes,
-      blockedUsersRes
-    ] = queries;
-
-    const hasError = queries.some((q) => q.error);
-    if (hasError) {
-      throw new Error('Error in one or more queries');
-    }
+    const result = await query(statsQuery);
+    const stats = result.rows[0];
 
     res.status(200).json({
       statistics: {
-        total: totalUsersRes.count,
-        active: activeUsersRes.count,
-        inactive: inactiveUsersRes.count,
-        blocked: blockedUsersRes.count,
-        deleted: deletedUsersRes.count,
-        admins: adminUsersRes.count
+        total: parseInt(stats.total),
+        active: parseInt(stats.active),
+        inactive: parseInt(stats.inactive),
+        blocked: parseInt(stats.blocked),
+        deleted: parseInt(stats.deleted),
+        admins: parseInt(stats.admins)
       }
     });
   } catch (error) {
@@ -399,23 +450,24 @@ export const changeUserPassword = async (req, res) => {
       return res.status(400).json({ error: 'Password is required' });
     }
 
-    // Validate password strength (optional - adjust as needed)
+    // Validate password strength
     if (password.length < 6) {
       return res.status(400).json({ error: 'Password must be at least 6 characters long' });
     }
 
     // Check if user exists and is not deleted
-    const { data: existingUser, error: fetchError } = await supabase
-      .from('users')
-      .select('id, name, email, status_for_delete')
-      .eq('id', id)
-      .single();
+    const checkQuery = `
+      SELECT id, name, email, status_for_delete
+      FROM users
+      WHERE id = $1
+    `;
+    const checkResult = await query(checkQuery, [id]);
 
-    if (fetchError || !existingUser) {
+    if (checkResult.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    if (existingUser.status_for_delete === 'deleted') {
+    if (checkResult.rows[0].status_for_delete === 'deleted') {
       return res.status(400).json({ error: 'Cannot change password for deleted user' });
     }
 
@@ -424,23 +476,22 @@ export const changeUserPassword = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
     // Update user password
-    const { data, error } = await supabase
-      .from('users')
-      .update({ password: hashedPassword })
-      .eq('id', id)
-      .select('id, name, email, role, status, created_at');
+    const updateQuery = `
+      UPDATE users
+      SET password = $1, updated_at = NOW()
+      WHERE id = $2
+      RETURNING id, name, email, role, status, created_at
+    `;
 
-    if (error) {
-      throw error;
-    }
+    const result = await query(updateQuery, [hashedPassword, id]);
 
-    if (!data || data.length === 0) {
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
 
     res.status(200).json({
       message: 'Password changed successfully',
-      user: data[0]
+      user: result.rows[0]
     });
 
   } catch (error) {
@@ -454,51 +505,43 @@ export const blockUser = async (req, res) => {
   const { id } = req.params;
   
   try {
-    // Check if user exists and is not soft-deleted
-    const { data: existingUser, error: fetchError } = await supabase
-      .from('users')
-      .select('id, status, status_for_delete, name, email')
-      .eq('id', id)
-      .neq('status_for_delete', 'deleted')
-      .single();
+    // Check if user exists and get current status
+    const checkQuery = `
+      SELECT id, status, status_for_delete, name, email, role
+      FROM users
+      WHERE id = $1 AND status_for_delete != 'deleted'
+    `;
+    const checkResult = await query(checkQuery, [id]);
 
-    if (fetchError) {
-      if (fetchError.code === 'PGRST116') {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      throw fetchError;
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
+    const user = checkResult.rows[0];
+
     // Check if user is already blocked
-    if (existingUser.status === 'blocked') {
+    if (user.status === 'blocked') {
       return res.status(200).json({ error: 'User is already blocked' });
     }
 
     // Check if trying to block an admin
-    const { data: adminCheck, error: adminError } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', id)
-      .single();
-
-    if (adminError) throw adminError;
-
-    if (adminCheck.role === 'admin') {
+    if (user.role === 'admin') {
       return res.status(403).json({ error: 'Cannot block admin users' });
     }
 
     // Update user status to blocked
-    const { data, error } = await supabase
-      .from('users')
-      .update({ status: 'blocked' })
-      .eq('id', id)
-      .select('id, name, email, phone, role, status, status_for_delete, created_at');
+    const updateQuery = `
+      UPDATE users
+      SET status = 'blocked', updated_at = NOW()
+      WHERE id = $1
+      RETURNING id, name, email, phone, role, status, status_for_delete, created_at
+    `;
 
-    if (error) throw error;
+    const result = await query(updateQuery, [id]);
 
     res.status(200).json({
       message: 'User blocked successfully',
-      user: data[0]
+      user: result.rows[0]
     });
   } catch (error) {
     console.error('Error blocking user:', error);
@@ -511,38 +554,38 @@ export const unblockUser = async (req, res) => {
   const { id } = req.params;
   
   try {
-    // Check if user exists and is not soft-deleted
-    const { data: existingUser, error: fetchError } = await supabase
-      .from('users')
-      .select('id, status, status_for_delete, name, email')
-      .eq('id', id)
-      .neq('status_for_delete', 'deleted')
-      .single();
+    // Check if user exists and get current status
+    const checkQuery = `
+      SELECT id, status, status_for_delete, name, email
+      FROM users
+      WHERE id = $1 AND status_for_delete != 'deleted'
+    `;
+    const checkResult = await query(checkQuery, [id]);
 
-    if (fetchError) {
-      if (fetchError.code === 'PGRST116') {
-        return res.status(404).json({ error: 'User not found' });
-      }
-      throw fetchError;
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
     }
 
+    const user = checkResult.rows[0];
+
     // Check if user is not blocked
-    if (existingUser.status !== 'blocked') {
+    if (user.status !== 'blocked') {
       return res.status(200).json({ error: 'User is already not blocked' });
     }
 
     // Update user status to active
-    const { data, error } = await supabase
-      .from('users')
-      .update({ status: 'active' })
-      .eq('id', id)
-      .select('id, name, email, phone, role, status, status_for_delete, created_at');
+    const updateQuery = `
+      UPDATE users
+      SET status = 'active', updated_at = NOW()
+      WHERE id = $1
+      RETURNING id, name, email, phone, role, status, status_for_delete, created_at
+    `;
 
-    if (error) throw error;
+    const result = await query(updateQuery, [id]);
 
     res.status(200).json({
       message: 'User unblocked successfully',
-      user: data[0]
+      user: result.rows[0]
     });
   } catch (error) {
     console.error('Error unblocking user:', error);
@@ -550,10 +593,10 @@ export const unblockUser = async (req, res) => {
   }
 };
 
-
+// UPLOAD USER PHOTO - Upload photo to AWS S3
 export const uploadUserPhoto = async (req, res) => {
   try {
-    console.log('📸 Uploading user photo...');
+    console.log('📸 Uploading user photo to AWS S3...');
     const files = req.files;
 
     if (!files || files.length === 0) {
@@ -566,8 +609,6 @@ export const uploadUserPhoto = async (req, res) => {
     if (!photoFile) {
       return res.status(400).json({ message: 'Photo file not found. Expected fieldname: photo_url' });
     }
-
-    const uploadedUrls = {};
 
     // Extract user role from filename
     // Expected filename format: {role}_{UserName}_Photo_{timestamp}.{ext}
@@ -589,43 +630,28 @@ export const uploadUserPhoto = async (req, res) => {
 
     console.log(`📋 Extracted role from filename: ${userRole}`);
 
-    // Create folder path based on role
-    const folderPath = `${userRole}`;
-    const filePath = `${folderPath}/${originalName}`;
+    // Create S3 key path based on role
+    const timestamp = Date.now();
+    const fileExtension = originalName.split('.').pop();
+    const s3Key = `user-profile-photos/${userRole}/${timestamp}_${originalName}`;
 
-    console.log(`📁 Uploading photo to folder: ${folderPath}`);
-    console.log(`📄 File path: ${filePath}`);
+    console.log(`📁 Uploading photo to S3 path: ${s3Key}`);
 
-    // Upload to Supabase Storage in 'user-profile-photos' bucket
-    const { data, error } = await supabase.storage
-      .from('user-profile-photos')
-      .upload(filePath, photoFile.buffer, {
-        contentType: photoFile.mimetype,
-        upsert: true, // Replace if file already exists
-      });
-
-    if (error) {
-      console.error(`Error uploading photo:`, error);
-      return res.status(500).json({ 
-        message: `Failed to upload photo: ${error.message}` 
-      });
-    }
-
-    // Get public URL for the uploaded photo
-    const { data: publicUrlData } = supabase.storage
-      .from('user-profile-photos')
-      .getPublicUrl(filePath);
-
-    uploadedUrls.photo_url = publicUrlData.publicUrl;
+    // Upload to AWS S3
+    const s3Url = await uploadToS3(photoFile, s3Key);
     
-    console.log(`✅ Photo uploaded successfully to: ${publicUrlData.publicUrl}`);
+    console.log(`✅ Photo uploaded successfully to: ${s3Url}`);
 
-    return res.status(200).json(uploadedUrls);
+    return res.status(200).json({
+      photo_url: s3Url,
+      message: 'Photo uploaded successfully'
+    });
 
   } catch (error) {
     console.error('❌ Unexpected error in uploadUserPhoto:', error);
     return res.status(500).json({ 
-      message: 'Server error while uploading user photo.' 
+      message: 'Server error while uploading user photo.',
+      error: error.message
     });
   }
 };

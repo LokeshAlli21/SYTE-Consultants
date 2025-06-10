@@ -1,5 +1,5 @@
 // bucketController.js
-import { supabase } from '../supabase/supabaseClient.js';
+import { query, db } from '../aws/awsClient.js';
 
 // ===== UPLOADED DOCUMENTS BUCKET FUNCTIONS =====
 
@@ -7,34 +7,33 @@ import { supabase } from '../supabase/supabaseClient.js';
 export const getAllFiles = async (req, res) => {
   try {
     const { page = 1, limit = 100 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    // Use the paginated function to get files
-    const { data: paginatedData, error: paginatedError } = await supabase
-      .rpc('get_uploaded_documents_paginated', {
-        page_num: parseInt(page),
-        page_size: parseInt(limit),
-        folder_filter: null
-      });
+    // Get paginated files with folder filter
+    const filesQuery = `
+      SELECT 
+        id, name, folder_path, folder, size, updated_at, created_at, 
+        mime_type, public_url, depth_level,
+        COUNT(*) OVER() as total_count
+      FROM uploaded_documents_files 
+      ORDER BY updated_at DESC 
+      LIMIT $1 OFFSET $2
+    `;
 
-    if (paginatedError) {
-      console.error('Error fetching paginated files:', paginatedError);
-      return res.status(500).json({ error: 'Failed to fetch files' });
-    }
+    const filesResult = await query(filesQuery, [parseInt(limit), offset]);
+    const allFiles = filesResult.rows;
+    const totalFiles = allFiles.length > 0 ? parseInt(allFiles[0].total_count) : 0;
 
     // Get folder summary for organization
-    const { data: folderSummary, error: summaryError } = await supabase
-      .from('uploaded_documents_folder_summary')
-      .select('*');
-
-    if (summaryError) {
-      console.error('Error fetching folder summary:', summaryError);
-      return res.status(500).json({ error: 'Failed to fetch folder summary' });
-    }
+    const folderSummaryQuery = `
+      SELECT folder_name, file_count 
+      FROM uploaded_documents_folder_summary
+    `;
+    const folderSummaryResult = await query(folderSummaryQuery);
+    const folderSummary = folderSummaryResult.rows;
 
     // Organize files by folder
     const organizedFiles = {};
-    const allFiles = paginatedData || [];
-    const totalFiles = allFiles.length > 0 ? allFiles[0].total_count : 0;
 
     // Group files by folder
     allFiles.forEach(file => {
@@ -63,12 +62,10 @@ export const getAllFiles = async (req, res) => {
       folderBreakdown[folder.folder_name] = folder.file_count;
     });
 
-    // console.log(`Found ${totalFiles} total files across ${folderSummary.length} folders`);
-
     return res.status(200).json({
       success: true,
       bucket: 'uploaded-documents',
-      totalFiles: parseInt(totalFiles),
+      totalFiles: totalFiles,
       organizedByFolder: organizedFiles,
       allFiles: allFiles.map(file => ({
         id: file.id,
@@ -87,7 +84,7 @@ export const getAllFiles = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         hasMore: allFiles.length === parseInt(limit),
-        totalPages: Math.ceil(parseInt(totalFiles) / parseInt(limit))
+        totalPages: Math.ceil(totalFiles / parseInt(limit))
       },
       summary: {
         totalFolders: folderSummary.length,
@@ -106,34 +103,33 @@ export const getFilesByFolder = async (req, res) => {
   try {
     const folderPath = decodeURIComponent(req.params.folderPath);
     const { page = 1, limit = 50 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
     
     if (!folderPath) {
       return res.status(400).json({ error: 'Folder path is required' });
     }
 
-    // Use the paginated function with folder filter
-    const { data: filesData, error: filesError } = await supabase
-      .rpc('get_uploaded_documents_paginated', {
-        page_num: parseInt(page),
-        page_size: parseInt(limit),
-        folder_filter: folderPath
-      });
+    // Get files from specific folder with pagination
+    const filesQuery = `
+      SELECT 
+        id, name, folder_path, folder, size, updated_at, created_at, 
+        mime_type, public_url, depth_level,
+        COUNT(*) OVER() as total_count
+      FROM uploaded_documents_files 
+      WHERE folder_path = $1 OR folder = $2
+      ORDER BY updated_at DESC 
+      LIMIT $3 OFFSET $4
+    `;
 
-    if (filesError) {
-      console.error('Error fetching files by folder:', filesError);
-      return res.status(500).json({ error: 'Failed to fetch folder files' });
-    }
-
-    const allFiles = filesData || [];
-    const totalFiles = allFiles.length > 0 ? allFiles[0].total_count : 0;
-
-    // console.log(`Found ${totalFiles} total files in ${folderPath} folder`);
+    const filesResult = await query(filesQuery, [folderPath, folderPath, parseInt(limit), offset]);
+    const allFiles = filesResult.rows;
+    const totalFiles = allFiles.length > 0 ? parseInt(allFiles[0].total_count) : 0;
 
     return res.status(200).json({
       success: true,
       bucket: 'uploaded-documents',
       folder: folderPath,
-      totalFiles: parseInt(totalFiles),
+      totalFiles: totalFiles,
       files: allFiles.map(file => ({
         id: file.id,
         name: file.name,
@@ -151,7 +147,7 @@ export const getFilesByFolder = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         hasMore: allFiles.length === parseInt(limit),
-        totalPages: Math.ceil(parseInt(totalFiles) / parseInt(limit))
+        totalPages: Math.ceil(totalFiles / parseInt(limit))
       }
     });
 
@@ -167,34 +163,40 @@ export const getFilesByFolder = async (req, res) => {
 export const getAllUserPhotos = async (req, res) => {
   try {
     const { page = 1, limit = 100, role } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    // Use the paginated function to get photos
-    const { data: paginatedData, error: paginatedError } = await supabase
-      .rpc('get_user_photos_paginated', {
-        page_num: parseInt(page),
-        page_size: parseInt(limit),
-        role_filter: role || null
-      });
-
-    if (paginatedError) {
-      console.error('Error fetching paginated photos:', paginatedError);
-      return res.status(500).json({ error: 'Failed to fetch photos' });
+    // Build query with optional role filter
+    let photosQuery = `
+      SELECT 
+        id, name, folder_path, role_folder, size, updated_at, created_at, 
+        mime_type, public_url, depth_level,
+        COUNT(*) OVER() as total_count
+      FROM user_profile_photos 
+    `;
+    let queryParams = [];
+    
+    if (role) {
+      photosQuery += ` WHERE role_folder = $1 `;
+      queryParams.push(role.toLowerCase());
     }
+    
+    photosQuery += ` ORDER BY updated_at DESC LIMIT $${queryParams.length + 1} OFFSET $${queryParams.length + 2}`;
+    queryParams.push(parseInt(limit), offset);
+
+    const photosResult = await query(photosQuery, queryParams);
+    const allPhotos = photosResult.rows;
+    const totalPhotos = allPhotos.length > 0 ? parseInt(allPhotos[0].total_count) : 0;
 
     // Get role summary for organization
-    const { data: roleSummary, error: summaryError } = await supabase
-      .from('user_profile_photos_role_summary')
-      .select('*');
-
-    if (summaryError) {
-      console.error('Error fetching role summary:', summaryError);
-      return res.status(500).json({ error: 'Failed to fetch role summary' });
-    }
+    const roleSummaryQuery = `
+      SELECT role_name, photo_count 
+      FROM user_profile_photos_role_summary
+    `;
+    const roleSummaryResult = await query(roleSummaryQuery);
+    const roleSummary = roleSummaryResult.rows;
 
     // Organize photos by role
     const organizedPhotos = {};
-    const allPhotos = paginatedData || [];
-    const totalPhotos = allPhotos.length > 0 ? allPhotos[0].total_count : 0;
 
     // Group photos by role
     allPhotos.forEach(photo => {
@@ -223,12 +225,10 @@ export const getAllUserPhotos = async (req, res) => {
       roleBreakdown[role.role_name] = role.photo_count;
     });
 
-    // console.log(`Found ${totalPhotos} total photos across ${roleSummary.length} roles`);
-
     return res.status(200).json({
       success: true,
       bucket: 'user-profile-photos',
-      totalPhotos: parseInt(totalPhotos),
+      totalPhotos: totalPhotos,
       organizedByRole: organizedPhotos,
       allPhotos: allPhotos.map(photo => ({
         id: photo.id,
@@ -247,7 +247,7 @@ export const getAllUserPhotos = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         hasMore: allPhotos.length === parseInt(limit),
-        totalPages: Math.ceil(parseInt(totalPhotos) / parseInt(limit))
+        totalPages: Math.ceil(totalPhotos / parseInt(limit))
       },
       summary: {
         totalRoles: roleSummary.length,
@@ -266,34 +266,33 @@ export const getUserPhotosByRole = async (req, res) => {
   try {
     const { role } = req.params;
     const { page = 1, limit = 50 } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
     
     if (!role) {
       return res.status(400).json({ error: 'Role is required' });
     }
 
-    // Use the paginated function with role filter
-    const { data: photosData, error: photosError } = await supabase
-      .rpc('get_user_photos_paginated', {
-        page_num: parseInt(page),
-        page_size: parseInt(limit),
-        role_filter: role.toLowerCase()
-      });
+    // Get photos from specific role with pagination
+    const photosQuery = `
+      SELECT 
+        id, name, folder_path, role_folder, size, updated_at, created_at, 
+        mime_type, public_url, depth_level,
+        COUNT(*) OVER() as total_count
+      FROM user_profile_photos 
+      WHERE role_folder = $1
+      ORDER BY updated_at DESC 
+      LIMIT $2 OFFSET $3
+    `;
 
-    if (photosError) {
-      console.error('Error fetching photos by role:', photosError);
-      return res.status(500).json({ error: 'Failed to fetch role photos' });
-    }
-
-    const allPhotos = photosData || [];
-    const totalPhotos = allPhotos.length > 0 ? allPhotos[0].total_count : 0;
-
-    // console.log(`Found ${totalPhotos} total photos in ${role} role`);
+    const photosResult = await query(photosQuery, [role.toLowerCase(), parseInt(limit), offset]);
+    const allPhotos = photosResult.rows;
+    const totalPhotos = allPhotos.length > 0 ? parseInt(allPhotos[0].total_count) : 0;
 
     return res.status(200).json({
       success: true,
       bucket: 'user-profile-photos',
       role: role.toLowerCase(),
-      totalPhotos: parseInt(totalPhotos),
+      totalPhotos: totalPhotos,
       photos: allPhotos.map(photo => ({
         id: photo.id,
         name: photo.name,
@@ -311,7 +310,7 @@ export const getUserPhotosByRole = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         hasMore: allPhotos.length === parseInt(limit),
-        totalPages: Math.ceil(parseInt(totalPhotos) / parseInt(limit))
+        totalPages: Math.ceil(totalPhotos / parseInt(limit))
       }
     });
 
@@ -329,14 +328,12 @@ export const getAllBucketsStructure = async (req, res) => {
     const { detailed = false } = req.query;
 
     // Get structure from the combined view
-    const { data: structureData, error: structureError } = await supabase
-      .from('all_buckets_structure')
-      .select('*');
-
-    if (structureError) {
-      console.error('Error fetching bucket structure:', structureError);
-      return res.status(500).json({ error: 'Failed to fetch bucket structure' });
-    }
+    const structureQuery = `
+      SELECT bucket_name, category, file_count, total_size, mime_types
+      FROM all_buckets_structure
+    `;
+    const structureResult = await query(structureQuery);
+    const structureData = structureResult.rows;
 
     // Organize the data by bucket
     const structure = {
@@ -381,46 +378,48 @@ export const getAllBucketsStructure = async (req, res) => {
     // If detailed view is requested, fetch actual files
     if (detailed === 'true') {
       // Get detailed documents
-      const { data: detailedDocs, error: docsError } = await supabase
-        .from('uploaded_documents_files')
-        .select('name, full_path_array, size, updated_at, public_url, folder')
-        .limit(1000);
+      const docsQuery = `
+        SELECT name, full_path_array, size, updated_at, public_url, folder
+        FROM uploaded_documents_files
+        LIMIT 1000
+      `;
+      const docsResult = await query(docsQuery);
+      const detailedDocs = docsResult.rows;
 
-      if (!docsError && detailedDocs) {
-        detailedDocs.forEach(doc => {
-          const folder = doc.folder || 'root';
-          if (structure['uploaded-documents'].folders[folder]) {
-            structure['uploaded-documents'].folders[folder].files.push({
-              name: doc.name,
-              fullPath: doc.full_path_array.join('/'),
-              size: parseInt(doc.size) || 0,
-              lastModified: doc.updated_at,
-              publicUrl: doc.public_url
-            });
-          }
-        });
-      }
+      detailedDocs.forEach(doc => {
+        const folder = doc.folder || 'root';
+        if (structure['uploaded-documents'].folders[folder]) {
+          structure['uploaded-documents'].folders[folder].files.push({
+            name: doc.name,
+            fullPath: Array.isArray(doc.full_path_array) ? doc.full_path_array.join('/') : doc.full_path_array,
+            size: parseInt(doc.size) || 0,
+            lastModified: doc.updated_at,
+            publicUrl: doc.public_url
+          });
+        }
+      });
 
       // Get detailed photos
-      const { data: detailedPhotos, error: photosError } = await supabase
-        .from('user_profile_photos')
-        .select('name, full_path_array, size, updated_at, public_url, role_folder')
-        .limit(1000);
+      const photosQuery = `
+        SELECT name, full_path_array, size, updated_at, public_url, role_folder
+        FROM user_profile_photos
+        LIMIT 1000
+      `;
+      const photosResult = await query(photosQuery);
+      const detailedPhotos = photosResult.rows;
 
-      if (!photosError && detailedPhotos) {
-        detailedPhotos.forEach(photo => {
-          const role = photo.role_folder;
-          if (structure['user-profile-photos'].roles[role]) {
-            structure['user-profile-photos'].roles[role].photos.push({
-              name: photo.name,
-              fullPath: photo.full_path_array.join('/'),
-              size: parseInt(photo.size) || 0,
-              lastModified: photo.updated_at,
-              publicUrl: photo.public_url
-            });
-          }
-        });
-      }
+      detailedPhotos.forEach(photo => {
+        const role = photo.role_folder;
+        if (structure['user-profile-photos'].roles[role]) {
+          structure['user-profile-photos'].roles[role].photos.push({
+            name: photo.name,
+            fullPath: Array.isArray(photo.full_path_array) ? photo.full_path_array.join('/') : photo.full_path_array,
+            size: parseInt(photo.size) || 0,
+            lastModified: photo.updated_at,
+            publicUrl: photo.public_url
+          });
+        }
+      });
     }
 
     return res.status(200).json({
@@ -449,28 +448,24 @@ export const getAllBucketsStructure = async (req, res) => {
 export const getBucketStats = async (req, res) => {
   try {
     // Get statistics from the bucket_statistics view
-    const { data: statsData, error: statsError } = await supabase
-      .from('bucket_statistics')
-      .select('*');
-
-    if (statsError) {
-      console.error('Error fetching bucket statistics:', statsError);
-      return res.status(500).json({ error: 'Failed to fetch bucket statistics' });
-    }
+    const statsQuery = `
+      SELECT bucket_name, total_files, total_size_bytes, total_categories
+      FROM bucket_statistics
+    `;
+    const statsResult = await query(statsQuery);
+    const statsData = statsResult.rows;
 
     // Get folder and role lists
-    const { data: folderSummary, error: folderError } = await supabase
-      .from('uploaded_documents_folder_summary')
-      .select('folder_name');
+    const folderQuery = `SELECT folder_name FROM uploaded_documents_folder_summary`;
+    const roleQuery = `SELECT role_name FROM user_profile_photos_role_summary`;
+    
+    const [folderResult, roleResult] = await Promise.all([
+      query(folderQuery),
+      query(roleQuery)
+    ]);
 
-    const { data: roleSummary, error: roleError } = await supabase
-      .from('user_profile_photos_role_summary')
-      .select('role_name');
-
-    if (folderError || roleError) {
-      console.error('Error fetching folder/role summaries:', folderError, roleError);
-      return res.status(500).json({ error: 'Failed to fetch summaries' });
-    }
+    const folderSummary = folderResult.rows;
+    const roleSummary = roleResult.rows;
 
     // Organize statistics
     const statistics = {
@@ -478,13 +473,13 @@ export const getBucketStats = async (req, res) => {
         totalFiles: 0,
         totalSize: 0,
         totalFolders: 0,
-        folders: folderSummary ? folderSummary.map(f => f.folder_name) : []
+        folders: folderSummary.map(f => f.folder_name)
       },
       'user-profile-photos': {
         totalPhotos: 0,
         totalSize: 0,
         totalRoles: 0,
-        roles: roleSummary ? roleSummary.map(r => r.role_name) : []
+        roles: roleSummary.map(r => r.role_name)
       },
       overall: {
         totalFiles: 0,
@@ -532,30 +527,64 @@ export const searchFiles = async (req, res) => {
       page = 1, 
       limit = 50 
     } = req.query;
+    const offset = (parseInt(page) - 1) * parseInt(limit);
 
-    // Use the search function
-    const { data: searchResults, error: searchError } = await supabase
-      .rpc('search_all_files', {
-        search_term: search || null,
-        bucket_filter: bucket,
-        mime_type_filter: mimeType,
-        page_num: parseInt(page),
-        page_size: parseInt(limit)
-      });
+    // Build dynamic search query
+    let searchQuery = `
+      WITH combined_files AS (
+        SELECT 
+          id, name, 'uploaded-documents' as bucket_name, folder as category,
+          CONCAT(folder_path, '/', name) as full_path, size, updated_at, created_at,
+          mime_type, public_url,
+          COUNT(*) OVER() as total_count
+        FROM uploaded_documents_files
+        
+        UNION ALL
+        
+        SELECT 
+          id, name, 'user-profile-photos' as bucket_name, role_folder as category,
+          CONCAT(folder_path, '/', name) as full_path, size, updated_at, created_at,
+          mime_type, public_url,
+          COUNT(*) OVER() as total_count
+        FROM user_profile_photos
+      )
+      SELECT * FROM combined_files
+      WHERE 1=1
+    `;
 
-    if (searchError) {
-      console.error('Error searching files:', searchError);
-      return res.status(500).json({ error: 'Failed to search files' });
+    let queryParams = [];
+    let paramCount = 0;
+
+    if (search) {
+      paramCount++;
+      searchQuery += ` AND name ILIKE $${paramCount}`;
+      queryParams.push(`%${search}%`);
     }
 
-    const results = searchResults || [];
-    const totalResults = results.length > 0 ? results[0].total_count : 0;
+    if (bucket) {
+      paramCount++;
+      searchQuery += ` AND bucket_name = $${paramCount}`;
+      queryParams.push(bucket);
+    }
+
+    if (mimeType) {
+      paramCount++;
+      searchQuery += ` AND mime_type ILIKE $${paramCount}`;
+      queryParams.push(`%${mimeType}%`);
+    }
+
+    searchQuery += ` ORDER BY updated_at DESC LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}`;
+    queryParams.push(parseInt(limit), offset);
+
+    const searchResult = await query(searchQuery, queryParams);
+    const results = searchResult.rows;
+    const totalResults = results.length > 0 ? parseInt(results[0].total_count) : 0;
 
     return res.status(200).json({
       success: true,
       searchTerm: search,
       filters: { bucket, mimeType },
-      totalResults: parseInt(totalResults),
+      totalResults: totalResults,
       results: results.map(file => ({
         id: file.id,
         name: file.name,
@@ -571,7 +600,7 @@ export const searchFiles = async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         hasMore: results.length === parseInt(limit),
-        totalPages: Math.ceil(parseInt(totalResults) / parseInt(limit))
+        totalPages: Math.ceil(totalResults / parseInt(limit))
       }
     });
 
@@ -581,7 +610,7 @@ export const searchFiles = async (req, res) => {
   }
 };
 
-// Delete file from any bucket (unchanged)
+// Delete file from any bucket (now uses AWS S3)
 export const deleteFile = async (req, res) => {
   try {
     const { bucket } = req.params;
@@ -597,14 +626,21 @@ export const deleteFile = async (req, res) => {
       return res.status(400).json({ error: 'Invalid bucket name' });
     }
 
-    const { data, error } = await supabase.storage
-      .from(bucket)
-      .remove([filePath]);
+    // Import deleteFromS3 function
+    const { deleteFromS3 } = await import('../aws/awsClient.js');
+    
+    // Delete from S3
+    await deleteFromS3(filePath);
 
-    if (error) {
-      console.error(`Error deleting file ${filePath} from ${bucket}:`, error);
-      return res.status(500).json({ error: `Failed to delete file: ${error.message}` });
+    // Delete from database
+    let deleteQuery = '';
+    if (bucket === 'uploaded-documents') {
+      deleteQuery = 'DELETE FROM uploaded_documents_files WHERE CONCAT(folder_path, \'/\', name) = $1';
+    } else if (bucket === 'user-profile-photos') {
+      deleteQuery = 'DELETE FROM user_profile_photos WHERE CONCAT(folder_path, \'/\', name) = $1';
     }
+
+    await query(deleteQuery, [filePath]);
 
     return res.status(200).json({
       success: true,

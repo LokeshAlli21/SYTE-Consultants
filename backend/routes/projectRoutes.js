@@ -30,7 +30,7 @@ import { uploadProjectFiles,
     getAllProjectsForQPR,
     getAllProjectsForAA,
 } from '../controllers/projectController.js';
-import {upload} from '../supabase/supabaseClient.js'
+import { upload } from '../aws/awsClient.js'; // Changed from supabase to awsClient
 
 const router = express.Router();
 

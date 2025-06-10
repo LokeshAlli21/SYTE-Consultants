@@ -14,7 +14,7 @@ import {
   uploadUserPhoto,
 } from '../controllers/adminController.js';
 import { protect } from '../middlewares/protect.js';
-import {upload} from '../supabase/supabaseClient.js'
+import { upload } from '../aws/awsClient.js'; // Changed from supabase to awsClient
 
 const router = express.Router();
 

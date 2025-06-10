@@ -1,4 +1,4 @@
-import { supabase } from '../supabase/supabaseClient.js';
+import { query } from '../aws/awsClient.js';
 import { generateToken } from '../utils/generateToken.js';
 import bcrypt from 'bcrypt';
 
@@ -33,16 +33,20 @@ export const loginUser = async (req, res, next) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    // Fetch user from Supabase
-    const { data: user, error } = await supabase
-      .from('users')
-      .select('id, name, email, phone, password, role, status, status_for_delete, photo_url, created_at, access_fields')
-      .eq('email', email)
-      .single();
+    // Fetch user from PostgreSQL
+    const userQuery = `
+      SELECT id, name, email, phone, password, role, status, status_for_delete, photo_url, created_at, access_fields
+      FROM users
+      WHERE email = $1
+    `;
 
-    if (error || !user) {
+    const result = await query(userQuery, [email]);
+
+    if (result.rows.length === 0) {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
+
+    const user = result.rows[0];
 
     // Check if user account is active
     if (user.status !== 'active') {
@@ -69,6 +73,17 @@ export const loginUser = async (req, res, next) => {
     const token = generateToken(user.id);
     console.log("Token generated for user:", user.id);
     
+    // Parse access_fields JSON if it exists
+    let accessFields = null;
+    if (user.access_fields) {
+      try {
+        accessFields = JSON.parse(user.access_fields);
+      } catch (jsonError) {
+        console.warn('Failed to parse access_fields JSON:', jsonError);
+        accessFields = user.access_fields; // Keep as string if parsing fails
+      }
+    }
+    
     // Return user data without password
     res.json({
       success: true,
@@ -82,7 +97,7 @@ export const loginUser = async (req, res, next) => {
         token: token,
         photo_url: user.photo_url || null, // Handle optional photo_url
         created_at: user.created_at || null,
-        access_fields: user.access_fields || null, // Handle optional access_fields
+        access_fields: accessFields, // Handle optional access_fields
       },
       message: 'User logged in successfully',
     });
@@ -97,6 +112,17 @@ export const getUser = async (req, res, next) => {
   try {
     const user = req.user; // ✅ We already set req.user in middleware
 
+    // Parse access_fields JSON if it exists and is a string
+    let accessFields = user.access_fields;
+    if (typeof user.access_fields === 'string' && user.access_fields) {
+      try {
+        accessFields = JSON.parse(user.access_fields);
+      } catch (jsonError) {
+        console.warn('Failed to parse access_fields JSON:', jsonError);
+        accessFields = user.access_fields; // Keep as string if parsing fails
+      }
+    }
+
     res.json({
       success: true,
       user: {
@@ -108,77 +134,10 @@ export const getUser = async (req, res, next) => {
         status: user.status,
         photo_url: user.photo_url || null, // Handle optional photo_url
         created_at: user.created_at || null,
-        access_fields: user.access_fields || null, // Handle optional access_fields
+        access_fields: accessFields, // Handle optional access_fields
       },
     });
   } catch (error) {
     next(error);
   }
 };
-
-
-// export const loginUser = async (req, res, next) => {
-//   try {
-//     const { email, password } = req.body;
-
-//     console.log('🚀 Logging in user:', email);
-
-//     if (!email || !password) {
-//       return res.status(400).json({ message: 'All fields are required' });
-//     }
-
-//     // Login user with Supabase
-//     const { data, error } = await supabase.auth.signInWithPassword({
-//       email,
-//       password,
-//     });
-
-//     if (error) {
-//       console.error('Supabase Login Error:', error);
-//       return res.status(401).json({ message: error.message });
-//     }
-
-//     console.log('✅ User Logged In:', data.user.id);
-
-//     res.status(200).json(data);
-//   } catch (error) {
-//     console.error('Login Error:', error);
-//     next(error);
-//   }
-// };
-
-// GET the Current Logged-In User
-// export const getCurrentUser = async (req, res, next) => {
-//   try {
-//     const { authorization } = req.headers;
-//     console.log('authorization: ',authorization);
-    
-
-//     if (!authorization || !authorization.startsWith('Bearer ')) {
-//       return res.status(401).json({ message: 'Unauthorized: No token provided' });
-//     }
-
-//     const token = authorization.split(' ')[1];
-
-//     // Validate the access token with Supabase
-//     const { data: { user }, error } = await supabase.auth.getUser(token);
-
-//     if (error || !user) {
-//       console.error('Supabase Get User Error:', error);
-//       return res.status(401).json({ message: 'Unauthorized: Invalid token' });
-//     }
-
-//     console.log('✅ Current User:', user.id);
-
-//     res.status(200).json({
-//       message: 'Current user fetched successfully',
-//       user: {
-//         id: user.id,
-//         email: user.email,
-//       },
-//     });
-//   } catch (error) {
-//     console.error('Get Current User Error:', error);
-//     next(error);
-//   }
-// };
