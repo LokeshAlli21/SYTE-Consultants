@@ -212,7 +212,7 @@ const router = createBrowserRouter([
         element: 
         <AuthLayout authentication>
           {" "}
-          <SyteDocuments />
+          {/* <SyteDocuments /> TODO: update this component as per BUCKET METHODS (RERA-DEV) in databaseService */}
          </AuthLayout>,
       },
     ],

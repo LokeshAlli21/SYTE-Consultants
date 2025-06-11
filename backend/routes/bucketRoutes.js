@@ -1,18 +1,19 @@
 // routes/bucketRoutes.js
 import express from 'express';
 import { 
-  // Uploaded Documents functions
+  // Single bucket (rera-dev) functions
   getAllFiles,
-  getFilesByFolder,
-
-  // User Profile Photos functions
-  getAllUserPhotos,
-  getUserPhotosByRole,
-  
-  // Combined Bucket functions
-  getAllBucketsStructure,
+  getFilesByCategory,
+  getAllDocuments,
+  getAllPhotos,
+  getBucketStructure,
   getBucketStats,
-  deleteFile
+  searchFiles,
+  deleteFile,
+  getFilesByFolder,
+  getCategorySummary,
+  getDocumentsBySubfolder,
+  getPhotosByRole
 } from '../controllers/bucketController.js';
 import { protect } from '../middlewares/protect.js';
 
@@ -21,19 +22,28 @@ const router = express.Router();
 // Apply protection middleware to all routes
 router.use(protect);
 
-// ===== UPLOADED DOCUMENTS ROUTES =====
-router.get('/documents', getAllFiles);                           // GET all project files organized by folders
-router.get('/documents/folder/:folderPath', getFilesByFolder);   // GET files from specific folder (supports nested paths with encoded slashes)
+// ===== MAIN BUCKET ROUTES (RERA-DEV) =====
+router.get('/files', getAllFiles);                               // GET all files organized by categories with pagination
+router.get('/files/category/:category', getFilesByCategory);     // GET files from specific category
+router.get('/files/folder/:folderPath', getFilesByFolder);       // GET files from specific folder path
 
-// ===== USER PROFILE PHOTOS ROUTES =====
-router.get('/photos', getAllUserPhotos);                         // GET all user photos organized by roles
-router.get('/photos/role/:role', getUserPhotosByRole);           // GET photos from specific role folder
+// ===== DOCUMENT ROUTES =====
+router.get('/documents', getAllDocuments);                       // GET all documents with pagination
+router.get('/documents/subfolder/:subfolder', getDocumentsBySubfolder); // GET documents from specific subfolder
 
-// ===== COMBINED BUCKET ROUTES =====
-router.get('/structure', getAllBucketsStructure);                // GET complete folder structure for both buckets
-router.get('/stats', getBucketStats);                            // GET statistics for both buckets
+// ===== PHOTO ROUTES =====
+router.get('/photos', getAllPhotos);                             // GET all photos with pagination
+router.get('/photos/role/:role', getPhotosByRole);               // GET photos from specific role/category
+
+// ===== BUCKET INFORMATION ROUTES =====
+router.get('/structure', getBucketStructure);                    // GET bucket structure and organization
+router.get('/stats', getBucketStats);                            // GET bucket statistics (database + S3)
+router.get('/categories', getCategorySummary);                   // GET category summary
+
+// ===== SEARCH AND FILTER ROUTES =====
+router.get('/search', searchFiles);                              // GET search results with filters
 
 // ===== FILE MANAGEMENT ROUTES =====
-router.delete('/file/:bucket/:filePath', deleteFile);            // DELETE file from any bucket (supports encoded paths)
+router.delete('/file/:fileId', deleteFile);                      // DELETE file by ID (also accepts filePath in body)
 
 export default router;

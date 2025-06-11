@@ -317,354 +317,494 @@ async getUserStats() {
   }
 }
 
- // Get all project files organized by folders
-  async getAllProjectFiles(page = 1, limit = 100) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/bucket/documents?page=${page}&limit=${limit}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
+// ===== MAIN BUCKET METHODS (RERA-DEV) =====
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch project files.");
-      }
+// Get all files organized by categories
+async getAllFiles(page = 1, limit = 100, category = null, folder = null) {
+  try {
+    let url = `${this.baseUrl}/api/bucket/files?page=${page}&limit=${limit}`;
+    if (category) url += `&category=${category}`;
+    if (folder) url += `&folder=${folder}`;
 
-      const data = await response.json();
-      // console.log("✅ Project files fetched successfully!");
-      return data;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
 
-    } catch (error) {
-      console.error("❌ Error fetching project files:", error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to fetch files.");
     }
+
+    const data = await response.json();
+    // console.log("✅ Files fetched successfully!");
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error fetching files:", error);
+    throw error;
   }
+}
 
-  // Get files from specific folder
-  async getProjectFilesByFolder(folderPath, page = 1, limit = 50) {
-    try {
-      const encodedFolder = encodeURIComponent(folderPath);
-      const response = await fetch(`${this.baseUrl}/api/bucket/documents/folder/${encodedFolder}?page=${page}&limit=${limit}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
+// Get files from specific category
+async getFilesByCategory(category, page = 1, limit = 50, folder = null) {
+  try {
+    let url = `${this.baseUrl}/api/bucket/files/category/${category}?page=${page}&limit=${limit}`;
+    if (folder) url += `&folder=${folder}`;
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to fetch files from ${folderPath}.`);
-      }
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
 
-      const data = await response.json();
-      // console.log(`✅ Files from ${folderPath} fetched successfully!`);
-      return data;
-
-    } catch (error) {
-      console.error(`❌ Error fetching files from ${folderPath}:`, error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Failed to fetch files from ${category} category.`);
     }
+
+    const data = await response.json();
+    // console.log(`✅ Files from ${category} category fetched successfully!`);
+    return data;
+
+  } catch (error) {
+    console.error(`❌ Error fetching files from ${category} category:`, error);
+    throw error;
   }
+}
 
-  // ===== USER PROFILE PHOTOS METHODS =====
+// Get files from specific folder
+async getFilesByFolder(folderPath, page = 1, limit = 50, category = null) {
+  try {
+    const encodedFolder = encodeURIComponent(folderPath);
+    let url = `${this.baseUrl}/api/bucket/files/folder/${encodedFolder}?page=${page}&limit=${limit}`;
+    if (category) url += `&category=${category}`;
 
-  // Get all user photos organized by roles
-  async getAllUserPhotos(page = 1, limit = 100, role = null) {
-    try {
-      let url = `${this.baseUrl}/api/bucket/photos?page=${page}&limit=${limit}`;
-      if (role) {
-        url += `&role=${role}`;
-      }
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
 
-      const response = await fetch(url, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch user photos.");
-      }
-
-      const data = await response.json();
-      // console.log("✅ User photos fetched successfully!");
-      return data;
-
-    } catch (error) {
-      console.error("❌ Error fetching user photos:", error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Failed to fetch files from ${folderPath}.`);
     }
+
+    const data = await response.json();
+    // console.log(`✅ Files from ${folderPath} fetched successfully!`);
+    return data;
+
+  } catch (error) {
+    console.error(`❌ Error fetching files from ${folderPath}:`, error);
+    throw error;
   }
+}
 
-  // Get photos from specific role folder
-  async getUserPhotosByRole(role, page = 1, limit = 50) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/bucket/photos/role/${role}?page=${page}&limit=${limit}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
+// ===== DOCUMENT METHODS =====
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to fetch photos for ${role} role.`);
-      }
+// Get all documents
+async getAllDocuments(page = 1, limit = 100, subfolder = null) {
+  try {
+    let url = `${this.baseUrl}/api/bucket/documents?page=${page}&limit=${limit}`;
+    if (subfolder) url += `&subfolder=${subfolder}`;
 
-      const data = await response.json();
-      // console.log(`✅ Photos for ${role} role fetched successfully!`);
-      return data;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
 
-    } catch (error) {
-      console.error(`❌ Error fetching photos for ${role} role:`, error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to fetch documents.");
     }
+
+    const data = await response.json();
+    // console.log("✅ Documents fetched successfully!");
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error fetching documents:", error);
+    throw error;
   }
+}
 
-  // ===== COMBINED BUCKET METHODS =====
+// Get documents from specific subfolder
+async getDocumentsBySubfolder(subfolder, page = 1, limit = 50) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/bucket/documents/subfolder/${subfolder}?page=${page}&limit=${limit}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
 
-  // Get complete folder structure for both buckets
-  async getAllBucketsStructure(detailed = false) {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/bucket/structure?detailed=${detailed}`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch bucket structure.");
-      }
-
-      const data = await response.json();
-      // console.log("✅ Bucket structure fetched successfully!");
-      return data;
-
-    } catch (error) {
-      console.error("❌ Error fetching bucket structure:", error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Failed to fetch documents from ${subfolder}.`);
     }
+
+    const data = await response.json();
+    // console.log(`✅ Documents from ${subfolder} fetched successfully!`);
+    return data;
+
+  } catch (error) {
+    console.error(`❌ Error fetching documents from ${subfolder}:`, error);
+    throw error;
   }
+}
 
-  // Get bucket statistics
-  async getBucketStats() {
-    try {
-      const response = await fetch(`${this.baseUrl}/api/bucket/stats`, {
-        method: "GET",
-        headers: this.getAuthHeaders(),
-      });
+// ===== PHOTO METHODS =====
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to fetch bucket statistics.");
-      }
+// Get all photos
+async getAllPhotos(page = 1, limit = 100, role = null) {
+  try {
+    let url = `${this.baseUrl}/api/bucket/photos?page=${page}&limit=${limit}`;
+    if (role) url += `&role=${role}`;
 
-      const data = await response.json();
-      // console.log("✅ Bucket statistics fetched successfully!");
-      return data;
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
 
-    } catch (error) {
-      console.error("❌ Error fetching bucket statistics:", error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to fetch photos.");
     }
+
+    const data = await response.json();
+    // console.log("✅ Photos fetched successfully!");
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error fetching photos:", error);
+    throw error;
   }
+}
 
-  // ===== FILE MANAGEMENT METHODS =====
+// Get photos from specific role
+async getPhotosByRole(role, page = 1, limit = 50) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/bucket/photos/role/${role}?page=${page}&limit=${limit}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
 
-  // Delete file from any bucket
-  async deleteFile(bucket, filePath) {
-    try {
-      const encodedFilePath = encodeURIComponent(filePath);
-      const response = await fetch(`${this.baseUrl}/api/bucket/file/${bucket}/${encodedFilePath}`, {
-        method: "DELETE",
-        headers: this.getAuthHeaders(),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to delete file.");
-      }
-
-      const data = await response.json();
-      console.log(`✅ File deleted successfully from ${bucket}!`);
-      return data;
-
-    } catch (error) {
-      console.error(`❌ Error deleting file from ${bucket}:`, error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || `Failed to fetch photos for ${role} role.`);
     }
+
+    const data = await response.json();
+    // console.log(`✅ Photos for ${role} role fetched successfully!`);
+    return data;
+
+  } catch (error) {
+    console.error(`❌ Error fetching photos for ${role} role:`, error);
+    throw error;
   }
+}
 
-  // ===== UTILITY METHODS =====
+// ===== BUCKET INFORMATION METHODS =====
 
-  // Format file size
-  formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+// Get bucket structure
+async getBucketStructure(detailed = false) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/bucket/structure?detailed=${detailed}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to fetch bucket structure.");
+    }
+
+    const data = await response.json();
+    // console.log("✅ Bucket structure fetched successfully!");
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error fetching bucket structure:", error);
+    throw error;
   }
+}
 
-  // Get file extension
-  getFileExtension(filename) {
-    return filename.split('.').pop().toLowerCase();
+// Get bucket statistics
+async getBucketStats() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/bucket/stats`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to fetch bucket statistics.");
+    }
+
+    const data = await response.json();
+    // console.log("✅ Bucket statistics fetched successfully!");
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error fetching bucket statistics:", error);
+    throw error;
   }
+}
 
-  // Check if file is image
-  isImageFile(filename) {
-    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
-    return imageExtensions.includes(this.getFileExtension(filename));
+// Get category summary
+async getCategorySummary() {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/bucket/categories`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to fetch category summary.");
+    }
+
+    const data = await response.json();
+    // console.log("✅ Category summary fetched successfully!");
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error fetching category summary:", error);
+    throw error;
   }
+}
 
-  // Check if file is document
-  isDocumentFile(filename) {
-    const docExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
-    return docExtensions.includes(this.getFileExtension(filename));
+// ===== SEARCH METHODS =====
+
+// Search files with filters
+async searchFiles(search = null, category = null, mimeType = null, page = 1, limit = 50) {
+  try {
+    let url = `${this.baseUrl}/api/bucket/search?page=${page}&limit=${limit}`;
+    if (search) url += `&search=${encodeURIComponent(search)}`;
+    if (category) url += `&category=${category}`;
+    if (mimeType) url += `&mimeType=${mimeType}`;
+
+    const response = await fetch(url, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to search files.");
+    }
+
+    const data = await response.json();
+    // console.log("✅ File search completed successfully!");
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error searching files:", error);
+    throw error;
   }
+}
 
-  // Get file type icon class (for UI)
-  getFileTypeIcon(filename) {
-    const extension = this.getFileExtension(filename);
-    const iconMap = {
-      // Images
-      'jpg': 'fas fa-image',
-      'jpeg': 'fas fa-image',
-      'png': 'fas fa-image',
-      'gif': 'fas fa-image',
-      'webp': 'fas fa-image',
-      'svg': 'fas fa-image',
-      
-      // Documents
-      'pdf': 'fas fa-file-pdf',
-      'doc': 'fas fa-file-word',
-      'docx': 'fas fa-file-word',
-      'xls': 'fas fa-file-excel',
-      'xlsx': 'fas fa-file-excel',
-      'ppt': 'fas fa-file-powerpoint',
-      'pptx': 'fas fa-file-powerpoint',
-      'txt': 'fas fa-file-alt',
-      
-      // Archives
-      'zip': 'fas fa-file-archive',
-      'rar': 'fas fa-file-archive',
-      '7z': 'fas fa-file-archive',
-      
-      // Default
-      'default': 'fas fa-file'
-    };
+// ===== FILE MANAGEMENT METHODS =====
+
+// Delete file by ID or file path
+async deleteFile(fileId, filePath = null) {
+  try {
+    const response = await fetch(`${this.baseUrl}/api/bucket/file/${fileId}`, {
+      method: "DELETE",
+      headers: {
+        ...this.getAuthHeaders(),
+        'Content-Type': 'application/json'
+      },
+      body: filePath ? JSON.stringify({ filePath }) : undefined
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || "Failed to delete file.");
+    }
+
+    const data = await response.json();
+    console.log("✅ File deleted successfully!");
+    return data;
+
+  } catch (error) {
+    console.error("❌ Error deleting file:", error);
+    throw error;
+  }
+}
+
+// ===== UTILITY METHODS =====
+
+// Format file size
+formatFileSize(bytes) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// Get file extension
+getFileExtension(filename) {
+  return filename.split('.').pop().toLowerCase();
+}
+
+// Check if file is image
+isImageFile(filename) {
+  const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'];
+  return imageExtensions.includes(this.getFileExtension(filename));
+}
+
+// Check if file is document
+isDocumentFile(filename) {
+  const docExtensions = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'];
+  return docExtensions.includes(this.getFileExtension(filename));
+}
+
+// Get file type icon class (for UI)
+getFileTypeIcon(filename) {
+  const extension = this.getFileExtension(filename);
+  const iconMap = {
+    // Images
+    'jpg': 'fas fa-image',
+    'jpeg': 'fas fa-image',
+    'png': 'fas fa-image',
+    'gif': 'fas fa-image',
+    'webp': 'fas fa-image',
+    'svg': 'fas fa-image',
     
-    return iconMap[extension] || iconMap['default'];
+    // Documents
+    'pdf': 'fas fa-file-pdf',
+    'doc': 'fas fa-file-word',
+    'docx': 'fas fa-file-word',
+    'xls': 'fas fa-file-excel',
+    'xlsx': 'fas fa-file-excel',
+    'ppt': 'fas fa-file-powerpoint',
+    'pptx': 'fas fa-file-powerpoint',
+    'txt': 'fas fa-file-alt',
+    
+    // Archives
+    'zip': 'fas fa-file-archive',
+    'rar': 'fas fa-file-archive',
+    '7z': 'fas fa-file-archive',
+    
+    // Default
+    'default': 'fas fa-file'
+  };
+  
+  return iconMap[extension] || iconMap['default'];
+}
+
+// ===== CONVENIENCE METHODS FOR SPECIFIC USE CASES =====
+
+// Get RERA certificate files specifically
+async getReraCertificateFiles() {
+  try {
+    return await this.getDocumentsBySubfolder('rera_certificate');
+  } catch (error) {
+    console.error("❌ Error fetching RERA certificate files:", error);
+    throw error;
   }
+}
 
-  // ===== SPECIFIC USE CASE METHODS =====
+// Get admin photos specifically
+async getAdminPhotos() {
+  try {
+    return await this.getPhotosByRole('admin');
+  } catch (error) {
+    console.error("❌ Error fetching admin photos:", error);
+    throw error;
+  }
+}
 
-  // Get RERA certificate files specifically
-  async getReraCertificateFiles() {
-    try {
-      return await this.getProjectFilesByFolder('project-files/rera_certificate');
-    } catch (error) {
-      console.error("❌ Error fetching RERA certificate files:", error);
-      throw error;
+// Get user photos specifically
+async getUserPhotos() {
+  try {
+    return await this.getPhotosByRole('user');
+  } catch (error) {
+    console.error("❌ Error fetching user photos:", error);
+    throw error;
+  }
+}
+
+// Get files by type using search functionality
+async getFilesByType(fileType = 'all', page = 1, limit = 100) {
+  try {
+    let mimeType = null;
+    
+    switch (fileType) {
+      case 'images':
+        mimeType = 'image/';
+        break;
+      case 'documents':
+        mimeType = 'application/pdf';
+        break;
+      case 'pdf':
+        mimeType = 'application/pdf';
+        break;
+      case 'office':
+        mimeType = 'application/vnd.';
+        break;
+      default:
+        // Get all files
+        return await this.getAllFiles(page, limit);
     }
+
+    return await this.searchFiles(null, null, mimeType, page, limit);
+
+  } catch (error) {
+    console.error(`❌ Error fetching ${fileType} files:`, error);
+    throw error;
   }
+}
 
-  // Get admin photos specifically
-  async getAdminPhotos() {
-    try {
-      return await this.getUserPhotosByRole('admin');
-    } catch (error) {
-      console.error("❌ Error fetching admin photos:", error);
-      throw error;
-    }
+// Get files from documents category (backward compatibility)
+async getAllProjectFiles(page = 1, limit = 100) {
+  try {
+    return await this.getFilesByCategory('documents', page, limit);
+  } catch (error) {
+    console.error("❌ Error fetching project files:", error);
+    throw error;
   }
+}
 
-  // Get user photos specifically
-  async getUserPhotos() {
-    try {
-      return await this.getUserPhotosByRole('user');
-    } catch (error) {
-      console.error("❌ Error fetching user photos:", error);
-      throw error;
-    }
+// Get files from specific folder in documents (backward compatibility)
+async getProjectFilesByFolder(folderPath, page = 1, limit = 50) {
+  try {
+    return await this.getFilesByFolder(folderPath, page, limit, 'documents');
+  } catch (error) {
+    console.error(`❌ Error fetching files from ${folderPath}:`, error);
+    throw error;
   }
+}
 
-  // Get files by type across all folders
-  async getFilesByType(fileType = 'all') {
-    try {
-      const allFiles = await this.getAllProjectFiles();
-      
-      if (fileType === 'all') {
-        return allFiles;
-      }
-
-      // Filter files by type
-      const filteredFiles = {
-        ...allFiles,
-        allFiles: allFiles.allFiles.filter(file => {
-          switch (fileType) {
-            case 'images':
-              return this.isImageFile(file.name);
-            case 'documents':
-              return this.isDocumentFile(file.name);
-            case 'pdf':
-              return this.getFileExtension(file.name) === 'pdf';
-            default:
-              return true;
-          }
-        })
-      };
-
-      // Update organized structure
-      filteredFiles.organizedByFolder = {};
-      filteredFiles.allFiles.forEach(file => {
-        if (!filteredFiles.organizedByFolder[file.folder]) {
-          filteredFiles.organizedByFolder[file.folder] = [];
-        }
-        filteredFiles.organizedByFolder[file.folder].push(file);
-      });
-
-      filteredFiles.totalFiles = filteredFiles.allFiles.length;
-      
-      return filteredFiles;
-
-    } catch (error) {
-      console.error(`❌ Error fetching ${fileType} files:`, error);
-      throw error;
-    }
+// Get user photos (backward compatibility)
+async getAllUserPhotos(page = 1, limit = 100, role = null) {
+  try {
+    return await this.getAllPhotos(page, limit, role);
+  } catch (error) {
+    console.error("❌ Error fetching user photos:", error);
+    throw error;
   }
+}
 
-  // Search files by name
-  async searchFiles(searchQuery, bucket = 'all') {
-    try {
-      let allFiles = [];
-
-      if (bucket === 'all' || bucket === 'uploaded-documents') {
-        const projectFiles = await this.getAllProjectFiles();
-        allFiles = [...allFiles, ...projectFiles.allFiles];
-      }
-
-      if (bucket === 'all' || bucket === 'user-profile-photos') {
-        const userPhotos = await this.getAllUserPhotos();
-        allFiles = [...allFiles, ...userPhotos.allPhotos];
-      }
-
-      // Filter files by search query
-      const filteredFiles = allFiles.filter(file =>
-        file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        file.folder.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (file.roleFolder && file.roleFolder.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-
-      return {
-        success: true,
-        searchQuery: searchQuery,
-        totalResults: filteredFiles.length,
-        files: filteredFiles
-      };
-
-    } catch (error) {
-      console.error("❌ Error searching files:", error);
-      throw error;
-    }
+// Get photos by role (backward compatibility)
+async getUserPhotosByRole(role, page = 1, limit = 50) {
+  try {
+    return await this.getPhotosByRole(role, page, limit);
+  } catch (error) {
+    console.error(`❌ Error fetching photos for ${role} role:`, error);
+    throw error;
   }
+}
 
+// Get bucket structure (backward compatibility)
+async getAllBucketsStructure(detailed = false) {
+  try {
+    return await this.getBucketStructure(detailed);
+  } catch (error) {
+    console.error("❌ Error fetching bucket structure:", error);
+    throw error;
+  }
+}
 
   // Promoter
   async uploadPromoterData({ commonData, formData, promoterType, userId }) {
