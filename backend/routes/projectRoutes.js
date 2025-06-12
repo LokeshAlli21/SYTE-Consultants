@@ -26,7 +26,7 @@ import { uploadProjectFiles,
     updateProjectUnits,
     addEngineer,
     addArchitect,
-    addCA,
+    // addCA,
     getAllProjectsForQPR,
     getAllProjectsForAA,
 } from '../controllers/projectController.js';
