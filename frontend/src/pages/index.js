@@ -15,6 +15,7 @@ import AssignmentTimeLine from "./AssignmentTimeLine";
 import AdminPanel from "./AdminPanel";
 import Accounts from "./Accounts";
 import SyteDocuments from "./SyteDocuments";
+import NotFoundPage from "./NotFoundPage";
 
 export {
     Dashboard,
@@ -34,4 +35,5 @@ export {
     AdminPanel,
     Accounts,
     SyteDocuments,
+    NotFoundPage,
 }

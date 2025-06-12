@@ -28,6 +28,7 @@ import {
   AdminPanel,
   Accounts,
   SyteDocuments,
+  NotFoundPage,
 } from './pages/index.js'
 
 const router = createBrowserRouter([
@@ -216,6 +217,7 @@ const router = createBrowserRouter([
          </AuthLayout>,
       },
     ],
+    errorElement: <NotFoundPage />
   },
 ]);
 
