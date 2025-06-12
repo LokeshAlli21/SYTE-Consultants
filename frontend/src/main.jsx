@@ -107,13 +107,13 @@ const router = createBrowserRouter([
           <AddProject forUpdate={true}  viewOnly={false}  />
          </AuthLayout>,
       },
-      {
-        path: "/assignments",
-        element: 
-        <AuthLayout authentication>
-          <Assignments />
-         </AuthLayout>,
-      },
+      // {
+      //   path: "/assignments",
+      //   element: 
+      //   <AuthLayout authentication>
+      //     <Assignments />
+      //    </AuthLayout>,
+      // },
       {
         path: "/assignments/add",
         element: 

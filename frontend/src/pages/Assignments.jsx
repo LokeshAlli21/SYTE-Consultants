@@ -9,7 +9,7 @@ import { IoClose , IoChevronDown} from "react-icons/io5";
 import databaseService from "../backend-services/database/database"; // Corrected import path
 import StatusDropdown from "../components/assignment-dashboard-components/StatusDropdown"; // Corrected import path
 import ReminderForm from "../components/assignment-dashboard-components/ReminderForm";
-import ShowAllPendingReminders from "../components/assignment-dashboard-components/showAllPendingReminders";
+import ShowAllPendingReminders from "../components/assignment-dashboard-components/ShowAllPendingReminders"; // Corrected import path
 import NoteCell from "../components/assignment-dashboard-components/NoteCell";     // Corrected import path
 import { HiEye, HiEyeOff } from 'react-icons/hi'
 import { useSelector } from "react-redux";

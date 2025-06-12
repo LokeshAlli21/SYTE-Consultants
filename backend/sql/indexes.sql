@@ -77,7 +77,6 @@ CREATE INDEX IF NOT EXISTS idx_assignments_application_number ON assignments(app
 CREATE INDEX IF NOT EXISTS idx_assignment_timeline_assignment_id ON assignment_timeline(assignment_id);
 CREATE INDEX IF NOT EXISTS idx_assignment_timeline_event_type ON assignment_timeline(event_type);
 CREATE INDEX IF NOT EXISTS idx_assignment_timeline_created_at ON assignment_timeline(created_at);
-CREATE INDEX IF NOT EXISTS idx_assignment_timeline_status ON assignment_timeline(assignment_status);
 
 -- Assignment reminders indexes
 CREATE INDEX IF NOT EXISTS idx_assignment_reminders_assignment_id ON assignment_reminders(assignment_id);
