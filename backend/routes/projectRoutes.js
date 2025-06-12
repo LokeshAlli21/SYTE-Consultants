@@ -62,7 +62,7 @@ router.post('/add-project-professionals', protect, adddProjectProfessionals);
 
 router.post('/professional-details/add/engineer', protect, addEngineer);
 router.post('/professional-details/add/architect', protect, addArchitect);
-router.post('/professional-details/add/ca', protect, addCA);
+// router.post('/professional-details/add/ca', protect, addCA);
 
 router.get('/get-project-professionals/:id', protect, getProjectProfessionalData);
 
