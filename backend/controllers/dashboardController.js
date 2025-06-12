@@ -1,4 +1,4 @@
-import { query, getClient } from '../aws/awsClient';
+import { query, getClient } from '../aws/awsClient.js';
 
 // ====================================================================
 // 1. MONTHLY TRENDS CONTROLLERS
