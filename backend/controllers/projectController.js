@@ -959,3 +959,47 @@ export const addArchitect = async (req, res) => {
     });
   }
 };
+
+export const addCA = async (req, res) => {
+  const ca = req.body;
+
+  const hasAnyValue = (obj) =>
+    Object.values(obj || {}).some(
+      (val) => val && typeof val === 'string' && val.trim() !== ''
+    );
+
+  try {
+    if (!hasAnyValue(ca)) {
+      return res.status(400).json({ message: 'No valid CA data provided' });
+    }
+
+    // Dynamically build the INSERT query based on the ca object
+    const columns = Object.keys(ca).filter(key => ca[key] !== undefined && ca[key] !== null);
+    const values = columns.map(key => ca[key]);
+    const placeholders = columns.map((_, index) => `$${index + 1}`).join(', ');
+    const columnNames = columns.join(', ');
+
+    const insertQuery = `
+      INSERT INTO cas (${columnNames}) 
+      VALUES (${placeholders}) 
+      RETURNING id
+    `;
+
+    const result = await query(insertQuery, values);
+
+    if (result.rows.length === 0) {
+      throw new Error('Failed to insert CA - no ID returned');
+    }
+
+    return res.status(200).json({ 
+      message: 'CA added successfully', 
+      id: result.rows[0].id 
+    });
+  } catch (err) {
+    console.error('❌ Unexpected error:', err);
+    return res.status(500).json({ 
+      message: 'Unexpected error occurred', 
+      error: err.message 
+    });
+  }
+};

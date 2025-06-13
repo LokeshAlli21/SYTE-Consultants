@@ -1,5 +1,5 @@
 -- First drop the existing view
-DROP VIEW IF EXISTS vw_assignments_with_latest_timeline;
+-- DROP VIEW IF EXISTS vw_assignments_with_latest_timeline;
 
 -- Then create the new view with the timeline as a JSON object
 CREATE VIEW vw_assignments_with_latest_timeline AS
@@ -199,7 +199,6 @@ SELECT
   p.created_at,
   p.updated_at,
   p.updated_by,
-  p.updated_at,
   p.update_action,
 
   -- Engineer Details
@@ -386,100 +385,6 @@ FROM
 LEFT JOIN 
   users u ON pu.updated_by = u.id;
 
--- Create a view for assignment timeline grouped by assignment status
-CREATE OR REPLACE VIEW assignment_timeline_view AS
-WITH timeline_with_status AS (
-    -- Get timeline events with their resolved assignment status
-    SELECT 
-        t.id,
-        t.assignment_id,
-        t.event_type,
-        t.created_at,
-        t.created_by,
-        t.note,
-        -- If assignment_status is null, use the most recent non-null status for this assignment
-        COALESCE(
-            t.assignment_status,
-            (
-                SELECT t2.assignment_status 
-                FROM assignment_timeline t2 
-                WHERE t2.assignment_id = t.assignment_id 
-                    AND t2.assignment_status IS NOT NULL 
-                    AND t2.created_at <= t.created_at
-                ORDER BY t2.created_at DESC 
-                LIMIT 1
-            )
-        ) AS resolved_assignment_status,
-        'timeline' AS source_type
-    FROM assignment_timeline t
-    
-    UNION ALL
-    
-    -- Get reminders as follow-up events
-    SELECT 
-        r.id,
-        r.assignment_id,
-        'follow_up' AS event_type,
-        r.created_at,
-        r.created_by,
-        jsonb_build_object(
-            'message', r.message,
-            'reminder_date', r.date_and_time,
-            'reminder_status', r.status
-        ) AS note,
-        r.assignment_status AS resolved_assignment_status,
-        'reminder' AS source_type
-    FROM assignment_reminders r
-),
-events_with_users AS (
-    SELECT 
-        tws.assignment_id,
-        tws.resolved_assignment_status,
-        tws.id,
-        tws.source_type,
-        json_build_object(
-            'id', tws.id,
-            'event_type', tws.event_type,
-            'created_at', tws.created_at,
-            'note', tws.note,
-            'source_type', tws.source_type,
-            'updated_user', json_build_object(
-                'id', u.id,
-                'name', u.name,
-                'email', u.email,
-                'phone', u.phone
-            )
-        ) AS event_data
-    FROM timeline_with_status tws
-    LEFT JOIN users u ON tws.created_by = u.id
-    WHERE tws.resolved_assignment_status IS NOT NULL
-),
-grouped_timeline AS (
-    SELECT 
-        assignment_id,
-        resolved_assignment_status,
-        json_agg(
-            event_data 
-            ORDER BY 
-                CASE WHEN source_type = 'timeline' THEN id END ASC,
-                CASE WHEN source_type = 'reminder' THEN id END ASC
-        ) AS events
-    FROM events_with_users
-    GROUP BY assignment_id, resolved_assignment_status
-)
-SELECT 
-    assignment_id,
-    json_agg(
-        json_build_object(
-            'assignment_status', resolved_assignment_status,
-            'events', events
-        ) ORDER BY resolved_assignment_status
-    ) AS timeline_by_status
-FROM grouped_timeline
-GROUP BY assignment_id;
-
--- Example query to use the view
--- SELECT * FROM assignment_timeline_view WHERE assignment_id = 1;
 
 
 CREATE OR REPLACE VIEW assignment_with_updated_user AS
