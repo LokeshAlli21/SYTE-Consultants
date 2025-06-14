@@ -166,6 +166,10 @@ export const listS3Files = async (prefix = '', maxKeys = 1000) => {
 };
 
 export const getSignedUrl = (key, expires = 3600) => {
+  let parsedKey = JSON.parse(key);
+  if (typeof parsedKey === 'object' && parsedKey.key) {
+    key = parsedKey.key;
+  }
   const params = {
     Bucket: bucketName,
     Key: key,

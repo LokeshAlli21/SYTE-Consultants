@@ -62,7 +62,7 @@ export const loginUser = async (req, res, next) => {
     // ✅ Generate signed URL if photo_url exists
     let signedPhotoUrl = null;
     if (user.photo_url) {
-      signedPhotoUrl = getSignedUrl(user.photo_url?.key);
+      signedPhotoUrl = getSignedUrl(user.photo_url);
     }
 
     res.json({
@@ -104,7 +104,7 @@ export const getUser = async (req, res, next) => {
     // ✅ Generate signed URL if photo_url exists
     let signedPhotoUrl = null;
     if (user.photo_url) {
-      signedPhotoUrl = getSignedUrl(user.photo_url?.key);
+      signedPhotoUrl = getSignedUrl(user.photo_url);
     }
 
     res.json({
