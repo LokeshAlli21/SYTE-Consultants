@@ -114,10 +114,15 @@ export const getAllUsers = async (req, res) => {
     queryParams.push(limit, offset);
     const usersResult = await query(usersQuery, queryParams);
 
+    const parsePgArray = (str) => {
+      if (!str) return [];
+      return str.replace(/^{|}$/g, '').split(',').map(s => s.trim());
+    };
+
     // Parse access_fields JSON for each user
     const users = usersResult.rows.map(user => ({
       ...user,
-      access_fields: user.access_fields ? JSON.parse(user.access_fields) : null
+      access_fields: parsePgArray(user.access_fields)
     }));
 
     res.status(200).json({
