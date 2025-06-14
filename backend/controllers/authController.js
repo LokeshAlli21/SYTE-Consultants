@@ -63,6 +63,8 @@ export const loginUser = async (req, res, next) => {
 
     // Verify password using bcrypt
     const validPassword = await bcrypt.compare(password, user.password);
+    console.log('Password provided:', password);
+    console.log('Hashed password from DB:', user.password);
     console.log('Password verification result:', validPassword);
 
     if (!validPassword) {
