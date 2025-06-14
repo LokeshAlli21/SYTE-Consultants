@@ -216,9 +216,10 @@ export const updateUser = async (req, res) => {
       updateValues.push(photo_url);
       paramIndex++;
     }
-    if (access_fields !== undefined) {
+    if (access_fields !== undefined && Array.isArray(access_fields)) {
+      const pgArray = `{${access_fields.join(',')}}`;
       updateFields.push(`access_fields = $${paramIndex}`);
-      updateValues.push(JSON.stringify(access_fields));
+      updateValues.push(pgArray);
       paramIndex++;
     }
 
@@ -236,7 +237,7 @@ export const updateUser = async (req, res) => {
       return res.status(400).json({ error: 'No fields to update' });
     }
 
-    // Add updated_at field
+    // Add updated_at timestamp
     updateFields.push(`updated_at = NOW()`);
 
     // Add user ID for WHERE clause
@@ -256,21 +257,17 @@ export const updateUser = async (req, res) => {
     }
 
     const user = result.rows[0];
-    // Parse access_fields JSON
-    user.access_fields = user.access_fields ? JSON.parse(user.access_fields) : null;
-
     res.status(200).json({
       message: 'User updated successfully',
       user: user
     });
   } catch (error) {
     console.error('Error updating user:', error);
-    
-    // Handle unique constraint violation (duplicate email)
+
     if (error.code === '23505' && error.constraint === 'users_email_key') {
       return res.status(409).json({ error: 'Email already exists' });
     }
-    
+
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
