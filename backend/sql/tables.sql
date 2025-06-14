@@ -14,6 +14,9 @@ CREATE TABLE users (
   created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata') 
 );
 
+ALTER TABLE users
+ADD COLUMN updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata');
+
 ----------------------------------------------------TABLE Promoters-------------------------------------------------------------------------
 
 -- Creating the Promoters table with promoter type and status
