@@ -27,6 +27,7 @@ export const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
 
     console.log('🚀 Logging in user:', email);
+    console.log('Request body:', req.body);
 
     // Validate required fields
     if (!email || !password) {
@@ -62,6 +63,7 @@ export const loginUser = async (req, res, next) => {
 
     // Verify password using bcrypt
     const validPassword = await bcrypt.compare(password, user.password);
+    console.log('Password verification result:', validPassword);
 
     if (!validPassword) {
       return res.status(400).json({ message: 'Invalid email or password' });
