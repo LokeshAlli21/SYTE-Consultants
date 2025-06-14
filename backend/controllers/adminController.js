@@ -113,7 +113,7 @@ export const getAllUsers = async (req, res) => {
     
     queryParams.push(limit, offset);
     const usersResult = await query(usersQuery, queryParams);
-
+    console.log('Fetched users:', usersResult, 'users');
     const parsePgArray = (str) => {
       if (!str) return [];
       return str.replace(/^{|}$/g, '').split(',').map(s => s.trim());
