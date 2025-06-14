@@ -345,6 +345,12 @@ export const getPromoterById = async (req, res) => {
           
           if (typeResult.rows.length > 0) {
             specificDetails = typeResult.rows[0];
+            // Convert *_url fields to signed URLs
+            for (const key in specificDetails) {
+              if (key.endsWith('_url') && specificDetails[key]) {
+                specificDetails[key] = await getSignedUrl(specificDetails[key]);
+              }
+            }
           }
         } catch (typeError) {
           console.error(`❌ Error fetching ${tableName} data:`, typeError);
@@ -357,7 +363,7 @@ export const getPromoterById = async (req, res) => {
       promoter_details: {
         office_address: promoterData.office_address,
         contact_person_name: promoterData.contact_person_name,
-        promoter_photo_uploaded_url: promoterData.promoter_photo_uploaded_url,
+        promoter_photo_uploaded_url: getSignedUrl(promoterData.promoter_photo_uploaded_url) || null,
         [promoterType]: {
           ...specificDetails,
         },

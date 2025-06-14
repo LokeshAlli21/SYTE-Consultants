@@ -1,4 +1,4 @@
-import { query, getClient, uploadToS3, deleteFromS3 } from '../aws/awsClient.js';
+import { query, getClient, uploadToS3, getSignedUrl } from '../aws/awsClient.js';
 import getCurrentISTTimestamp from './timestampt.js';
 
 export const uploadProjectData = async (req, res) => {
@@ -230,6 +230,31 @@ export const getAllUnitsForProject = async (req, res) => {
   }
 };
 
+// Utility function to sign all *_url fields
+export const signUrlFields = async (data) => {
+  const signRecursive = async (obj) => {
+    for (const key in obj) {
+      const value = obj[key];
+
+      if (value && typeof value === 'object' && !Array.isArray(value)) {
+        await signRecursive(value);
+      } else if (Array.isArray(value)) {
+        for (const item of value) {
+          if (typeof item === 'object' && item !== null) {
+            await signRecursive(item);
+          }
+        }
+      } else if (typeof value === 'string' && key.endsWith('_url')) {
+        obj[key] = await getSignedUrl(value);
+      }
+    }
+  };
+
+  await signRecursive(data);
+  return data;
+};
+
+
 export const getAllEngineers = async (req, res) => {
   try {
     const queryText = `
@@ -239,10 +264,11 @@ export const getAllEngineers = async (req, res) => {
              letter_head_uploaded_url, sign_stamp_uploaded_url
       FROM engineers
     `;
-    
-    const result = await query(queryText);
 
-    res.status(200).json({ engineers: result.rows });
+    const result = await query(queryText);
+    const signedEngineers = await signUrlFields(result.rows);
+
+    res.status(200).json({ engineers: signedEngineers });
   } catch (err) {
     console.error('❌ Unexpected error in getAllEngineers:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -258,10 +284,11 @@ export const getAllArchitects = async (req, res) => {
              letter_head_uploaded_url, sign_stamp_uploaded_url
       FROM architects
     `;
-    
-    const result = await query(queryText);
 
-    res.status(200).json({ architects: result.rows });
+    const result = await query(queryText);
+    const signedArchitects = await signUrlFields(result.rows);
+
+    res.status(200).json({ architects: signedArchitects });
   } catch (err) {
     console.error('❌ Unexpected error in getAllArchitects:', err);
     res.status(500).json({ error: 'Internal server error' });
@@ -277,15 +304,17 @@ export const getAllCAs = async (req, res) => {
              letter_head_uploaded_url, sign_stamp_uploaded_url
       FROM cas
     `;
-    
-    const result = await query(queryText);
 
-    res.status(200).json({ cas: result.rows });
+    const result = await query(queryText);
+    const signedCAs = await signUrlFields(result.rows);
+
+    res.status(200).json({ cas: signedCAs });
   } catch (err) {
     console.error('❌ Unexpected error in getAllCAs:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
 
 export const getProjectProfessionalData = async (req, res) => {
   try {
@@ -298,7 +327,13 @@ export const getProjectProfessionalData = async (req, res) => {
     
     const result = await query(queryText, [project_id]);
 
-    res.status(200).json({ professionalData: result.rows[0] || null });
+    const data = result.rows[0] || null;
+
+    if (data) {
+      await signUrlFields(data);
+    }
+
+    res.status(200).json({ professionalData: data });
   } catch (err) {
     console.error("❌ Unexpected error in getProjectProfessionalData:", err);
     res.status(500).json({ error: "Internal server error" });
@@ -354,7 +389,10 @@ export const getDocuments = async (req, res) => {
       });
     }
 
-    res.status(200).json({ documents: result.rows[0] });
+    const data = result.rows[0];
+    await signUrlFields(data);
+
+    res.status(200).json({ documents: data });
   } catch (error) {
     console.error("❌ Unexpected error fetching documents:", error);
     res.status(500).json({
@@ -379,7 +417,10 @@ export const getProject = async (req, res) => {
       return res.status(404).json({ error: "Project not found." });
     }
 
-    res.status(200).json({ project: result.rows[0] });
+    const data = result.rows[0];
+    await signUrlFields(data);
+
+    res.status(200).json({ project: data });
   } catch (error) {
     console.error("❌ Unexpected error fetching project:", error);
     res.status(500).json({ error: "Internal server error" });

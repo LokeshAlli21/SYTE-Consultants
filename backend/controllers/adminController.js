@@ -155,6 +155,7 @@ export const getUserById = async (req, res) => {
     const user = result.rows[0];
     // Parse access_fields JSON
     user.access_fields = user.access_fields ? JSON.parse(user.access_fields) : null;
+    user.photo_url = getSignedUrl(user.photo_url) || null; // Ensure photo_url is not undefined
 
     res.status(200).json(user);
   } catch (error) {
