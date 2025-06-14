@@ -5,7 +5,7 @@ import bcrypt from 'bcrypt';
 export const createUser = async (req, res) => {
   const { name, email, phone, password, role = 'user', status = 'active', photo_url, access_fields } = req.body;
   console.log('Creating user with data:', req.body);
-  
+
   try {
     // Validate required fields
     if (!name || !email || !password) {
@@ -15,6 +15,11 @@ export const createUser = async (req, res) => {
     // Hash the password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Convert JS array to PostgreSQL array format string
+    const pgArray = access_fields && Array.isArray(access_fields)
+      ? `{${access_fields.join(',')}}`
+      : '{dashboard}'; // default if not provided
 
     const insertQuery = `
       INSERT INTO users (name, email, phone, password, role, status, photo_url, status_for_delete, access_fields, created_at)
@@ -31,7 +36,7 @@ export const createUser = async (req, res) => {
       status,
       photo_url || null,
       'active',
-      access_fields ? JSON.stringify(access_fields) : null
+      pgArray
     ];
 
     const result = await query(insertQuery, values);
