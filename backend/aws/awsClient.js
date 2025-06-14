@@ -92,7 +92,6 @@ export const uploadToS3 = async (file, key, folder = null) => {
     Key: fullKey,
     Body: file.buffer,
     ContentType: file.mimetype,
-    ACL: 'public-read',
     Metadata: {
       originalName: file.originalname,
       uploadDate: new Date().toISOString(),
