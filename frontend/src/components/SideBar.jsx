@@ -185,7 +185,7 @@ function SideBar() {
   return (
     <>
       {/* Toggle Button */}
-      {location.pathname !== '/login' && (
+      {(
         <div className='fixed top-4 left-4 z-50'>
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)} 
@@ -197,7 +197,7 @@ function SideBar() {
       )}
 
       {/* Sidebar */}
-      {location.pathname !== '/login' && (
+      { (
         <div className={`
           fixed lg:static top-0 left-0 z-40 w-72 min-h-screen
           min-w-[250px]
@@ -293,7 +293,11 @@ function SideBar() {
                 )}
               </div>
             ))}
-
+          {/* Logout Button Container */}
+          <div className='px-4 py-3 pr-0 border-t bottom-0 border-gray-100'>
+            <LogoutButton />
+          </div>
+          
             {/* Admin Section */}
             {isAdmin && (
               <>
@@ -379,11 +383,6 @@ function SideBar() {
               </div>
             )}
           </nav>
-
-          {/* Logout Button Container */}
-          <div className='px-4 py-3 pr-0 border-t bottom-0 border-gray-100'>
-            <LogoutButton />
-          </div>
 
           {/* Footer */}
            <div className='px-6 py-5 bg-gradient-to-r from-[#5CAAAB]/5 to-[#5CAAAB]/10 border-t border-gray-100'>

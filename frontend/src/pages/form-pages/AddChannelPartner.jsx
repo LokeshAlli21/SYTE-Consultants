@@ -114,7 +114,7 @@ function AddChannelPartner({ viewOnly = false }) {
       
       setOriginalData(response);
       setFormData(response);
-      toast.success(TOAST_MESSAGES.LOAD_SUCCESS);
+      // toast.success(TOAST_MESSAGES.LOAD_SUCCESS);
     } catch (error) {
       console.error("Error fetching channel partner:", error);
       toast.error(`${TOAST_MESSAGES.LOAD_ERROR} ${error.message}`);
