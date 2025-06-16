@@ -185,7 +185,7 @@ function SideBar() {
   return (
     <>
       {/* Toggle Button */}
-      {(
+      {location.pathname !== '/login' && (
         <div className='fixed top-4 left-4 z-50'>
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)} 
@@ -197,7 +197,7 @@ function SideBar() {
       )}
 
       {/* Sidebar */}
-      { (
+      {location.pathname !== '/login' && (
         <div className={`
           fixed lg:static top-0 left-0 z-40 w-72 min-h-screen
           min-w-[250px]
