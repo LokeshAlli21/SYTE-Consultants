@@ -166,17 +166,44 @@ export const listS3Files = async (prefix = '', maxKeys = 1000) => {
 };
 
 export const getSignedUrl = (key, expires = 3600) => {
-  let parsedKey = JSON.parse(key);
-  if (typeof parsedKey === 'object' && parsedKey.key) {
-    key = parsedKey.key;
+  // Handle null, undefined, or empty values
+  if (!key || key.trim() === '') {
+    return null;
   }
+
+  let actualKey = key;
+  
+  try {
+    // Try to parse as JSON first
+    const parsedKey = JSON.parse(key);
+    if (typeof parsedKey === 'object' && parsedKey.key) {
+      actualKey = parsedKey.key;
+    } else if (typeof parsedKey === 'string') {
+      actualKey = parsedKey;
+    }
+  } catch (error) {
+    // If JSON parsing fails, treat the key as a plain string
+    // This handles cases where the key is already a plain S3 key
+    actualKey = key;
+  }
+
+  // Validate that we have a non-empty key after processing
+  if (!actualKey || actualKey.trim() === '') {
+    return null;
+  }
+
   const params = {
     Bucket: bucketName,
-    Key: key,
-    Expires: expires // URL expires in 1 hour by default
+    Key: actualKey,
+    Expires: expires
   };
 
-  return s3.getSignedUrl('getObject', params);
+  try {
+    return s3.getSignedUrl('getObject', params);
+  } catch (error) {
+    console.error('Error generating signed URL:', error);
+    return null;
+  }
 };
 
 // Get file metadata from S3

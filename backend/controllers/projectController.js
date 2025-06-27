@@ -245,7 +245,12 @@ export const signUrlFields = async (data) => {
           }
         }
       } else if (typeof value === 'string' && key.endsWith('_url')) {
-        obj[key] = await getSignedUrl(value);
+        const signedUrl = getSignedUrl(value);
+        // Only update if we got a valid signed URL
+        if (signedUrl !== null) {
+          obj[key] = signedUrl;
+        }
+        // If signedUrl is null, leave the original value unchanged
       }
     }
   };
