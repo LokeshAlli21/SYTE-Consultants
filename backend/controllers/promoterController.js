@@ -1,5 +1,5 @@
 // controllers/promoterController.js
-import { query, getClient, uploadToS3, deleteFromS3 } from '../aws/awsClient.js'; // Changed from supabase to awsClient
+import { query, getClient, uploadToS3, deleteFromS3, getSignedUrl } from '../aws/awsClient.js'; // Changed from supabase to awsClient
 import getCurrentISTTimestamp from './timestampt.js';
 
 export const uploadPromoterData = async (req, res) => {
