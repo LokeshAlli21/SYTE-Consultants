@@ -413,12 +413,16 @@ export const getProject = async (req, res) => {
     
     const result = await query(queryText, [project_id]);
 
+    console.log("🔍 Fetching project with ID:", project_id);
+
     if (result.rows.length === 0) {
       return res.status(404).json({ error: "Project not found." });
     }
 
     const data = result.rows[0];
     await signUrlFields(data);
+
+    console.log("📁 Project data fetched successfully:", data);
 
     res.status(200).json({ project: data });
   } catch (error) {
