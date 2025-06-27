@@ -552,7 +552,7 @@ switch (promoterType) {
           setFilePreviews(uploadedUrls);
         }
 
-        toast.success("✅ Promoter details loaded successfully!");
+        // toast.success("✅ Promoter details loaded successfully!");
       } catch (error) {
         console.error("❌ Error fetching promoter data:", error);
         toast.error(`❌ Failed to load promoter data: ${error.message}`);

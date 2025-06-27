@@ -274,7 +274,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
         const project = await databaseService.getProjectById(id);
         setPrevProjectDetails(project)
         setProjectDetails(project);
-        // console.log(project);
+        console.log("Project Details:", project);
         
       } catch (error) {
         console.error("❌ Error loading project details:", error);
