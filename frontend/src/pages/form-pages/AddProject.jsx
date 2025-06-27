@@ -274,7 +274,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
         const project = await databaseService.getProjectById(id);
         setPrevProjectDetails(project)
         setProjectDetails(project);
-        console.log("Project Details:", project);
+        // console.log("Project Details:", project);
         
       } catch (error) {
         console.error("❌ Error loading project details:", error);
@@ -526,6 +526,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
         } else {
           // CREATE MODE - New project
           const response = await databaseService.uploadProjectDetails(projectDetails, userData?.id);
+          console.log("Response from uploadProjectDetails:", response);
           const newProjectId = response?.data?.[0]?.id;
           
           if (newProjectId) {
