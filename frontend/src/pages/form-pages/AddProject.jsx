@@ -527,7 +527,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
           // CREATE MODE - New project
           const response = await databaseService.uploadProjectDetails(projectDetails, userData?.id);
           console.log("Response from uploadProjectDetails:", response);
-          const newProjectId = response?.message?.data?.[0]?.id;
+          const newProjectId = response?.data?.id;
           
           if (newProjectId) {
             setProjectId(newProjectId);
