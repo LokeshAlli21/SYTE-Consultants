@@ -394,14 +394,25 @@ function ProjectDetailsForm({
     }
 
     const confirmed = window.confirm('Are you sure you want to submit?');
-    if (confirmed) {
-      try {
-        await handleSubmitProjectDetails();
-        toast.success("Project details saved successfully!");
-      } catch (error) {
-        console.error("Submit error:", error);
+    if (!confirmed) {
+      return; // User cancelled
+    }
+
+    try {
+      // handleSubmitProjectDetails returns true/false based on success
+      const success = await handleSubmitProjectDetails();
+      
+      if (success) {
+        // Don't show toast here - it's already handled in the parent component
+        // The parent component will also handle tab navigation
+        console.log("Project details submitted successfully");
+      } else {
+        // This handles validation failures or other issues
         toast.error("Failed to save project details");
       }
+    } catch (error) {
+      console.error("Submit error:", error);
+      toast.error("Failed to save project details");
     }
   }, [validateForm, handleSubmitProjectDetails]);
 

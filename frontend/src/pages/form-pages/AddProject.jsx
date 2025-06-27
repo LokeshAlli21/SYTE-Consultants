@@ -472,9 +472,17 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
       }
 
       const response = await submitFn();
-      toast.success(successMsg);
       
-      if (resetFn) resetFn();
+      // Only show toast if response indicates success or if it's not a "no changes" scenario
+      if (response && (!response.message || response.message !== "No changes to update")) {
+        toast.success(successMsg);
+      }
+      
+      // Execute reset/callback function if provided
+      if (resetFn && typeof resetFn === 'function') {
+        resetFn();
+      }
+      
       return true;
     } catch (error) {
       console.error(`❌ Error: ${error}`);
@@ -490,8 +498,8 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
       projectDetails,
       async () => {
         if (forUpdate && id) {
+          // UPDATE MODE - Project already exists
           let update_action = null;
-
           const changedFields = [];
 
           for (const key in projectDetails) {
@@ -499,27 +507,39 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
               changedFields.push(key);
             }
           }  
+
           if (changedFields.length === 0) {
             toast.info("ℹ️ No changes detected.");
-          } else{
+            // Still move to next tab even if no changes
+            setActiveTabIndex(1);
+            return { success: true, message: "No changes to update" };
+          } else {
             update_action = changedFields.join(', ');
-            const response = await databaseService.updateProjectDetails(id, {...projectDetails,userId: userData?.id,update_action});
+            const response = await databaseService.updateProjectDetails(
+              id, 
+              { ...projectDetails, userId: userData?.id, update_action }
+            );
+            // Move to next tab after successful update
+            setActiveTabIndex(1);
             return response;
           }
         } else {
-          const response = await databaseService.uploadProjectDetails(projectDetails,userData?.id);
+          // CREATE MODE - New project
+          const response = await databaseService.uploadProjectDetails(projectDetails, userData?.id);
           const newProjectId = response?.data?.[0]?.id;
+          
           if (newProjectId) {
             setProjectId(newProjectId);
+            // Update URL to include the new project ID for future navigation
+            window.history.replaceState({}, '', `/projects/${newProjectId}/edit`);
           }
+          
+          // Move to next tab after successful creation
+          setActiveTabIndex(1);
           return response;
         }
       },
-      forUpdate ? "✅ Project details updated successfully!" : "✅ Project details submitted successfully!",
-      () => {
-        // setProjectDetails(prev => resetObjectData(prev));
-        setActiveTabIndex(1);
-      }
+      forUpdate ? "✅ Project details updated successfully!" : "✅ Project details submitted successfully!"
     );
   };
 
