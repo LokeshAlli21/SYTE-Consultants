@@ -345,7 +345,7 @@ export const getPromoterById = async (req, res) => {
           
           if (typeResult.rows.length > 0) {
             specificDetails = typeResult.rows[0];
-            // Convert *_url fields to signed URLs
+            // Convert *_url fields to signed URLs - with null check
             for (const key in specificDetails) {
               if (key.endsWith('_url') && specificDetails[key]) {
                 specificDetails[key] = getSignedUrl(specificDetails[key]);
@@ -363,7 +363,10 @@ export const getPromoterById = async (req, res) => {
       promoter_details: {
         office_address: promoterData.office_address,
         contact_person_name: promoterData.contact_person_name,
-        promoter_photo_uploaded_url: getSignedUrl(promoterData.promoter_photo_uploaded_url) || null,
+        // Fix: Check if the URL exists and is not null/undefined before calling getSignedUrl
+        promoter_photo_uploaded_url: promoterData.promoter_photo_uploaded_url 
+          ? getSignedUrl(promoterData.promoter_photo_uploaded_url) 
+          : null,
         [promoterType]: {
           ...specificDetails,
         },
