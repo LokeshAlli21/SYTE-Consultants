@@ -348,7 +348,7 @@ export const getPromoterById = async (req, res) => {
             // Convert *_url fields to signed URLs
             for (const key in specificDetails) {
               if (key.endsWith('_url') && specificDetails[key]) {
-                specificDetails[key] = await getSignedUrl(specificDetails[key]);
+                specificDetails[key] = getSignedUrl(specificDetails[key]);
               }
             }
           }
