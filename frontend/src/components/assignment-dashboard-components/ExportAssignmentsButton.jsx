@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Download, FileText, FileSpreadsheet, FileImage, File } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, File } from 'lucide-react';
 
 function ExportAssignmentsButton({ data = [] }) {
     const [isOpen, setIsOpen] = useState(false);
+    const [isGenerating, setIsGenerating] = useState(false);
     const dropdownRef = useRef(null);
 
     // Close dropdown when clicking outside
@@ -57,356 +58,272 @@ function ExportAssignmentsButton({ data = [] }) {
         });
     };
 
-    const exportToPDF = () => {
-        const formattedData = formatDataForDisplay(data);
-        
-        // Create HTML content for PDF
-        let htmlContent = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <title>Assignments Report</title>
-                <style>
-                    body {
-                        font-family: 'Arial', sans-serif;
-                        margin: 0;
-                        padding: 20px;
-                        background: white;
-                        color: #333;
-                        line-height: 1.6;
-                    }
-                    .header {
-                        text-align: center;
-                        margin-bottom: 30px;
-                        border-bottom: 3px solid #4CAF50;
-                        padding-bottom: 20px;
-                    }
-                    .header h1 {
-                        color: #2E7D32;
-                        margin: 0;
-                        font-size: 28px;
-                    }
-                    .header p {
-                        color: #666;
-                        margin: 10px 0 0 0;
-                        font-size: 14px;
-                    }
-                    .assignment {
-                        background: #f9f9f9;
-                        border: 1px solid #ddd;
-                        border-radius: 8px;
-                        margin-bottom: 25px;
-                        padding: 0;
-                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-                        page-break-inside: avoid;
-                    }
-                    .assignment-header {
-                        background: #4CAF50;
-                        color: white;
-                        padding: 15px 20px;
-                        border-radius: 8px 8px 0 0;
-                        margin: 0;
-                    }
-                    .assignment-header h2 {
-                        margin: 0;
-                        font-size: 20px;
-                    }
-                    .assignment-body {
-                        padding: 20px;
-                    }
-                    .field-row {
-                        display: flex;
-                        margin-bottom: 12px;
-                        align-items: flex-start;
-                    }
-                    .field-label {
-                        font-weight: bold;
-                        color: #333;
-                        width: 200px;
-                        flex-shrink: 0;
-                    }
-                    .field-value {
-                        color: #555;
-                        flex: 1;
-                        word-wrap: break-word;
-                    }
-                    .fees-section {
-                        background: #e8f5e8;
-                        padding: 15px;
-                        border-radius: 5px;
-                        margin: 15px 0;
-                    }
-                    .fees-title {
-                        font-weight: bold;
-                        color: #2E7D32;
-                        margin-bottom: 10px;
-                        font-size: 16px;
-                    }
-                    .notes-section {
-                        background: #fff3cd;
-                        padding: 15px;
-                        border-radius: 5px;
-                        margin: 15px 0;
-                        border-left: 4px solid #ffc107;
-                    }
-                    .reminders-section {
-                        background: #d4edda;
-                        padding: 15px;
-                        border-radius: 5px;
-                        margin: 15px 0;
-                        border-left: 4px solid #28a745;
-                    }
-                    .footer {
-                        text-align: center;
-                        margin-top: 30px;
-                        padding-top: 20px;
-                        border-top: 1px solid #ddd;
-                        color: #666;
-                        font-size: 12px;
-                    }
-                    @media print {
-                        body { margin: 0; }
-                        .assignment { page-break-inside: avoid; }
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>📋 Assignments Report</h1>
-                    <p>Generated on: ${new Date().toLocaleDateString()} at ${new Date().toLocaleTimeString()}</p>
-                    <p>Total Assignments: ${formattedData.length}</p>
-                </div>
-        `;
-
-        formattedData.forEach((assignment) => {
-            htmlContent += `
-                <div class="assignment">
-                    <div class="assignment-header">
-                        <h2>Assignment #${assignment['Assignment No.']} - ${assignment['Project Name']}</h2>
-                    </div>
-                    <div class="assignment-body">
-                        <div class="field-row">
-                            <div class="field-label">Assignment Type:</div>
-                            <div class="field-value">${assignment['Assignment Type']}</div>
-                        </div>
-                        <div class="field-row">
-                            <div class="field-label">Application Number:</div>
-                            <div class="field-value">${assignment['Application Number']}</div>
-                        </div>
-                        <div class="field-row">
-                            <div class="field-label">Payment Date:</div>
-                            <div class="field-value">${assignment['Payment Date']}</div>
-                        </div>
-                        <div class="field-row">
-                            <div class="field-label">Login ID:</div>
-                            <div class="field-value">${assignment['Login ID']}</div>
-                        </div>
-                        <div class="field-row">
-                            <div class="field-label">Password:</div>
-                            <div class="field-value">${assignment['Password']}</div>
-                        </div>
-                        
-                        <div class="fees-section">
-                            <div class="fees-title">💰 Fee Structure</div>
-                            <div class="field-row">
-                                <div class="field-label">Consultation Charges:</div>
-                                <div class="field-value">${assignment['Consultation Charges']}</div>
-                            </div>
-                            <div class="field-row">
-                                <div class="field-label">Government Fees:</div>
-                                <div class="field-value">${assignment['Government Fees']}</div>
-                            </div>
-                            <div class="field-row">
-                                <div class="field-label">CA Fees:</div>
-                                <div class="field-value">${assignment['CA Fees']}</div>
-                            </div>
-                            <div class="field-row">
-                                <div class="field-label">Engineer Fees:</div>
-                                <div class="field-value">${assignment['Engineer Fees']}</div>
-                            </div>
-                            <div class="field-row">
-                                <div class="field-label">Architect Fees:</div>
-                                <div class="field-value">${assignment['Architect Fees']}</div>
-                            </div>
-                            <div class="field-row">
-                                <div class="field-label">Liasioning Fees:</div>
-                                <div class="field-value">${assignment['Liasioning Fees']}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="field-row">
-                            <div class="field-label">Remarks:</div>
-                            <div class="field-value">${assignment['Remarks']}</div>
-                        </div>
-                        <div class="field-row">
-                            <div class="field-label">Created Date:</div>
-                            <div class="field-value">${assignment['Created Date']}</div>
-                        </div>
-                        <div class="field-row">
-                            <div class="field-label">Updated Date:</div>
-                            <div class="field-value">${assignment['Updated Date']}</div>
-                        </div>
-            `;
-
-            // Add notes section if exists
-            const noteFields = Object.keys(assignment).filter(key => key.startsWith('Note -'));
-            if (noteFields.length > 0) {
-                htmlContent += `<div class="notes-section"><div class="fees-title">📝 Notes</div>`;
-                noteFields.forEach(noteField => {
-                    htmlContent += `
-                        <div class="field-row">
-                            <div class="field-label">${noteField.replace('Note - ', '')}:</div>
-                            <div class="field-value">${assignment[noteField]}</div>
-                        </div>
-                    `;
-                });
-                htmlContent += `</div>`;
-            }
-
-            // Add reminders section if exists
-            const reminderFields = Object.keys(assignment).filter(key => key.startsWith('Reminder '));
-            if (reminderFields.length > 0) {
-                htmlContent += `<div class="reminders-section"><div class="fees-title">⏰ Reminders</div>`;
-                reminderFields.forEach(reminderField => {
-                    htmlContent += `
-                        <div class="field-row">
-                            <div class="field-label">${reminderField}:</div>
-                            <div class="field-value">${assignment[reminderField]}</div>
-                        </div>
-                    `;
-                });
-                htmlContent += `</div>`;
-            }
-
-            htmlContent += `</div></div>`;
-        });
-
-        htmlContent += `
-                <div class="footer">
-                    <p>This report contains ${formattedData.length} assignment(s) | Generated automatically</p>
-                </div>
-            </body>
-            </html>
-        `;
-
-        // Create and download the HTML file that can be saved as PDF
-        const blob = new Blob([htmlContent], { type: 'text/html' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Assignments_Report_${new Date().toISOString().split('T')[0]}.html`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        // Show instruction to user
-        setTimeout(() => {
-            alert('HTML file downloaded! To convert to PDF:\n1. Open the downloaded HTML file in your browser\n2. Press Ctrl+P (or Cmd+P on Mac)\n3. Select "Save as PDF" as the destination\n4. Click Save');
-        }, 500);
-        
-        setIsOpen(false);
-    };
-
-    const exportToExcel = () => {
-        const formattedData = formatDataForDisplay(data);
-        if (formattedData.length === 0) return;
-
-        // Get all unique headers from all assignments
-        const allHeaders = new Set();
-        formattedData.forEach(assignment => {
-            Object.keys(assignment).forEach(key => allHeaders.add(key));
-        });
-        const headers = Array.from(allHeaders);
-
-        // Create CSV content
-        const csvContent = [
-            headers.join(','),
-            ...formattedData.map(assignment => 
-                headers.map(header => {
-                    let value = assignment[header] || '';
-                    // Escape commas and quotes
-                    if (typeof value === 'string' && (value.includes(',') || value.includes('"') || value.includes('\n'))) {
-                        value = `"${value.replace(/"/g, '""')}"`;
-                    }
-                    return value;
-                }).join(',')
-            )
-        ].join('\n');
-
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Assignments_Export_${new Date().toISOString().split('T')[0]}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        setIsOpen(false);
-    };
-
-    const exportToWord = () => {
-        const formattedData = formatDataForDisplay(data);
-        
-        let docContent = `
-            <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
-            <head>
-                <meta charset="utf-8">
-                <title>Assignments Report</title>
-                <style>
-                    body { font-family: Arial, sans-serif; margin: 40px; }
-                    .header { text-align: center; margin-bottom: 30px; }
-                    .assignment { margin-bottom: 30px; border: 1px solid #ccc; padding: 20px; }
-                    .assignment-title { background-color: #4CAF50; color: white; padding: 10px; margin: -20px -20px 20px -20px; }
-                    .field { margin-bottom: 10px; }
-                    .label { font-weight: bold; display: inline-block; width: 200px; }
-                    .fees-section { background-color: #f0f8f0; padding: 15px; margin: 15px 0; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <h1>Assignments Report</h1>
-                    <p>Generated on: ${new Date().toLocaleDateString()}</p>
-                    <p>Total Assignments: ${formattedData.length}</p>
-                </div>
-        `;
-
-        formattedData.forEach((assignment) => {
-            docContent += `
-                <div class="assignment">
-                    <div class="assignment-title">
-                        <h2>Assignment #${assignment['Assignment No.']} - ${assignment['Project Name']}</h2>
-                    </div>
-            `;
+    // Generate PDF using jsPDF
+    const exportToPDF = async () => {
+        setIsGenerating(true);
+        try {
+            // Dynamic import of jsPDF
+            const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
             
-            Object.entries(assignment).forEach(([key, value]) => {
-                if (key !== 'Assignment No.' && key !== 'Project Name') {
-                    docContent += `
-                        <div class="field">
-                            <span class="label">${key}:</span>
-                            <span>${value}</span>
-                        </div>
-                    `;
+            const doc = new jsPDF();
+            const formattedData = formatDataForDisplay(data);
+            
+            // PDF Settings
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+            const margin = 20;
+            let yPosition = margin;
+            
+            // Title
+            doc.setFontSize(20);
+            doc.setFont(undefined, 'bold');
+            doc.text('📋 Assignments Report', pageWidth / 2, yPosition, { align: 'center' });
+            yPosition += 10;
+            
+            // Date
+            doc.setFontSize(12);
+            doc.setFont(undefined, 'normal');
+            doc.text(`Generated on: ${new Date().toLocaleDateString()}`, pageWidth / 2, yPosition, { align: 'center' });
+            yPosition += 10;
+            doc.text(`Total Assignments: ${formattedData.length}`, pageWidth / 2, yPosition, { align: 'center' });
+            yPosition += 20;
+            
+            // Process each assignment
+            formattedData.forEach((assignment, index) => {
+                // Check if we need a new page
+                if (yPosition > pageHeight - 50) {
+                    doc.addPage();
+                    yPosition = margin;
                 }
+                
+                // Assignment header
+                doc.setFillColor(76, 175, 80);
+                doc.rect(margin, yPosition - 5, pageWidth - 2 * margin, 12, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text(`Assignment #${assignment['Assignment No.']} - ${assignment['Project Name']}`, margin + 5, yPosition + 5);
+                yPosition += 20;
+                
+                // Reset text color
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                
+                // Assignment details
+                Object.entries(assignment).forEach(([key, value]) => {
+                    if (key !== 'Assignment No.' && key !== 'Project Name') {
+                        // Check if we need a new page
+                        if (yPosition > pageHeight - 30) {
+                            doc.addPage();
+                            yPosition = margin;
+                        }
+                        
+                        doc.setFont(undefined, 'bold');
+                        doc.text(`${key}:`, margin, yPosition);
+                        doc.setFont(undefined, 'normal');
+                        
+                        // Handle long text
+                        const textLines = doc.splitTextToSize(value.toString(), pageWidth - margin - 60);
+                        doc.text(textLines, margin + 60, yPosition);
+                        yPosition += textLines.length * 5;
+                    }
+                });
+                
+                yPosition += 10; // Space between assignments
             });
             
-            docContent += `</div>`;
-        });
+            // Save the PDF
+            doc.save(`Assignments_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+            
+        } catch (error) {
+            console.error('Error generating PDF:', error);
+            alert('Error generating PDF. Please try again.');
+        } finally {
+            setIsGenerating(false);
+            setIsOpen(false);
+        }
+    };
 
-        docContent += `</body></html>`;
+    // Generate Excel using SheetJS
+    const exportToExcel = async () => {
+        setIsGenerating(true);
+        try {
+            // Dynamic import of SheetJS
+            const XLSX = await import('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+            
+            const formattedData = formatDataForDisplay(data);
+            
+            // Create workbook
+            const wb = XLSX.utils.book_new();
+            
+            // Create worksheet
+            const ws = XLSX.utils.json_to_sheet(formattedData);
+            
+            // Set column widths
+            const colWidths = [];
+            Object.keys(formattedData[0] || {}).forEach((key, index) => {
+                colWidths[index] = { wch: Math.max(key.length, 20) };
+            });
+            ws['!cols'] = colWidths;
+            
+            // Add worksheet to workbook
+            XLSX.utils.book_append_sheet(wb, ws, 'Assignments');
+            
+            // Generate Excel file
+            XLSX.writeFile(wb, `Assignments_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+            
+        } catch (error) {
+            console.error('Error generating Excel:', error);
+            alert('Error generating Excel file. Please try again.');
+        } finally {
+            setIsGenerating(false);
+            setIsOpen(false);
+        }
+    };
 
-        const blob = new Blob([docContent], { type: 'application/msword' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `Assignments_Report_${new Date().toISOString().split('T')[0]}.doc`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        setIsOpen(false);
+    // Generate Word document
+    const exportToWord = async () => {
+        setIsGenerating(true);
+        try {
+            const formattedData = formatDataForDisplay(data);
+            
+            // Create Word document content
+            let docContent = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+                      xmlns:w="urn:schemas-microsoft-com:office:word" 
+                      xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                    <meta charset="utf-8">
+                    <title>Assignments Report</title>
+                    <!--[if gte mso 9]>
+                    <xml>
+                        <w:WordDocument>
+                            <w:View>Print</w:View>
+                            <w:Zoom>90</w:Zoom>
+                            <w:DoNotPromptForConvert/>
+                            <w:DoNotShowInsertionsAndDeletions/>
+                        </w:WordDocument>
+                    </xml>
+                    <![endif]-->
+                    <style>
+                        @page { margin: 1in; }
+                        body { font-family: Arial, sans-serif; font-size: 11pt; line-height: 1.5; }
+                        .header { text-align: center; margin-bottom: 30px; }
+                        .assignment { margin-bottom: 30px; border: 1px solid #ccc; page-break-inside: avoid; }
+                        .assignment-title { background-color: #4CAF50; color: white; padding: 10px; font-weight: bold; }
+                        .field { margin-bottom: 8px; }
+                        .label { font-weight: bold; display: inline-block; width: 150px; vertical-align: top; }
+                        .value { display: inline-block; width: calc(100% - 160px); }
+                        .fees-section { background-color: #f0f8f0; padding: 10px; margin: 10px 0; }
+                        .section-title { font-weight: bold; color: #2E7D32; margin-bottom: 10px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>📋 Assignments Report</h1>
+                        <p>Generated on: ${new Date().toLocaleDateString()}</p>
+                        <p>Total Assignments: ${formattedData.length}</p>
+                    </div>
+            `;
+
+            formattedData.forEach((assignment) => {
+                docContent += `
+                    <div class="assignment">
+                        <div class="assignment-title">
+                            Assignment #${assignment['Assignment No.']} - ${assignment['Project Name']}
+                        </div>
+                        <div style="padding: 15px;">
+                `;
+                
+                // Basic information
+                const basicFields = ['Assignment Type', 'Application Number', 'Payment Date', 'Login ID', 'Password', 'Remarks', 'Created Date', 'Updated Date'];
+                basicFields.forEach(field => {
+                    if (assignment[field]) {
+                        docContent += `
+                            <div class="field">
+                                <span class="label">${field}:</span>
+                                <span class="value">${assignment[field]}</span>
+                            </div>
+                        `;
+                    }
+                });
+                
+                // Fees section
+                docContent += `
+                    <div class="fees-section">
+                        <div class="section-title">💰 Fee Structure</div>
+                `;
+                const feeFields = ['Consultation Charges', 'Government Fees', 'CA Fees', 'Engineer Fees', 'Architect Fees', 'Liasioning Fees'];
+                feeFields.forEach(field => {
+                    if (assignment[field]) {
+                        docContent += `
+                            <div class="field">
+                                <span class="label">${field}:</span>
+                                <span class="value">${assignment[field]}</span>
+                            </div>
+                        `;
+                    }
+                });
+                docContent += `</div>`;
+                
+                // Notes section
+                const noteFields = Object.keys(assignment).filter(key => key.startsWith('Note -'));
+                if (noteFields.length > 0) {
+                    docContent += `
+                        <div class="section-title">📝 Notes</div>
+                    `;
+                    noteFields.forEach(noteField => {
+                        docContent += `
+                            <div class="field">
+                                <span class="label">${noteField.replace('Note - ', '')}:</span>
+                                <span class="value">${assignment[noteField]}</span>
+                            </div>
+                        `;
+                    });
+                }
+                
+                // Reminders section
+                const reminderFields = Object.keys(assignment).filter(key => key.startsWith('Reminder '));
+                if (reminderFields.length > 0) {
+                    docContent += `
+                        <div class="section-title">⏰ Reminders</div>
+                    `;
+                    reminderFields.forEach(reminderField => {
+                        docContent += `
+                            <div class="field">
+                                <span class="label">${reminderField}:</span>
+                                <span class="value">${assignment[reminderField]}</span>
+                            </div>
+                        `;
+                    });
+                }
+                
+                docContent += `</div></div>`;
+            });
+
+            docContent += `</body></html>`;
+
+            // Create blob and download
+            const blob = new Blob([docContent], { 
+                type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+            });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `Assignments_Report_${new Date().toISOString().split('T')[0]}.docx`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+        } catch (error) {
+            console.error('Error generating Word document:', error);
+            alert('Error generating Word document. Please try again.');
+        } finally {
+            setIsGenerating(false);
+            setIsOpen(false);
+        }
     };
 
     const exportOptions = [
@@ -414,19 +331,22 @@ function ExportAssignmentsButton({ data = [] }) {
             label: 'Download as PDF',
             icon: <FileText className="w-4 h-4" />,
             action: exportToPDF,
-            description: 'Professional PDF document'
+            description: 'Professional PDF document',
+            color: 'text-red-600 bg-red-100'
         },
         {
             label: 'Download as Excel',
             icon: <FileSpreadsheet className="w-4 h-4" />,
             action: exportToExcel,
-            description: 'Open in Excel or Google Sheets'
+            description: 'Excel spreadsheet (.xlsx)',
+            color: 'text-green-600 bg-green-100'
         },
         {
             label: 'Download as Word',
             icon: <File className="w-4 h-4" />,
             action: exportToWord,
-            description: 'Microsoft Word document'
+            description: 'Word document (.docx)',
+            color: 'text-blue-600 bg-blue-100'
         }
     ];
 
@@ -435,10 +355,15 @@ function ExportAssignmentsButton({ data = [] }) {
             <button
                 onClick={() => setIsOpen(!isOpen)}
                 onMouseEnter={() => setIsOpen(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium"
+                disabled={isGenerating}
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl font-medium ${
+                    isGenerating 
+                        ? 'bg-gray-400 cursor-not-allowed' 
+                        : 'bg-green-600 hover:bg-green-700 text-white'
+                }`}
             >
-                <Download className="w-5 h-5" />
-                Download Report
+                <Download className={`w-5 h-5 ${isGenerating ? 'animate-spin' : ''}`} />
+                {isGenerating ? 'Generating...' : 'Download Report'}
                 <svg 
                     className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
                     fill="none" 
@@ -449,7 +374,7 @@ function ExportAssignmentsButton({ data = [] }) {
                 </svg>
             </button>
 
-            {isOpen && (
+            {isOpen && !isGenerating && (
                 <div 
                     className="absolute right-0 mt-2 w-72 bg-white rounded-xl shadow-2xl border border-gray-200 z-50"
                     onMouseLeave={() => setIsOpen(false)}
@@ -462,9 +387,9 @@ function ExportAssignmentsButton({ data = [] }) {
                             <button
                                 key={index}
                                 onClick={option.action}
-                                className="w-full text-left px-4 py-4 hover:bg-green-50 rounded-lg flex items-center gap-4 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
+                                className="w-full text-left px-4 py-4 hover:bg-gray-50 rounded-lg flex items-center gap-4 transition-colors duration-150 border-b border-gray-50 last:border-b-0"
                             >
-                                <div className="text-green-600 bg-green-100 p-2 rounded-lg">
+                                <div className={`p-2 rounded-lg ${option.color}`}>
                                     {option.icon}
                                 </div>
                                 <div className="flex-1">
@@ -491,6 +416,6 @@ function ExportAssignmentsButton({ data = [] }) {
             )}
         </div>
     );
-}
+};
 
 export default ExportAssignmentsButton;
