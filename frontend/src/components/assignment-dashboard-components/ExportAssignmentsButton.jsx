@@ -83,6 +83,166 @@ function ExportAssignmentsButton({ data }) {
         setShowDropdown(false);
     };
 
+    // Export to Word (.docx)
+    const exportToWord = () => {
+        const cleanData = cleanDataForExport();
+        if (!cleanData.length) return;
+
+        // Create HTML content for Word document
+        const htmlContent = `
+            <!DOCTYPE html>
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
+            <head>
+                <meta charset='utf-8'>
+                <title>Assignments Report</title>
+                <style>
+                    body { 
+                        font-family: Arial, sans-serif; 
+                        margin: 40px; 
+                        line-height: 1.6;
+                    }
+                    h1 { 
+                        color: #333; 
+                        text-align: center; 
+                        border-bottom: 2px solid #4CAF50;
+                        padding-bottom: 10px;
+                        margin-bottom: 30px;
+                    }
+                    .header-info { 
+                        margin-bottom: 30px; 
+                        background-color: #f9f9f9;
+                        padding: 15px;
+                        border-radius: 5px;
+                    }
+                    .assignment-item {
+                        margin-bottom: 25px;
+                        padding: 15px;
+                        border: 1px solid #ddd;
+                        border-radius: 5px;
+                        page-break-inside: avoid;
+                    }
+                    .assignment-title {
+                        font-size: 16px;
+                        font-weight: bold;
+                        color: #2c3e50;
+                        margin-bottom: 10px;
+                        border-bottom: 1px solid #eee;
+                        padding-bottom: 5px;
+                    }
+                    .field-row {
+                        margin: 8px 0;
+                        display: flex;
+                    }
+                    .field-label {
+                        font-weight: bold;
+                        width: 180px;
+                        color: #555;
+                    }
+                    .field-value {
+                        flex: 1;
+                        color: #333;
+                    }
+                    .notes-section {
+                        background-color: #f8f9fa;
+                        padding: 10px;
+                        border-radius: 3px;
+                        margin-top: 10px;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Assignments Report</h1>
+                
+                <div class="header-info">
+                    <div class="field-row">
+                        <span class="field-label">Generated on:</span>
+                        <span class="field-value">${new Date().toLocaleString()}</span>
+                    </div>
+                    <div class="field-row">
+                        <span class="field-label">Total Records:</span>
+                        <span class="field-value">${cleanData.length}</span>
+                    </div>
+                </div>
+
+                ${cleanData.map((item, index) => `
+                    <div class="assignment-item">
+                        <div class="assignment-title">Assignment #${index + 1}: ${item.project_name}</div>
+                        
+                        <div class="field-row">
+                            <span class="field-label">Assignment Type:</span>
+                            <span class="field-value">${item.assignment_type}</span>
+                        </div>
+                        
+                        <div class="field-row">
+                            <span class="field-label">Application Number:</span>
+                            <span class="field-value">${item.application_number}</span>
+                        </div>
+                        
+                        <div class="field-row">
+                            <span class="field-label">Payment Date:</span>
+                            <span class="field-value">${item.payment_date}</span>
+                        </div>
+                        
+                        <div class="field-row">
+                            <span class="field-label">Login ID:</span>
+                            <span class="field-value">${item.login_id}</span>
+                        </div>
+                        
+                        <div class="field-row">
+                            <span class="field-label">Status:</span>
+                            <span class="field-value">${item.assignment_status}</span>
+                        </div>
+                        
+                        <div class="field-row">
+                            <span class="field-label">Created Date:</span>
+                            <span class="field-value">${item.created_date}</span>
+                        </div>
+                        
+                        <div class="field-row">
+                            <span class="field-label">Active Reminders:</span>
+                            <span class="field-value">${item.reminders}</span>
+                        </div>
+                        
+                        ${item.remarks ? `
+                        <div class="field-row">
+                            <span class="field-label">Remarks:</span>
+                            <span class="field-value">${item.remarks}</span>
+                        </div>
+                        ` : ''}
+                        
+                        ${item.note && item.note !== 'No notes' ? `
+                        <div class="notes-section">
+                            <div style="font-weight: bold; margin-bottom: 5px;">Notes:</div>
+                            <div>${item.note}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `).join('')}
+                
+                <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
+                    <hr style="margin: 20px 0;">
+                    Report generated from Assignment Management System
+                </div>
+            </body>
+            </html>
+        `;
+
+        // Create blob and download
+        const blob = new Blob([htmlContent], { 
+            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+        });
+        
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'assignments-report.docx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        setShowDropdown(false);
+    };
+
     // Create printable HTML
     const exportToPrint = () => {
         const cleanData = cleanDataForExport();
