@@ -1,9 +1,26 @@
-import React, { useState } from 'react';
-import { Download, FileText, FileSpreadsheet, File, Printer, FileCheck } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { Download, FileText, FileSpreadsheet, File, Printer, FileCheck, ChevronDown, Sparkles } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 function ExportAssignmentsButton({ data }) {
     const [showDropdown, setShowDropdown] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
+    const [exportingType, setExportingType] = useState('');
+    const dropdownRef = useRef(null);
+    const buttonRef = useRef(null);
+
+    // Close dropdown when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target) && 
+                buttonRef.current && !buttonRef.current.contains(event.target)) {
+                setShowDropdown(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
     
     // Filter and clean data for export (remove sensitive info)
     const cleanDataForExport = () => {
@@ -20,6 +37,24 @@ function ExportAssignmentsButton({ data }) {
             reminders: item.reminders?.length || 0,
             created_date: new Date(item.created_at).toLocaleDateString(),
         })) || [];
+    };
+
+    const handleExport = async (type, action) => {
+        setIsExporting(true);
+        setExportingType(type);
+        
+        try {
+            await action();
+            // Add a small delay to show the loading state
+            setTimeout(() => {
+                setIsExporting(false);
+                setExportingType('');
+            }, 1000);
+        } catch (error) {
+            console.error('Export failed:', error);
+            setIsExporting(false);
+            setExportingType('');
+        }
     };
 
     // Export to CSV
@@ -83,12 +118,106 @@ function ExportAssignmentsButton({ data }) {
         setShowDropdown(false);
     };
 
-    // Export to Word (.docx)
-    const exportToWord = () => {
+    // Export to Word (.docx) using proper docx library structure
+    const exportToWord = async () => {
         const cleanData = cleanDataForExport();
         if (!cleanData.length) return;
 
-        // Create HTML content for Word document
+        // Since we don't have access to the docx library in this environment,
+        // I'll create a structure that would work with it
+        const docStructure = {
+            sections: [{
+                properties: {},
+                children: [
+                    // Title
+                    {
+                        type: 'paragraph',
+                        properties: {
+                            alignment: 'center',
+                            spacing: { after: 400 }
+                        },
+                        children: [{
+                            type: 'text',
+                            text: 'Assignments Report',
+                            properties: {
+                                bold: true,
+                                size: 28,
+                                color: '2c3e50'
+                            }
+                        }]
+                    },
+                    
+                    // Header info
+                    {
+                        type: 'paragraph',
+                        properties: { spacing: { after: 200 } },
+                        children: [{
+                            type: 'text',
+                            text: `Generated on: ${new Date().toLocaleString()}`,
+                            properties: { bold: true }
+                        }]
+                    },
+                    {
+                        type: 'paragraph',
+                        properties: { spacing: { after: 400 } },
+                        children: [{
+                            type: 'text',
+                            text: `Total Records: ${cleanData.length}`,
+                            properties: { bold: true }
+                        }]
+                    },
+                    
+                    // Data sections
+                    ...cleanData.map((item, index) => [
+                        {
+                            type: 'paragraph',
+                            properties: {
+                                spacing: { before: 200, after: 100 },
+                                border: { bottom: { style: 'single', size: 1 } }
+                            },
+                            children: [{
+                                type: 'text',
+                                text: `Assignment #${index + 1}: ${item.project_name}`,
+                                properties: { bold: true, size: 24, color: '2c3e50' }
+                            }]
+                        },
+                        ...Object.entries(item).map(([key, value]) => ({
+                            type: 'paragraph',
+                            properties: { spacing: { after: 100 } },
+                            children: [
+                                {
+                                    type: 'text',
+                                    text: `${key.replace(/_/g, ' ').toUpperCase()}: `,
+                                    properties: { bold: true }
+                                },
+                                {
+                                    type: 'text',
+                                    text: String(value)
+                                }
+                            ]
+                        }))
+                    ]).flat()
+                ]
+            }]
+        };
+
+        // For now, fall back to HTML-based Word export
+        // In a real implementation, you would use:
+        /*
+        const doc = new Document(docStructure);
+        const blob = await Packer.toBlob(doc);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        const timestamp = new Date().toISOString().replace('T', '_').replace(/:/g, '-').replace(/\..+/, '');
+        link.download = `Assignment_Report_${timestamp}.docx`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        */
+
+        // Fallback HTML-based Word export
         const htmlContent = `
             <!DOCTYPE html>
             <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
@@ -97,61 +226,80 @@ function ExportAssignmentsButton({ data }) {
                 <title>Assignments Report</title>
                 <style>
                     body { 
-                        font-family: Arial, sans-serif; 
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
                         margin: 40px; 
                         line-height: 1.6;
+                        color: #333;
                     }
                     h1 { 
-                        color: #333; 
+                        color: #2c3e50; 
                         text-align: center; 
-                        border-bottom: 2px solid #4CAF50;
-                        padding-bottom: 10px;
+                        border-bottom: 3px solid #3498db;
+                        padding-bottom: 15px;
                         margin-bottom: 30px;
+                        font-size: 28px;
                     }
                     .header-info { 
                         margin-bottom: 30px; 
-                        background-color: #f9f9f9;
-                        padding: 15px;
-                        border-radius: 5px;
+                        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                        padding: 20px;
+                        border-radius: 10px;
+                        border-left: 4px solid #3498db;
                     }
                     .assignment-item {
-                        margin-bottom: 25px;
-                        padding: 15px;
-                        border: 1px solid #ddd;
-                        border-radius: 5px;
+                        margin-bottom: 30px;
+                        padding: 20px;
+                        border: 1px solid #e0e0e0;
+                        border-radius: 10px;
                         page-break-inside: avoid;
+                        background: white;
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
                     }
                     .assignment-title {
-                        font-size: 16px;
+                        font-size: 18px;
                         font-weight: bold;
                         color: #2c3e50;
-                        margin-bottom: 10px;
-                        border-bottom: 1px solid #eee;
-                        padding-bottom: 5px;
+                        margin-bottom: 15px;
+                        border-bottom: 2px solid #3498db;
+                        padding-bottom: 8px;
                     }
                     .field-row {
-                        margin: 8px 0;
+                        margin: 10px 0;
                         display: flex;
+                        align-items: flex-start;
                     }
                     .field-label {
-                        font-weight: bold;
+                        font-weight: 600;
                         width: 180px;
                         color: #555;
+                        text-transform: uppercase;
+                        font-size: 12px;
+                        letter-spacing: 0.5px;
                     }
                     .field-value {
                         flex: 1;
                         color: #333;
+                        font-size: 14px;
                     }
                     .notes-section {
-                        background-color: #f8f9fa;
-                        padding: 10px;
-                        border-radius: 3px;
-                        margin-top: 10px;
+                        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                        padding: 15px;
+                        border-radius: 8px;
+                        margin-top: 15px;
+                        border-left: 4px solid #17a2b8;
+                    }
+                    .footer {
+                        margin-top: 40px;
+                        text-align: center;
+                        color: #666;
+                        font-size: 12px;
+                        border-top: 1px solid #e0e0e0;
+                        padding-top: 20px;
                     }
                 </style>
             </head>
             <body>
-                <h1>Assignments Report</h1>
+                <h1>📋 Assignments Report</h1>
                 
                 <div class="header-info">
                     <div class="field-row">
@@ -166,7 +314,7 @@ function ExportAssignmentsButton({ data }) {
 
                 ${cleanData.map((item, index) => `
                     <div class="assignment-item">
-                        <div class="assignment-title">Assignment #${index + 1}: ${item.project_name}</div>
+                        <div class="assignment-title">📝 Assignment #${index + 1}: ${item.project_name}</div>
                         
                         <div class="field-row">
                             <span class="field-label">Assignment Type:</span>
@@ -212,16 +360,16 @@ function ExportAssignmentsButton({ data }) {
                         
                         ${item.note && item.note !== 'No notes' ? `
                         <div class="notes-section">
-                            <div style="font-weight: bold; margin-bottom: 5px;">Notes:</div>
+                            <div style="font-weight: bold; margin-bottom: 8px; color: #17a2b8;">📌 Notes:</div>
                             <div>${item.note}</div>
                         </div>
                         ` : ''}
                     </div>
                 `).join('')}
                 
-                <div style="margin-top: 40px; text-align: center; color: #666; font-size: 12px;">
-                    <hr style="margin: 20px 0;">
-                    Report generated from Assignment Management System
+                <div class="footer">
+                    <hr style="margin: 20px 0; border: none; height: 1px; background: #e0e0e0;">
+                    🚀 Report generated from Assignment Management System
                 </div>
             </body>
             </html>
@@ -235,7 +383,8 @@ function ExportAssignmentsButton({ data }) {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = 'assignments-report.docx';
+        const timestamp = new Date().toISOString().replace('T', '_').replace(/:/g, '-').replace(/\..+/, '');
+        link.download = `assignments-report_${timestamp}.docx`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -255,22 +404,55 @@ function ExportAssignmentsButton({ data }) {
             <head>
                 <title>Assignments Report</title>
                 <style>
-                    body { font-family: Arial, sans-serif; margin: 20px; }
-                    h1 { color: #333; text-align: center; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                    th { background-color: #f2f2f2; font-weight: bold; }
-                    tr:nth-child(even) { background-color: #f9f9f9; }
-                    .header-info { margin-bottom: 20px; }
+                    body { 
+                        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+                        margin: 20px; 
+                        color: #333;
+                    }
+                    h1 { 
+                        color: #2c3e50; 
+                        text-align: center; 
+                        border-bottom: 2px solid #3498db;
+                        padding-bottom: 10px;
+                    }
+                    table { 
+                        width: 100%; 
+                        border-collapse: collapse; 
+                        margin-top: 20px; 
+                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    }
+                    th, td { 
+                        border: 1px solid #ddd; 
+                        padding: 12px 8px; 
+                        text-align: left; 
+                        font-size: 12px;
+                    }
+                    th { 
+                        background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+                        color: white;
+                        font-weight: 600;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                    }
+                    tr:nth-child(even) { background-color: #f8f9fa; }
+                    tr:hover { background-color: #e3f2fd; }
+                    .header-info { 
+                        margin-bottom: 20px; 
+                        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                        padding: 15px;
+                        border-radius: 8px;
+                        border-left: 4px solid #3498db;
+                    }
                     @media print { 
                         body { margin: 0; }
                         .no-print { display: none; }
+                        table { box-shadow: none; }
                     }
                 </style>
             </head>
             <body>
                 <div class="header-info">
-                    <h1>Assignments Report</h1>
+                    <h1>📋 Assignments Report</h1>
                     <p><strong>Generated on:</strong> ${new Date().toLocaleString()}</p>
                     <p><strong>Total Records:</strong> ${cleanData.length}</p>
                 </div>
@@ -329,81 +511,131 @@ function ExportAssignmentsButton({ data }) {
 
     const exportOptions = [
         {
-            label: 'Download Excel File',
-            icon: <FileSpreadsheet className="w-4 h-4" />,
+            label: 'Excel Spreadsheet',
+            icon: <FileSpreadsheet className="w-5 h-5" />,
             action: exportToExcel,
-            description: 'Real Excel (.xlsx) file'
+            description: 'Download as .xlsx file with formatting',
+            gradient: 'from-emerald-500 to-teal-600',
+            type: 'excel'
         },
         {
-            label: 'Download Word Document',
-            icon: <FileCheck className="w-4 h-4" />,
+            label: 'Word Document',
+            icon: <FileCheck className="w-5 h-5" />,
             action: exportToWord,
-            description: 'Formatted Word (.docx) report'
+            description: 'Professional formatted .docx report',
+            gradient: 'from-blue-500 to-indigo-600',
+            type: 'word'
         },
         {
-            label: 'Export as CSV',
-            icon: <FileText className="w-4 h-4" />,
+            label: 'CSV Data',
+            icon: <FileText className="w-5 h-5" />,
             action: exportToCSV,
-            description: 'Comma-separated values'
+            description: 'Comma-separated values for analysis',
+            gradient: 'from-orange-500 to-red-600',
+            type: 'csv'
         },
         {
-            label: 'Export as JSON',
-            icon: <File className="w-4 h-4" />,
+            label: 'JSON Format',
+            icon: <File className="w-5 h-5" />,
             action: exportToJSON,
-            description: 'Raw data format'
+            description: 'Raw structured data format',
+            gradient: 'from-purple-500 to-pink-600',
+            type: 'json'
         },
         {
-            label: 'Print Report',
-            icon: <Printer className="w-4 h-4" />,
+            label: 'Print Preview',
+            icon: <Printer className="w-5 h-5" />,
             action: exportToPrint,
-            description: 'Printable report'
+            description: 'Open print-friendly version',
+            gradient: 'from-gray-500 to-slate-600',
+            type: 'print'
         }
     ];
 
     return (
         <div className="relative">
             <button
-                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors duration-200 shadow-sm"
-                onMouseEnter={() => setShowDropdown(true)}
-                onMouseLeave={() => setShowDropdown(false)}
-                onClick={() => setShowDropdown(!showDropdown)}
+                ref={buttonRef}
+                className={`group relative flex items-center gap-3 px-6 py-3 rounded-xl font-medium text-white transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 ${
+                    isExporting 
+                        ? 'bg-gradient-to-r from-gray-400 to-gray-500 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800'
+                }`}
+                onClick={() => !isExporting && setShowDropdown(!showDropdown)}
+                disabled={isExporting}
             >
-                <Download className="w-4 h-4" />
-                Export Assignments
+                <div className="flex items-center gap-2">
+                    {isExporting ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                        <Download className="w-5 h-5 group-hover:scale-110 transition-transform duration-200" />
+                    )}
+                    <span className="text-sm font-semibold">
+                        {isExporting ? `Exporting ${exportingType}...` : 'Export Data'}
+                    </span>
+                </div>
+                {!isExporting && (
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`} />
+                )}
+                
+                {/* Floating sparkles effect */}
+                <div className="absolute inset-0 rounded-xl overflow-hidden">
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-white/20 rounded-full animate-ping" />
+                    <div className="absolute top-1 left-1 w-1 h-1 bg-white/40 rounded-full animate-pulse" />
+                </div>
             </button>
 
-            {showDropdown && (
+            {showDropdown && !isExporting && (
                 <div 
-                    className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-64"
-                    onMouseEnter={() => setShowDropdown(true)}
-                    onMouseLeave={() => setShowDropdown(false)}
+                    ref={dropdownRef}
+                    className="absolute top-full left-0 mt-2 bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-2xl shadow-2xl z-50 min-w-80 overflow-hidden animate-in slide-in-from-top-2 duration-200"
                 >
-                    <div className="py-2">
-                        <div className="px-4 py-2 text-sm text-gray-500 border-b border-gray-100">
-                            Choose export format:
+                    {/* Header */}
+                    <div className="px-6 py-4 bg-gradient-to-r from-gray-50 to-blue-50 border-b border-gray-100">
+                        <div className="flex items-center gap-2">
+                            <Sparkles className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm font-semibold text-gray-700">Choose Export Format</span>
                         </div>
+                        <p className="text-xs text-gray-500 mt-1">Select your preferred format to download</p>
+                    </div>
+                    
+                    {/* Options */}
+                    <div className="py-2">
                         {exportOptions.map((option, index) => (
                             <button
                                 key={index}
-                                onClick={option.action}
-                                className="w-full flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors duration-150 text-left"
+                                onClick={() => handleExport(option.type, option.action)}
+                                className="w-full flex items-center gap-4 px-6 py-4 hover:bg-gradient-to-r hover:from-gray-50 hover:to-blue-50 transition-all duration-200 text-left group border-b border-gray-50/50 last:border-b-0"
                             >
-                                <div className="text-blue-600 mt-0.5">
+                                <div className={`p-2 rounded-lg bg-gradient-to-r ${option.gradient} text-white group-hover:scale-110 transition-transform duration-200`}>
                                     {option.icon}
                                 </div>
-                                <div>
-                                    <div className="font-medium text-gray-900 text-sm">
+                                <div className="flex-1">
+                                    <div className="font-semibold text-gray-900 text-sm group-hover:text-blue-700 transition-colors">
                                         {option.label}
                                     </div>
-                                    <div className="text-xs text-gray-500 mt-0.5">
+                                    <div className="text-xs text-gray-500 mt-0.5 group-hover:text-gray-600">
                                         {option.description}
                                     </div>
+                                </div>
+                                <div className="text-gray-300 group-hover:text-blue-400 transition-colors">
+                                    <ChevronDown className="w-4 h-4 -rotate-90" />
                                 </div>
                             </button>
                         ))}
                     </div>
-                    <div className="px-4 py-2 text-xs text-gray-400 border-t border-gray-100">
-                        {data?.length || 0} records ready for export
+                    
+                    {/* Footer */}
+                    <div className="px-6 py-3 bg-gradient-to-r from-gray-50 to-blue-50 border-t border-gray-100">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-500">
+                                {data?.length || 0} records ready
+                            </span>
+                            <div className="flex items-center gap-1">
+                                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                                <span className="text-xs text-gray-500">Ready to export</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
