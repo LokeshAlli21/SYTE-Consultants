@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Download, FileText, FileSpreadsheet, File, Printer } from 'lucide-react';
+import { Download, FileText, FileSpreadsheet, File, Printer, FileCheck } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 function ExportAssignmentsButton({ data }) {
     const [showDropdown, setShowDropdown] = useState(false);
@@ -48,20 +49,38 @@ function ExportAssignmentsButton({ data }) {
         downloadFile(jsonContent, 'assignments.json', 'application/json');
     };
 
-    // Export to TSV (Tab-separated values - can be opened in Excel)
-    const exportToTSV = () => {
+    // Export to Excel (.xlsx)
+    const exportToExcel = () => {
         const cleanData = cleanDataForExport();
         if (!cleanData.length) return;
 
-        const headers = Object.keys(cleanData[0]);
-        const tsvContent = [
-            headers.join('\t'),
-            ...cleanData.map(row => 
-                headers.map(header => row[header]).join('\t')
-            )
-        ].join('\n');
-
-        downloadFile(tsvContent, 'assignments.tsv', 'text/tab-separated-values');
+        // Create a new workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Convert data to worksheet
+        const ws = XLSX.utils.json_to_sheet(cleanData);
+        
+        // Set column widths for better readability
+        const colWidths = [
+            { wch: 15 }, // project_name
+            { wch: 15 }, // assignment_type
+            { wch: 20 }, // application_number
+            { wch: 12 }, // payment_date
+            { wch: 12 }, // login_id
+            { wch: 25 }, // remarks
+            { wch: 15 }, // assignment_status
+            { wch: 30 }, // note
+            { wch: 10 }, // reminders
+            { wch: 12 }, // created_date
+        ];
+        ws['!cols'] = colWidths;
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, 'Assignments');
+        
+        // Save the file
+        XLSX.writeFile(wb, 'assignments.xlsx');
+        setShowDropdown(false);
     };
 
     // Create printable HTML
@@ -150,10 +169,16 @@ function ExportAssignmentsButton({ data }) {
 
     const exportOptions = [
         {
-            label: 'Export as Excel (TSV)',
+            label: 'Download Excel File',
             icon: <FileSpreadsheet className="w-4 h-4" />,
-            action: exportToTSV,
-            description: 'Opens in Excel/Sheets'
+            action: exportToExcel,
+            description: 'Real Excel (.xlsx) file'
+        },
+        {
+            label: 'Download Word Document',
+            icon: <FileCheck className="w-4 h-4" />,
+            action: exportToWord,
+            description: 'Formatted Word (.docx) report'
         },
         {
             label: 'Export as CSV',
