@@ -14,6 +14,7 @@ import NoteCell from "../components/assignment-dashboard-components/NoteCell";  
 import { HiEye, HiEyeOff } from 'react-icons/hi'
 import { useSelector } from "react-redux";
 import UserProfile from "../components/UserProfile"; // Corrected import path
+import ExportAssignmentsButton from "../components/assignment-dashboard-components/ExportAssignmentsButton"; // Corrected import path
 
 // Constants
 const ASSIGNMENT_TYPES = [
@@ -42,6 +43,7 @@ function Assignments() {
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState("table"); // "table" or "cards"
   const [assignments, setAssignments] = useState([]);
+  const [rowData, setRowData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState("id");
@@ -98,6 +100,7 @@ useEffect(() => {
 
       console.log('formed: ',flatAssignments);
       setAssignments(flatAssignments);
+      setRowData(data)
 
       // Calculate statistics
       const statusCounts = {};
@@ -639,6 +642,8 @@ const SearchBox = ({ searchQuery, onChange, onClear, selectedIds, handleBulkDele
         Delete Selected ({selectedIds.length})
       </button>
     )}
+
+    <ExportAssignmentsButton data={rowData} />
   </div>
 );
 

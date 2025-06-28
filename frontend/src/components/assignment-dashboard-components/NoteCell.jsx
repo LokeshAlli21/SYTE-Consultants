@@ -120,7 +120,13 @@ export default function NoteCellWithModal({ currentNote = {}, onChange }) {
           >
             <button
               type="button"
-              onClick={() => setIsModalOpen(false)}
+              onClick={() => {
+                const confirmClose = window.confirm("Are you sure you want to close?");
+                if (confirmClose) {
+                  setNote(currentNote);
+                  setIsModalOpen(false);
+                }
+              }}
               className="absolute top-3 right-3 text-gray-400 hover:text-red-500 text-xl transition"
               aria-label="Close Modal"
             >
