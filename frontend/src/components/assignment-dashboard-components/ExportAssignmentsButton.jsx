@@ -58,13 +58,30 @@ function ExportAssignmentsButton({ data = [] }) {
         });
     };
 
+    // Load external scripts dynamically
+    const loadScript = (src) => {
+        return new Promise((resolve, reject) => {
+            if (document.querySelector(`script[src="${src}"]`)) {
+                resolve();
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    };
+
     // Generate PDF using jsPDF
     const exportToPDF = async () => {
         setIsGenerating(true);
         try {
-            // Dynamic import of jsPDF
-            const { jsPDF } = await import('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+            // Load jsPDF
+            await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
             
+            const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
             const formattedData = formatDataForDisplay(data);
             
@@ -149,9 +166,10 @@ function ExportAssignmentsButton({ data = [] }) {
     const exportToExcel = async () => {
         setIsGenerating(true);
         try {
-            // Dynamic import of SheetJS
-            const XLSX = await import('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+            // Load SheetJS
+            await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
             
+            const XLSX = window.XLSX;
             const formattedData = formatDataForDisplay(data);
             
             // Create workbook
@@ -350,6 +368,60 @@ function ExportAssignmentsButton({ data = [] }) {
         }
     ];
 
+    // Demo data for testing
+    const demoData = [
+        {
+            project_name: "Sample Project 1",
+            assignment_type: "Consultation",
+            application_number: "APP001",
+            payment_date: "2024-01-15",
+            login_id: "user001",
+            password: "pass123",
+            consultation_charges: 5000,
+            govt_fees: 2000,
+            ca_fees: 3000,
+            engineer_fees: 4000,
+            arch_fees: 2500,
+            liasioning_fees: 1500,
+            remarks: "Initial consultation completed",
+            created_at: "2024-01-10",
+            updated_at: "2024-01-16",
+            timeline: {
+                note: {
+                    initial_review: "Project requirements analyzed",
+                    follow_up: "Client meeting scheduled"
+                }
+            },
+            reminders: [
+                {
+                    message: "Follow up with client",
+                    date_and_time: "2024-02-01T10:00:00",
+                    status: "pending"
+                }
+            ]
+        },
+        {
+            project_name: "Sample Project 2",
+            assignment_type: "Implementation",
+            application_number: "APP002",
+            payment_date: "2024-01-20",
+            login_id: "user002",
+            password: "pass456",
+            consultation_charges: 7500,
+            govt_fees: 3000,
+            ca_fees: 4500,
+            engineer_fees: 6000,
+            arch_fees: 3500,
+            liasioning_fees: 2000,
+            remarks: "Implementation in progress",
+            created_at: "2024-01-15",
+            updated_at: "2024-01-21"
+        }
+    ];
+
+    // Use demo data if no data provided
+    const displayData = data.length > 0 ? data : demoData;
+
     return (
         <div className="relative inline-block" ref={dropdownRef}>
             <button
@@ -400,16 +472,12 @@ function ExportAssignmentsButton({ data = [] }) {
                         ))}
                     </div>
                     
-                    {data.length === 0 && (
-                        <div className="px-4 py-4 text-center text-gray-500 border-t border-gray-100">
-                            <div className="text-2xl mb-2">📋</div>
-                            <div className="text-sm">No assignments available to download</div>
-                        </div>
-                    )}
-                    
                     <div className="px-4 py-3 bg-gray-50 rounded-b-xl">
                         <div className="text-xs text-gray-600 text-center">
-                            {data.length} assignment{data.length !== 1 ? 's' : ''} ready for download
+                            {displayData.length} assignment{displayData.length !== 1 ? 's' : ''} ready for download
+                            {data.length === 0 && (
+                                <div className="text-blue-600 mt-1">(Using demo data for testing)</div>
+                            )}
                         </div>
                     </div>
                 </div>
