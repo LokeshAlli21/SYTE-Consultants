@@ -372,6 +372,7 @@ const handleNoteChange = useCallback(
         onClear={() => setSearchQuery("")}
         selectedIds={selectedIds}
         handleBulkDelete={handleBulkDelete}
+        rowData={rowData}
       />
     </div>
 
@@ -611,7 +612,7 @@ const DashboardHeader = ({ stats, viewMode, setViewMode, totalPendingReminders }
 
 // SearchBox Component (updated styling)
 
-const SearchBox = ({ searchQuery, onChange, onClear, selectedIds, handleBulkDelete }) => (
+const SearchBox = ({ searchQuery, onChange, onClear, selectedIds, handleBulkDelete, rowData }) => (
   <div className="flex flex-col md:flex-row items-center gap-4 w-full">
     <div className="relative flex-1 w-full">
       <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
