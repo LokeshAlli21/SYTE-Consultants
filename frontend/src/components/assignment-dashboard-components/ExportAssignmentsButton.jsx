@@ -246,7 +246,8 @@ function ExportAssignmentsButton({ data }) {
                 
                 <div class="footer">
                     <hr style="margin: 10px 0; border: none; height: 1px; background: #ddd;">
-                    Report generated from Assignment Management System
+                    Report generated from Assignments Dashboard<br>
+                    <small>SYTE Consultants</small>
                 </div>
             </body>
             </html>
@@ -396,6 +397,14 @@ function ExportAssignmentsButton({ data }) {
             type: 'excel'
         },
         {
+            label: 'Print Preview',
+            icon: <Printer className="w-5 h-5" />,
+            action: exportToPrint,
+            description: 'Open print-friendly version',
+            gradient: 'from-gray-500 to-slate-600',
+            type: 'print'
+        },
+        {
             label: 'Word Document',
             icon: <FileCheck className="w-5 h-5" />,
             action: exportToWord,
@@ -418,14 +427,6 @@ function ExportAssignmentsButton({ data }) {
             description: 'Raw structured data format',
             gradient: 'from-purple-500 to-pink-600',
             type: 'json'
-        },
-        {
-            label: 'Print Preview',
-            icon: <Printer className="w-5 h-5" />,
-            action: exportToPrint,
-            description: 'Open print-friendly version',
-            gradient: 'from-gray-500 to-slate-600',
-            type: 'print'
         }
     ];
 

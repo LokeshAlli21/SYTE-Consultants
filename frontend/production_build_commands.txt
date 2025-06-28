@@ -2,7 +2,6 @@ frontend build commands:
 
 npm i
 
-git pull origin main
 npm run build
 
 sudo cp -r dist/* /var/www/syte-frontend/
