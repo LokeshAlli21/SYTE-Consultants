@@ -118,273 +118,150 @@ function ExportAssignmentsButton({ data }) {
         setShowDropdown(false);
     };
 
-    // Export to Word (.docx) using proper docx library structure
+    // Export to Word (.docx) - Table format same as print
     const exportToWord = async () => {
         const cleanData = cleanDataForExport();
         if (!cleanData.length) return;
 
-        // Since we don't have access to the docx library in this environment,
-        // I'll create a structure that would work with it
-        const docStructure = {
-            sections: [{
-                properties: {},
-                children: [
-                    // Title
-                    {
-                        type: 'paragraph',
-                        properties: {
-                            alignment: 'center',
-                            spacing: { after: 400 }
-                        },
-                        children: [{
-                            type: 'text',
-                            text: 'Assignments Report',
-                            properties: {
-                                bold: true,
-                                size: 28,
-                                color: '2c3e50'
-                            }
-                        }]
-                    },
-                    
-                    // Header info
-                    {
-                        type: 'paragraph',
-                        properties: { spacing: { after: 200 } },
-                        children: [{
-                            type: 'text',
-                            text: `Generated on: ${new Date().toLocaleString()}`,
-                            properties: { bold: true }
-                        }]
-                    },
-                    {
-                        type: 'paragraph',
-                        properties: { spacing: { after: 400 } },
-                        children: [{
-                            type: 'text',
-                            text: `Total Records: ${cleanData.length}`,
-                            properties: { bold: true }
-                        }]
-                    },
-                    
-                    // Data sections
-                    ...cleanData.map((item, index) => [
-                        {
-                            type: 'paragraph',
-                            properties: {
-                                spacing: { before: 200, after: 100 },
-                                border: { bottom: { style: 'single', size: 1 } }
-                            },
-                            children: [{
-                                type: 'text',
-                                text: `Assignment #${index + 1}: ${item.project_name}`,
-                                properties: { bold: true, size: 24, color: '2c3e50' }
-                            }]
-                        },
-                        ...Object.entries(item).map(([key, value]) => ({
-                            type: 'paragraph',
-                            properties: { spacing: { after: 100 } },
-                            children: [
-                                {
-                                    type: 'text',
-                                    text: `${key.replace(/_/g, ' ').toUpperCase()}: `,
-                                    properties: { bold: true }
-                                },
-                                {
-                                    type: 'text',
-                                    text: String(value)
-                                }
-                            ]
-                        }))
-                    ]).flat()
-                ]
-            }]
-        };
-
-        // For now, fall back to HTML-based Word export
-        // In a real implementation, you would use:
-        /*
-        const doc = new Document(docStructure);
-        const blob = await Packer.toBlob(doc);
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        const timestamp = new Date().toISOString().replace('T', '_').replace(/:/g, '-').replace(/\..+/, '');
-        link.download = `Assignment_Report_${timestamp}.docx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-        */
-
-        // Fallback HTML-based Word export
+        // Create Word-compatible HTML with table format (same as print)
         const htmlContent = `
-            <!DOCTYPE html>
-            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>
+            <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
             <head>
                 <meta charset='utf-8'>
                 <title>Assignments Report</title>
+                <!--[if gte mso 9]>
+                <xml>
+                <w:WordDocument>
+                <w:View>Print</w:View>
+                <w:Zoom>90</w:Zoom>
+                <w:DoNotPromptForConvert/>
+                <w:DoNotShowInsertionsAndDeletions/>
+                </w:WordDocument>
+                </xml>
+                <![endif]-->
                 <style>
+                    @page {
+                        margin: 1in;
+                    }
                     body { 
                         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-                        margin: 40px; 
-                        line-height: 1.6;
+                        margin: 0;
                         color: #333;
+                        font-size: 11pt;
                     }
                     h1 { 
                         color: #2c3e50; 
                         text-align: center; 
-                        border-bottom: 3px solid #3498db;
-                        padding-bottom: 15px;
-                        margin-bottom: 30px;
-                        font-size: 28px;
+                        border-bottom: 2px solid #3498db;
+                        padding-bottom: 10px;
+                        margin-bottom: 20px;
+                        font-size: 18pt;
                     }
                     .header-info { 
-                        margin-bottom: 30px; 
-                        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                        padding: 20px;
-                        border-radius: 10px;
+                        margin-bottom: 20px; 
+                        background-color: #f8f9fa;
+                        padding: 15px;
+                        border-radius: 5px;
                         border-left: 4px solid #3498db;
                     }
-                    .assignment-item {
-                        margin-bottom: 30px;
-                        padding: 20px;
-                        border: 1px solid #e0e0e0;
-                        border-radius: 10px;
-                        page-break-inside: avoid;
-                        background: white;
-                        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                    .header-info p {
+                        margin: 5px 0;
+                        font-size: 10pt;
                     }
-                    .assignment-title {
-                        font-size: 18px;
-                        font-weight: bold;
-                        color: #2c3e50;
-                        margin-bottom: 15px;
-                        border-bottom: 2px solid #3498db;
-                        padding-bottom: 8px;
+                    table { 
+                        width: 100%; 
+                        border-collapse: collapse; 
+                        margin-top: 10px; 
+                        font-size: 9pt;
                     }
-                    .field-row {
-                        margin: 10px 0;
-                        display: flex;
-                        align-items: flex-start;
+                    th, td { 
+                        border: 1px solid #ddd; 
+                        padding: 8px 6px; 
+                        text-align: left; 
+                        vertical-align: top;
                     }
-                    .field-label {
+                    th { 
+                        background-color: #3498db;
+                        color: white;
                         font-weight: 600;
-                        width: 180px;
-                        color: #555;
                         text-transform: uppercase;
-                        font-size: 12px;
                         letter-spacing: 0.5px;
+                        font-size: 8pt;
                     }
-                    .field-value {
-                        flex: 1;
-                        color: #333;
-                        font-size: 14px;
-                    }
-                    .notes-section {
-                        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-                        padding: 15px;
-                        border-radius: 8px;
-                        margin-top: 15px;
-                        border-left: 4px solid #17a2b8;
+                    tr:nth-child(even) { 
+                        background-color: #f8f9fa; 
                     }
                     .footer {
-                        margin-top: 40px;
+                        margin-top: 20px;
                         text-align: center;
                         color: #666;
-                        font-size: 12px;
-                        border-top: 1px solid #e0e0e0;
-                        padding-top: 20px;
+                        font-size: 8pt;
+                        border-top: 1px solid #ddd;
+                        padding-top: 10px;
+                    }
+                    /* Word-specific styles */
+                    @media print {
+                        table { page-break-inside: auto; }
+                        tr { page-break-inside: avoid; page-break-after: auto; }
+                        thead { display: table-header-group; }
+                        tfoot { display: table-footer-group; }
                     }
                 </style>
             </head>
             <body>
-                <h1>📋 Assignments Report</h1>
-                
                 <div class="header-info">
-                    <div class="field-row">
-                        <span class="field-label">Generated on:</span>
-                        <span class="field-value">${new Date().toLocaleString()}</span>
-                    </div>
-                    <div class="field-row">
-                        <span class="field-label">Total Records:</span>
-                        <span class="field-value">${cleanData.length}</span>
-                    </div>
+                    <h1>Assignments Report</h1>
+                    <p><strong>Generated on:</strong> ${new Date().toLocaleString()}</p>
+                    <p><strong>Total Records:</strong> ${cleanData.length}</p>
                 </div>
-
-                ${cleanData.map((item, index) => `
-                    <div class="assignment-item">
-                        <div class="assignment-title">📝 Assignment #${index + 1}: ${item.project_name}</div>
-                        
-                        <div class="field-row">
-                            <span class="field-label">Assignment Type:</span>
-                            <span class="field-value">${item.assignment_type}</span>
-                        </div>
-                        
-                        <div class="field-row">
-                            <span class="field-label">Application Number:</span>
-                            <span class="field-value">${item.application_number}</span>
-                        </div>
-                        
-                        <div class="field-row">
-                            <span class="field-label">Payment Date:</span>
-                            <span class="field-value">${item.payment_date}</span>
-                        </div>
-                        
-                        <div class="field-row">
-                            <span class="field-label">Login ID:</span>
-                            <span class="field-value">${item.login_id}</span>
-                        </div>
-                        
-                        <div class="field-row">
-                            <span class="field-label">Status:</span>
-                            <span class="field-value">${item.assignment_status}</span>
-                        </div>
-                        
-                        <div class="field-row">
-                            <span class="field-label">Created Date:</span>
-                            <span class="field-value">${item.created_date}</span>
-                        </div>
-                        
-                        <div class="field-row">
-                            <span class="field-label">Active Reminders:</span>
-                            <span class="field-value">${item.reminders}</span>
-                        </div>
-                        
-                        ${item.remarks ? `
-                        <div class="field-row">
-                            <span class="field-label">Remarks:</span>
-                            <span class="field-value">${item.remarks}</span>
-                        </div>
-                        ` : ''}
-                        
-                        ${item.note && item.note !== 'No notes' ? `
-                        <div class="notes-section">
-                            <div style="font-weight: bold; margin-bottom: 8px; color: #17a2b8;">📌 Notes:</div>
-                            <div>${item.note}</div>
-                        </div>
-                        ` : ''}
-                    </div>
-                `).join('')}
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width: 15%;">Project Name</th>
+                            <th style="width: 12%;">Assignment Type</th>
+                            <th style="width: 13%;">Application Number</th>
+                            <th style="width: 10%;">Payment Date</th>
+                            <th style="width: 10%;">Login ID</th>
+                            <th style="width: 10%;">Status</th>
+                            <th style="width: 20%;">Remarks</th>
+                            <th style="width: 10%;">Created Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${cleanData.map(item => `
+                            <tr>
+                                <td>${item.project_name || 'N/A'}</td>
+                                <td>${item.assignment_type || 'N/A'}</td>
+                                <td>${item.application_number || 'N/A'}</td>
+                                <td>${item.payment_date || 'N/A'}</td>
+                                <td>${item.login_id || 'N/A'}</td>
+                                <td>${item.assignment_status || 'N/A'}</td>
+                                <td>${item.remarks || 'N/A'}</td>
+                                <td>${item.created_date || 'N/A'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
                 
                 <div class="footer">
-                    <hr style="margin: 20px 0; border: none; height: 1px; background: #e0e0e0;">
-                    🚀 Report generated from Assignment Management System
+                    <hr style="margin: 10px 0; border: none; height: 1px; background: #ddd;">
+                    Report generated from Assignment Management System
                 </div>
             </body>
             </html>
         `;
 
-        // Create blob and download
-        const blob = new Blob([htmlContent], { 
-            type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+        // Create proper Word document blob
+        const blob = new Blob(['\uFEFF', htmlContent], { 
+            type: 'application/msword'
         });
         
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
         const timestamp = new Date().toISOString().replace('T', '_').replace(/:/g, '-').replace(/\..+/, '');
-        link.download = `assignments-report_${timestamp}.docx`;
+        link.download = `assignments-report_${timestamp}.doc`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
