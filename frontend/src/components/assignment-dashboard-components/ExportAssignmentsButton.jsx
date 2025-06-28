@@ -83,7 +83,7 @@ function ExportAssignmentsButton({ data = [] }) {
             
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
-            const formattedData = formatDataForDisplay(data);
+            const formattedData = formatDataForDisplay(displayData);
             
             // PDF Settings
             const pageWidth = doc.internal.pageSize.width;
@@ -155,7 +155,7 @@ function ExportAssignmentsButton({ data = [] }) {
             
         } catch (error) {
             console.error('Error generating PDF:', error);
-            alert('Error generating PDF. Please try again.');
+            alert(`Error generating PDF: ${error.message}. Please try again.`);
         } finally {
             setIsGenerating(false);
             setIsOpen(false);
@@ -170,7 +170,7 @@ function ExportAssignmentsButton({ data = [] }) {
             await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
             
             const XLSX = window.XLSX;
-            const formattedData = formatDataForDisplay(data);
+            const formattedData = formatDataForDisplay(displayData);
             
             // Create workbook
             const wb = XLSX.utils.book_new();
@@ -193,7 +193,7 @@ function ExportAssignmentsButton({ data = [] }) {
             
         } catch (error) {
             console.error('Error generating Excel:', error);
-            alert('Error generating Excel file. Please try again.');
+            alert(`Error generating Excel file: ${error.message}. Please try again.`);
         } finally {
             setIsGenerating(false);
             setIsOpen(false);
@@ -204,7 +204,7 @@ function ExportAssignmentsButton({ data = [] }) {
     const exportToWord = async () => {
         setIsGenerating(true);
         try {
-            const formattedData = formatDataForDisplay(data);
+            const formattedData = formatDataForDisplay(displayData);
             
             // Create Word document content
             let docContent = `
@@ -322,22 +322,38 @@ function ExportAssignmentsButton({ data = [] }) {
 
             docContent += `</body></html>`;
 
-            // Create blob and download
-            const blob = new Blob([docContent], { 
-                type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
-            });
-            const url = URL.createObjectURL(blob);
-            const link = document.createElement('a');
-            link.href = url;
-            link.download = `Assignments_Report_${new Date().toISOString().split('T')[0]}.docx`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            // Create blob and download with better error handling
+            try {
+                const blob = new Blob([docContent], { 
+                    type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' 
+                });
+                
+                // Use a more secure download method
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `Assignments_Report_${new Date().toISOString().split('T')[0]}.docx`;
+                link.style.display = 'none';
+                
+                document.body.appendChild(link);
+                
+                // Trigger download
+                link.click();
+                
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 100);
+                
+            } catch (blobError) {
+                console.error('Error creating blob:', blobError);
+                throw new Error('Failed to create document file');
+            }
             
         } catch (error) {
             console.error('Error generating Word document:', error);
-            alert('Error generating Word document. Please try again.');
+            alert(`Error generating Word document: ${error.message}. Please try again.`);
         } finally {
             setIsGenerating(false);
             setIsOpen(false);
