@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { Eye, EyeOff, User, Lock, Loader2, Building2 } from 'lucide-react';
 import authService from '../../backend-services/auth/auth';
-import { login } from '../store/authSlice';
+import { login } from '../../store/authSlice';
 
 const PromoterLogin = () => {
   const dispatch = useDispatch();
