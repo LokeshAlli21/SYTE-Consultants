@@ -2,10 +2,8 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
-import PromoterApp from './PromoterApp.jsx'
 
-import { createBrowserRouter, RouterProvider, Navigate } from "react-router-dom"
-import { useSelector } from "react-redux"
+import { createBrowserRouter, RouterProvider } from "react-router-dom"
 
 import AuthLayout from './auth/AuthLayout.jsx'
 import PromoterAuthLayout from './auth/PromoterAuthLayout.jsx'
@@ -13,7 +11,6 @@ import PromoterAuthLayout from './auth/PromoterAuthLayout.jsx'
 import store from "./store/store.js"
 import { Provider } from "react-redux"
 
-// Import all components...
 import {
   Dashboard,
   Projects,
@@ -39,352 +36,244 @@ import {
   PromoterDashboard,
   PromoterLogin,
   PromoterProfile,
-  PromoterProjects,
-} from './pages/promoter/index.js'
+  PromoterProjects
+} from './pages/index.js'
+import PromoterApp from './PromoterApp.jsx'
 
-// Route Protection Component - moved outside router creation
-const ProtectedRoute = ({ children, requiredRole, fallbackPath = "/login" }) => {
-  const authStatus = useSelector(state => state.auth?.status)
-  const userRole = useSelector(state => state.auth?.userRole)
-  
-  if (!authStatus) {
-    return <Navigate to={fallbackPath} replace />
-  }
-  
-  if (requiredRole && userRole !== requiredRole) {
-    // Redirect to appropriate dashboard based on role
-    const redirectPath = userRole === 'promoter' ? '/promoter/dashboard' : '/consultant/dashboard'
-    return <Navigate to={redirectPath} replace />
-  }
-  
-  return children
-}
-
-// Role-based Layout Wrapper - moved outside router creation
-const RoleBasedLayout = ({ children, role }) => {
-  const userRole = useSelector(state => state.auth?.userRole)
-  
-  if (role === 'promoter' && userRole === 'promoter') {
-    return <PromoterApp>{children}</PromoterApp>
-  }
-  
-  if (role === 'consultant' && (userRole === 'consultant' || userRole === 'superadmin')) {
-    return <App>{children}</App>
-  }
-  
-  return <Navigate to="/login" replace />
-}
-
-// Component to handle root redirects - moved outside router creation
-const RoleBasedRedirect = () => {
-  const authStatus = useSelector(state => state.auth?.status)
-  const userRole = useSelector(state => state.auth?.userRole)
-  
-  if (!authStatus) {
-    return <Navigate to="/login" replace />
-  }
-  
-  if (userRole === 'promoter') {
-    return <Navigate to="/promoter/dashboard" replace />
-  }
-  
-  return <Navigate to="/consultant/dashboard" replace />
-}
-
-// Router factory function to create router after store is available
-const createAppRouter = () => createBrowserRouter([
-  // Public routes
+const router = createBrowserRouter([
   {
-    path: "/login",
-    element: (
-      <AuthLayout authentication={false}>
-        <Login />
-      </AuthLayout>
-    ),
-  },
-  {
-    path: "/promoter-login",
-    element: (
-      <AuthLayout authentication={false}>
-        <PromoterLogin />
-      </AuthLayout>
-    ),
-  },
-  
-  // Consultant routes with /consultant prefix
-  {
-    path: "/consultant",
-    element: (
-      <ProtectedRoute requiredRole="consultant">
-        <RoleBasedLayout role="consultant">
-          <App />
-        </RoleBasedLayout>
-      </ProtectedRoute>
-    ),
+    path: "/",
+    element: <App />,
     children: [
       {
-        index: true,
-        element: <Navigate to="/consultant/dashboard" replace />
+        path: "login",
+        element: 
+        <AuthLayout authentication={false}>
+          <Login />
+         </AuthLayout>,
       },
       {
-        path: "dashboard",
-        element: (
-          <AuthLayout authentication>
-            <Dashboard />
-          </AuthLayout>
-        ),
+        index: true, // Default route for "/"
+        element:
+        <AuthLayout authentication>
+           <Dashboard />
+         </AuthLayout>,
       },
       {
         path: "promoters",
-        element: (
-          <AuthLayout authentication>
-            <PromotersPage />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <PromotersPage />
+         </AuthLayout>, 
       },
       {
         path: "promoters/add",
-        element: (
-          <AuthLayout authentication>
-            <AddPromoter />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddPromoter />
+         </AuthLayout>,
       },
       {
         path: "promoters/view/:id",
-        element: (
-          <AuthLayout authentication>
-            <AddPromoter viewOnly={true} />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddPromoter viewOnly={true} />
+         </AuthLayout>,
       },
       {
         path: "promoters/edit/:id",
-        element: (
-          <AuthLayout authentication>
-            <AddPromoter viewOnly={false} />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddPromoter viewOnly={false} />
+         </AuthLayout>,
       },
       {
         path: "projects",
-        element: (
-          <AuthLayout authentication>
-            <Projects />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <Projects />
+         </AuthLayout>,
       },
       {
         path: "projects/add",
-        element: (
-          <AuthLayout authentication>
-            <AddProject forUpdate={false} />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddProject forUpdate={false} />
+         </AuthLayout>,
       },
       {
         path: "projects/view/:id",
-        element: (
-          <AuthLayout authentication>
-            <AddProject forUpdate={false} viewOnly={true} />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddProject forUpdate={false} viewOnly={true} />
+         </AuthLayout>,
       },
       {
         path: "projects/edit/:id",
-        element: (
-          <AuthLayout authentication>
-            <AddProject forUpdate={true} viewOnly={false} />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddProject forUpdate={true} viewOnly={false} />
+         </AuthLayout>,
       },
       {
         path: "assignments",
-        element: (
-          <AuthLayout authentication>
-            <Assignments />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <Assignments />
+         </AuthLayout>,
       },
       {
         path: "assignments/add",
-        element: (
-          <AuthLayout authentication>
-            <AddAssignment />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddAssignment />
+         </AuthLayout>,
       },
       {
         path: "assignments/view/:id",
-        element: (
-          <AuthLayout authentication>
-            <AddAssignment viewOnly={true} />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddAssignment viewOnly={true} />
+         </AuthLayout>,
       },
       {
         path: "assignments/edit/:id",
-        element: (
-          <AuthLayout authentication>
-            <AddAssignment viewOnly={false} />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddAssignment viewOnly={false} />
+         </AuthLayout>,
       },
       {
         path: "assignments/timeline/:id",
-        element: (
-          <AuthLayout authentication>
-            <AssignmentTimeLine />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AssignmentTimeLine/>
+         </AuthLayout>,
       },
       {
         path: "channel-partners",
-        element: (
-          <AuthLayout authentication>
-            <ChannelPartners />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <ChannelPartners />
+         </AuthLayout>,
       },
       {
         path: "channel-partners/add",
-        element: (
-          <AuthLayout authentication>
-            <AddChannelPartner />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddChannelPartner />
+         </AuthLayout>,
       },
       {
         path: "channel-partners/view/:id",
-        element: (
-          <AuthLayout authentication>
-            <AddChannelPartner viewOnly={true} />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddChannelPartner viewOnly={true} />
+         </AuthLayout>,
       },
       {
         path: "channel-partners/edit/:id",
-        element: (
-          <AuthLayout authentication>
-            <AddChannelPartner viewOnly={false} />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AddChannelPartner viewOnly={false} />
+         </AuthLayout>,
       },
       {
         path: "qpr",
-        element: (
-          <AuthLayout authentication>
-            <QPR />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <QPR />
+         </AuthLayout>,
       },
       {
         path: "aa",
-        element: (
-          <AuthLayout authentication>
-            <AA />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AA />
+         </AuthLayout>,
       },
       {
         path: "reports",
-        element: (
-          <AuthLayout authentication>
-            <Reports />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <Reports />
+         </AuthLayout>,
       },
       {
         path: "accounts",
-        element: (
-          <AuthLayout authentication>
-            <Accounts />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <Accounts />
+         </AuthLayout>,
       },
       {
         path: "admin-panel",
-        element: (
-          <AuthLayout authentication>
-            <AdminPanel />
-          </AuthLayout>
-        ),
+        element: 
+        <AuthLayout authentication>
+          <AdminPanel />
+         </AuthLayout>,
       },
+      // {
+      //   path: "syte-documents",
+      //   element: 
+      //   <AuthLayout authentication>
+      //     <SyteDocuments />
+      //    </AuthLayout>,
+      // },
     ],
+    errorElement: <NotFoundPage />
   },
-  
-  // Promoter routes with /promoter prefix
   {
     path: "/promoter",
-    element: (
-      <ProtectedRoute requiredRole="promoter">
-        <RoleBasedLayout role="promoter">
-          <PromoterApp />
-        </RoleBasedLayout>
-      </ProtectedRoute>
-    ),
+    element: <PromoterApp />, // Remove authentication wrapper from here
     children: [
       {
-        index: true,
-        element: <Navigate to="/promoter/dashboard" replace />
+        index: true, // Default route for "/promoter" 
+        element:
+        <PromoterAuthLayout authentication>
+          <PromoterDashboard />
+        </PromoterAuthLayout>,
       },
       {
-        path: "dashboard",
-        element: (
-          <PromoterAuthLayout authentication>
-            <PromoterDashboard />
-          </PromoterAuthLayout>
-        ),
+        path: "dashboard", // Relative path (no leading slash)
+        element:
+        <PromoterAuthLayout authentication>
+          <PromoterDashboard />
+        </PromoterAuthLayout>,
       },
       {
-        path: "profile",
-        element: (
-          <PromoterAuthLayout authentication>
-            <PromoterProfile />
-          </PromoterAuthLayout>
-        ),
+        path: "projects", // Relative path
+        element: 
+        <PromoterAuthLayout authentication>
+          <PromoterProjects />
+        </PromoterAuthLayout>,
       },
       {
-        path: "projects",
-        element: (
-          <PromoterAuthLayout authentication>
-            <PromoterProjects />
-          </PromoterAuthLayout>
-        ),
+        path: "login", // Relative path
+        element: 
+        <PromoterAuthLayout authentication={false}>
+          <PromoterLogin />
+        </PromoterAuthLayout>,
+      },
+      {
+        path: "profile", // Relative path
+        element: 
+        <PromoterAuthLayout authentication>
+          <PromoterProfile />
+        </PromoterAuthLayout>,
       },
     ],
-  },
-  
-  // Root redirect based on user role
-  {
-    path: "/",
-    element: <RoleBasedRedirect />,
-  },
-  
-  // Catch all - 404
-  {
-    path: "*",
-    element: <NotFoundPage />,
-  },
-])
-
-// Main App Component
-const MainApp = () => {
-  // Create router inside the component to ensure store is available
-  const router = createAppRouter()
-  
-  return (
-    <Provider store={store}>
-      <RouterProvider router={router} />
-    </Provider>
-  )
-}
+    errorElement: <NotFoundPage />
+  }
+]);
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <MainApp />
-  </StrictMode>
-)
+  <Provider store={store}>
+    <RouterProvider router={router} />
+  </Provider>
+);
+
+
 // code to generate docx file 
 // import React, { useState } from 'react';
 // import { Document, Packer, Paragraph, TextRun } from 'docx';

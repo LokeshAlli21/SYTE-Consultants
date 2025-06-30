@@ -14,7 +14,7 @@ function AuthLayout({ children, authentication = true }) {
 
     // Define route to access field mapping
     const routeAccessMap = {
-        '/consultant': 'dashboard',
+        '/': 'dashboard',
         '/dashboard': 'dashboard',
         '/promoters': 'promoters',
         '/projects': 'projects',
@@ -35,7 +35,7 @@ function AuthLayout({ children, authentication = true }) {
 
         // Check for parent routes (e.g., /projects/add should require 'projects' access)
         for (const route in routeAccessMap) {
-            if (route !== '/consultant' && pathname.startsWith(route + '/')) {
+            if (route !== '/' && pathname.startsWith(route + '/')) {
                 return routeAccessMap[route];
             }
         }
@@ -67,7 +67,7 @@ function AuthLayout({ children, authentication = true }) {
 
         if (!authentication && authStatus) {
             // user is logged in, but trying to access login/register
-            navigate('/consultant', { replace: true });
+            navigate('/', { replace: true });
             return;
         }
 
@@ -137,7 +137,7 @@ function AuthLayout({ children, authentication = true }) {
                             )}
                         </p>
                         <button 
-                            onClick={() => navigate('/consultant')} 
+                            onClick={() => navigate('/')} 
                             className="bg-[#5CAAAB] text-white px-4 py-2 rounded-lg hover:bg-[#4a9899] transition-colors"
                         >
                             Go to Dashboard
