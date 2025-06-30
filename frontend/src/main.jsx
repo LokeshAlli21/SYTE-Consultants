@@ -42,10 +42,10 @@ import {
   PromoterProjects,
 } from './pages/promoter/index.js'
 
-// Route Protection Component
+// Route Protection Component - moved outside router creation
 const ProtectedRoute = ({ children, requiredRole, fallbackPath = "/login" }) => {
-  const authStatus = useSelector(state => state.auth.status)
-  const userRole = useSelector(state => state.auth.userRole)
+  const authStatus = useSelector(state => state.auth?.status)
+  const userRole = useSelector(state => state.auth?.userRole)
   
   if (!authStatus) {
     return <Navigate to={fallbackPath} replace />
@@ -60,9 +60,9 @@ const ProtectedRoute = ({ children, requiredRole, fallbackPath = "/login" }) => 
   return children
 }
 
-// Role-based Layout Wrapper
+// Role-based Layout Wrapper - moved outside router creation
 const RoleBasedLayout = ({ children, role }) => {
-  const userRole = useSelector(state => state.auth.userRole)
+  const userRole = useSelector(state => state.auth?.userRole)
   
   if (role === 'promoter' && userRole === 'promoter') {
     return <PromoterApp>{children}</PromoterApp>
@@ -75,8 +75,24 @@ const RoleBasedLayout = ({ children, role }) => {
   return <Navigate to="/login" replace />
 }
 
-// Single Router Configuration
-const router = createBrowserRouter([
+// Component to handle root redirects - moved outside router creation
+const RoleBasedRedirect = () => {
+  const authStatus = useSelector(state => state.auth?.status)
+  const userRole = useSelector(state => state.auth?.userRole)
+  
+  if (!authStatus) {
+    return <Navigate to="/login" replace />
+  }
+  
+  if (userRole === 'promoter') {
+    return <Navigate to="/promoter/dashboard" replace />
+  }
+  
+  return <Navigate to="/consultant/dashboard" replace />
+}
+
+// Router factory function to create router after store is available
+const createAppRouter = () => createBrowserRouter([
   // Public routes
   {
     path: "/login",
@@ -294,14 +310,6 @@ const router = createBrowserRouter([
           </AuthLayout>
         ),
       },
-      // {
-      //   path: "syte-documents",
-      //   element: (
-      //     <AuthLayout authentication>
-      //       <SyteDocuments />
-      //     </AuthLayout>
-      //   ),
-      // },
     ],
   },
   
@@ -360,24 +368,11 @@ const router = createBrowserRouter([
   },
 ])
 
-// Component to handle root redirects
-const RoleBasedRedirect = () => {
-  const authStatus = useSelector(state => state.auth.status)
-  const userRole = useSelector(state => state.auth.userRole)
-  
-  if (!authStatus) {
-    return <Navigate to="/login" replace />
-  }
-  
-  if (userRole === 'promoter') {
-    return <Navigate to="/promoter/dashboard" replace />
-  }
-  
-  return <Navigate to="/consultant/dashboard" replace />
-}
-
 // Main App Component
 const MainApp = () => {
+  // Create router inside the component to ensure store is available
+  const router = createAppRouter()
+  
   return (
     <Provider store={store}>
       <RouterProvider router={router} />
@@ -390,7 +385,6 @@ createRoot(document.getElementById('root')).render(
     <MainApp />
   </StrictMode>
 )
-
 // code to generate docx file 
 // import React, { useState } from 'react';
 // import { Document, Packer, Paragraph, TextRun } from 'docx';
