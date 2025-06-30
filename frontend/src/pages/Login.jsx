@@ -234,9 +234,9 @@ const Login = () => {
            <div className="mt-6 text-center">
               <button
                 onClick={() => navigate('/promoter/login')}
-                className="text-sm text-[#5CAAAB] hover:text-[#4a9999] transition-colors"
+                className="text-sm text-[#5CAAAB] text-center hover:text-[#4a9999] transition-colors"
               >
-                 Go to Promoter login →
+                 Go to Promoter Login <b>→</b>
               </button>
             </div>
         </div>
