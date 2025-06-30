@@ -8,62 +8,72 @@ function PromoterAuthLayout({ children, authentication = true }) {
     const authStatus = useSelector(state => state.auth.status);
     const userData = useSelector(state => state.auth.userData);
 
-    // Check if user is a promoter
-    const isPromoter = userData && userData.role === 'promoter';
+    // Get user role
+    const userRole = userData?.role;
+    const isPromoter = userRole === 'promoter';
+    const isAdmin = userRole === 'admin';
+    const isUser = userRole === 'user';
 
     useEffect(() => {
+        // Wait for auth status to be determined
         if (authStatus === null) {
             console.log('Auth status still loading...');
             return;
         }
 
-        console.log('Final auth status:', authStatus);
+        console.log('Promoter Auth check - Status:', authStatus, 'Role:', userRole, 'Path:', location.pathname);
 
+        // Handle unauthenticated users
         if (authentication && !authStatus) {
-            // user must be logged in, but they are not
             navigate('/promoter/login', { replace: true });
             return;
         }
 
+        // Handle authenticated users trying to access promoter login
         if (!authentication && authStatus) {
-            // user is logged in, but trying to access login
-            navigate('/promoter/dashboard', { replace: true });
+            if (isPromoter) {
+                navigate('/promoter/dashboard', { replace: true });
+            } else {
+                // Non-promoters trying to access promoter login should go to main app
+                navigate('/login', { replace: true });
+            }
             return;
         }
 
-        // Role-based access control check - only promoters allowed
+        // Role-based access control for authenticated users
         if (authStatus && authentication) {
+            // Only promoters can access promoter routes
             if (!isPromoter) {
-                console.log(`Access denied for promoter route: ${location.pathname}, user role: ${userData?.role}`);
-                // Redirect to main app login or unauthorized page
-                navigate('/login', { replace: true });
+                console.log(`Non-promoter (${userRole}) trying to access promoter route: ${location.pathname}`);
+                
+                // Redirect based on their actual role
+                if (isAdmin || isUser) {
+                    navigate('/', { replace: true }); // Main app dashboard
+                } else {
+                    navigate('/login', { replace: true }); // Unknown role, back to login
+                }
                 return;
             }
         }
-    }, [authStatus, navigate, authentication, location.pathname, isPromoter, userData?.role]);
+    }, [authStatus, navigate, authentication, location.pathname, userRole, isPromoter, isAdmin, isUser]);
 
+    // Loading state
     if (authStatus === null) {
         return (
             <div className="w-full h-screen flex flex-col items-center justify-center bg-white">
-                {/* Spinner */}
                 <div className="loader"></div>
-
-                {/* Optional Loading Text */}
                 <p className="mt-4 text-lg font-semibold text-gray-700 animate-pulse">
                     Loading, please wait...
                 </p>
-
-                {/* CSS for the loading animation */}
                 <style>{`
                     .loader {
-                        border: 6px solid #f3f3f3; /* Light grey background */
-                        border-top: 6px solid #5CAAAB; /* Your brand color */
+                        border: 6px solid #f3f3f3;
+                        border-top: 6px solid #5CAAAB;
                         border-radius: 50%;
                         width: 60px;
                         height: 60px;
                         animation: spin 1s linear infinite;
                     }
-
                     @keyframes spin {
                         0% { transform: rotate(0deg); }
                         100% { transform: rotate(360deg); }
@@ -73,7 +83,7 @@ function PromoterAuthLayout({ children, authentication = true }) {
         );
     }
 
-    // Final access check before rendering - ensure user is promoter
+    // Final access check before rendering
     if (authStatus && authentication) {
         if (!isPromoter) {
             return (
@@ -88,21 +98,29 @@ function PromoterAuthLayout({ children, authentication = true }) {
                         <p className="text-gray-600 mb-4">
                             This area is restricted to promoters only.
                             <span className="block text-sm mt-1">
-                                Your current role: <strong>{userData?.role || 'Unknown'}</strong>
+                                Your current role: <strong>{userRole || 'Unknown'}</strong>
                             </span>
                         </p>
                         <div className="space-y-2">
-                            <button 
-                                onClick={() => navigate('/login')} 
-                                className="w-full bg-[#5CAAAB] text-white px-4 py-2 rounded-lg hover:bg-[#4a9899] transition-colors"
-                            >
-                                Go to Main Login
-                            </button>
+                            {(isAdmin || isUser) && (
+                                <button 
+                                    onClick={() => navigate('/')} 
+                                    className="w-full bg-[#5CAAAB] text-white px-4 py-2 rounded-lg hover:bg-[#4a9899] transition-colors"
+                                >
+                                    Go to Main Dashboard
+                                </button>
+                            )}
                             <button 
                                 onClick={() => navigate('/promoter/login')} 
                                 className="w-full bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
                             >
                                 Promoter Login
+                            </button>
+                            <button 
+                                onClick={() => navigate('/login')} 
+                                className="w-full bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition-colors"
+                            >
+                                Main App Login
                             </button>
                         </div>
                     </div>
