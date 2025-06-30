@@ -7,7 +7,7 @@ import { login, logout} from './store/authSlice'
 
 function PromoterApp() {
   const dispatch = useDispatch();
-  
+
   useEffect(() => {
     authService.getCurrentPromoter()
     .then((promoterData) => {
@@ -20,30 +20,16 @@ function PromoterApp() {
     })
     .catch((error) => console.log("Login Error : ",error))
   }, [])
-  
+
   return (
-    <div className="min-h-screen w-full bg-[#F3F4FF]">
-      <ToastContainer 
-        position='top-right'
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        className="!mt-safe-top"
-        toastClassName="!text-sm !rounded-lg"
-        bodyClassName="!text-sm"
-      />
-      <div className="w-full max-w-none mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="w-full">
-          <Outlet />
-        </div>
+    <div className="flex  max-w-screen w-full  bg-[#F3F4FF]">
+      <ToastContainer position='top-right' />
+      <div className=" flex-1 flex-grow mx-auto">
+        <Outlet />
       </div>
     </div>
   );
 }
+
 
 export default PromoterApp
