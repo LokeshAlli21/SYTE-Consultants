@@ -66,8 +66,8 @@ const PromoterLogin = () => {
     setLoading(true);
     
     try {
-      const response = await authService.login(formData);
-      
+      const response = await authService.promoterLogin(formData);
+
       if (response?.user) {
         // Check if user is a promoter
         if (response.user.role !== 'promoter') {
