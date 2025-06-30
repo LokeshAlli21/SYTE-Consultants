@@ -9,14 +9,14 @@ function PromoterApp() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    authService.getCurrentUser()
-    .then((userData) => {
-      if(userData) {
-        dispatch(login(userData))
+    authService.getCurrentPromoter()
+    .then((promoterData) => {
+      if(promoterData) {
+        dispatch(login(promoterData))
       } else {
         dispatch(logout())
       }
-      console.log("userData : ",userData);
+      console.log("promoterData : ",promoterData);
     })
     .catch((error) => console.log("Login Error : ",error))
   }, [])

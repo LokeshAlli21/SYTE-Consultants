@@ -229,6 +229,13 @@ const router = createBrowserRouter([
     element: <PromoterApp />, // Remove authentication wrapper from here
     children: [
       {
+        path: "login", // Relative path
+        element: 
+        <PromoterAuthLayout authentication={false}>
+          <PromoterLogin />
+        </PromoterAuthLayout>,
+      },
+      {
         index: true, // Default route for "/promoter" 
         element:
         <PromoterAuthLayout authentication>
@@ -247,13 +254,6 @@ const router = createBrowserRouter([
         element: 
         <PromoterAuthLayout authentication>
           <PromoterProjects />
-        </PromoterAuthLayout>,
-      },
-      {
-        path: "login", // Relative path
-        element: 
-        <PromoterAuthLayout authentication={false}>
-          <PromoterLogin />
         </PromoterAuthLayout>,
       },
       {

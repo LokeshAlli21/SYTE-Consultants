@@ -12,6 +12,10 @@ function AuthLayout({ children, authentication = true }) {
     const isAdmin = userData && userData.role === 'admin';
     const userAccessFields = userData?.access_fields || [];
 
+    const isConsultant = userData && (userData.role === 'admin' || userData.role === 'user');
+
+
+
     // Define route to access field mapping
     const routeAccessMap = {
         '/': 'dashboard',
@@ -52,6 +56,17 @@ function AuthLayout({ children, authentication = true }) {
     };
 
     useEffect(() => {
+        
+        // Role-based access control check - only consultants allowed
+        if (authStatus && authentication) {
+            if (!isConsultant) {
+                console.log(`Access denied for consultant route: ${location.pathname}, user role: ${userData?.role}`);
+                // Redirect to main app login or unauthorized page
+                navigate('/promoter/login', { replace: true });
+                return;
+            }
+        }
+        
         if (authStatus === null) {
             console.log('Auth status still loading...');
             return;

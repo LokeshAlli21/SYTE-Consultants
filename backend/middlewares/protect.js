@@ -34,4 +34,37 @@ export const protect = async (req, res, next) => {
   }
 };
 
-export default { protect };
+export const protectPromoter = async (req, res, next) => {
+  try {
+    let token;
+
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      token = req.headers.authorization.split(' ')[1];
+
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      // PostgreSQL query to get the promoter by id
+      const queryText = 'SELECT * FROM promoters WHERE id = $1';
+      const result = await query(queryText, [decoded.id]);
+
+      if (result.rows.length === 0) {
+        return res.status(401).json({ message: 'Promoter not found' });
+      }
+
+      const promoter = result.rows[0];
+
+      req.promoter = promoter; // ✅ Now you have full promoter info in req.promoter
+      next();
+    } else {
+      return res.status(401).json({ message: 'Not authorized, no token' });
+    }
+  } catch (error) {
+    console.error('Auth Middleware Error:', error);
+    res.status(401).json({ message: 'Not authorized, token failed' });
+  }
+};
+
+export default { protect, protectPromoter };
