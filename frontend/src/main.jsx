@@ -214,22 +214,35 @@ const router = createBrowserRouter([
           <AdminPanel />
          </AuthLayout>,
       },
-      // {
-      //   path: "syte-documents",
-      //   element: 
-      //   <AuthLayout authentication>
-      //     <SyteDocuments />
-      //    </AuthLayout>,
-      // },
+      // Add unauthorized route
+      {
+        path: "unauthorized",
+        element: 
+        <AuthLayout authentication>
+          <div className="flex items-center justify-center min-h-screen bg-gray-50">
+            <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
+              <h2 className="text-xl font-semibold text-gray-800 mb-4">Unauthorized Access</h2>
+              <p className="text-gray-600 mb-4">You don't have permission to access the requested page.</p>
+              <button 
+                onClick={() => window.history.back()} 
+                className="bg-[#5CAAAB] text-white px-4 py-2 rounded-lg hover:bg-[#4a9899] transition-colors"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+         </AuthLayout>,
+      },
     ],
     errorElement: <NotFoundPage />
   },
+  // ⭐ COMPLETELY SEPARATE PROMOTER ROUTES - NO NESTING CONFLICTS
   {
     path: "/promoter",
-    element: <PromoterApp />, // Remove authentication wrapper from here
+    element: <PromoterApp />,
     children: [
       {
-        path: "login", // Relative path
+        path: "login", 
         element: 
         <PromoterAuthLayout authentication={false}>
           <PromoterLogin />
@@ -243,21 +256,21 @@ const router = createBrowserRouter([
         </PromoterAuthLayout>,
       },
       {
-        path: "dashboard", // Relative path (no leading slash)
+        path: "dashboard",
         element:
         <PromoterAuthLayout authentication>
           <PromoterDashboard />
         </PromoterAuthLayout>,
       },
       {
-        path: "projects", // Relative path
+        path: "projects",
         element: 
         <PromoterAuthLayout authentication>
           <PromoterProjects />
         </PromoterAuthLayout>,
       },
       {
-        path: "profile", // Relative path
+        path: "profile",
         element: 
         <PromoterAuthLayout authentication>
           <PromoterProfile />
