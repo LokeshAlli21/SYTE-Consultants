@@ -38,7 +38,7 @@ function PromoterAuthLayout({ children, authentication = true }) {
 
         // ⭐ PROMOTER AREA PROTECTION: Only for authenticated routes
         if (authStatus && authentication) {
-            if (!isPromoter) {
+            if (!isPromoter && (isAdmin || isUser)) {
                 // Non-promoters trying to access promoter routes
                 if (isAdmin || isUser) {
                     navigate('/', { replace: true }); // Send to main app

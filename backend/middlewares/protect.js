@@ -13,6 +13,14 @@ export const protect = async (req, res, next) => {
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
+      if (!decoded || !decoded.id || !decoded.user) {
+        return res.status(401).json({ message: 'Not authorized, token failed' });
+      }
+
+      if (decoded.user !== 'consultant') {
+        return res.status(401).json({ message: 'Not authorized, invalid user role' });
+      }
+
       // PostgreSQL query to get the user by id
       const queryText = 'SELECT * FROM users WHERE id = $1';
       const result = await query(queryText, [decoded.id]);
@@ -45,6 +53,14 @@ export const protectPromoter = async (req, res, next) => {
       token = req.headers.authorization.split(' ')[1];
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+      if (!decoded || !decoded.id || !decoded.user) {
+        return res.status(401).json({ message: 'Not authorized, token failed' });
+      }
+
+      if (decoded.user !== 'promoter') {
+        return res.status(401).json({ message: 'Not authorized, invalid user role' });
+      }
 
       // PostgreSQL query to get the promoter by id
       const queryText = 'SELECT * FROM promoters WHERE id = $1';

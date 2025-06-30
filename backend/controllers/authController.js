@@ -46,8 +46,8 @@ export const loginUser = async (req, res, next) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    const token = generateToken(user.id);
-    console.log("Token generated for user:", user.id);
+    const token = generateToken(user.id, 'consultant'); // Pass user role as 'consultant'
+    console.log("Token generated for user:", user.id );
 
     let accessFields = null;
     if (user.access_fields) {
@@ -124,7 +124,7 @@ export const promoterLogin = async (req, res, next) => {
       return res.status(400).json({ message: 'Invalid username or password' });
     }
 
-    const token = generateToken(promoter.id);
+    const token = generateToken(promoter.id, 'promoter'); // Pass user role as 'promoter'
     console.log("Token generated for promoter:", promoter.id);
 
     res.json({
