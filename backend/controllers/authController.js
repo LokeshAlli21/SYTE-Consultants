@@ -133,6 +133,7 @@ export const promoterLogin = async (req, res, next) => {
         id: promoter.id,
         username: promoter.username,
         token: token,
+        role: 'promoter',
       },
       message: 'Promoter logged in successfully',
     });
@@ -190,6 +191,7 @@ export const getPromoter = async (req, res, next) => {
       promoter: {
         id: promoter.id,
         username: promoter.username,
+        role: 'promoter',
       },
     });
   } catch (error) {
