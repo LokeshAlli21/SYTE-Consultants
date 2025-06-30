@@ -37,7 +37,8 @@ import {
   PromoterLogin,
   PromoterProfile,
   PromoterProjects
-} from './pages/index.js'
+} from './pages/promoter/index.js'
+
 import PromoterApp from './PromoterApp.jsx'
 
 const router = createBrowserRouter([
