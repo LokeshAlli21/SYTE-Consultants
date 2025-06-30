@@ -21,12 +21,6 @@ const PromoterLogin = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  // Username validation
-  const validateUsername = useCallback((username) => {
-    // Username should be at least 3 characters and contain only letters, numbers, and underscores
-    const regex = /^[a-zA-Z0-9_]{3,}$/;
-    return regex.test(username);
-  }, []);
 
   // Form validation
   const validateForm = useCallback(() => {
@@ -34,9 +28,7 @@ const PromoterLogin = () => {
 
     if (!formData.username.trim()) {
       newErrors.username = 'Username is required';
-    } else if (!validateUsername(formData.username)) {
-      newErrors.username = 'Username must be at least 3 characters and contain only letters, numbers, and underscores';
-    }
+    } else 
 
     if (!formData.password.trim()) {
       newErrors.password = 'Password is required';
@@ -46,7 +38,7 @@ const PromoterLogin = () => {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [formData, validateUsername]);
+  }, [formData]);
 
   // Handle input changes
   const handleInputChange = useCallback((e) => {
