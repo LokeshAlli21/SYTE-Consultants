@@ -230,6 +230,15 @@ const Login = () => {
               )}
             </button>
           </form>
+
+           <div className="mt-6 text-center">
+              <button
+                onClick={() => navigate('/promoter/login')}
+                className="text-sm text-[#5CAAAB] hover:text-[#4a9999] transition-colors"
+              >
+                 Go to Promoter login →
+              </button>
+            </div>
         </div>
       </div>
     </div>

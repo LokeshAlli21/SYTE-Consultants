@@ -117,21 +117,12 @@ const PromoterLogin = () => {
               Promoter Portal
             </h1>
             <p className="text-white/90 text-sm">
-              Sign in to access your projects and dashboard
+              Sign in to access your projects and units
             </p>
           </div>
 
           {/* Form Section */}
           <div className="p-6">
-            
-            {/* Brand Info */}
-            <div className="text-center mb-6">
-              <div className="flex items-center justify-center mb-3">
-                <img className="w-12 h-12" src="../logo.png" alt="Logo" />
-                <span className="ml-2 text-lg font-semibold text-gray-800">SYTE</span>
-              </div>
-              <div className="h-0.5 bg-gray-200 w-16 mx-auto"></div>
-            </div>
 
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -245,12 +236,12 @@ const PromoterLogin = () => {
                 onClick={() => navigate('/login')}
                 className="text-sm text-[#5CAAAB] hover:text-[#4a9999] transition-colors"
               >
-                ← Back to Main Login
+                ← Go to consultant login
               </button>
             </div>
 
             {/* Mobile Optimized Footer */}
-            <div className="mt-8 pt-4 border-t border-gray-100">
+            <div className="mt-8 pt-4 border-t mb-4 border-gray-100">
               <p className="text-xs text-gray-500 text-center">
                 Promoter Portal • SYTE Consultants
               </p>
@@ -258,15 +249,26 @@ const PromoterLogin = () => {
           </div>
         </div>
 
-        {/* Mobile Helper Text */}
-        <div className="mt-4 text-center">
-          <p className="text-sm text-gray-600">
-            For the best experience, add this page to your home screen
-          </p>
-        </div>
       </div>
     </div>
   );
 };
 
 export default PromoterLogin;
+
+
+
+// TODO: Create a view to fetch channel partners by promoter id
+// CREATE VIEW vw_channel_partner_by_promoter AS
+// SELECT 
+//     p.id AS promoter_id,
+//     cp.id,
+//     cp.full_name,
+//     cp.contact_number,
+//     cp.alternate_contact_number,
+//     cp.email_id,
+//     cp.district,
+//     cp.city
+// FROM promoters p
+// LEFT JOIN projects pr ON p.id = pr.promoter_id
+// LEFT JOIN channel_partners cp ON pr.channel_partner_id = cp.id;
