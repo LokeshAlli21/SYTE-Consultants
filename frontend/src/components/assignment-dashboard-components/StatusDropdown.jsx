@@ -483,6 +483,8 @@ export default function StatusDropdown({
                       transition-all duration-150 ${optionColors.hover} 
                       ${isSelected ? 'ring-2 ring-offset-1 ring-[#42dbdb]' : ''}`}
                     onClick={() => {
+                      const confirmChange = window.confirm(`Are you sure you want to change the status to "${option.value}"?`);
+                      if (!confirmChange) return;
                       if(option.value === currentStatus) {
                         toast.info("No changes detected in status.");
                         return

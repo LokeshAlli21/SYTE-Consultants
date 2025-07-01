@@ -271,23 +271,22 @@ const handleBulkDelete = async () => {
 
 const handleStatusChange = useCallback(async (assignmentId, newStatus) => {
 
-  console.log(assignmentId, newStatus);
-  
+  console.log("Assignment ID:", assignmentId, "New Status:", newStatus);
+
   if (!assignmentId) {
     toast.error("Assignment ID not found");
     return;
   }
 
-  const confirmChange = window.confirm(`Are you sure you want to change the status to "${newStatus}"?`);
-  if (!confirmChange) return;
-
   try {
-    await databaseService.updateAssignmentStatus(assignmentId,userData?.id, newStatus);
-    setAssignments(prev =>
-      newStatus === 'close'
-        ? prev.filter(item => item.id !== assignmentId) // remove it
-        : prev.map(item =>
-            item.id === assignmentId ? { ...item, assignment_status: newStatus } : item
+    await databaseService.updateAssignmentStatus(assignmentId, userData?.id, newStatus);
+    setAssignments(prev => 
+      newStatus === 'close' 
+        ? prev.filter(item => item.id !== assignmentId)
+        : prev.map(item => 
+            item.id === assignmentId 
+              ? { ...item, assignment_status: newStatus } 
+              : item
           )
     );
     toast.success("Status updated successfully");
