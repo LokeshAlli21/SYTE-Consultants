@@ -96,8 +96,7 @@ useEffect(() => {
           last_action: timeline?.created_at || null,
           note: timeline?.note || {},
         };
-      })
-      .filter((item) => item.assignment_status !== 'close');
+      });
 
       console.log('formed: ',flatAssignments);
       setAssignments(flatAssignments);
