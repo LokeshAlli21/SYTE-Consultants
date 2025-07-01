@@ -96,7 +96,8 @@ useEffect(() => {
           last_action: timeline?.created_at || null,
           note: timeline?.note || {},
         };
-      });
+      })
+      .filter((item) => item.assignment_status !== 'close');
 
       console.log('formed: ',flatAssignments);
       setAssignments(flatAssignments);
@@ -277,12 +278,17 @@ const handleStatusChange = useCallback(async (assignmentId, newStatus) => {
     return;
   }
 
+  const confirmChange = window.confirm(`Are you sure you want to change the status to "${newStatus}"?`);
+  if (!confirmChange) return;
+
   try {
     await databaseService.updateAssignmentStatus(assignmentId,userData?.id, newStatus);
     setAssignments(prev =>
-      prev.map(item =>
-        item.id === assignmentId ? { ...item, assignment_status: newStatus } : item
-      )
+      newStatus === 'close'
+        ? prev.filter(item => item.id !== assignmentId) // remove it
+        : prev.map(item =>
+            item.id === assignmentId ? { ...item, assignment_status: newStatus } : item
+          )
     );
     toast.success("Status updated successfully");
   } catch (err) {
