@@ -6,7 +6,6 @@ import App from './App.jsx'
 import { createBrowserRouter, RouterProvider } from "react-router-dom"
 
 import AuthLayout from './auth/AuthLayout.jsx'
-import PromoterAuthLayout from './auth/PromoterAuthLayout.jsx'
 
 import store from "./store/store.js"
 import { Provider } from "react-redux"
@@ -32,253 +31,194 @@ import {
   NotFoundPage,
 } from './pages/index.js'
 
-import {
-  PromoterDashboard,
-  PromoterLogin,
-  PromoterProfile,
-  PromoterProjects
-} from './pages/promoter/index.js'
-
-import PromoterApp from './PromoterApp.jsx'
-
 const router = createBrowserRouter([
   {
     path: "/",
     element: <App />,
     children: [
       {
-        path: "login",
+        path: "/login",
         element: 
         <AuthLayout authentication={false}>
           <Login />
          </AuthLayout>,
       },
       {
-        index: true, // Default route for "/"
+        path: "/",
         element:
         <AuthLayout authentication>
            <Dashboard />
          </AuthLayout>,
       },
       {
-        path: "promoters",
+        path: "/promoters",
         element: 
         <AuthLayout authentication>
+          {" "}
           <PromotersPage />
          </AuthLayout>, 
       },
       {
-        path: "promoters/add",
+        path: "/promoters/add",
         element: 
         <AuthLayout authentication>
           <AddPromoter />
          </AuthLayout>,
       },
       {
-        path: "promoters/view/:id",
+        path: "/promoters/view/:id",
         element: 
         <AuthLayout authentication>
-          <AddPromoter viewOnly={true} />
+          <AddPromoter  viewOnly={true}  />
          </AuthLayout>,
       },
       {
-        path: "promoters/edit/:id",
+        path: "/promoters/edit/:id",
         element: 
         <AuthLayout authentication>
-          <AddPromoter viewOnly={false} />
+          <AddPromoter  viewOnly={false}  />
          </AuthLayout>,
       },
       {
-        path: "projects",
+        path: "/projects",
         element: 
         <AuthLayout authentication>
           <Projects />
          </AuthLayout>,
       },
       {
-        path: "projects/add",
+        path: "/projects/add",
         element: 
         <AuthLayout authentication>
           <AddProject forUpdate={false} />
          </AuthLayout>,
       },
       {
-        path: "projects/view/:id",
+        path: "/projects/view/:id",
         element: 
         <AuthLayout authentication>
-          <AddProject forUpdate={false} viewOnly={true} />
+          <AddProject  forUpdate={false} viewOnly={true}  />
          </AuthLayout>,
       },
       {
-        path: "projects/edit/:id",
+        path: "/projects/edit/:id",
         element: 
         <AuthLayout authentication>
-          <AddProject forUpdate={true} viewOnly={false} />
+          <AddProject forUpdate={true}  viewOnly={false}  />
          </AuthLayout>,
       },
       {
-        path: "assignments",
+        path: "/assignments",
         element: 
         <AuthLayout authentication>
           <Assignments />
          </AuthLayout>,
       },
       {
-        path: "assignments/add",
+        path: "/assignments/add",
         element: 
         <AuthLayout authentication>
           <AddAssignment />
          </AuthLayout>,
       },
       {
-        path: "assignments/view/:id",
+        path: "/assignments/view/:id",
         element: 
         <AuthLayout authentication>
-          <AddAssignment viewOnly={true} />
+          <AddAssignment  viewOnly={true}  />
          </AuthLayout>,
       },
       {
-        path: "assignments/edit/:id",
+        path: "/assignments/edit/:id",
         element: 
         <AuthLayout authentication>
-          <AddAssignment viewOnly={false} />
+          <AddAssignment  viewOnly={false}  />
          </AuthLayout>,
       },
       {
-        path: "assignments/timeline/:id",
+        path: "/assignments/timeline/:id",
         element: 
         <AuthLayout authentication>
           <AssignmentTimeLine/>
          </AuthLayout>,
       },
       {
-        path: "channel-partners",
+        path: "/channel-partners",
         element: 
         <AuthLayout authentication>
           <ChannelPartners />
          </AuthLayout>,
       },
       {
-        path: "channel-partners/add",
+        path: "/channel-partners/add",
         element: 
         <AuthLayout authentication>
           <AddChannelPartner />
          </AuthLayout>,
       },
       {
-        path: "channel-partners/view/:id",
+        path: "/channel-partners/view/:id",
         element: 
         <AuthLayout authentication>
           <AddChannelPartner viewOnly={true} />
          </AuthLayout>,
       },
       {
-        path: "channel-partners/edit/:id",
+        path: "/channel-partners/edit/:id",
         element: 
         <AuthLayout authentication>
           <AddChannelPartner viewOnly={false} />
          </AuthLayout>,
       },
       {
-        path: "qpr",
+        path: "/qpr",
         element: 
         <AuthLayout authentication>
           <QPR />
          </AuthLayout>,
       },
       {
-        path: "aa",
+        path: "/aa",
         element: 
         <AuthLayout authentication>
           <AA />
          </AuthLayout>,
       },
       {
-        path: "reports",
+        path: "/reports",
         element: 
         <AuthLayout authentication>
+          {" "}
           <Reports />
          </AuthLayout>,
       },
       {
-        path: "accounts",
+        path: "/accounts",
         element: 
         <AuthLayout authentication>
+          {" "}
           <Accounts />
          </AuthLayout>,
       },
       {
-        path: "admin-panel",
+        path: "/admin-panel",
         element: 
         <AuthLayout authentication>
+          {" "}
           <AdminPanel />
          </AuthLayout>,
       },
-      // Add unauthorized route
       {
-        path: "unauthorized",
+        path: "/syte-documents",
         element: 
         <AuthLayout authentication>
-          <div className="flex items-center justify-center min-h-screen bg-gray-50">
-            <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
-              <h2 className="text-xl font-semibold text-gray-800 mb-4">Unauthorized Access</h2>
-              <p className="text-gray-600 mb-4">You don't have permission to access the requested page.</p>
-              <button 
-                onClick={() => window.history.back()} 
-                className="bg-[#5CAAAB] text-white px-4 py-2 rounded-lg hover:bg-[#4a9899] transition-colors"
-              >
-                Go Back
-              </button>
-            </div>
-          </div>
+          {" "}
+          {/* <SyteDocuments /> TODO: update this component as per BUCKET METHODS (RERA-DEV) in databaseService */}
          </AuthLayout>,
       },
     ],
     errorElement: <NotFoundPage />
   },
-  // ⭐ COMPLETELY SEPARATE PROMOTER ROUTES - NO NESTING CONFLICTS
-  {
-    path: "/promoter",
-    element: <PromoterApp />,
-    children: [
-      {
-        path: "login", 
-        element: 
-        <PromoterAuthLayout authentication={false}>
-          <PromoterLogin />
-        </PromoterAuthLayout>,
-      },
-      {
-        index: true, // Default route for "/promoter" 
-        element:
-        <PromoterAuthLayout authentication>
-          <PromoterDashboard />
-        </PromoterAuthLayout>,
-      },
-      {
-        path: "dashboard",
-        element:
-        <PromoterAuthLayout authentication>
-          <PromoterDashboard />
-        </PromoterAuthLayout>,
-      },
-      {
-        path: "projects",
-        element: 
-        <PromoterAuthLayout authentication>
-          <PromoterProjects />
-        </PromoterAuthLayout>,
-      },
-      {
-        path: "profile",
-        element: 
-        <PromoterAuthLayout authentication>
-          <PromoterProfile />
-        </PromoterAuthLayout>,
-      },
-    ],
-    errorElement: <NotFoundPage />
-  }
 ]);
 
 createRoot(document.getElementById('root')).render(

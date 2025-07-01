@@ -46,7 +46,7 @@ export const loginUser = async (req, res, next) => {
       return res.status(400).json({ message: 'Invalid email or password' });
     }
 
-    const token = generateToken(user.id, 'consultant'); // Pass user role as 'consultant'
+    const token = generateToken(user.id, 'consultant'); // Pass user type as 'consultant'
     console.log("Token generated for user:", user.id );
 
     let accessFields = null;
@@ -88,62 +88,6 @@ export const loginUser = async (req, res, next) => {
   }
 };
 
-export const promoterLogin = async (req, res, next) => {
-  try {
-    const { username, password } = req.body;
-
-    console.log('🚀 Logging in promoter:', username);
-    console.log('Request body:', req.body);
-
-    if (!username || !password) {
-      return res.status(400).json({ message: 'Username and password are required' });
-    }
-
-    // TODO: set username and password in promoters table with bcrypt hash
-    const promoterQuery = `
-      SELECT id, email_id as username, contact_number as password
-      FROM promoters
-      WHERE email_id = $1
-    `;
-
-    const result = await query(promoterQuery, [username]);
-
-    if (result.rows.length === 0) {
-      return res.status(400).json({ message: 'Invalid username or password' });
-    }
-
-    const promoter = result.rows[0];
-
-    // TODO : const validPassword = await bcrypt.compare(password, promoter.password);
-    const validPassword = password === promoter.password
-    console.log('Password provided:', password);
-    console.log('Hashed password from DB:', promoter.password);
-    console.log('Password verification result:', validPassword);
-
-    if (!validPassword) {
-      return res.status(400).json({ message: 'Invalid username or password' });
-    }
-
-    const token = generateToken(promoter.id, 'promoter'); // Pass user role as 'promoter'
-    console.log("Token generated for promoter:", promoter.id);
-
-    res.json({
-      success: true,
-      user: {
-        id: promoter.id,
-        username: promoter.username,
-        token: token,
-        role: 'promoter',
-      },
-      message: 'Promoter logged in successfully',
-    });
-
-  } catch (error) {
-    console.error('Promoter Login Error:', error);
-    res.status(500).json({ message: 'Internal Server Error' });
-  }
-};
-
 export const getUser = async (req, res, next) => {
   try {
     const user = req.user;
@@ -175,23 +119,6 @@ export const getUser = async (req, res, next) => {
         photo_url: signedPhotoUrl, // ✅ use signed URL
         created_at: user.created_at || null,
         access_fields: accessFields,
-      },
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-export const getPromoter = async (req, res, next) => {
-  try {
-    const promoter = req.promoter;
-
-    res.json({
-      success: true,
-      promoter: {
-        id: promoter.id,
-        username: promoter.username,
-        role: 'promoter',
       },
     });
   } catch (error) {

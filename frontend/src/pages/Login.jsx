@@ -206,6 +206,28 @@ const Login = () => {
               )}
             </div>
 
+            {/* Forgot Password */}
+            {/* <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <input
+                  id="remember-me"
+                  name="remember-me"
+                  type="checkbox"
+                  className="h-4 w-4 text-[#5CAAAB] focus:ring-[#5CAAAB] border-gray-300 rounded"
+                />
+                <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  Remember me
+                </label>
+              </div>
+              <button
+                type="button"
+                className="text-sm text-[#5CAAAB] hover:text-[#076666] font-medium transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div> */}
+
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
@@ -231,14 +253,15 @@ const Login = () => {
             </button>
           </form>
 
-           <div className="mt-6 text-center">
-              <button
-                onClick={() => navigate('/promoter/login')}
-                className="text-sm text-[#5CAAAB] text-center hover:text-[#4a9999] transition-colors"
-              >
-                 Go to Promoter Login <b>→</b>
+          {/* Footer */}
+          {/* <div className="mt-8 text-center">
+            <p className="text-sm text-gray-600">
+              Don't have an account?{' '}
+              <button className="font-medium text-[#5CAAAB] hover:text-[#076666] transition-colors">
+                Contact Administrator
               </button>
-            </div>
+            </p>
+          </div> */}
         </div>
       </div>
     </div>
