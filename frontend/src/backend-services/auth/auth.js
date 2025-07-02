@@ -36,6 +36,7 @@ class AuthService {
         throw new Error("Invalid credentials");
       }
 
+      localStorage.removeItem("authTokenForPromoter"); // Clear any previous token for promoter
       localStorage.setItem("authToken", data?.user?.token);
       toast.success(`Welcome back! Logged in successfully.`);
       return data;
