@@ -26,21 +26,21 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
-        path: "/login",
+        path: "login",
         element: 
         <AuthLayout authentication={false}>
           <Login />
          </AuthLayout>,
       },
       {
-        path: "/",
+        path: "",
         element:
         <AuthLayout authentication>
            <Dashboard />
          </AuthLayout>,
       },
       {
-        path: "/projects",
+        path: "projects",
         element: 
         <AuthLayout authentication>
           {" "}
@@ -48,21 +48,21 @@ const router = createBrowserRouter([
          </AuthLayout>, 
       },
       {
-        path: "/project/:id",
+        path: "project/:id",
         element: 
         <AuthLayout authentication>
           <ViewProject />
          </AuthLayout>,
       },
       {
-        path: "/project/unit/:id",
+        path: "project/unit/:id",
         element: 
         <AuthLayout authentication>
           <ViewProjectUnit />
          </AuthLayout>,
       },
       {
-        path: "/profile",
+        path: "profile",
         element: 
         <AuthLayout authentication>
           <ViewProfile />
