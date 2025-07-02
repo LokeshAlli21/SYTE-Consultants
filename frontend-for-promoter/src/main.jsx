@@ -26,6 +26,13 @@ const router = createBrowserRouter([
     element: <App />,
     children: [
       {
+        index: true,  // This handles the root path /promoter/
+        element:
+        <AuthLayout authentication>
+           <Dashboard />
+         </AuthLayout>,
+      },
+      {
         path: "login",
         element: 
         <AuthLayout authentication={false}>
@@ -33,17 +40,9 @@ const router = createBrowserRouter([
          </AuthLayout>,
       },
       {
-        path: "",
-        element:
-        <AuthLayout authentication>
-           <Dashboard />
-         </AuthLayout>,
-      },
-      {
         path: "projects",
         element: 
         <AuthLayout authentication>
-          {" "}
           <Projects />
          </AuthLayout>, 
       },
@@ -71,9 +70,8 @@ const router = createBrowserRouter([
     ],
     errorElement: <NotFoundPage />
   },
-] ,
-{
-  basename: "/promoter", // 👈 Important
+], {
+  basename: "/promoter",
 });
 
 createRoot(document.getElementById('root')).render(
