@@ -1,0 +1,13 @@
+syte-frontend-for-promoter build commands:
+
+npm i
+
+npm run build
+
+sudo cp -r dist/* /var/www/syte-frontend-for-promoter/
+
+sudo nginx -t && sudo systemctl reload nginx
+
+sudo systemctl status nginx
+
+sudo nano /etc/nginx/sites-available/default

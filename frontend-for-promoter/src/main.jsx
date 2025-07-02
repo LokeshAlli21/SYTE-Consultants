@@ -71,7 +71,10 @@ const router = createBrowserRouter([
     ],
     errorElement: <NotFoundPage />
   },
-]);
+] ,
+{
+  basename: "/promoter", // 👈 Important
+});
 
 createRoot(document.getElementById('root')).render(
   <Provider store={store}>
