@@ -27,11 +27,6 @@ function AuthLayout({ children, authentication = true }) {
                 navigate('/', { replace: true });
             return;
         }
-
-        // ⭐ PROMOTER AREA PROTECTION: Only for authenticated routes
-        if (authStatus && authentication) {
-            navigate('/', { replace: true });
-        }
     }, [authStatus, authentication]);
 
     // Loading state
