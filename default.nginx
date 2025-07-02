@@ -24,9 +24,14 @@ listen 80;
         try_files $uri $uri/ /index.html;
     }
 
+    # Redirect /promoter to /promoter/
+    location = /promoter {
+        return 301 /promoter/;
+    }
+
     # App2 route
     location /promoter/ {
-        root /var/www/syte-frontend-for-promoter;
+        alias /var/www/syte-frontend-for-promoter;
         index index.html;
         try_files $uri $uri/ /index.html;
     }
