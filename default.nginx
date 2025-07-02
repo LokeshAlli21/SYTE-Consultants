@@ -1,3 +1,53 @@
+#updated
+server {
+    listen 80;
+    server_name _;
+
+    # App1 (main app)
+    location / {
+        root /var/www/syte-frontend;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Redirect /promoter to /promoter/
+    location = /promoter {
+        return 301 /promoter/;
+    }
+
+    # App2 (promoter app) - FIXED
+    location ^~ /promoter/ {
+        alias /var/www/syte-frontend-for-promoter/;
+        index index.html;
+        try_files $uri $uri/ /promoter/index.html;
+    }
+
+    # API proxy
+    location /api/ {
+        proxy_pass http://localhost:3000/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # /etc/nginx/sites-available/default                                                                
 # Redirect HTTP to HTTPS
 # server {
