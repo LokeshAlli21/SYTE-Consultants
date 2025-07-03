@@ -1033,7 +1033,7 @@ disabled={disabled}
                   onChange={handleChange}
                   disabled={disabled}
                   onKeyDown={handleKeyDown}
-                  className={`${commonInputClass} pr-10`}
+                  className={`${commonInputClass} pr-10 w-full`}
                 />
                 
                 {/* Status indicator */}
