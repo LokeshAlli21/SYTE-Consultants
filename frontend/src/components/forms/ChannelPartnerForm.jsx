@@ -65,7 +65,9 @@ function ChannelPartnerForm({
   });
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
 
-    const [filePreviews, setFilePreviews] = useState({});
+  const [filePreviews, setFilePreviews] = useState({
+    cp_photo_uploaded_url: formData?.cp_photo_uploaded_url || null,
+  });     
 
   /**
    * Handles input field changes
