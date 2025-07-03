@@ -117,7 +117,8 @@ LEFT JOIN latest_note ln ON a.id = ln.assignment_id
 LEFT JOIN projects p ON a.project_id = p.id
 LEFT JOIN assignment_reminders_grouped ar ON a.id = ar.assignment_id
 WHERE 
-    a.status_for_delete = 'active';
+    a.status_for_delete = 'active'
+    AND lt.assignment_status != 'close';
 
 
 
