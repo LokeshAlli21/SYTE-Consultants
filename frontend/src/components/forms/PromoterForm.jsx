@@ -983,7 +983,7 @@ disabled={disabled}
               />
             </div>
             <div className="flex flex-col">
-              <label className="mb-2 font-medium">Password</label>
+              <label className="mb-2 font-medium text-gray-700">Password</label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -997,7 +997,8 @@ disabled={disabled}
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                  disabled={disabled}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none focus:text-gray-600 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {showPassword ? (
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
