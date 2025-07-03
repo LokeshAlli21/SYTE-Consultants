@@ -23,6 +23,7 @@ import {
 import { validateFormData } from "./promoter-form-components/validateFormData.jsx";
 import { useSelector } from "react-redux";
 import UpdateInfoComponent from "../UpdateInfoComponent.jsx";
+import { Eye, EyeOff } from 'lucide-react';
 
 const PromoterForm = ({ id, disabled }) => {
   const selectRef = useRef(null);
