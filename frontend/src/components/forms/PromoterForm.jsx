@@ -604,10 +604,7 @@ useEffect(() => {
     setUsernameStatus('checking');
     
     try {
-      // Replace with your actual API endpoint
-      // const response = await fetch(`/api/check-username/${usernameDebounce}`);
-      // const data = await response.json();
-      data = await databaseService.checkUsernameAvailability(usernameDebounce);
+      const data = await databaseService.checkUsernameAvailability(usernameDebounce);
       
       if (data.available) {
         setUsernameStatus('available');
