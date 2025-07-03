@@ -1116,7 +1116,28 @@ for (const key in formData) {
       throw error;
     }
   }
-    
+
+  async checkUsernameAvailability(username) {
+    try {
+      const response = await fetch(`${this.baseUrl}/api/promoters/check-username/${username}`, {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to check username availability.");
+      }
+
+      const data = await response.json();
+      return data;
+
+    } catch (error) {
+      console.error("❌ Error checking username availability:", error);
+      throw error;
+    }
+  }
+
   async getAllPromoters() {
     try {
       const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {

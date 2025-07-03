@@ -563,3 +563,29 @@ export const updatePromoter = async (req, res) => {
     client.release();
   }
 };
+
+export const checkUsernameAvailability = async (req, res) => {
+  const { username } = req.params;
+
+  try {
+    // Check if username is provided
+    if (!username) {
+      return res.status(400).json({ available: false, message: 'Username is required' });
+    }
+
+    // Query to check if username exists
+    const queryText = 'SELECT COUNT(*) FROM promoters WHERE username = $1';
+    const result = await query(queryText, [username]);
+
+    const count = parseInt(result.rows[0].count, 10);
+
+    if (count > 0) {
+      return res.status(200).json({ available: false, message: 'Username is already taken' });
+    } else {
+      return res.status(200).json({ available: true, message: 'Username is available' });
+    }
+  } catch (error) {
+    console.error('❌ Unexpected error in checkUsernameAvailability:', error);
+    return res.status(500).json({ error: 'Internal server error', details: error.message });
+  }
+};

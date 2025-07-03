@@ -23,7 +23,7 @@ import {
 import { validateFormData } from "./promoter-form-components/validateFormData.jsx";
 import { useSelector } from "react-redux";
 import UpdateInfoComponent from "../UpdateInfoComponent.jsx";
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Check, X, Loader2 } from 'lucide-react';
 
 const PromoterForm = ({ id, disabled }) => {
   const selectRef = useRef(null);
@@ -34,6 +34,10 @@ const PromoterForm = ({ id, disabled }) => {
   const [districtOptions, setDistrictOptions] = useState([]);
 
   const [showPassword, setShowPassword] = useState(false);
+
+  const [usernameStatus, setUsernameStatus] = useState(''); // 'checking', 'available', 'taken', ''
+const [usernameDebounce, setUsernameDebounce] = useState('');
+const [prevUsername, setPrevUsername] = useState(''); // Store previous username for comparison
 
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -256,6 +260,16 @@ const PromoterForm = ({ id, disabled }) => {
     return;
   }
 
+  if(usernameStatus === 'checking') {
+    setLoading(false);
+    return
+  }
+  if(usernameStatus === 'taken') {
+    toast.error("⚠️ Username is already taken. Please choose another.");
+    setLoading(false);
+    return;
+  }
+
     try {
 
       if(!userData){
@@ -404,6 +418,7 @@ const commonFormValues = {
 
 setPrevData({...commonFormValues, typeFormData:response?.promoter_details?.[response.promoter_type]});
 setFormData(commonFormValues); // ✅ Safe to use immediately
+setPrevUsername(response.username || ''); // Store initial username for comparison
 
 // Set promoter-type-specific form
 const promoterDetails = response.promoter_details || {};
@@ -568,6 +583,46 @@ switch (promoterType) {
 
     fetchPromoterData();
   }, [id]);
+
+  // Debounce effect to avoid too many API calls
+useEffect(() => {
+  const timer = setTimeout(() => {
+    setUsernameDebounce(formData.username || '');
+  }, 500); // Wait 500ms after user stops typing
+
+  return () => clearTimeout(timer);
+}, [formData.username]);
+
+// Check username availability
+useEffect(() => {
+  const checkUsernameAvailability = async () => {
+    if (!usernameDebounce || usernameDebounce.length < 3) {
+      setUsernameStatus('');
+      return;
+    }
+
+    setUsernameStatus('checking');
+    
+    try {
+      // Replace with your actual API endpoint
+      // const response = await fetch(`/api/check-username/${usernameDebounce}`);
+      // const data = await response.json();
+      data = await databaseService.checkUsernameAvailability(usernameDebounce);
+      
+      if (data.available) {
+        setUsernameStatus('available');
+      } else {
+        setUsernameStatus('taken');
+      }
+    } catch (error) {
+      console.error('Error checking username:', error);
+      setUsernameStatus('');
+    }
+  };
+if (usernameDebounce !== prevUsername) {
+  checkUsernameAvailability();
+}
+}, [usernameDebounce]);
 
   const commonInputClass =
     "border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-[#5CAAAB] focus:border-[#5CAAAB] focus:outline-none transition ease-in-out duration-150 ";
@@ -973,15 +1028,41 @@ disabled={disabled}
           <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 ">
             <div className="flex flex-col">
               <label className="mb-2 font-medium">Username</label>
-              <input
-                type="text"
-                name="username"
-                value={formData.username || ''}
-                onChange={handleChange}
-                disabled={disabled}
-                onKeyDown={handleKeyDown}
-                className={commonInputClass}
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username || ''}
+                  onChange={handleChange}
+                  disabled={disabled}
+                  onKeyDown={handleKeyDown}
+                  className={`${commonInputClass} pr-10`}
+                />
+                
+                {/* Status indicator */}
+                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                  {usernameStatus === 'checking' && (
+                    <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                  )}
+                  {usernameStatus === 'available' && (
+                    <Check className="w-4 h-4 text-green-500" />
+                  )}
+                  {usernameStatus === 'taken' && (
+                    <X className="w-4 h-4 text-red-500" />
+                  )}
+                </div>
+              </div>
+              
+              {/* Status message */}
+              {usernameStatus === 'available' && (
+                <p className="mt-1 text-sm text-green-600">Username is available</p>
+              )}
+              {usernameStatus === 'taken' && (
+                <p className="mt-1 text-sm text-red-600">Username is already taken</p>
+              )}
+              {formData.username && formData.username.length < 3 && (
+                <p className="mt-1 text-sm text-gray-500">Username must be at least 3 characters</p>
+              )}
             </div>
             <div className="flex flex-col">
               <label className="mb-2 font-medium">Password</label>
@@ -990,7 +1071,7 @@ disabled={disabled}
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password || ''}
-                  onChange={handleChange}
+                  onChange={isUernameAvailible(handleChange)}
                   disabled={disabled}
                   onKeyDown={handleKeyDown}
                   className={`${commonInputClass} pr-10`}

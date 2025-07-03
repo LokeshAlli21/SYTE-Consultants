@@ -9,6 +9,9 @@ const formatTimeAgo = (dateString) => {
   const nowIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
   const updatedIST = updatedDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
 
+  console.log("Now IST:", nowIST);
+  console.log("Updated IST:", updatedIST);
+
   // Parse back to Date objects
   const now = new Date(nowIST);
   const updated = new Date(updatedIST);
