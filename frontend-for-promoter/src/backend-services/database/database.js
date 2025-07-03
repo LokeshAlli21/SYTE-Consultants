@@ -35,6 +35,32 @@ class DatabaseService {
     }
     return data;
   }
+
+async getChannelPartnerByPromoterId(promoterId) {
+  // console.log("🔍 Fetching channel partner by promoter ID...");
+
+  try {
+    const response = await fetch(`${this.baseUrl}/api/for-promoter-frontend/get-cp-by-promoter/${promoterId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Fetching channel partner failed.");
+    }
+
+    const data = await response.json();
+    // toast.success("🔍 Channel partner fetched successfully!");
+    console.log("Fetched channel partner:", data);
+    return data.channelPartner;
+  } catch (err) {
+    console.error("❌ Error fetching channel partner:", err);
+    // toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
 }
 
 const databaseService = new DatabaseService();

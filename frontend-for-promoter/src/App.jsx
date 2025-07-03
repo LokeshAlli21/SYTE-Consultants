@@ -1,12 +1,37 @@
 import { useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { Outlet } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import authService from './backend-services/auth/auth';
 import { login, logout} from './store/authSlice'
+import databaseService from './backend-services/database/database';
 
 function App() {
   const dispatch = useDispatch();
+
+  const userData = useSelector((state) => state.auth.userData);
+
+  console.log(userData);
+  
+
+  useEffect(() => {
+    if(userData?.id){
+      databaseService.getChannelPartnerByPromoterId(userData.id)
+      .then((channelPartnerData) => {
+        if(channelPartnerData) {
+          dispatch(login({ ...userData, channelPartner: channelPartnerData }));
+        } else {
+          toast.error("Channel Partner not found for the promoter.");
+          dispatch(logout());
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching channel partner:", error);
+        toast.error("Failed to fetch channel partner data.");
+        dispatch(logout());
+      });
+    }
+  }, [userData]);
 
   useEffect(() => {
     authService.getCurrentPromoter()

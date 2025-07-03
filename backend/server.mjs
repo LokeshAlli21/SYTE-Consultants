@@ -12,6 +12,8 @@ import channelPartnerRoutes from './routes/channelPartnerRoutes.js'
 import assignmentRoutes from './routes/assignmentRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
 import bucketRoutes from './routes/bucketRoutes.js';
+import promoterFrontendRoutes from './routes/promoterFrontendRoutes.js';
+
 dotenv.config();
 
 const app = express();
@@ -36,6 +38,8 @@ app.use('/api/assignments', assignmentRoutes);
 app.use('/api/channel-partners',channelPartnerRoutes );
 app.use('/api/dashboard',dashboardRoutes );
 app.use('/api/bucket',bucketRoutes );
+
+app.use('/api/for-promoter-frontend', promoterFrontendRoutes);
 
 // Main route
 app.get('/', (req, res) => {
