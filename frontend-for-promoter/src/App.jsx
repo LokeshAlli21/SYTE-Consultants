@@ -20,10 +20,10 @@ useEffect(() => {
     databaseService.getChannelPartnerByPromoterId(userData.id)
     .then((channelPartnerData) => {
       if(channelPartnerData) {
-        dispatch(login({ ...userData, channelPartner: channelPartnerData }));
+        console.log("Channel Partner Data:", channelPartnerData);
+        toast.success("Channel Partner data fetched successfully!");
       } else {
         toast.error("Channel Partner not found for the promoter.");
-        dispatch(logout());
       }
     })
     .catch((error) => {
