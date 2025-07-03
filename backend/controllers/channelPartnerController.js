@@ -193,7 +193,7 @@ export const getChannelPartnerById = async (req, res) => {
       return res.status(404).json({ error: 'Channel Partner not found or inactive' });
     }
 
-
+console.log('Channel Partner found:', result.rows[0]);
     const channelPartner = result.rows[0];
 
     // If cp_photo_uploaded_url exists, generate signed URL

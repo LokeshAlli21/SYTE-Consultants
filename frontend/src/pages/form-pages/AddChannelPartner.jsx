@@ -112,7 +112,7 @@ function AddChannelPartner({ viewOnly = false }) {
     setIsLoading(true);
     try {
       const response = await databaseService.getChannelPartnerById(id);
-      
+      console.log("Fetched channel partner data:", response);
       setOriginalData(response);
       setFormData(response);
       // toast.success(TOAST_MESSAGES.LOAD_SUCCESS);
