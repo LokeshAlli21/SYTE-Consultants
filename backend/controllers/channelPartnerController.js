@@ -79,7 +79,6 @@ export const updateChannelPartner = async (req, res) => {
         city = $6,
         updated_by = $7,
         update_action = $8,
-        updated_at = CURRENT_TIMESTAMP,
         cp_photo_uploaded_url = $9
       WHERE id = $10
       RETURNING *;
@@ -139,7 +138,7 @@ export const softDeleteChannelPartnerById = async (req, res) => {
   try {
     const updateQuery = `
       UPDATE channel_partners 
-      SET status_for_delete = 'inactive', updated_at = CURRENT_TIMESTAMP
+      SET status_for_delete = 'inactive'
       WHERE id = $1
       RETURNING id;
     `;

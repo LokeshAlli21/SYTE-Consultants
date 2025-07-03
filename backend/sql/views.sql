@@ -120,7 +120,8 @@ WHERE
     a.status_for_delete = 'active'
     AND lt.assignment_status != 'close';
 
-
+-- Drop the existing view if it exists
+DROP VIEW IF EXISTS view_promoter_full;
 
 CREATE OR REPLACE VIEW view_promoter_full AS
 SELECT
@@ -137,6 +138,8 @@ SELECT
   p.updated_at,
   p.updated_by,
   p.update_action,
+  p.username,
+  p.password,
   
   -- Aggregate promoter_details as JSON array
   COALESCE(

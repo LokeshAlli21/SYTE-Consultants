@@ -236,7 +236,7 @@ export const getAllPromoters = async (req, res) => {
     const getAllQuery = `
       SELECT id, promoter_name, contact_number, email_id, district, city, 
              created_at, updated_at, promoter_type, created_by, updated_by, 
-             update_action, created_at
+             update_action, created_at, username, password
       FROM promoters 
       WHERE status_for_delete = 'active'
       ORDER BY created_at DESC

@@ -37,6 +37,10 @@ CREATE TABLE promoters (
     update_action TEXT
 );
 
+ALTER TABLE promoters
+ADD COLUMN username VARCHAR(100) UNIQUE,
+ADD COLUMN password VARCHAR(100);
+
 -- Creating the PromoteDetails table with foreign key to Promoters
 CREATE TABLE promoter_details (
     id SERIAL PRIMARY KEY,
