@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 
 import databaseService from '../../backend-services/database/database';
 import UpdateInfoComponent from '../UpdateInfoComponent';
+import FileInputWithPreview from './FileInputWithPreview ';
 
 // Constants
 const COMMON_INPUT_STYLES = 

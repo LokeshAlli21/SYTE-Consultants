@@ -7,7 +7,6 @@ import { FaArrowLeft } from "react-icons/fa6";
 import { ChannelPartnerForm } from "../../components/index.js";
 import databaseService from "../../backend-services/database/database.js";
 import UserProfile from "../../components/UserProfile.jsx";
-import FileInputWithPreview from "../../components/index.js";
 
 // Constants
 const INITIAL_FORM_DATA = {
