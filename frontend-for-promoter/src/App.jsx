@@ -21,9 +21,12 @@ useEffect(() => {
     .then((channelPartnerData) => {
       if(channelPartnerData) {
         console.log("Channel Partner Data:", channelPartnerData);
-        toast.success("Channel Partner data fetched successfully!");
+        dispatch(login({
+          ...userData,
+          channelPartner: channelPartnerData
+        }));
       } else {
-        toast.error("Channel Partner not found for the promoter.");
+        console.log("Channel Partner not found for the promoter.");
       }
     })
     .catch((error) => {
