@@ -52,7 +52,7 @@ export const loginUser = async (req, res, next) => {
     let accessFields = null;
     if (user.access_fields) {
       try {
-        accessFields = JSON.parse(user.access_fields);
+        accessFields = JSON.parse(user?.access_fields);
       } catch (jsonError) {
         console.warn('Failed to parse access_fields JSON:', jsonError);
         accessFields = user.access_fields;

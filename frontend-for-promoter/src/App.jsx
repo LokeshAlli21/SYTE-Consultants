@@ -12,26 +12,27 @@ function App() {
   const userData = useSelector((state) => state.auth.userData);
 
   console.log(userData);
-  
 
-  useEffect(() => {
-    if(userData?.id){
-      databaseService.getChannelPartnerByPromoterId(userData.id)
-      .then((channelPartnerData) => {
-        if(channelPartnerData) {
-          dispatch(login({ ...userData, channelPartner: channelPartnerData }));
-        } else {
-          toast.error("Channel Partner not found for the promoter.");
-          dispatch(logout());
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching channel partner:", error);
-        toast.error("Failed to fetch channel partner data.");
+useEffect(() => {
+  console.log("User Data in App Component:", userData);
+  
+  if(userData?.id && !userData?.channelPartner){
+    databaseService.getChannelPartnerByPromoterId(userData.id)
+    .then((channelPartnerData) => {
+      if(channelPartnerData) {
+        dispatch(login({ ...userData, channelPartner: channelPartnerData }));
+      } else {
+        toast.error("Channel Partner not found for the promoter.");
         dispatch(logout());
-      });
-    }
-  }, [userData]);
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching channel partner:", error);
+      toast.error("Failed to fetch channel partner data.");
+      dispatch(logout());
+    });
+  }
+}, [userData]);
 
   useEffect(() => {
     authService.getCurrentPromoter()
