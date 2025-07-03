@@ -10,9 +10,6 @@ function App() {
   const dispatch = useDispatch();
 
   const userData = useSelector((state) => state.auth.userData);
-
-  console.log(userData);
-
 useEffect(() => {
   console.log("User Data in App Component:", userData);
   
@@ -20,7 +17,7 @@ useEffect(() => {
     databaseService.getChannelPartnerByPromoterId(userData.id)
     .then((channelPartnerData) => {
       if(channelPartnerData) {
-        console.log("Channel Partner Data:", channelPartnerData);
+        // console.log("Channel Partner Data:", channelPartnerData);
         dispatch(login({
           ...userData,
           channelPartner: channelPartnerData
