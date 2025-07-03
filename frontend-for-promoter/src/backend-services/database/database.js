@@ -15,7 +15,7 @@ class DatabaseService {
 
   // ✅ Utility to get token
   getAuthHeaders(skipContentType = false) {
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('authTokenForPromoter');
     const headers = {
       Authorization: `Bearer ${token}`,
     };
