@@ -2446,7 +2446,7 @@ async getChannelPartnerById(id) {
     
     
     const data = await response.json();
-    console.log(data);
+    // console.log(data);
     // toast.success("✅ Channel Partner details fetched successfully!");
     return data.channelPartner; // assuming your API returns { channel_partner: {...} }
 

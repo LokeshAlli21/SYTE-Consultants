@@ -173,27 +173,13 @@ export const getChannelPartnerById = async (req, res) => {
     try {
       result = await query(selectQuery, [id]);
     } catch (viewError) {
-      // If view doesn't exist, fall back to direct table query with JOIN
-      console.log('View not found, using direct query with JOIN');
-      selectQuery = `
-        SELECT 
-          cp.*,
-          u1.full_name as created_by_name,
-          u2.full_name as updated_by_name
-        FROM channel_partners cp
-        LEFT JOIN users u1 ON cp.created_by = u1.id
-        LEFT JOIN users u2 ON cp.updated_by = u2.id
-        WHERE cp.id = $1 AND cp.status_for_delete = 'active';
-      `;
-      
-      result = await query(selectQuery, [id]);
+        res.status(500).json({ error: 'Internal server error' });
     }
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Channel Partner not found or inactive' });
     }
 
-console.log('Channel Partner found:', result.rows[0]);
     const channelPartner = result.rows[0];
 
     // If cp_photo_uploaded_url exists, generate signed URL
