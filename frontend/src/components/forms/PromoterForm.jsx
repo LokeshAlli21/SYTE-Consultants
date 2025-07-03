@@ -32,6 +32,8 @@ const PromoterForm = ({ id, disabled }) => {
   const [cityOptions, setCityOptions] = useState([]);
   const [districtOptions, setDistrictOptions] = useState([]);
 
+  const [showPassword, setShowPassword] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -47,6 +49,8 @@ const PromoterForm = ({ id, disabled }) => {
     promoter_photo_uploaded_url: "",
     office_address: "",
     contact_person_name: "",
+    username: "",
+    password: "",
   });
 
   const [individualTypeForm, setIndividualTypeForm] = useState({
@@ -389,6 +393,8 @@ const commonFormValues = {
   promoter_photo_uploaded_url: response.promoter_details?.promoter_photo_uploaded_url || "",
   office_address: response.promoter_details?.office_address || "",
   contact_person_name: response.promoter_details?.contact_person_name || "",
+  username: response.username || "",
+  password: response.password || "",
   updated_at:response.updated_at,
   updated_by:response.updated_by,
   updated_user:response.updated_user,
@@ -960,6 +966,51 @@ disabled={disabled}
                 onKeyDown={handleKeyDown}
                 className={commonInputClass}
               />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6 ">
+            <div className="flex flex-col">
+              <label className="mb-2 font-medium">Username</label>
+              <input
+                type="text"
+                name="username"
+                value={formData.username || ''}
+                onChange={handleChange}
+                disabled={disabled}
+                onKeyDown={handleKeyDown}
+                className={commonInputClass}
+              />
+            </div>
+            <div className="flex flex-col">
+              <label className="mb-2 font-medium">Password</label>
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  value={formData.password || ''}
+                  onChange={handleChange}
+                  disabled={disabled}
+                  onKeyDown={handleKeyDown}
+                  className={`${commonInputClass} pr-12`}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                >
+                  {showPassword ? (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L12 12m-2.122-2.122l4.242 4.242M12 12l2.878 2.878m-5.756-5.756l2.878 2.878m0 0L12 12m2.878 2.878L12 12" />
+                    </svg>
+                  ) : (
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 

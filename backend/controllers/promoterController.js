@@ -21,6 +21,8 @@ export const uploadPromoterData = async (req, res) => {
       promoter_photo_uploaded_url,
       promoter_details,
       userId,
+      username,
+      password,
     } = req.body;
 
     if (!userId) {
@@ -35,8 +37,9 @@ export const uploadPromoterData = async (req, res) => {
     const promoterInsertQuery = `
       INSERT INTO promoters (
         promoter_name, contact_number, email_id, district, city, 
-        promoter_type, created_by, created_at, status_for_delete
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
+        promoter_type, created_by, created_at, status_for_delete,
+        username, password
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) 
       RETURNING id
     `;
 
@@ -49,7 +52,9 @@ export const uploadPromoterData = async (req, res) => {
       promoter_type,
       userId,
       getCurrentISTTimestamp(),
-      'active'
+      'active',
+      username,
+      password
     ];
 
     const promoterResult = await client.query(promoterInsertQuery, promoterValues);
@@ -400,6 +405,8 @@ export const updatePromoter = async (req, res) => {
       promoter_details,
       userId,
       update_action,
+      username,
+      password,
     } = req.body;
 
     if (!userId) {
@@ -415,8 +422,9 @@ export const updatePromoter = async (req, res) => {
       UPDATE promoters 
       SET promoter_name = $1, contact_number = $2, email_id = $3, 
           district = $4, city = $5, promoter_type = $6, 
-          updated_by = $7, update_action = $8, updated_at = $9
-      WHERE id = $10
+          updated_by = $7, update_action = $8, updated_at = $9,
+          username = $10, password = $11
+      WHERE id = $12
       RETURNING id
     `;
 
@@ -430,6 +438,8 @@ export const updatePromoter = async (req, res) => {
       userId,
       update_action,
       new Date().toISOString(),
+      username,
+      password,
       id
     ];
 
