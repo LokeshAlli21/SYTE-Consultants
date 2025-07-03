@@ -2,17 +2,26 @@ import React from 'react';
 
 const UpdateInfoComponent = ({formData}) => {
 
-  const formatTimeAgo = (dateString) => {
-    const updatedDate = new Date(dateString);
-    const now = new Date();
-    const diffTime = now.getTime() - updatedDate.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+const formatTimeAgo = (dateString) => {
+  const updatedDate = new Date(dateString);
+  
+  // Convert both dates to IST (Asia/Kolkata)
+  const nowIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
+  const updatedIST = updatedDate.toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
 
-    if (diffDays === 0) return 'Today';
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays <= 6) return `${diffDays} days ago`;
-    return updatedDate.toLocaleDateString('en-IN', { dateStyle: 'medium' });
-  };
+  // Parse back to Date objects
+  const now = new Date(nowIST);
+  const updated = new Date(updatedIST);
+
+  const diffTime = now - updated;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays <= 6) return `${diffDays} days ago`;
+
+  return updated.toLocaleDateString('en-IN', { dateStyle: 'medium' });
+};
 
   const formatTime = (dateString) => {
     const updatedDate = new Date(dateString);
