@@ -255,7 +255,10 @@ function ChannelPartnerForm({
           )}
         </div>
 
-            <FileInputWithPreview
+        {/* Form Body */}
+        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+          <FileInputWithPreview
               label="Upload Photo"
               name="cp_photo_uploaded_url"
               onChange={handleFileChange}
@@ -264,9 +267,7 @@ function ChannelPartnerForm({
               filePreview={filePreviews.cp_photo_uploaded_url}
               onDelete={() => handleFileDelete("cp_photo_uploaded_url")}
             />
-
-        {/* Form Body */}
-        <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            
           {/* Text Input Fields */}
           {formFields.map((field) => (
             <div key={field.name} className="flex flex-col">
