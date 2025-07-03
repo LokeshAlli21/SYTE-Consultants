@@ -985,7 +985,7 @@ disabled={disabled}
             </div>
             <div className="flex flex-col">
               <label className="mb-2 font-medium">Password</label>
-              <div className="flex flex-col">
+              <div className="relative flex flex-col">
                 <input
                   type={showPassword ? "text" : "password"}
                   name="password"
