@@ -194,6 +194,10 @@ CREATE TABLE channel_partners (
     update_action TEXT
 );
 
+-- Add cp_photo_uploaded_url column to existing channel_partners table
+ALTER TABLE channel_partners 
+ADD COLUMN cp_photo_uploaded_url TEXT;
+
 ----------------------------------------------------TABLE Projects-------------------------------------------------------------------------
 
 -- Creating the Projects table

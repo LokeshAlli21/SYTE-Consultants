@@ -17,6 +17,7 @@ const INITIAL_FORM_DATA = {
   district: "",
   city: "",
   update_action: "",
+  cp_photo_uploaded_url: "",
   updated_By: "",
   updated_at: "",
 };

@@ -64,6 +64,8 @@ function ChannelPartnerForm({
   });
   const [isLoadingLocations, setIsLoadingLocations] = useState(true);
 
+    const [filePreviews, setFilePreviews] = useState({});
+
   /**
    * Handles input field changes
    */
@@ -212,6 +214,33 @@ function ChannelPartnerForm({
     }
   ];
 
+    const handleFileChange = (e) => {
+    const { name, files } = e.target;
+    const file = files[0];
+    if (file) {
+      setFormData((prev) => ({ ...prev, [name]: file }));
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFilePreviews((prev) => ({
+          ...prev,
+          [name]: { url: reader.result, type: file.type },
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+    const handleFileDelete = (name) => {
+    setFormData((prev) => ({ ...prev, [name]: null }));
+
+    setFilePreviews((prev) => {
+      const updatedPreviews = { ...prev };
+      delete updatedPreviews[name];
+      return updatedPreviews;
+    });
+  };
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <div className="bg-white rounded-xl shadow-lg">
@@ -222,6 +251,16 @@ function ChannelPartnerForm({
             <UpdateInfoComponent formData={formData} />
           )}
         </div>
+
+            <FileInputWithPreview
+              label="Upload Photo"
+              name="cp_photo_uploaded_url"
+              onChange={handleFileChange}
+              disabled={disabled}
+              className={' w-[150px] h-[150px]'}
+              filePreview={filePreviews.cp_photo_uploaded_url}
+              onDelete={() => handleFileDelete("cp_photo_uploaded_url")}
+            />
 
         {/* Form Body */}
         <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">

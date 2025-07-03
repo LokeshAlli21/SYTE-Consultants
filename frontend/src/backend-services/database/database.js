@@ -2187,6 +2187,54 @@ async getAllProjectsForAssignmentDropdown() {
 
 async createChannelPartner(formData,userId) {
   try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const channelPartnerName = formData.full_name  || "ChannelPartner";
+
+    // 📤 Handle file uploads if cp_photo_uploaded_url contains a File
+    if (
+      formData?.cp_photo_uploaded_url &&
+      formData.cp_photo_uploaded_url instanceof File
+    ) {
+      const file = formData.cp_photo_uploaded_url;
+      const ext = file.name?.split(".").pop() || "jpg";
+
+      const renamedFile = new File(
+        [file],
+        `${channelPartnerName}_Photo_${timestamp}.${ext}`,
+        { type: file.type }
+      );
+
+      // Create FormData for file upload
+      const fileFormData = new FormData();
+      fileFormData.append("cp_photo_uploaded_url", renamedFile);
+      
+      const fieldsToUpload = ["cp_photo_uploaded_url"];
+
+      // ⬆️ Upload files
+      const uploadRes = await fetch(`${this.baseUrl}/api/channel-partners/upload-photo`, {
+        method: "POST",
+        headers: this.getAuthHeaders(true),
+        body: fileFormData,
+      });
+
+      if (!uploadRes.ok) {
+        const errorRes = await uploadRes.json();
+        throw new Error(errorRes.message || "File upload failed.");
+      }
+
+      const uploadedUrls = await uploadRes.json();
+      console.log("📥 Uploaded URLs:", uploadedUrls);
+
+      // 🔁 Merge uploaded URLs back to formData
+      for (const field of fieldsToUpload) {
+        if (!uploadedUrls[field]) {
+          throw new Error(`Missing uploaded URL for field: ${field}`);
+        }
+        formData[field] = uploadedUrls[field];
+      }
+    }
+
+    // 📋 Create Channel Partner with updated formData
     const response = await fetch(`${this.baseUrl}/api/channel-partners/add`, {
       method: "POST",
       headers: {
@@ -2210,8 +2258,131 @@ async createChannelPartner(formData,userId) {
     throw err;
   }
 }
-async updateChannelPartner( id, formData) {
+
+async createChannelPartner(formData, userId) {
   try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const channelPartnerName = formData.full_name || "ChannelPartner";
+
+    // 📤 Handle file uploads if cp_photo_uploaded_url contains a File
+    if (
+      formData?.cp_photo_uploaded_url &&
+      formData.cp_photo_uploaded_url instanceof File
+    ) {
+      const file = formData.cp_photo_uploaded_url;
+      const ext = file.name?.split(".").pop() || "jpg";
+
+      const renamedFile = new File(
+        [file],
+        `${channelPartnerName}_Photo_${timestamp}.${ext}`,
+        { type: file.type }
+      );
+
+      // Create FormData for file upload
+      const fileFormData = new FormData();
+      fileFormData.append("cp_photo_uploaded_url", renamedFile);
+      
+      const fieldsToUpload = ["cp_photo_uploaded_url"];
+
+      // ⬆️ Upload files
+      const uploadRes = await fetch(`${this.baseUrl}/api/channel-partners/upload-photo`, {
+        method: "POST",
+        headers: this.getAuthHeaders(true),
+        body: fileFormData,
+      });
+
+      if (!uploadRes.ok) {
+        const errorRes = await uploadRes.json();
+        throw new Error(errorRes.message || "File upload failed.");
+      }
+
+      const uploadedUrls = await uploadRes.json();
+      console.log("📥 Uploaded URLs:", uploadedUrls);
+
+      // 🔁 Merge uploaded URLs back to formData
+      for (const field of fieldsToUpload) {
+        if (!uploadedUrls[field]) {
+          throw new Error(`Missing uploaded URL for field: ${field}`);
+        }
+        formData[field] = uploadedUrls[field];
+      }
+    }
+
+    // 📋 Create Channel Partner with updated formData
+    const response = await fetch(`${this.baseUrl}/api/channel-partners/add`, {
+      method: "POST",
+      headers: {
+        ...this.getAuthHeaders(),
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({...formData, userId})
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Channel Partner creation failed.");
+    }
+
+    const data = await response.json();
+    // toast.success("✅ Channel Partner created successfully!");
+    return data;
+  } catch (err) {
+    console.error("❌ Error creating Channel Partner:", err);
+    // toast.error(`❌ ${err.message}`);
+    throw err;
+  }
+}
+
+async updateChannelPartner(id, formData) {
+  try {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+    const channelPartnerName = formData.full_name || "ChannelPartner";
+
+    // 📤 Handle file uploads if cp_photo_uploaded_url contains a File
+    if (
+      formData?.cp_photo_uploaded_url &&
+      formData.cp_photo_uploaded_url instanceof File
+    ) {
+      const file = formData.cp_photo_uploaded_url;
+      const ext = file.name?.split(".").pop() || "jpg";
+
+      const renamedFile = new File(
+        [file],
+        `${channelPartnerName}_Photo_${timestamp}.${ext}`,
+        { type: file.type }
+      );
+
+      // Create FormData for file upload
+      const fileFormData = new FormData();
+      fileFormData.append("cp_photo_uploaded_url", renamedFile);
+      
+      const fieldsToUpload = ["cp_photo_uploaded_url"];
+
+      // ⬆️ Upload files
+      const uploadRes = await fetch(`${this.baseUrl}/api/channel-partners/upload-photo`, {
+        method: "POST",
+        headers: this.getAuthHeaders(true),
+        body: fileFormData,
+      });
+
+      if (!uploadRes.ok) {
+        const errorRes = await uploadRes.json();
+        throw new Error(errorRes.message || "File upload failed.");
+      }
+
+      const uploadedUrls = await uploadRes.json();
+      console.log("📥 Uploaded URLs:", uploadedUrls);
+
+      // 🔁 Merge uploaded URLs back to formData
+      for (const field of fieldsToUpload) {
+        if (!uploadedUrls[field]) {
+          throw new Error(`Missing uploaded URL for field: ${field}`);
+        }
+        formData[field] = uploadedUrls[field];
+      }
+    }
+
+    // 📋 Update Channel Partner with updated formData
     const response = await fetch(`${this.baseUrl}/api/channel-partners/update/${id}`, {
       method: "PUT",
       headers: {

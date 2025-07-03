@@ -5,7 +5,10 @@ import { createChannelPartner,
   softDeleteChannelPartnerById,
   getChannelPartnerById,
   updateChannelPartner,
+  uploadChannelPartnerPhoto,
 } from '../controllers/channelPartnerController.js';
+
+import { upload } from '../aws/awsClient.js';
 
 const router = express.Router();
 
@@ -20,7 +23,8 @@ router.post(
     protect,
     updateChannelPartner
   );
-  
+
+  router.post('/upload-photo', protect, upload.any(), uploadChannelPartnerPhoto);
 
   router.get('/get-all', protect, getAllChannelPartners);
 

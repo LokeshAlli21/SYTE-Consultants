@@ -1,4 +1,4 @@
-import { query, getClient } from '../aws/awsClient.js';
+import { query, getClient, uploadToS3, getSignedUrl } from '../aws/awsClient.js';
 
 export const createChannelPartner = async (req, res) => {
   try {
@@ -10,6 +10,7 @@ export const createChannelPartner = async (req, res) => {
       district,
       city,
       userId,
+      cp_photo_uploaded_url,
     } = req.body;
 
     const insertQuery = `
@@ -20,9 +21,10 @@ export const createChannelPartner = async (req, res) => {
         email_id, 
         district, 
         city, 
-        created_by
+        created_by,
+        cp_photo_uploaded_url
       ) 
-      VALUES ($1, $2, $3, $4, $5, $6, $7) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
       RETURNING *;
     `;
 
@@ -33,7 +35,8 @@ export const createChannelPartner = async (req, res) => {
       email_id || null,
       district || null,
       city || null,
-      userId
+      userId,
+      cp_photo_uploaded_url || null
     ];
 
     const result = await query(insertQuery, values);
@@ -62,6 +65,7 @@ export const updateChannelPartner = async (req, res) => {
       city,
       userId,
       update_action,
+      cp_photo_uploaded_url
     } = req.body;
 
     const updateQuery = `
@@ -75,8 +79,9 @@ export const updateChannelPartner = async (req, res) => {
         city = $6,
         updated_by = $7,
         update_action = $8,
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = $9
+        updated_at = CURRENT_TIMESTAMP,
+        cp_photo_uploaded_url = $9
+      WHERE id = $10
       RETURNING *;
     `;
 
@@ -89,6 +94,7 @@ export const updateChannelPartner = async (req, res) => {
       city || null,
       userId,
       update_action,
+      cp_photo_uploaded_url || null,
       id
     ];
 
@@ -187,10 +193,71 @@ export const getChannelPartnerById = async (req, res) => {
       return res.status(404).json({ error: 'Channel Partner not found or inactive' });
     }
 
-    res.status(200).json({ channelPartner: result.rows[0] });
+
+    const channelPartner = result.rows[0];
+
+    // If cp_photo_uploaded_url exists, generate signed URL
+    if (channelPartner.cp_photo_uploaded_url) {
+      channelPartner.cp_photo_uploaded_url = getSignedUrl(channelPartner.cp_photo_uploaded_url);
+    }
+
+    return res.status(200).json({ channelPartner });
 
   } catch (error) {
     console.error('❌ Unexpected error in getChannelPartnerById:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const uploadChannelPartnerPhoto = async (req, res) => {
+  try {
+    const files = req.files;
+
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: 'No files uploaded.' });
+    }
+
+    const uploadedUrls = {};
+
+    // Define folder mapping for channel partner photo
+    const folderMap = {
+      cp_photo_uploaded_url: 'photo'
+    };
+
+    for (const file of files) {
+      const fieldName = file.fieldname;
+      const originalName = file.originalname;
+
+      // Check if the field is cp_photo_uploaded_url
+      if (fieldName !== 'cp_photo_uploaded_url') {
+        return res.status(400).json({ 
+          message: `Invalid field name: ${fieldName}. Only cp_photo_uploaded_url is allowed.` 
+        });
+      }
+
+      // Determine folder from map
+      const folder = folderMap[fieldName];
+
+      const fileExt = originalName.split('.').pop();
+      const timestamp = Date.now();
+      const fileName = `${timestamp}-${originalName}`;
+      const s3Key = `channel-partner-files/${folder}/${fileName}`;
+
+      try {
+        // Upload to AWS S3
+        const fileUrl = await uploadToS3(file, s3Key);
+        uploadedUrls[fieldName] = fileUrl;
+        console.log(`${fieldName} uploaded to ${fileUrl}`);
+      } catch (uploadError) {
+        console.error(`Error uploading ${fieldName}:`, uploadError);
+        return res.status(500).json({ message: `Failed to upload ${fieldName}` });
+      }
+    }
+
+    return res.status(200).json(uploadedUrls);
+
+  } catch (error) {
+    console.error('Unexpected error in uploadChannelPartnerPhoto:', error);
+    return res.status(500).json({ message: 'Server error while uploading channel partner photo.' });
   }
 };
