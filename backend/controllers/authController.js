@@ -101,9 +101,9 @@ export const promoterLogin = async (req, res, next) => {
 
     // TODO: set username and password in promoters table with bcrypt hash
     const promoterQuery = `
-      SELECT id, email_id as username, contact_number as password
+      SELECT id, username, password
       FROM promoters
-      WHERE email_id = $1
+      WHERE username = $1
     `;
 
     const result = await query(promoterQuery, [username]);
