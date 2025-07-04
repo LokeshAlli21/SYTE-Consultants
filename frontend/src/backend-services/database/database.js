@@ -347,11 +347,11 @@ async getAllFiles(page = 1, limit = 100, category = null, folder = null) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || "Failed to fetch files.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log("✅ Files fetched successfully!");
     return data;
 
@@ -373,11 +373,11 @@ async getFilesByCategory(category, page = 1, limit = 50, folder = null) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || `Failed to fetch files from ${category} category.`);
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log(`✅ Files from ${category} category fetched successfully!`);
     return data;
 
@@ -400,11 +400,11 @@ async getFilesByFolder(folderPath, page = 1, limit = 50, category = null) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || `Failed to fetch files from ${folderPath}.`);
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log(`✅ Files from ${folderPath} fetched successfully!`);
     return data;
 
@@ -428,11 +428,11 @@ async getAllDocuments(page = 1, limit = 100, subfolder = null) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || "Failed to fetch documents.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log("✅ Documents fetched successfully!");
     return data;
 
@@ -451,11 +451,11 @@ async getDocumentsBySubfolder(subfolder, page = 1, limit = 50) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || `Failed to fetch documents from ${subfolder}.`);
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log(`✅ Documents from ${subfolder} fetched successfully!`);
     return data;
 
@@ -479,11 +479,11 @@ async getAllPhotos(page = 1, limit = 100, role = null) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || "Failed to fetch photos.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log("✅ Photos fetched successfully!");
     return data;
 
@@ -502,11 +502,11 @@ async getPhotosByRole(role, page = 1, limit = 50) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || `Failed to fetch photos for ${role} role.`);
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log(`✅ Photos for ${role} role fetched successfully!`);
     return data;
 
@@ -527,11 +527,11 @@ async getBucketStructure(detailed = false) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || "Failed to fetch bucket structure.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log("✅ Bucket structure fetched successfully!");
     return data;
 
@@ -550,11 +550,11 @@ async getBucketStats() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || "Failed to fetch bucket statistics.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log("✅ Bucket statistics fetched successfully!");
     return data;
 
@@ -573,11 +573,11 @@ async getCategorySummary() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || "Failed to fetch category summary.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log("✅ Category summary fetched successfully!");
     return data;
 
@@ -603,11 +603,11 @@ async searchFiles(search = null, category = null, mimeType = null, page = 1, lim
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || "Failed to search files.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log("✅ File search completed successfully!");
     return data;
 
@@ -632,11 +632,11 @@ async deleteFile(fileId, filePath = null) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.error || "Failed to delete file.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     console.log("✅ File deleted successfully!");
     return data;
 
@@ -951,11 +951,11 @@ for (const key in formData) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Promoter data submission failed.");
     }
 
-    const result = await response.json();
+    const result = this.handleResponse(response);
     // toast.success("✅ Promoter data uploaded successfully!");
     return result;
   } catch (error) {
@@ -1093,11 +1093,11 @@ for (const key in formData) {
       });
 
       if (!response.ok) {
-        const err = await response.json();
+        const err = this.handleResponse(response);
         throw new Error(err.message || "Promoter update failed.");
       }
 
-      const data = await response.json();
+      const data = this.handleResponse(response);
       // toast.success("✅ Promoter updated successfully!");
       return data;
     } catch (err) {
@@ -1115,11 +1115,11 @@ for (const key in formData) {
       });
   
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = this.handleResponse(response);
         throw new Error(errorData.message || "Failed to fetch promoter details.");
       }
   
-      const data = await response.json();
+      const data = this.handleResponse(response);
       console.log(data);
       
       // toast.success("✅ Promoter details fetched successfully!");
@@ -1140,11 +1140,11 @@ for (const key in formData) {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = this.handleResponse(response);
         throw new Error(errorData.message || "Failed to check username availability.");
       }
 
-      const data = await response.json();
+      const data = this.handleResponse(response);
       return data;
 
     } catch (error) {
@@ -1161,11 +1161,11 @@ for (const key in formData) {
       });
   
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = this.handleResponse(response);
         throw new Error(errorData.message || "Failed to fetch promoters.");
       }
   
-      const data = await response.json();
+      const data = this.handleResponse(response);
       // toast.success("✅ Promoters fetched successfully!");
       return data.promoters;
   
@@ -1184,11 +1184,11 @@ for (const key in formData) {
       });
   
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = this.handleResponse(response);
         throw new Error(errorData.message || "Failed to fetch promoters.");
       }
   
-      const data = await response.json();
+      const data = this.handleResponse(response);
       // toast.success("✅ Promoters fetched successfully!");
   
       // Map to label/value format for react-select or dropdowns
@@ -1214,7 +1214,7 @@ for (const key in formData) {
       });
   
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = this.handleResponse(response);
         throw new Error(errorData.message || "Failed to delete promoter.");
       }
   
@@ -1303,11 +1303,11 @@ for (const key in formData) {
       });
   
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = this.handleResponse(response);
         throw new Error(errorData.message || "Project data submission failed.");
       }
   
-      const data = await response.json();
+      const data = this.handleResponse(response);
       // toast.success("✅ Project data uploaded successfully!");
       return data;
   
@@ -1326,11 +1326,11 @@ for (const key in formData) {
       });
   
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = this.handleResponse(response);
         throw new Error(errorData.message || "Failed to fetch project details.");
       }
   
-      const data = await response.json();
+      const data = this.handleResponse(response);
       // toast.success("✅ Project details fetched successfully!");
       return data.project;
     } catch (error) {
@@ -1409,11 +1409,11 @@ for (const key in formData) {
       });
   
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = this.handleResponse(response);
         throw new Error(errorData.message || "Project update failed.");
       }
   
-      const data = await response.json();
+      const data = this.handleResponse(response);
       // toast.success("✅ Project data updated successfully!");
       return data;
   
@@ -1432,7 +1432,7 @@ for (const key in formData) {
       });
   
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = this.handleResponse(response);
         throw new Error(errorData.message || "Failed to delete project.");
       }
   
@@ -1465,11 +1465,11 @@ for (const key in formData) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Professional details submission failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Project professional details uploaded successfully!");
     return data;
 
@@ -1595,11 +1595,11 @@ async getProjectProfessionalData(projectId) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch project professional data.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Project professional data fetched successfully!");
     return data.professionalData;
 
@@ -1618,11 +1618,11 @@ async getAllEngineers() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch engineers.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // // toast.success("✅ Engineers fetched successfully!");
     return data.engineers;
 
@@ -1641,11 +1641,11 @@ async getAllArchitects() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch architects.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // // toast.success("✅ Architects fetched successfully!");
     return data.architects;
 
@@ -1664,11 +1664,11 @@ async getAllCAs() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch CAs.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // // toast.success("✅ CAs fetched successfully!");
     return data.cas;
 
@@ -1737,11 +1737,11 @@ console.log(formData);
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Unit details submission failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Project unit details uploaded successfully!");
     return data;
   } catch (err) {
@@ -1803,11 +1803,11 @@ async updateProjectUnitDetails(id, formData) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Unit update failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Project unit details updated successfully!");
     return data;
   } catch (err) {
@@ -1825,11 +1825,11 @@ async getUnitById(id) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch unit details.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Unit details fetched successfully!");
     return data.unit;
   } catch (error) {
@@ -1847,11 +1847,11 @@ async getAllUnitsForProject(projectId) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch units.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Units fetched successfully!");
     return data.units;
 
@@ -1870,7 +1870,7 @@ async deleteProjectUnitById(id) {
     });
   
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to delete unit.");
     }
   
@@ -1941,11 +1941,11 @@ async uploadProjectDocuments(formData) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Documents submission failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Project documents uploaded successfully!");
     return data;
   } catch (err) {
@@ -1963,7 +1963,7 @@ async getProjectDocuments(projectId) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       
       // Handle specific error messages returned from the backend
       if (errorData.error === "No documents found for this project.") {
@@ -1973,7 +1973,7 @@ async getProjectDocuments(projectId) {
       throw new Error(errorData.message || "Failed to fetch project documents.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // // toast.success("✅ Project documents fetched successfully!");
     return data.documents;
 
@@ -2012,11 +2012,11 @@ async uploadProjectBuildingProgress(formData) {
     
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Building progress submission failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Project building progress uploaded successfully!");
     return data;
   } catch (err) {
@@ -2038,11 +2038,11 @@ async uploadProjectCommonAreasProgress(formData) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Common areas progress submission failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Project common areas progress uploaded successfully!");
     return data;
   } catch (err) {
@@ -2065,11 +2065,11 @@ async getProjectSiteProgress(projectId) {
         toast('Site Progress Data is not availible!')
         return
       }
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch site progress.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
 
     // toast.success("✅ Project site progress fetched successfully!");
 
@@ -2094,11 +2094,11 @@ async getAllProjects() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch promoters.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Projects fetched successfully!");
     return data.projects;
 
@@ -2116,11 +2116,11 @@ async getAllProjectsForQPR() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch promoters.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Projects fetched successfully!");
     return data.projects;
 
@@ -2138,11 +2138,11 @@ async getAllProjectsForAA() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch promoters.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Projects fetched successfully!");
     return data.projects;
 
@@ -2161,11 +2161,11 @@ async getAllProjectsForDropdown() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch projects.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Projects fetched successfully!");
 
     // Map to label/value format for react-select
@@ -2191,11 +2191,11 @@ async getAllProjectsForAssignmentDropdown() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch projects for assignment.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log(data);
     
 
@@ -2281,11 +2281,11 @@ async createChannelPartner(formData,userId) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Channel Partner creation failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Channel Partner created successfully!");
     return data;
   } catch (err) {
@@ -2355,11 +2355,11 @@ async createChannelPartner(formData, userId) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Channel Partner creation failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Channel Partner created successfully!");
     return data;
   } catch (err) {
@@ -2429,11 +2429,11 @@ async updateChannelPartner(id, formData) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Channel Partner update failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Channel Partner updated successfully!");
     return data;
   } catch (err) {
@@ -2451,13 +2451,13 @@ async getAllChannelPartners() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch channel partners.");
     }
 
     // console.log(response);
     
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Channel partners fetched successfully!");
     return data.channelPartners;
 
@@ -2476,12 +2476,12 @@ async getChannelPartnerById(id) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch channel partner details.");
     }
     
     
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log(data);
     // toast.success("✅ Channel Partner details fetched successfully!");
     return data.channelPartner; // assuming your API returns { channel_partner: {...} }
@@ -2502,11 +2502,11 @@ async getAllChannelPartnersForDropdown() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch channel partners.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Channel partners fetched successfully!");
 
     // Map to label/value format for react-select
@@ -2532,7 +2532,7 @@ async deleteChannelPartnerById(id) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to delete channel partner.");
     }
 
@@ -2563,11 +2563,11 @@ async createNewAssignment(formData) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Assignment creation failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Assignment created successfully!");
     return data;
   } catch (err) {
@@ -2585,11 +2585,11 @@ async getAssignmentById(id) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch assignment details.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // console.log(data);
     
     // toast.success("✅ Assignment details fetched successfully!");
@@ -2609,12 +2609,12 @@ async getAllAssignments() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch assignments.");
     }
 
     
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.assignments;
 
   } catch (error) {
@@ -2635,11 +2635,11 @@ async updateAssignment(id, formData) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Assignment update failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Assignment updated successfully!");
     return data;
   } catch (err) {
@@ -2661,11 +2661,11 @@ async updateAssignmentStatus(assignmentId, userId, newStatus) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Assignment status update failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Assignment status updated successfully!");
     return data;
   } catch (err) {
@@ -2688,11 +2688,11 @@ async addAssignmentNote(assignmentId, notePayload) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Adding note failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Note added successfully!");
     return data;
   } catch (err) {
@@ -2710,7 +2710,7 @@ async deleteAssignmentById(id) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to delete assignment.");
     }
 
@@ -2738,11 +2738,11 @@ async setAssignmentReminder(assignmentId, reminderData) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Setting reminder failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Reminder set successfully!");
     return data;
   } catch (err) {
@@ -2765,11 +2765,11 @@ async getAllPendingReminders() {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Fetching pending reminders failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("⏰ Pending reminders fetched successfully!");
     return data.reminders;
   } catch (err) {
@@ -2792,11 +2792,11 @@ async updateReminderStatus(formData) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Failed to update reminder status.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("✅ Reminder status updated successfully!");
     return data.updatedReminder;
   } catch (err) {
@@ -2819,11 +2819,11 @@ async getAssignmentTimeline(assignmentId) {
     });
 
     if (!response.ok) {
-      const err = await response.json();
+      const err = this.handleResponse(response);
       throw new Error(err.message || "Fetching timeline failed.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     // toast.success("📅 Timeline fetched successfully!");
     return data;
   } catch (err) {
@@ -3881,11 +3881,11 @@ async getMonthlyPromoters(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch monthly promoters data.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching monthly promoters:", error);
@@ -3913,11 +3913,11 @@ async getMonthlyChannelPartners(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch monthly channel partners data.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching monthly channel partners:", error);
@@ -3947,11 +3947,11 @@ async getMonthlyProjects(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch monthly projects data.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching monthly projects:", error);
@@ -3979,11 +3979,11 @@ async getMonthlyAssignments(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch monthly assignments data.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching monthly assignments:", error);
@@ -4006,11 +4006,11 @@ async getAssignmentStatusSummary() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch assignment status summary.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching assignment status summary:", error);
@@ -4029,11 +4029,11 @@ async getAssignmentTypeSummary() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch assignment type summary.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching assignment type summary:", error);
@@ -4065,11 +4065,11 @@ async getDailyReminders(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch daily reminders.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching daily reminders:", error);
@@ -4092,11 +4092,11 @@ async getGeneralStats() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch general statistics.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching general statistics:", error);
@@ -4119,11 +4119,11 @@ async getPromoterTypeDistribution() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch promoter type distribution.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching promoter type distribution:", error);
@@ -4151,11 +4151,11 @@ async getPromoterGeographicDistribution(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch promoter geographic distribution.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching promoter geographic distribution:", error);
@@ -4197,11 +4197,11 @@ async getProjectOverview(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch project overview.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return {
       projects: data.data,
       pagination: data.pagination
@@ -4234,11 +4234,11 @@ async getReraExpiryAlerts(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch RERA expiry alerts.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching RERA expiry alerts:", error);
@@ -4270,11 +4270,11 @@ async getMonthlyFinancialSummary(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch monthly financial summary.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching monthly financial summary:", error);
@@ -4298,11 +4298,11 @@ async getAssignmentFinancialPerformance(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch assignment financial performance.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching assignment financial performance:", error);
@@ -4334,11 +4334,11 @@ async getUserActivitySummary(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch user activity summary.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching user activity summary:", error);
@@ -4374,11 +4374,11 @@ async getRecentActivity(params = {}) {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch recent activity.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching recent activity:", error);
@@ -4401,11 +4401,11 @@ async getCompleteDashboardData() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch complete dashboard data.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching complete dashboard data:", error);
@@ -4428,11 +4428,11 @@ async getDashboardOverview() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch dashboard overview.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching dashboard overview:", error);
@@ -4451,11 +4451,11 @@ async getQuickStats() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorData = this.handleResponse(response);
       throw new Error(errorData.message || "Failed to fetch quick stats.");
     }
 
-    const data = await response.json();
+    const data = this.handleResponse(response);
     return data.data;
   } catch (error) {
     console.error("❌ Error fetching quick stats:", error);
