@@ -5,6 +5,8 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 
+import { getNavigate } from '../../utils/navigation';
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -30,6 +32,19 @@ class DatabaseService {
   // ✅ Utility to handle responses globally
   async handleResponse(response) {
     const data = await response.json();
+
+    if (response.status === 401) {
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('authTokenForPromoter');
+      toast("Session expired. Please log in again.");
+      const navigate = getNavigate();
+      if (navigate) {
+        navigate("/login");
+      } else {
+        window.location.href = "/login"; // fallback
+      }
+    }
+
     if (!response.ok) {
       throw new Error(data.message || 'Something went wrong');
     }

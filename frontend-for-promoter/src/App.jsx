@@ -1,13 +1,22 @@
 import { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
 import authService from './backend-services/auth/auth';
 import { login, logout} from './store/authSlice'
 import databaseService from './backend-services/database/database';
+import {setNavigate } from './utils/navigation'
 
 function App() {
   const dispatch = useDispatch();
+
+  
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setNavigate(navigate);
+  }, [navigate]);
+
 
   const userData = useSelector((state) => state.auth.userData);
 useEffect(() => {
