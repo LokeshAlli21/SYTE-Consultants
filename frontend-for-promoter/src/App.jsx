@@ -56,7 +56,7 @@ useEffect(() => {
   }, [])
 
   return (
-    <div className="flex  max-w-screen w-full  bg-[#F3F4FF]">
+    <div className="flex flex-col max-w-screen w-full   bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <ToastContainer position='top-right' />
       <Header />
       <div className=" flex-1 flex-grow mx-auto">

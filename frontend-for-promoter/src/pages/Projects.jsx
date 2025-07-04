@@ -174,7 +174,7 @@ function Projects() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen">
       <div className="max-w-6xl mx-auto px-4 py-8">
 
 {/* Enhanced Search & Filter */}
