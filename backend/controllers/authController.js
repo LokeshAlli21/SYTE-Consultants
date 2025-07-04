@@ -52,21 +52,27 @@ export const loginUser = async (req, res, next) => {
     let accessFields = [];
 
     if (user.access_fields) {
-      try {
-        // Try parsing as JSON first
-        const parsed = JSON.parse(user.access_fields);
-        accessFields = Array.isArray(parsed) ? parsed : [parsed];
-      } catch (jsonError) {
-        console.warn('Failed to parse access_fields JSON:', jsonError);
-
-        // Fallback: treat as comma-separated string
-        // Check if it's actually a string before calling split
-        if (typeof user.access_fields === 'string') {
+      if (typeof user.access_fields === 'string') {
+        try {
+          // Try parsing as JSON first
+          const parsed = JSON.parse(user.access_fields);
+          accessFields = Array.isArray(parsed) ? parsed : [parsed];
+        } catch (jsonError) {
+          console.warn('Failed to parse access_fields JSON:', jsonError);
+          // Fallback: treat as comma-separated string
           accessFields = user.access_fields.split(',').map(item => item.trim());
-        } else {
-          console.error('access_fields is neither valid JSON nor a string:', typeof user.access_fields);
-          accessFields = []; // Default to empty array
         }
+      } else if (typeof user.access_fields === 'object') {
+        // Already parsed as object by ORM/database driver
+        if (Array.isArray(user.access_fields)) {
+          accessFields = user.access_fields;
+        } else {
+          // If it's an object but not an array, convert to array
+          accessFields = Object.values(user.access_fields);
+        }
+      } else {
+        console.error('Unexpected access_fields type:', typeof user.access_fields, user.access_fields);
+        accessFields = [];
       }
     }
 
