@@ -13,7 +13,7 @@ const userData = useSelector((state) => state.auth.userData);
   };
 
   return (
-    <div className="mb-8">
+    <div className=" px-2 py-3 ">
       {/* Main Header */}
       <div 
         className="flex items-center gap-4 mb-6 cursor-pointer transition-all duration-300 hover:bg-white/30 rounded-2xl p-2 -m-2"
@@ -38,7 +38,7 @@ const userData = useSelector((state) => state.auth.userData);
           {userData?.channelPartner && (
             <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-transparent rounded-full flex items-center justify-center shadow-lg">
               <svg 
-                className={`w-3 h-3 text-white transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`} 
+                className={`w-3 h-3 text-blue-500 transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`} 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -66,7 +66,7 @@ const userData = useSelector((state) => state.auth.userData);
           transition-all duration-500 ease-in-out overflow-hidden
           ${isContactOpen ? 'max-h-96 opacity-100 mb-4' : 'max-h-0 opacity-0 mb-0'}
         `}>
-          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-white/30 relative overflow-hidden transform transition-all duration-500 ease-in-out">
+          <div className="bg-white/70 backdrop-blur-md rounded-2xl p-4 border border-white/30 relative overflow-hidden transform transition-all duration-500 ease-in-out">
             {/* Background Pattern */}
             <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-2xl"></div>
             
