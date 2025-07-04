@@ -53,14 +53,20 @@ export const loginUser = async (req, res, next) => {
 
     if (user.access_fields) {
       try {
-        // Try parsing as JSON
+        // Try parsing as JSON first
         const parsed = JSON.parse(user.access_fields);
         accessFields = Array.isArray(parsed) ? parsed : [parsed];
       } catch (jsonError) {
         console.warn('Failed to parse access_fields JSON:', jsonError);
 
-        // Fallback: assume comma-separated string
-        accessFields = user.access_fields.split(',').map(item => item.trim());
+        // Fallback: treat as comma-separated string
+        // Check if it's actually a string before calling split
+        if (typeof user.access_fields === 'string') {
+          accessFields = user.access_fields.split(',').map(item => item.trim());
+        } else {
+          console.error('access_fields is neither valid JSON nor a string:', typeof user.access_fields);
+          accessFields = []; // Default to empty array
+        }
       }
     }
 
