@@ -269,22 +269,25 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION get_channel_partner_by_promoter(promoter_id_input INT)
 RETURNS JSON AS $$
 BEGIN
-   RETURN (
-       SELECT json_build_object(
-           'id', cp.id,
-           'promoter_id', p.id,
-           'full_name', cp.full_name,
-           'contact_number', cp.contact_number,
-           'alternate_contact_number', cp.alternate_contact_number,
-           'email_id', cp.email_id,
-           'district', cp.district,
-           'city', cp.city
-       )
-       FROM channel_partners cp
-       JOIN projects p ON cp.id = p.channel_partner_id
-       WHERE p.promoter_id = promoter_id_input
-         AND cp.status_for_delete = 'active'
-       LIMIT 1
-   );
+    RETURN (
+        SELECT json_build_object(
+            'id', cp.id,
+            'cp_photo_uploaded_url', cp.cp_photo_uploaded_url,
+            'promoter_id', promoter_id_input,
+            'full_name', cp.full_name,
+            'contact_number', cp.contact_number,
+            'alternate_contact_number', cp.alternate_contact_number,
+            'email_id', cp.email_id,
+            'district', cp.district,
+            'city', cp.city,
+            'project_id', p.id
+        )
+        FROM channel_partners cp
+        JOIN projects p ON cp.id = p.channel_partner_id
+        WHERE p.promoter_id = promoter_id_input
+          AND cp.status_for_delete = 'active'
+        ORDER BY p.id  -- This determines which project takes priority
+        LIMIT 1
+    );
 END;
 $$ LANGUAGE plpgsql;

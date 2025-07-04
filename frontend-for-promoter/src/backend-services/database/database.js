@@ -61,6 +61,31 @@ async getChannelPartnerByPromoterId(promoterId) {
   }
 }
 
+async getPromoterProjects(promoterId) {
+  // console.log("🔍 Fetching projects for promoter ID:", promoterId);
+
+  try {
+    const response = await fetch(`${this.baseUrl}/api/for-promoter-frontend/get-projects-by-promoter/${promoterId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Fetching projects failed.");
+    }
+
+    const data = await response.json();
+    // toast.success("🔍 Projects fetched successfully!");
+    // console.log("Fetched projects:", data);
+    return data.projects;
+  } catch (err) {
+    console.error("❌ Error fetching projects:", err);
+    // toast.error(`❌ ${err.message}`);
+    throw err;
+  } 
+}
+
 }
 
 const databaseService = new DatabaseService();
