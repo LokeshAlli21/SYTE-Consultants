@@ -177,10 +177,10 @@ function Projects() {
             </div>
             <div>
               <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                My Projects
+                Projects
               </h1>
-              <p className="text-gray-600 mt-1">
-                Track and manage your real estate portfolio
+              <p className="text-gray-600 mt-0">
+                Track your real estate projects 
               </p>
             </div>
           </div>
@@ -199,7 +199,7 @@ function Projects() {
               placeholder="Search projects, locations, or RERA numbers..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-4 bg-white/70 backdrop-blur-sm border border-white/20 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg placeholder-gray-500 text-gray-900"
+              className="w-full pl-12 pr-4 py-4 bg-white/70 outline-none border border-white/20 rounded-2xl focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg placeholder-gray-500 text-gray-900"
             />
           </div>
 
