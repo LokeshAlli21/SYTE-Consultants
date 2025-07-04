@@ -44,7 +44,11 @@ useEffect(() => {
       }
       console.log("promoterData : ",promoterData);
     })
-    .catch((error) => console.log("Login Error : ",error))
+    .catch((error) => {
+      console.log("Login Error : ",error)
+      dispatch(logout())
+      return
+    })
   }, [])
 
   return (

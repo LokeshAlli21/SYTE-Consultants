@@ -19,7 +19,11 @@ function App() {
       }
       console.log("userData : ",userData);
     })
-    .catch((error) => console.log("Login Error : ",error))
+    .catch((error) => {
+       dispatch(logout()) 
+      console.log("Login Error : ",error)
+      return
+    })
   }, [])
 
   return (
