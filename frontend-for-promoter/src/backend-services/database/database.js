@@ -76,8 +76,8 @@ async getPromoterProjects(promoterId) {
     }
 
     const data = await response.json();
-    // toast.success("🔍 Projects fetched successfully!");
-    // console.log("Fetched projects:", data);
+    toast.success("🔍 Projects fetched successfully!");
+    console.log("Fetched projects:", data);
     return data.projects;
   } catch (err) {
     console.error("❌ Error fetching projects:", err);

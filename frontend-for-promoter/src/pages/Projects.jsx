@@ -4,6 +4,7 @@ import databaseService from '../backend-services/database/database'
 
 function Projects() {
   const userData = useSelector((state) => state.auth.userData)
+  console.log("User Data in Projects Component:", userData)
   const promoterId = userData?.id
 
   const [projects, setProjects] = useState([])
@@ -18,10 +19,14 @@ function Projects() {
       return
     }
 
+    console.log("Fetching projects for promoter ID:", promoterId)
+
     const fetchProjects = async () => {
       try {
         setLoading(true)
         const response = await databaseService.getPromoterProjects(promoterId)
+
+        console.log("Fetched projects:", response)
         
         if (response.projects) {
           setProjects(response.projects)
