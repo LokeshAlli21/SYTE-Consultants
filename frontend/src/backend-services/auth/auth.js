@@ -28,7 +28,7 @@ class AuthService {
 
       const data = await response.json();
 
-      console.log("data at login service in auth.js :: data:",data);
+      // console.log("data at login service in auth.js :: data:",data);
       
 
       if (!response.ok) {
@@ -38,7 +38,7 @@ class AuthService {
 
       localStorage.removeItem("authTokenForPromoter"); // Clear any previous token for promoter
       localStorage.setItem("authToken", data?.user?.token);
-      toast.success(`Welcome back! Logged in successfully.`);
+      // toast.success(`Welcome back! Logged in successfully.`);
       return data;
 
     } catch (error) {
@@ -70,7 +70,7 @@ class AuthService {
       
 
       if (!response.ok) {
-        toast.error("🚫 Unauthorized access. Please log in again.");
+        toast("🚫 Session Expired. Please log in again.");
         throw new Error("Unauthorized");
       }
 
