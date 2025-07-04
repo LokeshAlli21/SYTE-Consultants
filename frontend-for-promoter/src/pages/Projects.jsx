@@ -330,7 +330,7 @@ function Projects() {
           </div>
         ) : (
           <div className="space-y-4">
-{filteredProjects.map((project) => (
+            {filteredProjects.map((project) => (
               <div 
                 key={project.id} 
                 className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200"
@@ -343,7 +343,7 @@ function Projects() {
                         {project.project_name}
                       </h3>
                       <div className="flex items-center space-x-2 mb-2">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getProjectTypeColor(project.project_type)}`}>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getProjectTypeInfo(project.project_type).bgColor} ${getProjectTypeInfo(project.project_type).textColor}`}>
                           {project.project_type || 'N/A'}
                         </span>
                         {project.rera_number && (
