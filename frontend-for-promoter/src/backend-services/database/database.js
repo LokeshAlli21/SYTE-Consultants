@@ -69,7 +69,7 @@ async getChannelPartnerByPromoterId(promoterId) {
 
     const data = await this.handleResponse(response);
     // toast.success("🔍 Channel partner fetched successfully!");
-    // console.log("Fetched channel partner:", data);
+    console.log("Fetched channel partner:", data);
     return data.channelPartner;
   } catch (err) {
     console.error("❌ Error fetching channel partner:", err);
