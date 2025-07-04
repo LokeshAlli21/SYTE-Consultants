@@ -5,16 +5,11 @@ import { ToastContainer, toast } from 'react-toastify';
 import SideBar from './components/SideBar';
 import authService from './backend-services/auth/auth';
 import { login, logout} from './store/authSlice'
-import {setNavigate } from './utils/navigation'
 
 function App() {
   const dispatch = useDispatch();
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setNavigate(navigate);
-  }, [navigate]);
 
   useEffect(() => {
     authService.getCurrentUser()

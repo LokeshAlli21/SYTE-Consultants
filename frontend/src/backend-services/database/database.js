@@ -5,7 +5,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 
-import { getNavigate } from '../../utils/navigation';
+import {authenticatedFetch} from '../fetchWrapper';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -76,7 +76,7 @@ async createUser(userData) {
       fileFormData.append("photo_url", renamedFile);
 
       // ⬆️ Upload the photo file
-      const uploadRes = await fetch(`${this.baseUrl}/api/admin/users/upload-photo`, {
+      const uploadRes = await authenticatedFetch(`${this.baseUrl}/api/admin/users/upload-photo`, {
         method: "POST",
         headers: this.getAuthHeaders(true), // Assuming this excludes Content-Type for FormData
         body: fileFormData,
@@ -101,7 +101,7 @@ async createUser(userData) {
     console.log("📤 Final User Payload:", userData);
 
     // 📨 Submit final user data
-    const response = await fetch(`${this.baseUrl}/api/admin/users`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/admin/users`, {
       method: "POST",
       headers: {
         ...this.getAuthHeaders(),
@@ -132,7 +132,7 @@ async getAllUsers(params = {}) {
       ? `${this.baseUrl}/api/admin/users?${queryString}`
       : `${this.baseUrl}/api/admin/users`;
     
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -146,7 +146,7 @@ async getAllUsers(params = {}) {
 // READ - Get user by ID
 async getUserById(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/admin/users/${id}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -179,7 +179,7 @@ async updateUser(id, updateData) {
 
       fileFormData.append("photo_url", renamedFile);
 
-      const uploadRes = await fetch(`${this.baseUrl}/api/admin/users/upload-photo`, {
+      const uploadRes = await authenticatedFetch(`${this.baseUrl}/api/admin/users/upload-photo`, {
         method: "POST",
         headers: this.getAuthHeaders(true), // FormData: don't set Content-Type manually
         body: fileFormData,
@@ -202,7 +202,7 @@ async updateUser(id, updateData) {
 
     console.log("📤 Final Update Payload:", updateData);
 
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/admin/users/${id}`, {
       method: "PUT",
       headers: {
         ...this.getAuthHeaders(),
@@ -227,7 +227,7 @@ async updateUser(id, updateData) {
 
 async changeUserPassword(userId, newPassword) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${userId}/password`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/admin/users/${userId}/password`, {
       method: "PUT",
       headers: {
         ...this.getAuthHeaders(),
@@ -245,7 +245,7 @@ async changeUserPassword(userId, newPassword) {
 // SOFT DELETE - Mark user as deleted
 async softDeleteUser(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}/delete`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/admin/users/${id}/delete`, {
       method: "PATCH",
       headers: this.getAuthHeaders(),
     });
@@ -259,7 +259,7 @@ async softDeleteUser(id) {
 // RESTORE - Restore soft-deleted user
 async restoreUser(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}/restore`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/admin/users/${id}/restore`, {
       method: "PATCH",
       headers: this.getAuthHeaders(),
     });
@@ -273,7 +273,7 @@ async restoreUser(id) {
 // BLOCK - Block a user
 async blockUser(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}/block`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/admin/users/${id}/block`, {
       method: "PATCH",
       headers: this.getAuthHeaders(),
     });
@@ -287,7 +287,7 @@ async blockUser(id) {
 // UNBLOCK - Unblock a user
 async unblockUser(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/${id}/unblock`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/admin/users/${id}/unblock`, {
       method: "PATCH",
       headers: this.getAuthHeaders(),
     });
@@ -302,7 +302,7 @@ async unblockUser(id) {
 async searchUsers(params = {}) {
   try {
     const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`${this.baseUrl}/api/admin/users/search?${queryString}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/admin/users/search?${queryString}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -316,7 +316,7 @@ async searchUsers(params = {}) {
 // STATS - Get user statistics
 async getUserStats() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/admin/users/stats`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/admin/users/stats`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -336,7 +336,7 @@ async getAllFiles(page = 1, limit = 100, category = null, folder = null) {
     if (category) url += `&category=${category}`;
     if (folder) url += `&folder=${folder}`;
 
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -362,7 +362,7 @@ async getFilesByCategory(category, page = 1, limit = 50, folder = null) {
     let url = `${this.baseUrl}/api/bucket/files/category/${category}?page=${page}&limit=${limit}`;
     if (folder) url += `&folder=${folder}`;
 
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -389,7 +389,7 @@ async getFilesByFolder(folderPath, page = 1, limit = 50, category = null) {
     let url = `${this.baseUrl}/api/bucket/files/folder/${encodedFolder}?page=${page}&limit=${limit}`;
     if (category) url += `&category=${category}`;
 
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -417,7 +417,7 @@ async getAllDocuments(page = 1, limit = 100, subfolder = null) {
     let url = `${this.baseUrl}/api/bucket/documents?page=${page}&limit=${limit}`;
     if (subfolder) url += `&subfolder=${subfolder}`;
 
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -440,7 +440,7 @@ async getAllDocuments(page = 1, limit = 100, subfolder = null) {
 // Get documents from specific subfolder
 async getDocumentsBySubfolder(subfolder, page = 1, limit = 50) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/bucket/documents/subfolder/${subfolder}?page=${page}&limit=${limit}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/bucket/documents/subfolder/${subfolder}?page=${page}&limit=${limit}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -468,7 +468,7 @@ async getAllPhotos(page = 1, limit = 100, role = null) {
     let url = `${this.baseUrl}/api/bucket/photos?page=${page}&limit=${limit}`;
     if (role) url += `&role=${role}`;
 
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -491,7 +491,7 @@ async getAllPhotos(page = 1, limit = 100, role = null) {
 // Get photos from specific role
 async getPhotosByRole(role, page = 1, limit = 50) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/bucket/photos/role/${role}?page=${page}&limit=${limit}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/bucket/photos/role/${role}?page=${page}&limit=${limit}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -516,7 +516,7 @@ async getPhotosByRole(role, page = 1, limit = 50) {
 // Get bucket structure
 async getBucketStructure(detailed = false) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/bucket/structure?detailed=${detailed}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/bucket/structure?detailed=${detailed}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -539,7 +539,7 @@ async getBucketStructure(detailed = false) {
 // Get bucket statistics
 async getBucketStats() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/bucket/stats`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/bucket/stats`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -562,7 +562,7 @@ async getBucketStats() {
 // Get category summary
 async getCategorySummary() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/bucket/categories`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/bucket/categories`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -592,7 +592,7 @@ async searchFiles(search = null, category = null, mimeType = null, page = 1, lim
     if (category) url += `&category=${category}`;
     if (mimeType) url += `&mimeType=${mimeType}`;
 
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -617,7 +617,7 @@ async searchFiles(search = null, category = null, mimeType = null, page = 1, lim
 // Delete file by ID or file path
 async deleteFile(fileId, filePath = null) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/bucket/file/${fileId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/bucket/file/${fileId}`, {
       method: "DELETE",
       headers: {
         ...this.getAuthHeaders(),
@@ -894,7 +894,7 @@ for (const key in formData) {
 
     // ⬆️ Upload all files
     if (fieldsToUpload.length > 0) {
-      const uploadRes = await fetch(`${this.baseUrl}/api/promoters/upload-files`, {
+      const uploadRes = await authenticatedFetch(`${this.baseUrl}/api/promoters/upload-files`, {
         method: "POST",
         headers: this.getAuthHeaders(true),
         body: fileFormData,
@@ -931,7 +931,7 @@ for (const key in formData) {
     });
 
     // 📨 Submit final data
-    const response = await fetch(`${this.baseUrl}/api/promoters/add-promoter`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/promoters/add-promoter`, {
       method: "POST",
       headers: {
         ...this.getAuthHeaders(),
@@ -1038,7 +1038,7 @@ for (const key in formData) {
 
       // ⬆️ Upload files if any
       if (fieldsToUpload.length > 0) {
-        const uploadRes = await fetch(`${this.baseUrl}/api/promoters/upload-files`, {
+        const uploadRes = await authenticatedFetch(`${this.baseUrl}/api/promoters/upload-files`, {
           method: "POST",
           headers: this.getAuthHeaders(true),
           body: fileFormData,
@@ -1078,7 +1078,7 @@ for (const key in formData) {
       console.log("📤 Final Payload for update:", payload);
 
       // 🔄 Make update API call
-      const response = await fetch(`${this.baseUrl}/api/promoters/update/${id}`, {
+      const response = await authenticatedFetch(`${this.baseUrl}/api/promoters/update/${id}`, {
         method: "PUT",
         headers: {
           ...this.getAuthHeaders(),
@@ -1104,7 +1104,7 @@ for (const key in formData) {
   
   async getPromoterDetailsById(id) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/promoters/get/${id}`, {
+      const response = await authenticatedFetch(`${this.baseUrl}/api/promoters/get/${id}`, {
         method: "GET",
         headers: this.getAuthHeaders(),
       });
@@ -1129,7 +1129,7 @@ for (const key in formData) {
 
   async checkUsernameAvailability(username) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/promoters/check-username/${username}`, {
+      const response = await authenticatedFetch(`${this.baseUrl}/api/promoters/check-username/${username}`, {
         method: "GET",
         headers: this.getAuthHeaders(),
       });
@@ -1150,7 +1150,7 @@ for (const key in formData) {
 
   async getAllPromoters() {
     try {
-      const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {
+      const response = await authenticatedFetch(`${this.baseUrl}/api/promoters/get-all`, {
         method: "GET",
         headers: this.getAuthHeaders(),
       });
@@ -1173,7 +1173,7 @@ for (const key in formData) {
   
   async getAllPromotersForDropdown() {
     try {
-      const response = await fetch(`${this.baseUrl}/api/promoters/get-all`, {
+      const response = await authenticatedFetch(`${this.baseUrl}/api/promoters/get-all`, {
         method: "GET",
         headers: this.getAuthHeaders(),
       });
@@ -1203,7 +1203,7 @@ for (const key in formData) {
 
   async deletePromoterById(id) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/promoters/delete/${id}`, {
+      const response = await authenticatedFetch(`${this.baseUrl}/api/promoters/delete/${id}`, {
         method: "DELETE",
         headers: this.getAuthHeaders(),
       });
@@ -1264,7 +1264,7 @@ for (const key in formData) {
       }
   
       if (fieldsToUpload.length > 0) {
-        const fileUploadRes = await fetch(`${this.baseUrl}/api/projects/upload-files`, {
+        const fileUploadRes = await authenticatedFetch(`${this.baseUrl}/api/projects/upload-files`, {
           method: "POST",
           headers: this.getAuthHeaders(true),
           body: fileFormData
@@ -1288,7 +1288,7 @@ for (const key in formData) {
   
       console.log("Final project formData to submit:", formData);
   
-      const response = await fetch(`${this.baseUrl}/api/projects/add-project`, {
+      const response = await authenticatedFetch(`${this.baseUrl}/api/projects/add-project`, {
         method: "POST",
         headers: {
           ...this.getAuthHeaders(),
@@ -1315,7 +1315,7 @@ for (const key in formData) {
 
   async getProjectById(id) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/projects/get-project/${id}`, {
+      const response = await authenticatedFetch(`${this.baseUrl}/api/projects/get-project/${id}`, {
         method: "GET",
         headers: this.getAuthHeaders(),
       });
@@ -1370,7 +1370,7 @@ for (const key in formData) {
       }
   
       if (fieldsToUpload.length > 0) {
-        const fileUploadRes = await fetch(`${this.baseUrl}/api/projects/upload-files`, {
+        const fileUploadRes = await authenticatedFetch(`${this.baseUrl}/api/projects/upload-files`, {
           method: "POST",
           headers: this.getAuthHeaders(true),
           body: fileFormData,
@@ -1394,7 +1394,7 @@ for (const key in formData) {
   
       console.log("Final project formData to update:", formData);
   
-      const response = await fetch(`${this.baseUrl}/api/projects/update/${projectId}`, {
+      const response = await authenticatedFetch(`${this.baseUrl}/api/projects/update/${projectId}`, {
         method: "PUT",
         headers: {
           ...this.getAuthHeaders(),
@@ -1421,7 +1421,7 @@ for (const key in formData) {
 
   async deleteProjectById(id) {
     try {
-      const response = await fetch(`${this.baseUrl}/api/projects/delete/${id}`, {
+      const response = await authenticatedFetch(`${this.baseUrl}/api/projects/delete/${id}`, {
         method: "DELETE",
         headers: this.getAuthHeaders(),
       });
@@ -1450,7 +1450,7 @@ for (const key in formData) {
   try {
     console.log("Final professional details formData to submit:", formData);
 
-    const response = await fetch(`${this.baseUrl}/api/projects/add-project-professionals`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/add-project-professionals`, {
       method: "POST",
       headers: {
         ...this.getAuthHeaders(),
@@ -1533,7 +1533,7 @@ async #uploadProfessionalWithFiles(data, role) {
 
   // 🔄 Upload files if any
   if (fieldsToUpload.length > 0) {
-    const fileUploadRes = await fetch(`${this.baseUrl}/api/projects/professional-details/upload-files`, {
+    const fileUploadRes = await authenticatedFetch(`${this.baseUrl}/api/projects/professional-details/upload-files`, {
       method: "POST",
       headers: this.getAuthHeaders(true), // skipContentType = true for multipart/form-data
       body: fileFormData
@@ -1564,7 +1564,7 @@ async #uploadProfessionalWithFiles(data, role) {
     project_id: data.project_id,
   };
 
-  const res = await fetch(`${this.baseUrl}/api/projects/professional-details/add/${role}`, {
+  const res = await authenticatedFetch(`${this.baseUrl}/api/projects/professional-details/add/${role}`, {
     method: "POST",
     headers: this.getAuthHeaders(),
     body: JSON.stringify(finalPayload),
@@ -1584,7 +1584,7 @@ async #uploadProfessionalWithFiles(data, role) {
 
 async getProjectProfessionalData(projectId) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/get-project-professionals/${projectId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/get-project-professionals/${projectId}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -1607,7 +1607,7 @@ async getProjectProfessionalData(projectId) {
     
 async getAllEngineers() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/engineers/get-all`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/engineers/get-all`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -1630,7 +1630,7 @@ async getAllEngineers() {
 
 async getAllArchitects() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/architects/get-all`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/architects/get-all`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -1653,7 +1653,7 @@ async getAllArchitects() {
 
 async getAllCAs() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/cas/get-all`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/cas/get-all`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -1699,7 +1699,7 @@ async uploadProjectUnitDetails(formData) {
 
     // Upload files
     if (uploadedFiles.length > 0) {
-      const res = await fetch(`${this.baseUrl}/api/projects/unit-details/upload-files`, {
+      const res = await authenticatedFetch(`${this.baseUrl}/api/projects/unit-details/upload-files`, {
         method: "POST",
         headers: this.getAuthHeaders(true),
         body: fileFormData
@@ -1722,7 +1722,7 @@ async uploadProjectUnitDetails(formData) {
 console.log(formData);
 
     // Submit final form
-    const response = await fetch(`${this.baseUrl}/api/projects/add-project-units`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/add-project-units`, {
       method: "POST",
       headers: {
         ...this.getAuthHeaders(),
@@ -1766,7 +1766,7 @@ async updateProjectUnitDetails(id, formData) {
 
     // Upload new files if any
     if (uploadedFiles.length > 0) {
-      const res = await fetch(`${this.baseUrl}/api/projects/unit-details/upload-files`, {
+      const res = await authenticatedFetch(`${this.baseUrl}/api/projects/unit-details/upload-files`, {
         method: "POST",
         headers: this.getAuthHeaders(true),
         body: fileFormData
@@ -1788,7 +1788,7 @@ async updateProjectUnitDetails(id, formData) {
     }
 
     // Submit updated unit details
-    const response = await fetch(`${this.baseUrl}/api/projects/update-project-units/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/update-project-units/${id}`, {
       method: "PUT",
       headers: {
         ...this.getAuthHeaders(),
@@ -1814,7 +1814,7 @@ async updateProjectUnitDetails(id, formData) {
 
 async getUnitById(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/units/get-unit/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/units/get-unit/${id}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -1836,7 +1836,7 @@ async getUnitById(id) {
 
 async getAllUnitsForProject(projectId) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/units/get-all/?project-id=${projectId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/units/get-all/?project-id=${projectId}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -1859,7 +1859,7 @@ async getAllUnitsForProject(projectId) {
 
 async deleteProjectUnitById(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/units/delete/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/units/delete/${id}`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
     });
@@ -1903,7 +1903,7 @@ async uploadProjectDocuments(formData) {
 
     // Upload files
     if (uploadedFiles.length > 0) {
-      const res = await fetch(`${this.baseUrl}/api/projects/documents/upload-files`, {
+      const res = await authenticatedFetch(`${this.baseUrl}/api/projects/documents/upload-files`, {
         method: "POST",
         headers: this.getAuthHeaders(true),
         body: fileFormData
@@ -1926,7 +1926,7 @@ async uploadProjectDocuments(formData) {
       });
     }
 
-    const response = await fetch(`${this.baseUrl}/api/projects/add-project-documents`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/add-project-documents`, {
       method: "POST",
       headers: {
         ...this.getAuthHeaders(),
@@ -1952,7 +1952,7 @@ async uploadProjectDocuments(formData) {
 
 async getProjectDocuments(projectId) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/get-documents/${projectId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/get-documents/${projectId}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -1994,7 +1994,7 @@ async getProjectDocuments(projectId) {
 
 async uploadProjectBuildingProgress(formData) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/add-building-progress`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/add-building-progress`, {
       method: "POST",
       headers: {
         ...this.getAuthHeaders(),
@@ -2023,7 +2023,7 @@ async uploadProjectBuildingProgress(formData) {
 
 async uploadProjectCommonAreasProgress(formData) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/add-common-areas-progress`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/add-common-areas-progress`, {
       method: "POST",
       headers: {
         ...this.getAuthHeaders(),
@@ -2049,7 +2049,7 @@ async uploadProjectCommonAreasProgress(formData) {
 
 async getProjectSiteProgress(projectId) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/get-site-progress/${projectId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/get-site-progress/${projectId}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2083,7 +2083,7 @@ async getProjectSiteProgress(projectId) {
 
 async getAllProjects() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/get-all`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/get-all`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2105,7 +2105,7 @@ async getAllProjects() {
 }
 async getAllProjectsForQPR() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/get-all-for-qpr`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/get-all-for-qpr`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2127,7 +2127,7 @@ async getAllProjectsForQPR() {
 }
 async getAllProjectsForAA() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/get-all-for-aa`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/get-all-for-aa`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2150,7 +2150,7 @@ async getAllProjectsForAA() {
 
 async getAllProjectsForDropdown() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/get-all`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/get-all`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2180,7 +2180,7 @@ async getAllProjectsForDropdown() {
 
 async getAllProjectsForAssignmentDropdown() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/projects/get-all`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/projects/get-all`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2242,7 +2242,7 @@ async createChannelPartner(formData,userId) {
       const fieldsToUpload = ["cp_photo_uploaded_url"];
 
       // ⬆️ Upload files
-      const uploadRes = await fetch(`${this.baseUrl}/api/channel-partners/upload-photo`, {
+      const uploadRes = await authenticatedFetch(`${this.baseUrl}/api/channel-partners/upload-photo`, {
         method: "POST",
         headers: this.getAuthHeaders(true),
         body: fileFormData,
@@ -2266,7 +2266,7 @@ async createChannelPartner(formData,userId) {
     }
 
     // 📋 Create Channel Partner with updated formData
-    const response = await fetch(`${this.baseUrl}/api/channel-partners/add`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/channel-partners/add`, {
       method: "POST",
       headers: {
         ...this.getAuthHeaders(),
@@ -2316,7 +2316,7 @@ async createChannelPartner(formData, userId) {
       const fieldsToUpload = ["cp_photo_uploaded_url"];
 
       // ⬆️ Upload files
-      const uploadRes = await fetch(`${this.baseUrl}/api/channel-partners/upload-photo`, {
+      const uploadRes = await authenticatedFetch(`${this.baseUrl}/api/channel-partners/upload-photo`, {
         method: "POST",
         headers: this.getAuthHeaders(true),
         body: fileFormData,
@@ -2340,7 +2340,7 @@ async createChannelPartner(formData, userId) {
     }
 
     // 📋 Create Channel Partner with updated formData
-    const response = await fetch(`${this.baseUrl}/api/channel-partners/add`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/channel-partners/add`, {
       method: "POST",
       headers: {
         ...this.getAuthHeaders(),
@@ -2390,7 +2390,7 @@ async updateChannelPartner(id, formData) {
       const fieldsToUpload = ["cp_photo_uploaded_url"];
 
       // ⬆️ Upload files
-      const uploadRes = await fetch(`${this.baseUrl}/api/channel-partners/upload-photo`, {
+      const uploadRes = await authenticatedFetch(`${this.baseUrl}/api/channel-partners/upload-photo`, {
         method: "POST",
         headers: this.getAuthHeaders(true),
         body: fileFormData,
@@ -2414,7 +2414,7 @@ async updateChannelPartner(id, formData) {
     }
 
     // 📋 Update Channel Partner with updated formData
-    const response = await fetch(`${this.baseUrl}/api/channel-partners/update/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/channel-partners/update/${id}`, {
       method: "PUT",
       headers: {
         ...this.getAuthHeaders(),
@@ -2440,7 +2440,7 @@ async updateChannelPartner(id, formData) {
 
 async getAllChannelPartners() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/channel-partners/get-all`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/channel-partners/get-all`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2465,7 +2465,7 @@ async getAllChannelPartners() {
 
 async getChannelPartnerById(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/channel-partners/get/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/channel-partners/get/${id}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2491,7 +2491,7 @@ async getChannelPartnerById(id) {
 
 async getAllChannelPartnersForDropdown() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/channel-partners/get-all`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/channel-partners/get-all`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2521,7 +2521,7 @@ async getAllChannelPartnersForDropdown() {
 
 async deleteChannelPartnerById(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/channel-partners/delete/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/channel-partners/delete/${id}`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
     });
@@ -2548,7 +2548,7 @@ async deleteChannelPartnerById(id) {
 
 async createNewAssignment(formData) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/add`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/add`, {
       method: "POST",
       headers: {
         ...this.getAuthHeaders(),
@@ -2574,7 +2574,7 @@ async createNewAssignment(formData) {
   
 async getAssignmentById(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/get/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/get/${id}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2598,7 +2598,7 @@ async getAssignmentById(id) {
 }
 async getAllAssignments() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/get-all`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/get-all`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -2620,7 +2620,7 @@ async getAllAssignments() {
 
 async updateAssignment(id, formData) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/update/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/update/${id}`, {
       method: "PUT",
       headers: {
         ...this.getAuthHeaders(),
@@ -2646,7 +2646,7 @@ async updateAssignment(id, formData) {
 
 async updateAssignmentStatus(assignmentId, userId, newStatus) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/update-status/${assignmentId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/update-status/${assignmentId}`, {
       method: "PUT",
       headers: {
         ...this.getAuthHeaders(),
@@ -2673,7 +2673,7 @@ async updateAssignmentStatus(assignmentId, userId, newStatus) {
 async addAssignmentNote(assignmentId, notePayload) {
       console.log("assignmentId:", assignmentId, "notePayload:", notePayload);
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/add-note/${assignmentId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/add-note/${assignmentId}`, {
       method: "PUT",
       headers: {
         ...this.getAuthHeaders(),
@@ -2699,7 +2699,7 @@ async addAssignmentNote(assignmentId, notePayload) {
 
 async deleteAssignmentById(id) {
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/delete/${id}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/delete/${id}`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
     });
@@ -2723,7 +2723,7 @@ async setAssignmentReminder(assignmentId, reminderData) {
   console.log("assignmentId:", assignmentId, "reminderData:", reminderData);
 
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/set-reminder/${assignmentId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/set-reminder/${assignmentId}`, {
       method: "POST", // or "PUT" if you're updating an existing reminder
       headers: {
         ...this.getAuthHeaders(),
@@ -2751,7 +2751,7 @@ async getAllPendingReminders() {
   // console.log("⏰ Fetching all pending reminders...");
 
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/get-all-pending-reminders`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/get-all-pending-reminders`, {
       method: "GET",
       headers: {
         ...this.getAuthHeaders(),
@@ -2777,7 +2777,7 @@ async getAllPendingReminders() {
 async updateReminderStatus(formData) {
 
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/update-reminder-status`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/update-reminder-status`, {
       method: "PATCH",
       headers: {
         ...this.getAuthHeaders(),
@@ -2805,7 +2805,7 @@ async getAssignmentTimeline(assignmentId) {
   console.log("📅 Fetching timeline for assignmentId:", assignmentId);
 
   try {
-    const response = await fetch(`${this.baseUrl}/api/assignments/timeline/${assignmentId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/assignments/timeline/${assignmentId}`, {
       method: "GET",
       headers: {
         ...this.getAuthHeaders(),
@@ -3870,7 +3870,7 @@ async getMonthlyPromoters(params = {}) {
     if (params.month) queryParams.append('month', params.month);
     if (params.limit) queryParams.append('limit', params.limit);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/monthly/promoters?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/monthly/promoters?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -3902,7 +3902,7 @@ async getMonthlyChannelPartners(params = {}) {
     if (params.month) queryParams.append('month', params.month);
     if (params.limit) queryParams.append('limit', params.limit);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/monthly/channel-partners?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/monthly/channel-partners?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -3936,7 +3936,7 @@ async getMonthlyProjects(params = {}) {
     if (params.project_type) queryParams.append('project_type', params.project_type);
     if (params.limit) queryParams.append('limit', params.limit);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/monthly/projects?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/monthly/projects?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -3968,7 +3968,7 @@ async getMonthlyAssignments(params = {}) {
     if (params.month) queryParams.append('month', params.month);
     if (params.limit) queryParams.append('limit', params.limit);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/monthly/assignments?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/monthly/assignments?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -3995,7 +3995,7 @@ async getMonthlyAssignments(params = {}) {
  */
 async getAssignmentStatusSummary() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/assignments/status-summary`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/assignments/status-summary`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4018,7 +4018,7 @@ async getAssignmentStatusSummary() {
  */
 async getAssignmentTypeSummary() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/assignments/type-summary`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/assignments/type-summary`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4054,7 +4054,7 @@ async getDailyReminders(params = {}) {
     if (params.assignment_type) queryParams.append('assignment_type', params.assignment_type);
     if (params.days_ahead) queryParams.append('days_ahead', params.days_ahead);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/reminders/daily?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/reminders/daily?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4081,7 +4081,7 @@ async getDailyReminders(params = {}) {
  */
 async getGeneralStats() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/stats/general`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/stats/general`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4108,7 +4108,7 @@ async getGeneralStats() {
  */
 async getPromoterTypeDistribution() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/promoters/type-distribution`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/promoters/type-distribution`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4140,7 +4140,7 @@ async getPromoterGeographicDistribution(params = {}) {
     if (params.city) queryParams.append('city', params.city);
     if (params.limit) queryParams.append('limit', params.limit);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/promoters/geographic-distribution?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/promoters/geographic-distribution?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4186,7 +4186,7 @@ async getProjectOverview(params = {}) {
     if (params.promoter_id) queryParams.append('promoter_id', params.promoter_id);
     if (params.rera_status) queryParams.append('rera_status', params.rera_status);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/projects/overview?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/projects/overview?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4223,7 +4223,7 @@ async getReraExpiryAlerts(params = {}) {
     if (params.city) queryParams.append('city', params.city);
     if (params.days_ahead) queryParams.append('days_ahead', params.days_ahead);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/projects/rera-expiry-alerts?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/projects/rera-expiry-alerts?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4259,7 +4259,7 @@ async getMonthlyFinancialSummary(params = {}) {
     if (params.month) queryParams.append('month', params.month);
     if (params.limit) queryParams.append('limit', params.limit);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/financial/monthly-summary?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/financial/monthly-summary?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4287,7 +4287,7 @@ async getAssignmentFinancialPerformance(params = {}) {
     const queryParams = new URLSearchParams();
     if (params.assignment_type) queryParams.append('assignment_type', params.assignment_type);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/financial/assignment-performance?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/financial/assignment-performance?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4323,7 +4323,7 @@ async getUserActivitySummary(params = {}) {
     if (params.user_type) queryParams.append('user_type', params.user_type);
     if (params.limit) queryParams.append('limit', params.limit);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/activity/user-summary?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/activity/user-summary?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4363,7 +4363,7 @@ async getRecentActivity(params = {}) {
     if (params.limit) queryParams.append('limit', params.limit);
     if (params.days_back) queryParams.append('days_back', params.days_back);
 
-    const response = await fetch(`${this.baseUrl}/api/dashboard/activity/recent?${queryParams}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/activity/recent?${queryParams}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4390,7 +4390,7 @@ async getRecentActivity(params = {}) {
  */
 async getCompleteDashboardData() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/complete`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/complete`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4417,7 +4417,7 @@ async getCompleteDashboardData() {
  */
 async getDashboardOverview() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/overview`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/overview`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
@@ -4440,7 +4440,7 @@ async getDashboardOverview() {
  */
 async getQuickStats() {
   try {
-    const response = await fetch(`${this.baseUrl}/api/dashboard/stats`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/dashboard/stats`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
