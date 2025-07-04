@@ -329,71 +329,111 @@ function Projects() {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {filteredProjects.map((project) => (
-              <div 
-                key={project.id} 
-                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200"
-              >
-                <div className="p-4">
-                  {/* Project Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                        {project.project_name}
-                      </h3>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getProjectTypeInfo(project.project_type).bgColor} ${getProjectTypeInfo(project.project_type).textColor}`}>
-                          {project.project_type || 'N/A'}
-                        </span>
-                        {project.rera_number && (
-                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
-                            RERA: {project.rera_number}
-                          </span>
-                        )}
+<div className="grid gap-8">
+            {filteredProjects.map((project) => {
+              const typeInfo = getProjectTypeInfo(project.project_type)
+              const statusInfo = getProjectStatus(project.expiry_date)
+              
+              return (
+                <div 
+                  key={project.id} 
+                  className="group relative bg-white/80 backdrop-blur-lg rounded-3xl shadow-xl border border-white/50 overflow-hidden hover:shadow-2xl hover:bg-white/90 transition-all duration-500 hover:-translate-y-1"
+                >
+                  {/* Gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-transparent to-purple-50/30 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                  
+                  <div className="relative p-8 md:p-10">
+                    {/* Project Header */}
+                    <div className="flex items-start justify-between mb-8">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-4 mb-4">
+                          <div className={`w-16 h-16 ${typeInfo.color} rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg`}>
+                            {typeInfo.icon}
+                          </div>
+                          <div>
+                            <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors duration-300">
+                              {project.project_name}
+                            </h3>
+                            <div className="flex items-center gap-3">
+                              <span className={`px-4 py-2 text-sm font-semibold rounded-full ${typeInfo.bgColor} ${typeInfo.textColor} shadow-sm`}>
+                                {project.project_type || 'N/A'}
+                              </span>
+                              <span className={`px-4 py-2 text-sm font-semibold rounded-full ${statusInfo.color} shadow-sm`}>
+                                {statusInfo.status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Project Details Grid */}
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                      {/* Location */}
+                      <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-blue-50 to-blue-100/50 rounded-2xl border border-blue-200/50">
+                        <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-blue-600 mb-1">Location</div>
+                          <div className="font-semibold text-gray-900">
+                            {project.city}{project.district && `, ${project.district}`}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* RERA Number */}
+                      {project.rera_number && (
+                        <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-green-50 to-green-100/50 rounded-2xl border border-green-200/50">
+                          <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center shadow-lg">
+                            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-green-600 mb-1">RERA Number</div>
+                            <div className="font-semibold text-gray-900">{project.rera_number}</div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Registration Date */}
+                      <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-purple-50 to-purple-100/50 rounded-2xl border border-purple-200/50">
+                        <div className="w-12 h-12 bg-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-purple-600 mb-1">Registration Date</div>
+                          <div className="font-semibold text-gray-900">{formatDate(project.registration_date)}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Expiry Date - Full Width */}
+                    <div className="flex items-center gap-4 p-5 bg-gradient-to-r from-amber-50 to-orange-100/50 rounded-2xl border border-amber-200/50">
+                      <div className="w-12 h-12 bg-amber-500 rounded-xl flex items-center justify-center shadow-lg">
+                        <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-sm font-medium text-amber-600 mb-1">Project Expiry Date</div>
+                        <div className="font-semibold text-gray-900">{formatDate(project.expiry_date)}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-sm text-gray-500">Registration Valid Until</div>
+                        <div className="text-lg font-bold text-gray-900">{formatDate(project.expiry_date)}</div>
                       </div>
                     </div>
                   </div>
-
-                  {/* Location */}
-                  <div className="flex items-center text-gray-600 mb-3">
-                    <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <span className="text-sm">
-                      {project.city}{project.district && `, ${project.district}`}
-                    </span>
-                  </div>
-
-                  {/* Dates */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span>Registered: {formatDate(project.registration_date)}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                      <span>Expires: {formatDate(project.expiry_date)}</span>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex space-x-2 pt-3 border-t border-gray-100">
-                    <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-                      View Details
-                    </button>
-                    <button className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
-                      Edit Project
-                    </button>
-                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
