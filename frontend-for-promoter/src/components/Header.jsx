@@ -36,7 +36,7 @@ const userData = useSelector((state) => state.auth.userData);
           )}
           {/* Click indicator */}
           {userData?.channelPartner && (
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-transparent rounded-full flex items-center justify-center shadow-lg">
               <svg 
                 className={`w-3 h-3 text-white transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`} 
                 fill="none" 

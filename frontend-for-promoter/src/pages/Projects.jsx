@@ -175,7 +175,6 @@ function Projects() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-6xl mx-auto px-4 py-8">
 
 {/* Enhanced Search & Filter */}
 <div className="mb-8">
@@ -396,7 +395,6 @@ function Projects() {
             })}
           </div>
         )}
-      </div>
     </div>
   )
 }

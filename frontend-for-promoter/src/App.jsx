@@ -56,10 +56,10 @@ useEffect(() => {
   }, [])
 
   return (
-    <div className="flex flex-col max-w-screen w-full   bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="flex flex-col max-w-screen w-full mx-auto px-4 py-8 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <ToastContainer position='top-right' />
       <Header />
-      <div className=" flex-1 flex-grow mx-auto">
+      <div className=" flex-1 flex-grow mx-auto max-w-6xl ">
         <Outlet />
       </div>
     </div>
