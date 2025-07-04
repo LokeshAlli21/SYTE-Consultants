@@ -64,7 +64,9 @@ class AuthService {
       });
 
       if (!response.ok) {
-        toast.error("🚫 Unauthorized access. Please log in again.");
+        if(localStorage.getItem("authTokenForPromoter")) {
+          toast("🚫 Session Expired. Please log in again.");
+        }
         throw new Error("Unauthorized");
       }
 

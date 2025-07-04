@@ -7,6 +7,8 @@ import timezone from 'dayjs/plugin/timezone';
 
 import { getNavigate } from '../../utils/navigation';
 
+import {authenticatedFetch} from '../fetchWrapper';
+
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -55,7 +57,7 @@ async getChannelPartnerByPromoterId(promoterId) {
   // console.log("🔍 Fetching channel partner by promoter ID...");
 
   try {
-    const response = await fetch(`${this.baseUrl}/api/for-promoter-frontend/get-cp-by-promoter/${promoterId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/for-promoter-frontend/get-cp-by-promoter/${promoterId}`, {
       method: "GET",
       headers: this.getAuthHeaders()
     });
@@ -80,7 +82,7 @@ async getPromoterProjects(promoterId) {
   // console.log("🔍 Fetching projects for promoter ID:", promoterId);
 
   try {
-    const response = await fetch(`${this.baseUrl}/api/for-promoter-frontend/get-projects-by-promoter/${promoterId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/for-promoter-frontend/get-projects-by-promoter/${promoterId}`, {
       method: "GET",
       headers: this.getAuthHeaders()
     });
