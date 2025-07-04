@@ -14,11 +14,13 @@ export const getChannelPartnerByPromoterId = async (req, res) => {
       return res.status(404).json({ message: 'Channel partner not found.' });
     }
 
-    result.rows[0]?.channel_partner?.cp_photo_uploaded_url = getSignedUrl(
-      result.rows[0]?.channel_partner?.cp_photo_uploaded_url
-    );
+    const channelPartner = result.rows[0]?.channel_partner;
 
-    return res.status(200).json({ channelPartner: result.rows[0].channel_partner });
+    if (channelPartner?.cp_photo_uploaded_url) {
+      channelPartner.cp_photo_uploaded_url = getSignedUrl(channelPartner.cp_photo_uploaded_url);
+    }
+
+    return res.status(200).json({ channelPartner });
   } catch (error) {
     console.error('Error fetching channel partner:', error);
     return res.status(500).json({ message: 'Internal server error.' });
