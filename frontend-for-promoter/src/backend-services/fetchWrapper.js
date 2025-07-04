@@ -9,7 +9,6 @@ export const authenticatedFetch = async (url, options = {}) => {
     // Handle 401 errors (this WILL execute for your backend 401 responses)
     if (response.status === 401) {
       store.dispatch(logout());
-      window.location.href = '/login';
       throw new Error('Token expired');
     }
     
