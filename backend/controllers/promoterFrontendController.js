@@ -26,7 +26,7 @@ export const getChannelPartnerByPromoterId = async (req, res) => {
 };
 
 export const getPromoterProjects = async (req, res) => {
-  const promoterId = req.params.promoterId;
+  const {promoterId} = req.params;
 
   try {
     const client = await getClient();

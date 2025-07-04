@@ -49,13 +49,18 @@ export const loginUser = async (req, res, next) => {
     const token = generateToken(user.id, 'consultant'); // Pass user type as 'consultant'
     console.log("Token generated for user:", user.id );
 
-    let accessFields = null;
+    let accessFields = [];
+
     if (user.access_fields) {
       try {
-        accessFields = JSON.parse(user?.access_fields);
+        // Try parsing as JSON
+        const parsed = JSON.parse(user.access_fields);
+        accessFields = Array.isArray(parsed) ? parsed : [parsed];
       } catch (jsonError) {
         console.warn('Failed to parse access_fields JSON:', jsonError);
-        accessFields = user.access_fields;
+
+        // Fallback: assume comma-separated string
+        accessFields = user.access_fields.split(',').map(item => item.trim());
       }
     }
 
