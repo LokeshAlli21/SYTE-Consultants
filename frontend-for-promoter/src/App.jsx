@@ -5,6 +5,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import authService from './backend-services/auth/auth';
 import { login, logout} from './store/authSlice'
 import databaseService from './backend-services/database/database';
+import Header from './components/Header';
 
 function App() {
   const dispatch = useDispatch();
@@ -12,7 +13,7 @@ function App() {
   
   const navigate = useNavigate();
 
-  const userData = useSelector((state) => state.auth.userData);
+    const userData = useSelector((state) => state.auth.userData);
 useEffect(() => {
   console.log("User Data in App Component:", userData);
   
@@ -57,6 +58,7 @@ useEffect(() => {
   return (
     <div className="flex  max-w-screen w-full  bg-[#F3F4FF]">
       <ToastContainer position='top-right' />
+      <Header />
       <div className=" flex-1 flex-grow mx-auto">
         <Outlet />
       </div>
