@@ -15,8 +15,7 @@ export const getChannelPartnerByPromoterId = async (req, res) => {
     }
 
     const channelPartner = result.rows[0]?.channel_partner;
-
-    if (channelPartner?.cp_photo_uploaded_url) {
+    if (channelPartner) {
       channelPartner.cp_photo_uploaded_url = getSignedUrl(channelPartner.cp_photo_uploaded_url);
     }
 
