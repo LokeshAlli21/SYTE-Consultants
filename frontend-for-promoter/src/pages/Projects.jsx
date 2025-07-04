@@ -57,6 +57,12 @@ function Projects() {
         textColor: 'text-blue-700',
         icon: '🏠'
       },
+      'residential / group housing': { 
+        color: 'bg-gradient-to-r from-blue-500 to-blue-600', 
+        bgColor: 'bg-blue-50', 
+        textColor: 'text-blue-700',
+        icon: '🏠'
+      },
       'commercial': { 
         color: 'bg-gradient-to-r from-green-500 to-green-600', 
         bgColor: 'bg-green-50', 
@@ -69,11 +75,11 @@ function Projects() {
         textColor: 'text-purple-700',
         icon: '🏘️'
       },
-      'industrial': { 
-        color: 'bg-gradient-to-r from-orange-500 to-orange-600', 
-        bgColor: 'bg-orange-50', 
-        textColor: 'text-orange-700',
-        icon: '🏭'
+      'plotted': { 
+        color: 'bg-gradient-to-r from-amber-500 to-amber-600', 
+        bgColor: 'bg-amber-50', 
+        textColor: 'text-amber-700',
+        icon: '🗺️'
       },
       'default': { 
         color: 'bg-gradient-to-r from-gray-500 to-gray-600', 
@@ -82,7 +88,10 @@ function Projects() {
         icon: '🏗️'
       }
     }
-    return types[type?.toLowerCase()] || types.default
+    
+    // Normalize the input to handle case variations
+    const normalizedType = type?.toLowerCase().trim()
+    return types[normalizedType] || types.default
   }
 
   const getProjectStatus = (expiryDate) => {
