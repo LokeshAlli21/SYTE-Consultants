@@ -70,7 +70,9 @@ class AuthService {
       
 
       if (!response.ok) {
-        toast("🚫 Session Expired. Please log in again.");
+        if(localStorage.getItem("authToken")) {
+          toast("🚫 Session Expired. Please log in again.");
+        }
         throw new Error("Unauthorized");
       }
 
