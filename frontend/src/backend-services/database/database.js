@@ -32,7 +32,7 @@ class DatabaseService {
   // ✅ Utility to handle responses globally
   async handleResponse(response) {
     const data = await response.json();
-
+    console.log('response status:', response.status);
     if (response.status === 401) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('authTokenForPromoter');
