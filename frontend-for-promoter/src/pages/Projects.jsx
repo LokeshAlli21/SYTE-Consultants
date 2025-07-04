@@ -329,105 +329,71 @@ function Projects() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6">
-            {filteredProjects.map((project) => {
-              const typeInfo = getProjectTypeInfo(project.project_type)
-              const statusInfo = getProjectStatus(project.expiry_date)
-              
-              return (
-                <div 
-                  key={project.id} 
-                  className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-lg border border-white/20 overflow-hidden hover:shadow-xl hover:scale-[1.02] transition-all duration-300 cursor-pointer group"
-                >
-                  <div className="p-6 md:p-8">
-                    {/* Project Header */}
-                    <div className="flex items-start justify-between mb-6">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <div className={`w-12 h-12 ${typeInfo.color} rounded-2xl flex items-center justify-center text-white text-xl`}>
-                            {typeInfo.icon}
-                          </div>
-                          <div>
-                            <h3 className="text-xl md:text-2xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-                              {project.project_name}
-                            </h3>
-                            <div className="flex items-center gap-2 mt-1">
-                              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${typeInfo.bgColor} ${typeInfo.textColor}`}>
-                                {project.project_type || 'N/A'}
-                              </span>
-                              <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusInfo.color}`}>
-                                {statusInfo.status}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Project Details Grid */}
-                    <div className="grid md:grid-cols-2 gap-6 mb-6">
-                      {/* Location */}
-                      <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-500">Location</div>
-                          <div className="font-medium text-gray-900">
-                            {project.city}{project.district && `, ${project.district}`}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* RERA Number */}
-                      {project.rera_number && (
-                        <div className="flex items-center gap-3 p-4 bg-gray-50 rounded-2xl">
-                          <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                          </div>
-                          <div>
-                            <div className="text-sm text-gray-500">RERA Number</div>
-                            <div className="font-medium text-gray-900">{project.rera_number}</div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Date Information */}
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-500">Registration Date</div>
-                          <div className="font-medium text-gray-900">{formatDate(project.registration_date)}</div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl">
-                        <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                          <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                        </div>
-                        <div>
-                          <div className="text-sm text-gray-500">Expiry Date</div>
-                          <div className="font-medium text-gray-900">{formatDate(project.expiry_date)}</div>
-                        </div>
+          <div className="space-y-4">
+{filteredProjects.map((project) => (
+              <div 
+                key={project.id} 
+                className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow duration-200"
+              >
+                <div className="p-4">
+                  {/* Project Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                        {project.project_name}
+                      </h3>
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${getProjectTypeColor(project.project_type)}`}>
+                          {project.project_type || 'N/A'}
+                        </span>
+                        {project.rera_number && (
+                          <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+                            RERA: {project.rera_number}
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
+
+                  {/* Location */}
+                  <div className="flex items-center text-gray-600 mb-3">
+                    <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="text-sm">
+                      {project.city}{project.district && `, ${project.district}`}
+                    </span>
+                  </div>
+
+                  {/* Dates */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                    <div className="flex items-center text-sm text-gray-600">
+                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <span>Registered: {formatDate(project.registration_date)}</span>
+                    </div>
+                    <div className="flex items-center text-sm text-gray-600">
+                      <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <span>Expires: {formatDate(project.expiry_date)}</span>
+                    </div>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex space-x-2 pt-3 border-t border-gray-100">
+                    <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+                      View Details
+                    </button>
+                    <button className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">
+                      Edit Project
+                    </button>
+                  </div>
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
         )}
       </div>
