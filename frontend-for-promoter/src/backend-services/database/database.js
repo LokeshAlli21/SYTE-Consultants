@@ -67,7 +67,7 @@ async getChannelPartnerByPromoterId(promoterId) {
       throw new Error(err.message || "Fetching channel partner failed.");
     }
 
-    const data = this.handleResponse(response);
+    const data = await this.handleResponse(response);
     // toast.success("🔍 Channel partner fetched successfully!");
     // console.log("Fetched channel partner:", data);
     return data.channelPartner;
@@ -92,8 +92,8 @@ async getPromoterProjects(promoterId) {
       throw new Error(err.message || "Fetching projects failed.");
     }
 
-    const data = this.handleResponse(response);
-    toast.success("🔍 Projects fetched successfully!");
+    const data = await this.handleResponse(response);
+    // toast.success("🔍 Projects fetched successfully!");
     console.log("Fetched projects:", data);
     return data;
   } catch (err) {

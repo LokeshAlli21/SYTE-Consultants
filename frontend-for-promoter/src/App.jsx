@@ -5,18 +5,12 @@ import { ToastContainer, toast } from 'react-toastify';
 import authService from './backend-services/auth/auth';
 import { login, logout} from './store/authSlice'
 import databaseService from './backend-services/database/database';
-import {setNavigate } from './utils/navigation'
 
 function App() {
   const dispatch = useDispatch();
 
   
   const navigate = useNavigate();
-
-  useEffect(() => {
-    setNavigate(navigate);
-  }, [navigate]);
-
 
   const userData = useSelector((state) => state.auth.userData);
 useEffect(() => {
@@ -26,7 +20,7 @@ useEffect(() => {
     databaseService.getChannelPartnerByPromoterId(userData.id)
     .then((channelPartnerData) => {
       if(channelPartnerData) {
-        // console.log("Channel Partner Data:", channelPartnerData);
+        console.log("Channel Partner Data:", channelPartnerData);
         dispatch(login({
           ...userData,
           channelPartner: channelPartnerData
