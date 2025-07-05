@@ -2,7 +2,8 @@ import express from 'express';
 import { protectPromoter } from '../middlewares/protect.js';
 import { getChannelPartnerByPromoterId,
     getPromoterProjects,
-    getProjectById
+    getProjectById,
+    getProjectDocuments
 } from '../controllers/promoterFrontendController.js';
 import { upload } from '../aws/awsClient.js'; 
 
@@ -13,5 +14,7 @@ router.get('/get-cp-by-promoter/:promoterId', protectPromoter, getChannelPartner
 router.get('/get-projects-by-promoter/:promoterId', protectPromoter, getPromoterProjects);
 
 router.get('/get-project/:projectId', protectPromoter, getProjectById);
+
+router.get('/get-project-documents/:projectId', protectPromoter, getProjectDocuments);
 
 export default router;

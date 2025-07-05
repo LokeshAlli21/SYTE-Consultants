@@ -63,21 +63,21 @@ const router = createBrowserRouter([
          </AuthLayout>,
       },
       {
-        path: "units",
+        path: "units/:id",
         element: 
         <AuthLayout authentication>
           <Units />
          </AuthLayout>,
       },
       {
-        path: "documents",
+        path: "documents/:id",
         element: 
         <AuthLayout authentication>
           <Documents />
          </AuthLayout>,
       },
       {
-        path: "progress",
+        path: "progress/:id",
         element: 
         <AuthLayout authentication>
           <Progress />

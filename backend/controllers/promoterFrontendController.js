@@ -172,3 +172,54 @@ export const getProjectById = async (req, res) => {
     }
   }
 };
+
+export const getProjectDocuments = async (req, res) => {
+  const { projectId } = req.params;
+
+  if (!projectId || isNaN(projectId)) {
+    return res.status(400).json({ 
+      message: 'Invalid project ID. Project ID must be a valid number.' 
+    });
+  }
+
+  try {
+    const client = await getClient();
+    const queryText = `
+      SELECT * FROM project_documents WHERE project_id = $1;
+    `;
+    
+    const result = await client.query(queryText, [parseInt(projectId)]);
+
+    console.log('Project Documents Result:', result.rows);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        message: 'No documents found for this project.' 
+      });
+    }
+
+    const documents = {
+      cc_uploaded_url: getSignedUrl(result?.rows[0]?.cc_uploaded_url) || null,
+      plan_uploaded_url: getSignedUrl(result?.rows[0]?.plan_uploaded_url) || null,
+      search_report_uploaded_url: getSignedUrl(result?.rows[0]?.search_report_uploaded_url) || null,
+      da_uploaded_url: getSignedUrl(result?.rows[0]?.da_uploaded_url) || null,
+      pa_uploaded_url: getSignedUrl(result?.rows[0]?.pa_uploaded_url) || null,
+      satbara_uploaded_url: getSignedUrl(result?.rows[0]?.satbara_uploaded_url) || null,
+      promoter_letter_head_uploaded_url: getSignedUrl(result?.rows[0]?.promoter_letter_head_uploaded_url) || null,
+      promoter_sign_stamp_uploaded_url: getSignedUrl(result?.rows[0]?.promoter_sign_stamp_uploaded_url) || null,
+      created_at: result?.rows[0]?.created_at || null,
+      updated_at: result?.rows[0]?.updated_at || null,
+    };
+
+    return res.status(200).json({ 
+      success: true,
+      documents 
+    });
+
+  } catch (error) {
+    console.error('Error fetching project documents:', error);
+    return res.status(500).json({ 
+      message: 'Internal server error while fetching project documents.' 
+    });
+  }
+};

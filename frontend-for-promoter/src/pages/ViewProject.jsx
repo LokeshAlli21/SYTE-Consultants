@@ -90,7 +90,11 @@ function ViewProject() {
   ]
 
   const handleCardClick = (route) => {
-    navigate(route)
+    if (!id) {
+      setError("Project ID is not available")
+      return
+    }
+    navigate(`${route}/${id}`)
   }
 
   if (loading) {
