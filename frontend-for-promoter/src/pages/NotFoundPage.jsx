@@ -1,6 +1,8 @@
 import React from 'react'
+import { useNavigate } from 'react-router-dom'
 
 function NotFoundPage() {
+  const navigate = useNavigate()
   return (
   <div className="max-w-4xl mx-auto p-8 text-center">
     <h1 className="text-6xl font-bold text-gray-400 mb-4">404</h1>
@@ -9,7 +11,7 @@ function NotFoundPage() {
       The page you're looking for doesn't exist or has been moved.
     </p>
     <button 
-      onClick={() => window.location.href = '/'}
+      onClick={() => navigate(-1)}
       className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition-colors"
     >
       Go Back Home
