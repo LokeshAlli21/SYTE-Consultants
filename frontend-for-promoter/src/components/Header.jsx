@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useLocation, useNavigate } from 'react-router-dom';
-import {ChevronLeft} from 'lucide-react';
+import {MoveLeft} from 'lucide-react';
 
 const Header = () => {
 
@@ -30,7 +30,7 @@ const navigate = useNavigate();
         onClick={toggleContact}
       >
         {/* Logo/Profile Image */}
-        <div className="w-16 shrink-0 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white/20 flex items-center justify-center relative">
+        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white/20 flex items-center justify-center relative">
           {userData?.channelPartner?.cp_photo_uploaded_url ? (
             <img 
               src={userData.channelPartner.cp_photo_uploaded_url} 
@@ -48,20 +48,20 @@ const navigate = useNavigate();
         
         {/* Header Content */}
         <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold whitespace-nowrap bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent leading-tight">
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent leading-tight">
             {userData?.channelPartner?.full_name ? userData.channelPartner.full_name : 'My Projects'}
           </h1>
           <p className="text-gray-600 text-sm mt-1">
             Monitor Every Detail of Your Projects
           </p>
         </div>
-
+        
         {/* Back Button */}
-        {location.pathname !== '/' && (
-           <div className="w-fit h-fit bg-transparent z-50 rounded-full flex items-center justify-center" onClick={goBack}>
-              <ChevronLeft className="w-12 h-12 text-gray-500" />
+        {/* {location.pathname !== '/' && (
+           <div className="absolute top-16 left-4 w-fit h-fit bg-transparent z-50 rounded-full flex items-center justify-center" onClick={goBack}>
+              <MoveLeft className="w-12 h-12 text-gray-500" />
             </div>
-        )}
+        )} */}
 
       </div>
 
