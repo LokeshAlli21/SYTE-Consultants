@@ -30,7 +30,7 @@ const navigate = useNavigate();
         onClick={toggleContact}
       >
         {/* Logo/Profile Image */}
-        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white/20 flex items-center justify-center relative">
+        <div className="w-16 shrink-0 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white/20 flex items-center justify-center relative">
           {userData?.channelPartner?.cp_photo_uploaded_url ? (
             <img 
               src={userData.channelPartner.cp_photo_uploaded_url} 
