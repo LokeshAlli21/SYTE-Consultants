@@ -66,20 +66,112 @@ export const getPromoterProjects = async (req, res) => {
 export const getProjectById = async (req, res) => {
   const { projectId } = req.params;
 
+  if (!projectId || isNaN(projectId)) {
+    return res.status(400).json({ 
+      message: 'Invalid project ID. Project ID must be a valid number.' 
+    });
+  }
+
+  let client;
+  
   try {
-    const client = await getClient();
+    client = await getClient();
+    
     const queryText = `
       SELECT * FROM get_project_details($1);
     `;
-    const result = await client.query(queryText, [projectId]);
+    
+    const result = await client.query(queryText, [parseInt(projectId)]);
+
+    console.log('Query Result:', result);
+    
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ message: 'Project not found.' });
+      return res.status(404).json({ 
+        message: 'Project not found or project is not active.' 
+      });
     }
 
-    return res.status(200).json({ project: result.rows[0] });
+    const project = result.rows[0];
+    
+    // Organize data into logical groups
+    const organizedProject = {
+      basic_info: {
+        project_id: project.project_id,
+        project_name: project.project_name,
+        project_type: project.project_type,
+        project_address: project.project_address,
+        city: project.city,
+        district: project.district,
+        project_pincode: project.project_pincode,
+        promoter_name: project.promoter_name
+      },
+      status: {
+        project_status: project.project_status,
+        professional_team_status: project.professional_team_status,
+        registration_date: project.registration_date,
+        expiry_date: project.expiry_date,
+        days_until_expiry: project.days_until_expiry,
+        project_age_days: project.project_age_days
+      },
+      rera_details: {
+        rera_number: project.rera_number,
+        rera_certificate_url: project.rera_certificate_url
+      },
+      professional_team: {
+        engineer: {
+          name: project.engineer_name,
+          contact: project.engineer_contact,
+          email: project.engineer_email,
+          documents: {
+            licence_url: project.engineer_licence_url,
+            pan_url: project.engineer_pan_url,
+            letterhead_url: project.engineer_letterhead_url,
+            stamp_url: project.engineer_stamp_url
+          }
+        },
+        architect: {
+          name: project.architect_name,
+          contact: project.architect_contact,
+          email: project.architect_email,
+          documents: {
+            licence_url: project.architect_licence_url,
+            pan_url: project.architect_pan_url,
+            letterhead_url: project.architect_letterhead_url,
+            stamp_url: project.architect_stamp_url
+          }
+        },
+        ca: {
+          name: project.ca_name,
+          contact: project.ca_contact,
+          email: project.ca_email,
+          documents: {
+            licence_url: project.ca_licence_url,
+            pan_url: project.ca_pan_url,
+            letterhead_url: project.ca_letterhead_url,
+            stamp_url: project.ca_stamp_url
+          }
+        }
+      },
+      timestamps: {
+        project_created_date: project.project_created_date,
+        project_last_updated: project.project_last_updated
+      }
+    };
+
+    return res.status(200).json({ 
+      success: true,
+      project: organizedProject 
+    });
+
   } catch (error) {
     console.error('Error fetching project:', error);
-    return res.status(500).json({ message: 'Internal server error.' });
+    return res.status(500).json({ 
+      message: 'Internal server error while fetching project details.' 
+    });
+  } finally {
+    if (client) {
+      client.release();
+    }
   }
 };
