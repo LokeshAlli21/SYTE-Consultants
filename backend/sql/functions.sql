@@ -291,3 +291,131 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql;
+
+-- SQL Function for Single Project Client Tracking
+-- This function provides comprehensive project details for a specific project
+
+CREATE OR REPLACE FUNCTION get_project_details(p_project_id INT)
+RETURNS TABLE (
+    project_id INT,
+    project_name VARCHAR,
+    project_type VARCHAR,
+    project_address TEXT,
+    city VARCHAR,
+    district VARCHAR,
+    project_pincode NUMERIC,
+    project_status VARCHAR,
+    registration_date DATE,
+    expiry_date DATE,
+    days_until_expiry NUMERIC,
+    project_age_days NUMERIC,
+    rera_number VARCHAR,
+    rera_certificate_url TEXT,
+    promoter_name VARCHAR,
+    engineer_name VARCHAR,
+    engineer_contact VARCHAR,
+    engineer_email VARCHAR,
+    engineer_licence_url TEXT,
+    engineer_pan_url TEXT,
+    engineer_letterhead_url TEXT,
+    engineer_stamp_url TEXT,
+    architect_name VARCHAR,
+    architect_contact VARCHAR,
+    architect_email VARCHAR,
+    architect_licence_url TEXT,
+    architect_pan_url TEXT,
+    architect_letterhead_url TEXT,
+    architect_stamp_url TEXT,
+    ca_name VARCHAR,
+    ca_contact VARCHAR,
+    ca_email VARCHAR,
+    ca_licence_url TEXT,
+    ca_pan_url TEXT,
+    ca_letterhead_url TEXT,
+    ca_stamp_url TEXT,
+    professional_team_status TEXT,
+    project_created_date TIMESTAMP,
+    project_last_updated TIMESTAMP
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        -- Project Basic Information
+        p.id::INT AS project_id,
+        p.project_name::VARCHAR,
+        p.project_type::VARCHAR,
+        p.project_address::TEXT,
+        p.city::VARCHAR,
+        p.district::VARCHAR,
+        p.project_pincode::NUMERIC,
+        
+        -- Project Status & Dates
+        p.status_for_delete::VARCHAR AS project_status,
+        p.registration_date::DATE,
+        p.expiry_date::DATE,
+        
+        -- Calculate days remaining until expiry
+        CASE 
+            WHEN p.expiry_date IS NOT NULL THEN 
+                EXTRACT(DAY FROM (p.expiry_date - CURRENT_DATE))::NUMERIC
+            ELSE NULL 
+        END AS days_until_expiry,
+        
+        -- Project age in days
+        EXTRACT(DAY FROM (CURRENT_DATE - p.registration_date))::NUMERIC AS project_age_days,
+        
+        -- RERA Information
+        p.rera_number::VARCHAR,
+        p.rera_certificate_uploaded_url::TEXT AS rera_certificate_url,
+        
+        -- Promoter Information
+        p.promoter_name::VARCHAR,
+        
+        -- Engineer Details
+        COALESCE(eng.name, 'Not Assigned')::VARCHAR AS engineer_name,
+        COALESCE(eng.contact_number, 'N/A')::VARCHAR AS engineer_contact,
+        COALESCE(eng.email_id, 'N/A')::VARCHAR AS engineer_email,
+        eng.licence_uploaded_url::TEXT AS engineer_licence_url,
+        eng.pan_uploaded_url::TEXT AS engineer_pan_url,
+        eng.letter_head_uploaded_url::TEXT AS engineer_letterhead_url,
+        eng.sign_stamp_uploaded_url::TEXT AS engineer_stamp_url,
+        
+        -- Architect Details
+        COALESCE(arch.name, 'Not Assigned')::VARCHAR AS architect_name,
+        COALESCE(arch.contact_number, 'N/A')::VARCHAR AS architect_contact,
+        COALESCE(arch.email_id, 'N/A')::VARCHAR AS architect_email,
+        arch.licence_uploaded_url::TEXT AS architect_licence_url,
+        arch.pan_uploaded_url::TEXT AS architect_pan_url,
+        arch.letter_head_uploaded_url::TEXT AS architect_letterhead_url,
+        arch.sign_stamp_uploaded_url::TEXT AS architect_stamp_url,
+        
+        -- CA Details
+        COALESCE(ca.name, 'Not Assigned')::VARCHAR AS ca_name,
+        COALESCE(ca.contact_number, 'N/A')::VARCHAR AS ca_contact,
+        COALESCE(ca.email_id, 'N/A')::VARCHAR AS ca_email,
+        ca.licence_uploaded_url::TEXT AS ca_licence_url,
+        ca.pan_uploaded_url::TEXT AS ca_pan_url,
+        ca.letter_head_uploaded_url::TEXT AS ca_letterhead_url,
+        ca.sign_stamp_uploaded_url::TEXT AS ca_stamp_url,
+        
+        -- Professional Team Completion Status
+        CASE 
+            WHEN eng.id IS NOT NULL AND arch.id IS NOT NULL AND ca.id IS NOT NULL THEN 'Complete'::TEXT
+            WHEN eng.id IS NOT NULL OR arch.id IS NOT NULL OR ca.id IS NOT NULL THEN 'Partial'::TEXT
+            ELSE 'Not Assigned'::TEXT
+        END AS professional_team_status,
+        
+        -- Project Timestamps
+        p.created_at::TIMESTAMP AS project_created_date,
+        p.updated_at::TIMESTAMP AS project_last_updated
+
+    FROM projects p
+    LEFT JOIN project_professional_details ppd ON p.id = ppd.project_id
+    LEFT JOIN engineers eng ON ppd.engineer_id = eng.id
+    LEFT JOIN architects arch ON ppd.architect_id = arch.id
+    LEFT JOIN cas ca ON ppd.ca_id = ca.id
+    
+    WHERE p.id = p_project_id 
+    AND p.status_for_delete = 'active';
+END;
+$$ LANGUAGE plpgsql;

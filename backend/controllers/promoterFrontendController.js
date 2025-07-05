@@ -69,19 +69,7 @@ export const getProjectById = async (req, res) => {
   try {
     const client = await getClient();
     const queryText = `
-      SELECT 
-        id,
-        project_name,
-        project_type,
-        city,
-        district,
-        rera_number,
-        registration_date,
-        expiry_date,
-        created_at
-      FROM projects 
-      WHERE id = $1 
-      AND status_for_delete = 'active';
+      SELECT * FROM get_project_details($1);
     `;
     const result = await client.query(queryText, [projectId]);
 
