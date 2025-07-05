@@ -183,7 +183,7 @@ function Documents() {
 
   return (
     <div className="min-h-screen ">
-      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 py-4">
         <div className="mb-8">
           <div className="flex items-center space-x-3 mb-4">
             <div className="p-2.5 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-lg">
@@ -198,7 +198,7 @@ function Documents() {
           </div>
           
           {documentUrls.updated_at && (
-            <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500 bg-white/50 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit border border-green-200/50">
+            <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500 bg-white/50 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit border border-green-200/80">
               <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
               <span>Updated: {formatDate(documentUrls.updated_at)}</span>
             </div>
