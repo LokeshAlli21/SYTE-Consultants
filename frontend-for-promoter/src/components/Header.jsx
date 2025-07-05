@@ -55,14 +55,16 @@ const navigate = useNavigate();
             Monitor Every Detail of Your Projects
           </p>
         </div>
-      </div>
-          
+
         {/* Back Button */}
         {location.pathname !== '/' && (
-           <div className="absolute top-16 left-4 w-fit h-fit bg-transparent z-50 rounded-full flex items-center justify-center" onClick={goBack}>
+           <div className="absolute -bottom-1 left-4 w-fit h-fit bg-transparent z-50 rounded-full flex items-center justify-center" onClick={goBack}>
               <MoveLeft className="w-12 h-12 text-gray-500" />
             </div>
         )}
+
+      </div>
+
 
                 {/* Click indicator */}
           {userData?.channelPartner && (
