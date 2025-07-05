@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { ChevronLeft } from 'lucide-react';
 
 const Header = () => {
 
@@ -25,41 +26,21 @@ const navigate = useNavigate();
         className={`flex items-center gap-4 ${isContactOpen ? 'mb-4' : ''} cursor-pointer transition-all duration-300 hover:bg-white/30 rounded-2xl p-2 -m-2`}
         onClick={toggleContact}
       >
-        {/* Logo/Profile Image with Back Button */}
-        <div className="relative">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white/20 flex items-center justify-center relative">
-            {userData?.channelPartner?.cp_photo_uploaded_url ? (
-              <img 
-                src={userData.channelPartner.cp_photo_uploaded_url} 
-                alt="Channel Partner"
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <img 
-                src="/logo.png" 
-                alt="Logo"
-                className="w-10 h-10 object-contain"
-              />
-            )}
-          </div>
-          
-          {/* Back Button positioned at bottom of logo */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              goBack();
-            }}
-            className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm border border-white/40 flex items-center justify-center shadow-lg hover:bg-white active:scale-95 transition-all duration-200"
-          >
-            <svg 
-              className="w-4 h-4 text-gray-700" 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+        {/* Logo/Profile Image */}
+        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white/20 flex items-center justify-center relative">
+          {userData?.channelPartner?.cp_photo_uploaded_url ? (
+            <img 
+              src={userData.channelPartner.cp_photo_uploaded_url} 
+              alt="Channel Partner"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <img 
+              src="/logo.png" 
+              alt="Logo"
+              className="w-10 h-10 object-contain"
+            />
+          )}
         </div>
         
         {/* Header Content */}
@@ -85,6 +66,16 @@ const navigate = useNavigate();
             </svg>
           </div>
         )}
+      </div>
+
+      {/* Back Button - Positioned between logo and contact details */}
+      <div className="px-2 mb-2">
+        <button
+          onClick={goBack}
+          className="w-10 h-10 rounded-xl bg-white/60 backdrop-blur-sm border border-white/40 flex items-center justify-center shadow-lg hover:bg-white/80 active:scale-95 transition-all duration-200"
+        >
+          <ChevronLeft className="w-5 h-5 text-gray-700" />
+        </button>
       </div>
 
       {/* Contact Information Card - Smooth Transition */}
