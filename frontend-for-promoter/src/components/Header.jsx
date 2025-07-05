@@ -34,19 +34,6 @@ const userData = useSelector((state) => state.auth.userData);
               className="w-10 h-10 object-contain"
             />
           )}
-          {/* Click indicator */}
-          {userData?.channelPartner && (
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-transparent rounded-full flex items-center justify-center shadow-lg">
-              <svg 
-                className={`w-3 h-3 text-gray-500 transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          )}
         </div>
         
         {/* Header Content */}
@@ -60,6 +47,20 @@ const userData = useSelector((state) => state.auth.userData);
         </div>
       </div>
       
+                {/* Click indicator */}
+          {userData?.channelPartner && (
+            <div className="absolute top-10 right-2 w-6 h-6 bg-transparent rounded-full flex items-center justify-center shadow-lg">
+              <svg 
+                className={`w-3 h-3 text-gray-500 transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          )}
+
       {/* Contact Information Card - Smooth Transition */}
       {userData?.channelPartner && (
         <div className={`
