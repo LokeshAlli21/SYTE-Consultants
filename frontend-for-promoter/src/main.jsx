@@ -15,9 +15,11 @@ import {
   Projects,
   ViewProject,
   ViewProjectUnit,
-  ViewProfile,
+  Units,
   Login,
   NotFoundPage,
+  Documents,
+  Progress,
 } from './pages/index.js'
 
 const router = createBrowserRouter([
@@ -61,10 +63,24 @@ const router = createBrowserRouter([
          </AuthLayout>,
       },
       {
-        path: "profile",
+        path: "units",
         element: 
         <AuthLayout authentication>
-          <ViewProfile />
+          <Units />
+         </AuthLayout>,
+      },
+      {
+        path: "documents",
+        element: 
+        <AuthLayout authentication>
+          <Documents />
+         </AuthLayout>,
+      },
+      {
+        path: "progress",
+        element: 
+        <AuthLayout authentication>
+          <Progress />
          </AuthLayout>,
       },
     ],

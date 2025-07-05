@@ -2,16 +2,20 @@ import Dashboard from "./Dashboard";
 import Projects from "./Projects";
 import ViewProject from "./ViewProject";
 import ViewProjectUnit from "./ViewProjectUnit";
-import ViewProfile from "./ViewProfile";
+import Units from "./Units";
 import Login from "./Login";
 import NotFoundPage from "./NotFoundPage";
+import Documents from "./Documents";
+import Progress from "./Progress";
 
 export {
   Dashboard,
   Projects,
   ViewProject,
   ViewProjectUnit,
-  ViewProfile,
+  Units,
   Login,
   NotFoundPage,
+  Documents,
+  Progress,
 };
