@@ -224,23 +224,29 @@ function Documents() {
                 <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity duration-300`}></div>
                 
                 <div className="relative z-10 ">
+                  <div className=' flex flex-row gap-2 items-center'>
+
                     <div className="flex items-start justify-between mb-4">
                     <div className={`p-3 rounded-2xl bg-gradient-to-r ${gradient} text-white text-2xl shadow-lg`}>
                       {icon}
                     </div>
                   </div>
-                    <h3 className="font-bold inline-block text-gray-900 mb-2 text-lg leading-tight">{name}</h3>
+                <div className=' flex-1'>
+                    <h3 className="font-bold  text-gray-900 mb-2 text-lg leading-tight">{name}</h3>
                   
                   <p className="text-sm text-gray-500 flex items-center space-x-1 mb-6">
                     <span>📄</span>
                     <span>PDF Document</span>
                   </p>
+                </div>
+
+                  </div>
                   
                   {/* Large Action Buttons */}
                   <div className="flex space-x-3">
                     <button
                       onClick={() => handleView(url, key)}
-                      className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
+                      className="flex-1 w-[150px] flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl"
                     >
                       <Eye className="w-5 h-5" />
                       <span className="font-medium">View</span>
@@ -248,7 +254,7 @@ function Documents() {
                     <button
                       onClick={() => handleDownload(url, key)}
                       disabled={downloadingDoc === key}
-                      className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      className="flex-1 w-[150px] flex items-center justify-center space-x-2 px-4 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
                       {downloadingDoc === key ? (
                         <>
