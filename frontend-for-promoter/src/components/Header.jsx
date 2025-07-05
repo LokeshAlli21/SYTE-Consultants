@@ -56,7 +56,7 @@ const navigate = useNavigate();
       </div>
           
         {/* Back Button */}
-        <div className="absolute top-2 right-2 w-fit h-fit bg-transparent z-50 rounded-full flex items-center justify-center" onClick={goBack}>
+        <div className="absolute top-4 left-2 w-fit h-fit bg-transparent z-50 rounded-full flex items-center justify-center" onClick={goBack}>
           <ChevronLeft className="w-12 h-12 text-gray-500" />
         </div>
 
