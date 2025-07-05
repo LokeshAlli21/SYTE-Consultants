@@ -56,8 +56,8 @@ const navigate = useNavigate();
       </div>
           
         {/* Back Button */}
-        <div className="absolute top-15 right-2 w-8 h-8 bg-transparent rounded-full flex items-center justify-center" onClick={goBack}>
-          <ArrowLeft className="w-4 h-4 text-gray-500" />
+        <div className="absolute top-15 left-2 w-8 h-8 bg-transparent rounded-full flex items-center justify-center" onClick={goBack}>
+          <ArrowLeft className="w-10 h-10 text-gray-500" />
         </div>
 
                 {/* Click indicator */}
