@@ -97,7 +97,7 @@ const Login = () => {
 
       {/* Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center">
-        <div className="w-full max-w-md">
+        <div className="w-full">
 
 
           {/* Login Card */}
