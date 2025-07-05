@@ -114,7 +114,7 @@ async getProjectById(projectId) {
     }
 
     const data = await this.handleResponse(response);
-    console.log("Fetched project:", data);
+    // console.log("Fetched project:", data);
     return data.project;
   } catch (err) {
     console.error("❌ Error fetching project:", err);
@@ -129,13 +129,18 @@ async getProjectDocuments(projectId) {
       headers: this.getAuthHeaders()
     });
 
+    if(response.status === 404) {
+      console.warn("No documents found for project ID:", projectId);
+      return { documents: [] }; // Return empty array if no documents found
+    }
+
     if (!response.ok) {
       const err = await response.json();
       throw new Error(err.message || "Fetching project documents failed.");
     }
 
     const data = await this.handleResponse(response);
-    console.log("Fetched project documents:", data);
+    // console.log("Fetched project documents:", data);
     return data.documents;
   } catch (err) {
     console.error("❌ Error fetching project documents:", err);
