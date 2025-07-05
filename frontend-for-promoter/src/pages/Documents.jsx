@@ -184,24 +184,23 @@ function Documents() {
   return (
     <div className="min-h-screen ">
       <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 py-8">
-        {/* Modern Header */}
-        <div className="mb-12">
-          <div className="flex items-center space-x-4 mb-6">
-            <div className="p-3 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-lg">
-              <FileText className="w-8 h-8 text-white" />
+        <div className="mb-8">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="p-2.5 bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl shadow-lg">
+              <FileText className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                 Project Documents
               </h1>
-              <p className="text-gray-600 text-lg mt-1">Access and manage your project documentation</p>
+              <p className="text-gray-600 text-sm sm:text-base mt-1">Access and manage your files</p>
             </div>
           </div>
           
           {documentUrls.updated_at && (
-            <div className="flex items-center space-x-2 text-sm text-gray-500 bg-white/50 backdrop-blur-sm rounded-full px-4 py-2 w-fit border border-gray-200/50">
-              <Calendar className="w-4 h-4" />
-              <span>Last updated: {formatDate(documentUrls.updated_at)}</span>
+            <div className="flex items-center space-x-2 text-xs sm:text-sm text-gray-500 bg-white/50 backdrop-blur-sm rounded-full px-3 py-1.5 w-fit border border-green-200/50">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span>Updated: {formatDate(documentUrls.updated_at)}</span>
             </div>
           )}
         </div>
@@ -224,14 +223,14 @@ function Documents() {
                 {/* Gradient overlay on hover */}
                 <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity duration-300`}></div>
                 
-                <div className="relative z-10">
+                <div className="relative z-10 flex flex-row items-start justify-between">
                   <div className="flex items-start justify-between mb-4">
                     <div className={`p-3 rounded-2xl bg-gradient-to-r ${gradient} text-white text-2xl shadow-lg`}>
                       {icon}
                     </div>
+                    <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{name}</h3>
                   </div>
                   
-                  <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{name}</h3>
                   <p className="text-sm text-gray-500 flex items-center space-x-1 mb-6">
                     <span>📄</span>
                     <span>PDF Document</span>
@@ -272,28 +271,29 @@ function Documents() {
 
         {/* Modern Document Viewer Modal */}
         {viewingDocument && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-            <div className="bg-white/95 backdrop-blur-sm rounded-3xl shadow-2xl w-[80%] h-[80%] flex flex-col border border-white/20">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200/50 bg-white/80 backdrop-blur-sm rounded-t-3xl">
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-2xl bg-gradient-to-r ${documentTypes[viewingDocument.type]?.gradient || 'from-gray-400 to-gray-500'}`}>
-                    <span className="text-2xl text-white">{documentTypes[viewingDocument.type]?.icon || '📄'}</span>
+          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
+            <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl w-full h-full sm:w-[95%] sm:h-[95%] lg:w-[80%] lg:h-[80%] flex flex-col border border-white/20">
+              {/* Mobile-Optimized Modal Header */}
+              <div className="flex items-center justify-between p-3 sm:p-6 border-b border-gray-200/50 bg-white/80 backdrop-blur-sm rounded-t-2xl sm:rounded-t-3xl">
+                <div className="flex items-center space-x-3">
+                  <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-r ${documentTypes[viewingDocument.type]?.gradient || 'from-gray-400 to-gray-500'}`}>
+                    <span className="text-lg sm:text-2xl text-white">{documentTypes[viewingDocument.type]?.icon || '📄'}</span>
                   </div>
-                  <div>
-                    <h3 className="font-bold text-gray-900 text-xl">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-gray-900 text-sm sm:text-xl truncate">
                       {documentTypes[viewingDocument.type]?.name || 'Document'}
                     </h3>
-                    <p className="text-sm text-gray-500">PDF Document • {zoom}% zoom</p>
+                    <p className="text-xs sm:text-sm text-gray-500">PDF • {zoom}%</p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
-                  {/* Zoom Controls */}
-                  <div className="flex items-center space-x-2 bg-gray-100/50 rounded-xl p-1">
+                
+                {/* Mobile Action Bar */}
+                <div className="flex items-center space-x-2">
+                  {/* Zoom Controls - Hidden on small screens */}
+                  <div className="hidden sm:flex items-center space-x-2 bg-gray-100/50 rounded-xl p-1">
                     <button
                       onClick={handleZoomOut}
                       className="p-2 text-gray-600 hover:text-gray-900 hover:bg-white/80 rounded-lg transition-colors"
-                      title="Zoom Out"
                     >
                       <ZoomOut className="w-4 h-4" />
                     </button>
@@ -301,47 +301,83 @@ function Documents() {
                     <button
                       onClick={handleZoomIn}
                       className="p-2 text-gray-600 hover:text-gray-900 hover:bg-white/80 rounded-lg transition-colors"
-                      title="Zoom In"
                     >
                       <ZoomIn className="w-4 h-4" />
                     </button>
                   </div>
                   
-                  {/* Action Buttons */}
-                  <button
-                    onClick={() => window.open(viewingDocument.url, '_blank')}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    <span>Open</span>
-                  </button>
-                  <button
-                    onClick={() => handleDownload(viewingDocument.url, viewingDocument.type)}
-                    className="flex items-center space-x-2 px-4 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
-                  >
-                    <Download className="w-4 h-4" />
-                    <span>Download</span>
-                  </button>
+                  {/* Mobile Menu Button */}
+                  <div className="flex sm:hidden">
+                    <button
+                      onClick={() => window.open(viewingDocument.url, '_blank')}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    >
+                      <ExternalLink className="w-5 h-5" />
+                    </button>
+                  </div>
+                  
+                  {/* Desktop Action Buttons */}
+                  <div className="hidden sm:flex items-center space-x-2">
+                    <button
+                      onClick={() => window.open(viewingDocument.url, '_blank')}
+                      className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                      <span>Open</span>
+                    </button>
+                    <button
+                      onClick={() => handleDownload(viewingDocument.url, viewingDocument.type)}
+                      className="flex items-center space-x-2 px-3 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Download</span>
+                    </button>
+                  </div>
+                  
                   <button
                     onClick={closeViewer}
                     className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100/50 rounded-xl transition-colors"
                   >
-                    <X className="w-6 h-6" />
+                    <X className="w-5 h-5 sm:w-6 sm:h-6" />
                   </button>
                 </div>
               </div>
               
               {/* Modal Content */}
-              <div className="flex-1 overflow-hidden p-6">
-                <div className="w-full h-full bg-gray-50 rounded-2xl overflow-hidden shadow-inner">
+              <div className="flex-1 overflow-hidden p-2 sm:p-6">
+                <div className="w-full h-full bg-gray-50 rounded-xl sm:rounded-2xl overflow-hidden shadow-inner">
                   <iframe
                     src={`${viewingDocument.url}#zoom=${zoom}`}
-                    className="w-full h-full border-0 rounded-2xl"
+                    className="w-full h-full border-0 rounded-xl sm:rounded-2xl"
                     title={documentTypes[viewingDocument.type]?.name || 'Document'}
                     allow="fullscreen"
-                    style={{ transform: `scale(${zoom / 100})`, transformOrigin: 'top left' }}
                   />
                 </div>
+              </div>
+              
+              {/* Mobile Bottom Action Bar */}
+              <div className="flex sm:hidden items-center justify-center space-x-4 p-4 bg-white/80 backdrop-blur-sm border-t border-gray-200/50 rounded-b-2xl">
+                <button
+                  onClick={handleZoomOut}
+                  className="flex items-center justify-center w-12 h-12 bg-gray-600 text-white rounded-xl active:scale-95 transition-transform"
+                >
+                  <ZoomOut className="w-5 h-5" />
+                </button>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => handleDownload(viewingDocument.url, viewingDocument.type)}
+                    className="flex items-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-xl active:scale-95 transition-transform font-semibold"
+                  >
+                    <Download className="w-5 h-5" />
+                    <span>Download</span>
+                  </button>
+                </div>
+                <button
+                  onClick={handleZoomIn}
+                  className="flex items-center justify-center w-12 h-12 bg-gray-600 text-white rounded-xl active:scale-95 transition-transform"
+                >
+                  <ZoomIn className="w-5 h-5" />
+                </button>
               </div>
             </div>
           </div>
