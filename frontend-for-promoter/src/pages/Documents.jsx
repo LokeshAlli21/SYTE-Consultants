@@ -164,7 +164,7 @@ function Documents() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex items-center justify-center">
+      <div className="min-h-screenflex items-center justify-center">
         <div className="text-center">
           <div className="relative">
             <div className="w-16 h-16 border-4 border-blue-100 border-t-blue-500 rounded-full animate-spin mx-auto mb-6"></div>
@@ -182,8 +182,8 @@ function Documents() {
     .map(([key, url]) => ({ key, url, ...documentTypes[key] }))
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen ">
+      <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 py-8">
         {/* Modern Header */}
         <div className="mb-12">
           <div className="flex items-center space-x-4 mb-6">
