@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { MapPin, Calendar, CheckCircle, Clock, User, Phone, Mail, FileText, Download, Building, Home } from 'lucide-react'
+import databaseService from '../backend-services/database/database'
 
 function ViewProject({ projectId }) {
   const [project, setProject] = useState({})
@@ -58,7 +59,7 @@ function ViewProject({ projectId }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screenflex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading project details...</p>
@@ -69,7 +70,7 @@ function ViewProject({ projectId }) {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen flex items-center justify-center p-4">
         <div className="text-center">
           <div className="text-red-500 mb-4">
             <FileText className="w-16 h-16 mx-auto mb-2" />
@@ -81,7 +82,7 @@ function ViewProject({ projectId }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen ">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="px-4 py-6">
