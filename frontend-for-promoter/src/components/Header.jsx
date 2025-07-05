@@ -1,12 +1,14 @@
 
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {MoveLeft} from 'lucide-react';
 
 const Header = () => {
 
 const userData = useSelector((state) => state.auth.userData);
+
+const location = useLocation(); // Get the current location
 
 const navigate = useNavigate();
 
@@ -56,9 +58,11 @@ const navigate = useNavigate();
       </div>
           
         {/* Back Button */}
-        <div className="absolute top-19 left-5 w-fit h-fit bg-transparent z-50 rounded-full flex items-center justify-center" onClick={goBack}>
-          <MoveLeft className="w-12 h-12 text-gray-500" />
-        </div>
+        {location.pathname !== '/' && (
+           <div className="absolute top-16 left-4 w-fit h-fit bg-transparent z-50 rounded-full flex items-center justify-center" onClick={goBack}>
+              <MoveLeft className="w-12 h-12 text-gray-500" />
+            </div>
+        )}
 
                 {/* Click indicator */}
           {userData?.channelPartner && (
