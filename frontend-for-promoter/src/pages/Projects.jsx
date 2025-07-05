@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import databaseService from '../backend-services/database/database'
+import { useNavigate } from 'react-router-dom'
 
 function Projects() {
   const userData = useSelector((state) => state.auth.userData)
   const promoterId = userData?.id
+
+  const navigate = useNavigate()
 
   const [projects, setProjects] = useState([])
   const [loading, setLoading] = useState(true)
@@ -327,6 +330,7 @@ function Projects() {
               return (
                 <div 
                   key={project.id} 
+                  onClick={() => navigate(`/project/${project.id}`)}
                   className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 overflow-hidden hover:shadow-xl transition-all duration-300"
                 >
                   <div className="p-4">

@@ -101,6 +101,27 @@ async getPromoterProjects(promoterId) {
   } 
 }
 
+async getProjectById(projectId) {
+  try {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/for-promoter-frontend/get-project/${projectId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders()
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Fetching project failed.");
+    }
+
+    const data = await this.handleResponse(response);
+    console.log("Fetched project:", data);
+    return data.project;
+  } catch (err) {
+    console.error("❌ Error fetching project:", err);
+    throw err;
+  }
+}
+
 }
 
 const databaseService = new DatabaseService();

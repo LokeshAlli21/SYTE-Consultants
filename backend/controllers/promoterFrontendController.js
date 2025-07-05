@@ -62,3 +62,36 @@ export const getPromoterProjects = async (req, res) => {
     return res.status(500).json({ message: 'Internal server error.' });
   }
 }
+
+export const getProjectById = async (req, res) => {
+  const { projectId } = req.params;
+
+  try {
+    const client = await getClient();
+    const queryText = `
+      SELECT 
+        id,
+        project_name,
+        project_type,
+        city,
+        district,
+        rera_number,
+        registration_date,
+        expiry_date,
+        created_at
+      FROM projects 
+      WHERE id = $1 
+      AND status_for_delete = 'active';
+    `;
+    const result = await client.query(queryText, [projectId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'Project not found.' });
+    }
+
+    return res.status(200).json({ project: result.rows[0] });
+  } catch (error) {
+    console.error('Error fetching project:', error);
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+};
