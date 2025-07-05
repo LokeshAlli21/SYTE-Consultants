@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import {ArrowLeft} from 'lucide-react';
+import {ChevronLeft} from 'lucide-react';
 
 const Header = () => {
 
@@ -56,8 +56,8 @@ const navigate = useNavigate();
       </div>
           
         {/* Back Button */}
-        <div className="absolute top-19 left-5 w-fit h-fit bg-transparent z-50 rounded-full flex items-center justify-center" onClick={goBack}>
-          <ArrowLeft className="w-12 h-12 text-gray-500" />
+        <div className="absolute top-2 right-2 w-fit h-fit bg-transparent z-50 rounded-full flex items-center justify-center" onClick={goBack}>
+          <ChevronLeft className="w-12 h-12 text-gray-500" />
         </div>
 
                 {/* Click indicator */}
