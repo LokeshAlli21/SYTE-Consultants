@@ -20,11 +20,11 @@ const navigate = useNavigate();
 
   return (
     <div className=" px-2 py-3 ">
-      {/* Back Button */}
+      {/* Back Button - Mobile First */}
       <div className="mb-3">
         <button
           onClick={goBack}
-          className="flex items-center gap-2 px-3 py-2 bg-white/70 backdrop-blur-md rounded-xl border border-white/30 hover:bg-white/80 transition-all duration-300 shadow-sm hover:shadow-md"
+          className="flex items-center gap-2 px-3 py-2 bg-white/50 hover:bg-white/70 backdrop-blur-sm rounded-xl border border-white/30 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
         >
           <svg 
             className="w-4 h-4 text-gray-700" 
