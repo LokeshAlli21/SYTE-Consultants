@@ -20,60 +20,58 @@ const navigate = useNavigate();
 
   return (
     <div className=" px-2 py-3 ">
-      {/* Back Button - Mobile First */}
-      <div className="mb-3">
+      {/* Main Header */}
+      <div className="flex items-center gap-4 mb-2">
+        {/* Back Button */}
         <button
           onClick={goBack}
-          className="flex items-center gap-2 px-3 py-2 bg-white/50 hover:bg-white/70 backdrop-blur-sm rounded-xl border border-white/30 transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
+          className="w-10 h-10 rounded-xl bg-white/40 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-sm hover:bg-white/60 active:scale-95 transition-all duration-200"
         >
           <svg 
-            className="w-4 h-4 text-gray-700" 
+            className="w-5 h-5 text-gray-700" 
             fill="none" 
             stroke="currentColor" 
             viewBox="0 0 24 24"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
-          <span className="text-sm font-medium text-gray-700">Back</span>
         </button>
-      </div>
 
-      {/* Main Header */}
-      <div 
-        className={`flex items-center gap-4 ${isContactOpen ? 'mb-4' : ''} cursor-pointer transition-all duration-300 hover:bg-white/30 rounded-2xl p-2 -m-2`}
-        onClick={toggleContact}
-      >
-        {/* Logo/Profile Image */}
-        <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white/20 flex items-center justify-center relative">
-          {userData?.channelPartner?.cp_photo_uploaded_url ? (
-            <img 
-              src={userData.channelPartner.cp_photo_uploaded_url} 
-              alt="Channel Partner"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <img 
-              src="/logo.png" 
-              alt="Logo"
-              className="w-10 h-10 object-contain"
-            />
-          )}
-        </div>
-        
-        {/* Header Content */}
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent leading-tight">
-            {userData?.channelPartner?.full_name ? userData.channelPartner.full_name : 'My Projects'}
-          </h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Monitor Every Detail of Your Projects
-          </p>
-        </div>
-      </div>
-      
-                {/* Click indicator */}
+        {/* Header Content Container */}
+        <div 
+          className={`flex items-center gap-4 flex-1 ${isContactOpen ? 'mb-4' : ''} cursor-pointer transition-all duration-300 hover:bg-white/30 rounded-2xl p-2 -m-2`}
+          onClick={toggleContact}
+        >
+          {/* Logo/Profile Image */}
+          <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white/20 flex items-center justify-center relative">
+            {userData?.channelPartner?.cp_photo_uploaded_url ? (
+              <img 
+                src={userData.channelPartner.cp_photo_uploaded_url} 
+                alt="Channel Partner"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <img 
+                src="/logo.png" 
+                alt="Logo"
+                className="w-10 h-10 object-contain"
+              />
+            )}
+          </div>
+          
+          {/* Header Content */}
+          <div className="flex-1">
+            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent leading-tight">
+              {userData?.channelPartner?.full_name ? userData.channelPartner.full_name : 'My Projects'}
+            </h1>
+            <p className="text-gray-600 text-sm mt-1">
+              Monitor Every Detail of Your Projects
+            </p>
+          </div>
+
+          {/* Click indicator */}
           {userData?.channelPartner && (
-            <div className="absolute top-12 right-2 w-6 h-6 bg-transparent rounded-full flex items-center justify-center">
+            <div className="w-6 h-6 bg-transparent rounded-full flex items-center justify-center">
               <svg 
                 className={`w-3 h-3 text-gray-500 transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`} 
                 fill="none" 
@@ -84,6 +82,8 @@ const navigate = useNavigate();
               </svg>
             </div>
           )}
+        </div>
+      </div>
 
       {/* Contact Information Card - Smooth Transition */}
       {userData?.channelPartner && (
