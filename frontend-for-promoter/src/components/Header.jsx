@@ -21,28 +21,12 @@ const navigate = useNavigate();
   return (
     <div className=" px-2 py-3 ">
       {/* Main Header */}
-      <div className="flex items-center gap-4 mb-2">
-        {/* Back Button */}
-        <button
-          onClick={goBack}
-          className="w-10 h-10 rounded-xl bg-white/40 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-sm hover:bg-white/60 active:scale-95 transition-all duration-200"
-        >
-          <svg 
-            className="w-5 h-5 text-gray-700" 
-            fill="none" 
-            stroke="currentColor" 
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </button>
-
-        {/* Header Content Container */}
-        <div 
-          className={`flex items-center gap-4 flex-1 ${isContactOpen ? 'mb-4' : ''} cursor-pointer transition-all duration-300 hover:bg-white/30 rounded-2xl p-2 -m-2`}
-          onClick={toggleContact}
-        >
-          {/* Logo/Profile Image */}
+      <div 
+        className={`flex items-center gap-4 ${isContactOpen ? 'mb-4' : ''} cursor-pointer transition-all duration-300 hover:bg-white/30 rounded-2xl p-2 -m-2`}
+        onClick={toggleContact}
+      >
+        {/* Logo/Profile Image with Back Button */}
+        <div className="relative">
           <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg border-2 border-white/20 flex items-center justify-center relative">
             {userData?.channelPartner?.cp_photo_uploaded_url ? (
               <img 
@@ -59,30 +43,48 @@ const navigate = useNavigate();
             )}
           </div>
           
-          {/* Header Content */}
-          <div className="flex-1">
-            <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent leading-tight">
-              {userData?.channelPartner?.full_name ? userData.channelPartner.full_name : 'My Projects'}
-            </h1>
-            <p className="text-gray-600 text-sm mt-1">
-              Monitor Every Detail of Your Projects
-            </p>
-          </div>
-
-          {/* Click indicator */}
-          {userData?.channelPartner && (
-            <div className="w-6 h-6 bg-transparent rounded-full flex items-center justify-center">
-              <svg 
-                className={`w-3 h-3 text-gray-500 transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`} 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
-          )}
+          {/* Back Button positioned at bottom of logo */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              goBack();
+            }}
+            className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm border border-white/40 flex items-center justify-center shadow-lg hover:bg-white active:scale-95 transition-all duration-200"
+          >
+            <svg 
+              className="w-4 h-4 text-gray-700" 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
         </div>
+        
+        {/* Header Content */}
+        <div className="flex-1">
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent leading-tight">
+            {userData?.channelPartner?.full_name ? userData.channelPartner.full_name : 'My Projects'}
+          </h1>
+          <p className="text-gray-600 text-sm mt-1">
+            Monitor Every Detail of Your Projects
+          </p>
+        </div>
+
+        {/* Click indicator */}
+        {userData?.channelPartner && (
+          <div className="w-6 h-6 bg-transparent rounded-full flex items-center justify-center">
+            <svg 
+              className={`w-3 h-3 text-gray-500 transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`} 
+              fill="none" 
+              stroke="currentColor" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </div>
+        )}
       </div>
 
       {/* Contact Information Card - Smooth Transition */}
