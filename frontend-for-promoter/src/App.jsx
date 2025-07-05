@@ -6,6 +6,7 @@ import authService from './backend-services/auth/auth';
 import { login, logout} from './store/authSlice'
 import databaseService from './backend-services/database/database';
 import Header from './components/Header';
+import Login from './pages/Login';
 
 function App() {
   const dispatch = useDispatch();
@@ -57,6 +58,15 @@ useEffect(() => {
       return
     })
   }, [])
+
+  if(location.pathname === '/login') {
+    return (
+      <>
+        <ToastContainer position='top-right' />
+        <Login />
+      </>
+    );
+  }
 
   return (
     <div className="flex flex-col max-w-screen w-full mx-auto bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
