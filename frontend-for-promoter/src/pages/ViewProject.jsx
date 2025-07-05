@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from 'react'
 import { MapPin, Calendar, CheckCircle, Clock, User, Phone, Mail, FileText, Download, Building, Home } from 'lucide-react'
 import databaseService from '../backend-services/database/database'
+import { useParams } from 'react-router-dom'
 
-function ViewProject({ projectId }) {
+function ViewProject() {
+
+  const {id} = useParams()
+
   const [project, setProject] = useState({})
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -11,7 +15,7 @@ function ViewProject({ projectId }) {
     const fetchProjectDetails = async (id) => {
       try {
         setLoading(true)
-        const projectDetails = await databaseService.getProjectById(projectId)
+        const projectDetails = await databaseService.getProjectById(id)
         console.log("Project Details:", projectDetails)
         if (projectDetails) {
           setProject(projectDetails)
@@ -26,8 +30,8 @@ function ViewProject({ projectId }) {
       }
     }
 
-    fetchProjectDetails(projectId)
-  }, [projectId])
+    fetchProjectDetails(id)
+  }, [id])
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A'
