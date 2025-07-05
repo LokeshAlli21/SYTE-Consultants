@@ -307,8 +307,8 @@ RETURNS TABLE (
     project_status VARCHAR,
     registration_date DATE,
     expiry_date DATE,
-    days_until_expiry NUMERIC,
-    project_age_days NUMERIC,
+    days_until_expiry INTEGER,
+    project_age_days INTEGER,
     rera_number VARCHAR,
     rera_certificate_url TEXT,
     promoter_name VARCHAR,
@@ -354,15 +354,19 @@ BEGIN
         p.registration_date::DATE,
         p.expiry_date::DATE,
         
-        -- Calculate days remaining until expiry
+        -- Calculate days remaining until expiry (fixed calculation)
         CASE 
             WHEN p.expiry_date IS NOT NULL THEN 
-                EXTRACT(DAY FROM (p.expiry_date - CURRENT_DATE))::NUMERIC
+                (p.expiry_date - CURRENT_DATE)::INTEGER
             ELSE NULL 
         END AS days_until_expiry,
         
-        -- Project age in days
-        EXTRACT(DAY FROM (CURRENT_DATE - p.registration_date))::NUMERIC AS project_age_days,
+        -- Project age in days (fixed calculation)
+        CASE 
+            WHEN p.registration_date IS NOT NULL THEN
+                (CURRENT_DATE - p.registration_date)::INTEGER
+            ELSE NULL
+        END AS project_age_days,
         
         -- RERA Information
         p.rera_number::VARCHAR,
@@ -419,3 +423,6 @@ BEGIN
     AND p.status_for_delete = 'active';
 END;
 $$ LANGUAGE plpgsql;
+
+-- Usage Example:
+-- SELECT * FROM get_project_details(10);

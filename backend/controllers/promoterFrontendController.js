@@ -82,8 +82,6 @@ export const getProjectById = async (req, res) => {
     `;
     
     const result = await client.query(queryText, [parseInt(projectId)]);
-
-    console.log('Query Result:', result);
     
 
     if (result.rows.length === 0) {
@@ -116,7 +114,7 @@ export const getProjectById = async (req, res) => {
       },
       rera_details: {
         rera_number: project.rera_number,
-        rera_certificate_url: project.rera_certificate_url
+        rera_certificate_url: getSignedUrl(project.rera_certificate_url)
       },
       professional_team: {
         engineer: {
@@ -124,10 +122,10 @@ export const getProjectById = async (req, res) => {
           contact: project.engineer_contact,
           email: project.engineer_email,
           documents: {
-            licence_url: project.engineer_licence_url,
-            pan_url: project.engineer_pan_url,
-            letterhead_url: project.engineer_letterhead_url,
-            stamp_url: project.engineer_stamp_url
+            licence_url: getSignedUrl(project.engineer_licence_url),
+            pan_url: getSignedUrl(project.engineer_pan_url),
+            letterhead_url: getSignedUrl(project.engineer_letterhead_url),
+            stamp_url: getSignedUrl(project.engineer_stamp_url)
           }
         },
         architect: {
@@ -135,10 +133,10 @@ export const getProjectById = async (req, res) => {
           contact: project.architect_contact,
           email: project.architect_email,
           documents: {
-            licence_url: project.architect_licence_url,
-            pan_url: project.architect_pan_url,
-            letterhead_url: project.architect_letterhead_url,
-            stamp_url: project.architect_stamp_url
+            licence_url: getSignedUrl(project.architect_licence_url),
+            pan_url: getSignedUrl(project.architect_pan_url),
+            letterhead_url: getSignedUrl(project.architect_letterhead_url),
+            stamp_url: getSignedUrl(project.architect_stamp_url)
           }
         },
         ca: {
@@ -146,16 +144,15 @@ export const getProjectById = async (req, res) => {
           contact: project.ca_contact,
           email: project.ca_email,
           documents: {
-            licence_url: project.ca_licence_url,
-            pan_url: project.ca_pan_url,
-            letterhead_url: project.ca_letterhead_url,
-            stamp_url: project.ca_stamp_url
+            licence_url: getSignedUrl(project.ca_licence_url),
+            pan_url: getSignedUrl(project.ca_pan_url),
+            letterhead_url: getSignedUrl(project.ca_letterhead_url),
+            stamp_url: getSignedUrl(project.ca_stamp_url)
           }
         }
       },
       timestamps: {
-        project_created_date: project.project_created_date,
-        project_last_updated: project.project_last_updated
+        project_created_date: project.project_created_date
       }
     };
 
