@@ -1,10 +1,12 @@
-
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
 
 const userData = useSelector((state) => state.auth.userData);
+
+const navigate = useNavigate();
 
   const [isContactOpen, setIsContactOpen] = useState(false);
 
@@ -12,8 +14,30 @@ const userData = useSelector((state) => state.auth.userData);
     setIsContactOpen(!isContactOpen);
   };
 
+  const goBack = () => {
+    navigate(-1);
+  };
+
   return (
     <div className=" px-2 py-3 ">
+      {/* Back Button */}
+      <div className="mb-3">
+        <button
+          onClick={goBack}
+          className="flex items-center gap-2 px-3 py-2 bg-white/70 backdrop-blur-md rounded-xl border border-white/30 hover:bg-white/80 transition-all duration-300 shadow-sm hover:shadow-md"
+        >
+          <svg 
+            className="w-4 h-4 text-gray-700" 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          <span className="text-sm font-medium text-gray-700">Back</span>
+        </button>
+      </div>
+
       {/* Main Header */}
       <div 
         className={`flex items-center gap-4 ${isContactOpen ? 'mb-4' : ''} cursor-pointer transition-all duration-300 hover:bg-white/30 rounded-2xl p-2 -m-2`}

@@ -228,7 +228,7 @@ function ViewProject() {
               </div>
             </div>
             
-            <div className="flex items-start space-x-3">
+            {/* <div className="flex items-start space-x-3">
               <div className="p-2 bg-gray-100 rounded-lg">
                 <User className="w-4 h-4 text-gray-600" />
               </div>
@@ -236,7 +236,7 @@ function ViewProject() {
                 <p className="text-sm font-semibold text-gray-900 mb-1">Promoter</p>
                 <p className="text-sm text-gray-600">{project.basic_info?.promoter_name || 'N/A'}</p>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
