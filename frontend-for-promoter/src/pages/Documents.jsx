@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Download, Eye, FileText, Calendar, AlertCircle, X } from 'lucide-react'
 import databaseService from '../backend-services/database/database'
+import { useParams } from 'react-router-dom'
 
 function Documents() {
-  const id = '123' // Mock ID for demo
+  const {id} = useParams() // Get project ID from URL parameters
   const [documentUrls, setDocumentUrls] = useState({})
   const [loading, setLoading] = useState(true)
   const [viewingDocument, setViewingDocument] = useState(null)
