@@ -223,7 +223,7 @@ function Documents() {
                 {/* Gradient overlay on hover */}
                 <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity duration-300`}></div>
                 
-                <div className="relative z-10 flex flex-row items-start justify-between">
+                <div className="relative z-10 ">
                   <div className="flex items-start justify-between mb-4">
                     <div className={`p-3 rounded-2xl bg-gradient-to-r ${gradient} text-white text-2xl shadow-lg`}>
                       {icon}
