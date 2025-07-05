@@ -224,14 +224,12 @@ function Documents() {
                 <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity duration-300`}></div>
                 
                 <div className="relative z-10 ">
-                  <div className='flex flex-row items-start gap-4'>
                     <div className="flex items-start justify-between mb-4">
                     <div className={`p-3 rounded-2xl bg-gradient-to-r ${gradient} text-white text-2xl shadow-lg`}>
                       {icon}
                     </div>
                   </div>
-                    <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{name}</h3>
-                  </div>
+                    <h3 className="font-bold inline-block text-gray-900 mb-2 text-lg leading-tight">{name}</h3>
                   
                   <p className="text-sm text-gray-500 flex items-center space-x-1 mb-6">
                     <span>📄</span>
@@ -272,118 +270,33 @@ function Documents() {
         )}
 
         {/* Modern Document Viewer Modal */}
-        {viewingDocument && (
-          <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-            <div className="bg-white/95 backdrop-blur-sm rounded-2xl sm:rounded-3xl shadow-2xl w-full h-full sm:w-[95%] sm:h-[95%] lg:w-[80%] lg:h-[80%] flex flex-col border border-white/20">
-              {/* Mobile-Optimized Modal Header */}
-              <div className="flex items-center justify-between p-3 sm:p-6 border-b border-gray-200/50 bg-white/80 backdrop-blur-sm rounded-t-2xl sm:rounded-t-3xl">
-                <div className="flex items-center space-x-3">
-                  <div className={`p-2 sm:p-3 rounded-xl bg-gradient-to-r ${documentTypes[viewingDocument.type]?.gradient || 'from-gray-400 to-gray-500'}`}>
-                    <span className="text-lg sm:text-2xl text-white">{documentTypes[viewingDocument.type]?.icon || '📄'}</span>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="font-bold text-gray-900 text-sm sm:text-xl truncate">
-                      {documentTypes[viewingDocument.type]?.name || 'Document'}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-500">PDF • {zoom}%</p>
-                  </div>
-                </div>
-                
-                {/* Mobile Action Bar */}
-                <div className="flex items-center space-x-2">
-                  {/* Zoom Controls - Hidden on small screens */}
-                  <div className="hidden sm:flex items-center space-x-2 bg-gray-100/50 rounded-xl p-1">
-                    <button
-                      onClick={handleZoomOut}
-                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-white/80 rounded-lg transition-colors"
-                    >
-                      <ZoomOut className="w-4 h-4" />
-                    </button>
-                    <span className="text-sm text-gray-600 px-2">{zoom}%</span>
-                    <button
-                      onClick={handleZoomIn}
-                      className="p-2 text-gray-600 hover:text-gray-900 hover:bg-white/80 rounded-lg transition-colors"
-                    >
-                      <ZoomIn className="w-4 h-4" />
-                    </button>
-                  </div>
-                  
-                  {/* Mobile Menu Button */}
-                  <div className="flex sm:hidden">
-                    <button
-                      onClick={() => window.open(viewingDocument.url, '_blank')}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    >
-                      <ExternalLink className="w-5 h-5" />
-                    </button>
-                  </div>
-                  
-                  {/* Desktop Action Buttons */}
-                  <div className="hidden sm:flex items-center space-x-2">
-                    <button
-                      onClick={() => window.open(viewingDocument.url, '_blank')}
-                      className="flex items-center space-x-2 px-3 py-2 text-sm bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                      <span>Open</span>
-                    </button>
-                    <button
-                      onClick={() => handleDownload(viewingDocument.url, viewingDocument.type)}
-                      className="flex items-center space-x-2 px-3 py-2 text-sm bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
-                    >
-                      <Download className="w-4 h-4" />
-                      <span>Download</span>
-                    </button>
-                  </div>
-                  
-                  <button
-                    onClick={closeViewer}
-                    className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100/50 rounded-xl transition-colors"
-                  >
-                    <X className="w-5 h-5 sm:w-6 sm:h-6" />
-                  </button>
-                </div>
-              </div>
-              
-              {/* Modal Content */}
-              <div className="flex-1 overflow-hidden p-2 sm:p-6">
-                <div className="w-full h-full bg-gray-50 rounded-xl sm:rounded-2xl overflow-hidden shadow-inner">
-                  <iframe
-                    src={`${viewingDocument.url}#zoom=${zoom}`}
-                    className="w-full h-full border-0 rounded-xl sm:rounded-2xl"
-                    title={documentTypes[viewingDocument.type]?.name || 'Document'}
-                    allow="fullscreen"
-                  />
-                </div>
-              </div>
-              
-              {/* Mobile Bottom Action Bar */}
-              <div className="flex sm:hidden items-center justify-center space-x-4 p-4 bg-white/80 backdrop-blur-sm border-t border-gray-200/50 rounded-b-2xl">
-                <button
-                  onClick={handleZoomOut}
-                  className="flex items-center justify-center w-12 h-12 bg-gray-600 text-white rounded-xl active:scale-95 transition-transform"
-                >
-                  <ZoomOut className="w-5 h-5" />
-                </button>
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => handleDownload(viewingDocument.url, viewingDocument.type)}
-                    className="flex items-center space-x-2 px-6 py-3 bg-green-600 text-white rounded-xl active:scale-95 transition-transform font-semibold"
-                  >
-                    <Download className="w-5 h-5" />
-                    <span>Download</span>
-                  </button>
-                </div>
-                <button
-                  onClick={handleZoomIn}
-                  className="flex items-center justify-center w-12 h-12 bg-gray-600 text-white rounded-xl active:scale-95 transition-transform"
-                >
-                  <ZoomIn className="w-5 h-5" />
-                </button>
-              </div>
+         {/* Simple Modal */}
+      {viewingDocument && (
+        <div className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl w-full h-full max-w-6xl max-h-[90vh] flex flex-col">
+            
+            {/* Close Button */}
+            <div className="flex justify-end p-2">
+              <button
+                onClick={closeViewer}
+                className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            {/* Iframe */}
+            <div className="flex-1 px-4 pb-4">
+              <iframe
+                src={viewingDocument.url}
+                className="w-full h-full border-0 rounded"
+                title={viewingDocument.title}
+                allow="fullscreen"
+              />
             </div>
           </div>
-        )}
+        </div>
+      )}
       </div>
     </div>
   )
