@@ -190,7 +190,7 @@ export const getProjectDocuments = async (req, res) => {
     
     const result = await client.query(queryText, [parseInt(projectId)]);
 
-    console.log('Project Documents Result:', result);
+    // console.log('Project Documents Result:', result);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ 
