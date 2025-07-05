@@ -7,6 +7,7 @@ function Documents() {
   const [documentUrls, setDocumentUrls] = useState({})
   const [loading, setLoading] = useState(true)
   const [viewingDocument, setViewingDocument] = useState(null)
+  const [downloadingDoc, setDownloadingDoc] = useState(null)
 
   // Document type mapping with user-friendly names
   const documentTypes = {
@@ -48,68 +49,39 @@ function Documents() {
   }, [id])
 
   const handleView = (url, docType) => {
-    try {
-      // Try to open in new tab first
-      const newWindow = window.open(url, '_blank', 'noopener,noreferrer')
-      if (newWindow) {
-        setViewingDocument({ url, type: docType })
-      } else {
-        // If popup blocked, show in modal
-        setViewingDocument({ url, type: docType })
-      }
-    } catch (error) {
-      console.error('View error:', error)
-      setViewingDocument({ url, type: docType })
-    }
+    console.log('Opening document:', url)
+    setViewingDocument({ url, type: docType })
   }
 
   const handleDownload = async (url, docType) => {
+    console.log('Downloading document:', url)
+    setDownloadingDoc(docType)
+    
+    const fileName = `${documentTypes[docType]?.name.replace(/\s+/g, '_') || 'Document'}.pdf`
+    
     try {
-      const fileName = `${documentTypes[docType]?.name || 'Document'}.pdf`
+      // Method 1: Try creating a download link
+      const link = document.createElement('a')
+      link.href = url
+      link.download = fileName
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      link.style.display = 'none'
       
-      // Try fetch approach first
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/pdf',
-        },
-        mode: 'cors'
-      })
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
       
-      if (response.ok) {
-        const blob = await response.blob()
-        const downloadUrl = window.URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = downloadUrl
-        link.download = fileName
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        window.URL.revokeObjectURL(downloadUrl)
-      } else {
-        throw new Error('Fetch failed')
-      }
+      // Add a small delay to show download state
+      setTimeout(() => {
+        setDownloadingDoc(null)
+      }, 1000)
+      
     } catch (error) {
-      console.error('Download error:', error)
-      // Fallback: direct link method
-      try {
-        const link = document.createElement('a')
-        link.href = url
-        link.download = `${documentTypes[docType]?.name || 'Document'}.pdf`
-        link.target = '_blank'
-        link.rel = 'noopener noreferrer'
-        
-        // Force download attribute
-        link.setAttribute('download', `${documentTypes[docType]?.name || 'Document'}.pdf`)
-        
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-      } catch (fallbackError) {
-        console.error('Fallback download error:', fallbackError)
-        // Last resort: open in new tab
-        window.open(url, '_blank', 'noopener,noreferrer')
-      }
+      console.error('Download failed:', error)
+      // Fallback: Open in new window
+      window.open(url, '_blank', 'noopener,noreferrer')
+      setDownloadingDoc(null)
     }
   }
 
@@ -148,7 +120,7 @@ function Documents() {
     .map(([key, url]) => ({ key, url, ...documentTypes[key] }))
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-6">
+    <div className="w-full space-y-6">
       {/* Header Section */}
       <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 p-6">
         <div className="text-center">
@@ -172,7 +144,7 @@ function Documents() {
         </div>
       </div>
 
-      {/* Documents Grid */}
+      {/* Documents List - Full Width Cards */}
       <div className="space-y-4">
         {availableDocuments.length === 0 ? (
           <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 p-12 text-center">
@@ -185,48 +157,62 @@ function Documents() {
             <p className="text-gray-600">Your project documents will appear here once uploaded</p>
           </div>
         ) : (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {availableDocuments.map(({ key, url, name, icon, color }) => (
-              <div key={key} className="group bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 p-6 hover:shadow-xl hover:scale-105 transition-all duration-300">
-                <div className="text-center">
-                  <div className={`inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r ${color} rounded-2xl text-white text-2xl mb-4 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+          availableDocuments.map(({ key, url, name, icon, color }) => (
+            <div key={key} className="w-full bg-white/80 backdrop-blur-lg rounded-2xl shadow-lg border border-white/20 p-6 hover:shadow-xl transition-all duration-300">
+              <div className="flex items-center justify-between">
+                {/* Left side - Icon and Info */}
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className={`flex-shrink-0 w-16 h-16 bg-gradient-to-r ${color} rounded-2xl flex items-center justify-center text-white text-2xl shadow-lg`}>
                     {icon}
                   </div>
-                  <h3 className="font-bold text-gray-800 mb-2 text-base leading-tight">{name}</h3>
-                  <p className="text-gray-500 mb-6 text-sm">PDF Document</p>
-                  
-                  <div className="flex flex-col space-y-2">
-                    <button
-                      onClick={() => handleView(url, key)}
-                      className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      Preview
-                    </button>
-                    <button
-                      onClick={() => handleDownload(url, key)}
-                      className="w-full inline-flex items-center justify-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      Download
-                    </button>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-gray-800 text-lg truncate">{name}</h3>
+                    <p className="text-gray-500 text-sm">PDF Document</p>
                   </div>
                 </div>
+                
+                {/* Right side - Action Buttons */}
+                <div className="flex items-center space-x-3 flex-shrink-0">
+                  <button
+                    onClick={() => handleView(url, key)}
+                    className="inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl font-medium hover:from-blue-600 hover:to-purple-700 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200"
+                  >
+                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    Preview
+                  </button>
+                  <button
+                    onClick={() => handleDownload(url, key)}
+                    disabled={downloadingDoc === key}
+                    className="inline-flex items-center justify-center px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 hover:border-gray-400 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {downloadingDoc === key ? (
+                      <>
+                        <div className="w-4 h-4 mr-2 border-2 border-gray-400 border-t-gray-700 rounded-full animate-spin"></div>
+                        Downloading...
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                        Download
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))
         )}
       </div>
 
       {/* Document Viewer Modal */}
       {viewingDocument && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] flex flex-col overflow-hidden">
             {/* Modal Header */}
             <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
               <div className="flex items-center space-x-4">
@@ -264,11 +250,11 @@ function Documents() {
             {/* Modal Content */}
             <div className="flex-1 overflow-hidden bg-gray-50">
               <iframe
-                src={`${viewingDocument.url}#toolbar=1&navpanes=1&scrollbar=1`}
+                src={viewingDocument.url}
                 className="w-full h-full border-0"
                 title={documentTypes[viewingDocument.type]?.name || 'Document'}
-                allow="fullscreen"
-                loading="lazy"
+                onLoad={() => console.log('PDF loaded successfully')}
+                onError={() => console.error('Failed to load PDF')}
               />
             </div>
           </div>
