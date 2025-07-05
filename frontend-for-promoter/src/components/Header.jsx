@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft } from 'lucide-react';
+import {ArrowLeft} from 'lucide-react';
 
 const Header = () => {
 
@@ -52,31 +53,26 @@ const navigate = useNavigate();
             Monitor Every Detail of Your Projects
           </p>
         </div>
-
-        {/* Click indicator */}
-        {userData?.channelPartner && (
-          <div className="w-6 h-6 bg-transparent rounded-full flex items-center justify-center">
-            <svg 
-              className={`w-3 h-3 text-gray-500 transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`} 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-            </svg>
-          </div>
-        )}
       </div>
+          
+        {/* Back Button */}
+        <div className="absolute top-15 right-2 w-8 h-8 bg-transparent rounded-full flex items-center justify-center" onClick={goBack}>
+          <ArrowLeft className="w-4 h-4 text-gray-500" />
+        </div>
 
-      {/* Back Button - Positioned between logo and contact details */}
-      <div className="px-2 mb-2">
-        <button
-          onClick={goBack}
-          className="w-10 h-10 rounded-xl bg-white/60 backdrop-blur-sm border border-white/40 flex items-center justify-center shadow-lg hover:bg-white/80 active:scale-95 transition-all duration-200"
-        >
-          <ChevronLeft className="w-5 h-5 text-gray-700" />
-        </button>
-      </div>
+                {/* Click indicator */}
+          {userData?.channelPartner && (
+            <div className="absolute top-12 right-2 w-6 h-6 bg-transparent rounded-full flex items-center justify-center">
+              <svg 
+                className={`w-3 h-3 text-gray-500 transition-transform duration-300 ${isContactOpen ? 'rotate-180' : ''}`} 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          )}
 
       {/* Contact Information Card - Smooth Transition */}
       {userData?.channelPartner && (
