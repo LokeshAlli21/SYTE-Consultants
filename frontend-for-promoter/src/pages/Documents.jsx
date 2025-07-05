@@ -224,10 +224,12 @@ function Documents() {
                 <div className={`absolute inset-0 bg-gradient-to-r ${gradient} opacity-0 group-hover:opacity-5 rounded-3xl transition-opacity duration-300`}></div>
                 
                 <div className="relative z-10 ">
-                  <div className="flex items-start justify-between mb-4">
+                  <div className='flex flex-row items-start gap-4'>
+                    <div className="flex items-start justify-between mb-4">
                     <div className={`p-3 rounded-2xl bg-gradient-to-r ${gradient} text-white text-2xl shadow-lg`}>
                       {icon}
                     </div>
+                  </div>
                     <h3 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{name}</h3>
                   </div>
                   
