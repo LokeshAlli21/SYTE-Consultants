@@ -32,7 +32,7 @@ function AuthLayout({ children, authentication = true }) {
     // Loading state
     if (authStatus === null) {
         return (
-            <div className="w-full h-screen flex flex-col items-center justify-center bg-white">
+            <div className="w-full h-screen flex flex-col items-center justify-center ">
                 <div className="loader"></div>
                 <p className="mt-4 text-lg font-semibold text-gray-700 animate-pulse">
                     Loading...

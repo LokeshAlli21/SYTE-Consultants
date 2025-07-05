@@ -55,7 +55,7 @@ const userData = useSelector((state) => state.auth.userData);
             {userData?.channelPartner?.full_name ? userData.channelPartner.full_name : 'My Projects'}
           </h1>
           <p className="text-gray-600 text-sm mt-1">
-            Real Estate Projects & Investments
+            Monitor Every Detail of Your Projects
           </p>
         </div>
       </div>
