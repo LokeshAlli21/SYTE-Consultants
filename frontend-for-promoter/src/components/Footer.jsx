@@ -63,7 +63,7 @@ const Footer = () => {
               <div className="flex items-center justify-center gap-1 text-xs text-gray-500">
                 <span>Made with</span>
                 <Heart className="w-3 h-3 text-red-500 fill-current" />
-                <span>for Channel Partners & Promoter</span>
+                <span>for Channel Partner & Promoter</span>
               </div>
               <p className="text-xs text-gray-400">
                 © 2025 Syte Consultants. 
