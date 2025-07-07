@@ -54,7 +54,7 @@ function ViewProjectUnit() {
     switch (status?.toLowerCase()) {
       case 'sold': return 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
       case 'unsold': return 'bg-gradient-to-r from-red-500 to-rose-500 text-white'
-      case 'reserved': return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+      case 'booked': return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
       default: return 'bg-gradient-to-r from-gray-500 to-slate-500 text-white'
     }
   }
@@ -63,7 +63,7 @@ function ViewProjectUnit() {
     switch (status?.toLowerCase()) {
       case 'sold': return <CheckCircle className="w-4 h-4" />
       case 'unsold': return <XCircle className="w-4 h-4" />
-      case 'reserved': return <Clock className="w-4 h-4" />
+      case 'booked': return <Clock className="w-4 h-4" />
       default: return <Clock className="w-4 h-4" />
     }
   }
