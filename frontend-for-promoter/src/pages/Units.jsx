@@ -113,7 +113,7 @@ function Units() {
   };
 
   const handleUnitClick = (unitId) => {
-    navigate(`/unit/${unitId}`);
+    navigate(`units/unit/${unitId}`);
   };
 
   if (loading) {
