@@ -6,8 +6,8 @@ import { getChannelPartnerByPromoterId,
     getProjectDocuments,
     getProjectUnits,
     getProjectUnitById,
+    getProjectProgress,
 } from '../controllers/promoterFrontendController.js';
-import { upload } from '../aws/awsClient.js'; 
 
 const router = express.Router();
 
@@ -22,5 +22,7 @@ router.get('/get-project-documents/:projectId', protectPromoter, getProjectDocum
 router.get('/get-project-units/:projectId', protectPromoter, getProjectUnits);
 
 router.get('/get-project-unit/:id', protectPromoter, getProjectUnitById);
+
+router.get('/get-project-progress/:id', protectPromoter, getProjectProgress);
 
 export default router;

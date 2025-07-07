@@ -345,3 +345,34 @@ export const getProjectUnitById = async (req, res) => {
     });
   }
 };
+
+export const getProjectProgress = async (req, res) => {
+  try {
+    const { id: project_id } = req.params;
+
+    const queryText = `
+      SELECT * FROM view_site_progress_full
+      WHERE project_id = $1
+    `;
+    
+    const result = await query(queryText, [project_id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "No site progress found for this project." });
+    }
+
+    const data = result.rows[0];
+
+    res.status(200).json({
+      siteProgress: {
+        id: data.id,
+        project_id: data.project_id,
+      },
+      buildingProgress: data.building_progress || null,
+      commonAreasProgress: data.common_areas_progress || null,
+    });
+  } catch (error) {
+    console.error("❌ Unexpected error fetching site progress:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
