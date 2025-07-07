@@ -9,7 +9,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import databaseService from '../backend-services/database/database';
 
 function Units() {
-  const [units, setUnits] = useState()
+  const [units, setUnits] = useState([])
   
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
@@ -50,24 +50,24 @@ function Units() {
   ];
 
   const filteredUnits = useMemo(() => {
-    return units.filter(unit => {
-      const matchesSearch = unit.unit_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           unit.unit_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           (unit.customer_name && unit.customer_name.toLowerCase().includes(searchTerm.toLowerCase()));
-      const matchesStatus = statusFilter === 'All' || unit.unit_status === statusFilter;
+    return units?.filter(unit => {
+      const matchesSearch = unit?.unit_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           unit?.unit_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (unit?.customer_name && unit?.customer_name.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesStatus = statusFilter === 'All' || unit?.unit_status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [units, searchTerm, statusFilter]);
 
   const stats = useMemo(() => {
-    const totalUnits = units.length;
-    const totalRevenue = units.reduce((sum, u) => sum + (parseFloat(u.total_received) || 0), 0);
-    const totalValue = units.reduce((sum, u) => sum + (parseFloat(u.agreement_value) || 0), 0);
-    const balanceAmount = units.reduce((sum, u) => sum + (parseFloat(u.balance_amount) || 0), 0);
+    const totalUnits = units?.length;
+    const totalRevenue = units?.reduce((sum, u) => sum + (parseFloat(u.total_received) || 0), 0);
+    const totalValue = units?.reduce((sum, u) => sum + (parseFloat(u.agreement_value) || 0), 0);
+    const balanceAmount = units?.reduce((sum, u) => sum + (parseFloat(u.balance_amount) || 0), 0);
 
     const statusCounts = {};
     statusOptions.forEach(({ value }) => {
-      statusCounts[value] = value === 'All' ? totalUnits : units.filter(u => u.unit_status === value).length;
+      statusCounts[value] = value === 'All' ? totalUnits : units?.filter(u => u.unit_status === value).length;
     });
 
     return {
@@ -230,7 +230,7 @@ function Units() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search units..."
+              placeholder="Search units?..."
               className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white border-0"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -285,7 +285,7 @@ function Units() {
       {/* View Mode Toggle */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600">
-          {filteredUnits.length} of {stats.totalUnits} units
+          {filteredunits?.length} of {stats.totalUnits} units
         </p>
         <div className="flex items-center bg-gray-50 rounded-xl p-1">
           <button
@@ -309,16 +309,16 @@ function Units() {
 
       {/* Units List */}
       <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 gap-4' : 'space-y-3'}`}>
-        {filteredUnits.length > 0 ? (
-          filteredUnits.map((unit) => {
-            const colors = statusColors[unit.unit_status] || statusColors['Unsold'];
-            const completionPercentage = ((unit.total_received / unit.agreement_value) * 100).toFixed(0);
+        {filteredunits?.length > 0 ? (
+          filteredunits?.map((unit) => {
+            const colors = statusColors[unit?.unit_status] || statusColors['Unsold'];
+            const completionPercentage = ((unit?.total_received / unit?.agreement_value) * 100).toFixed(0);
             
             return (
               <div
-                key={unit.id}
+                key={unit?.id}
                 className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
-                onClick={() => handleUnitClick(unit.id)}
+                onClick={() => handleUnitClick(unit?.id)}
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
@@ -326,14 +326,14 @@ function Units() {
                       <Home className="w-5 h-5 text-gray-700" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-gray-900">{unit.unit_name}</h3>
-                      <p className="text-sm text-gray-600">{unit.unit_type} • {unit.carpet_area} sq ft</p>
+                      <h3 className="font-bold text-gray-900">{unit?.unit_name}</h3>
+                      <p className="text-sm text-gray-600">{unit?.unit_type} • {unit?.carpet_area} sq ft</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <div className={`w-2 h-2 rounded-full ${colors.dot}`}></div>
                     <span className={`text-xs font-medium px-2 py-1 rounded-lg ${colors.text} ${colors.light}`}>
-                      {unit.unit_status}
+                      {unit?.unit_status}
                     </span>
                   </div>
                 </div>
@@ -341,11 +341,11 @@ function Units() {
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="space-y-1">
                     <p className="text-xs text-gray-500 uppercase tracking-wider">Total Value</p>
-                    <p className="font-bold text-gray-900">{formatCurrency(unit.agreement_value)}</p>
+                    <p className="font-bold text-gray-900">{formatCurrency(unit?.agreement_value)}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-xs text-gray-500 uppercase tracking-wider">Received</p>
-                    <p className="font-bold text-emerald-600">{formatCurrency(unit.total_received)}</p>
+                    <p className="font-bold text-emerald-600">{formatCurrency(unit?.total_received)}</p>
                   </div>
                 </div>
 
@@ -363,16 +363,16 @@ function Units() {
                   </div>
                 </div>
 
-                {unit.customer_name && (
+                {unit?.customer_name && (
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
                         <span className="text-white text-xs font-bold">
-                          {unit.customer_name.split(' ').map(n => n[0]).join('')}
+                          {unit?.customer_name.split(' ').map(n => n[0]).join('')}
                         </span>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{unit.customer_name}</p>
+                        <p className="text-sm font-medium text-gray-900">{unit?.customer_name}</p>
                         <p className="text-xs text-gray-500">Customer</p>
                       </div>
                     </div>
@@ -380,7 +380,7 @@ function Units() {
                   </div>
                 )}
 
-                {!unit.customer_name && (
+                {!unit?.customer_name && (
                   <div className="flex items-center justify-between pt-3 border-t border-gray-100">
                     <span className="text-sm text-gray-500">No customer assigned</span>
                     <ChevronRight className="w-5 h-5 text-gray-400" />
