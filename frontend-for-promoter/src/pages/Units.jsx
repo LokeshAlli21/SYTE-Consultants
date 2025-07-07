@@ -2,23 +2,23 @@ import React, { useEffect, useState, useMemo } from 'react'
 import {
   Building2, CheckCircle, Clock, BookOpen, DollarSign, TrendingUp, AlertCircle,
   Lock, CalendarCheck, Hammer, Ban, Tag, IndianRupee, Search, Filter, 
-  ArrowUpRight, Eye, MoreVertical, ChevronRight, Home, MapPin, X, Menu
+  ArrowUpRight, Eye, MoreVertical, ChevronRight, Home, MapPin, Plus,
+  Grid3X3, List, SlidersHorizontal, X
 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import databaseService from '../backend-services/database/database';
 
 function Units() {
-  const [units, setUnits] = useState([])
+  const [units, setUnits] = useState()
   
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('All')
+  const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
   const [showFilters, setShowFilters] = useState(false)
-  const [selectedUnit, setSelectedUnit] = useState(null)
 
-    const {projectId} = useParams()
-    const navigate = useNavigate()
-
+  const {projectId} = useParams()
+  const navigate = useNavigate()
   
   useEffect(() => {
     // Simulate API call
@@ -40,15 +40,13 @@ function Units() {
   }, [projectId])
   
   const statusOptions = [
-    { value: "All", label: "All Status", icon: "🏠" },
-    { value: "Sold", label: "Sold", icon: "✅" },
-    { value: "Unsold", label: "Unsold", icon: "🟡" },
-    { value: "Booked", label: "Booked", icon: "📝" },
-    { value: "Mortgage", label: "Mortgage", icon: "🏦" },
-    { value: "Reservation", label: "Reservation", icon: "⏳" },
-    { value: "Rehab", label: "Rehab", icon: "🔨" },
-    { value: "Land Owner/Investor Share (Not for Sale)", label: "Land Owner/Investor Share (Not for Sale)", icon: "🔒" },
-    { value: "Land Owner/Investor Share (for Sale)", label: "Land Owner/Investor Share (for Sale)", icon: "🏷️" },
+    { value: "All", label: "All Status", count: 0 },
+    { value: "Sold", label: "Sold", count: 0 },
+    { value: "Unsold", label: "Unsold", count: 0 },
+    { value: "Booked", label: "Booked", count: 0 },
+    { value: "Mortgage", label: "Mortgage", count: 0 },
+    { value: "Reservation", label: "Reservation", count: 0 },
+    { value: "Rehab", label: "Rehab", count: 0 }
   ];
 
   const filteredUnits = useMemo(() => {
@@ -69,84 +67,61 @@ function Units() {
 
     const statusCounts = {};
     statusOptions.forEach(({ value }) => {
-      if (value !== 'All') {
-        statusCounts[value] = units.filter(u => u.unit_status === value).length;
-      }
+      statusCounts[value] = value === 'All' ? totalUnits : units.filter(u => u.unit_status === value).length;
     });
-
-    const availableUnits = statusCounts['Unsold'] || 0;
-    const soldUnits = statusCounts['Sold'] || 0;
-    const bookedUnits = statusCounts['Booked'] || 0;
 
     return {
       totalUnits,
       totalRevenue,
       totalValue,
       balanceAmount,
-      availableUnits,
-      soldUnits,
-      bookedUnits,
       collectionRate: totalValue > 0 ? (totalRevenue / totalValue) * 100 : 0,
-      ...statusCounts
+      statusCounts
     };
   }, [units]);
 
   const statusColors = {
     'Sold': { 
-      bg: 'bg-gradient-to-br from-emerald-500 to-green-600', 
+      bg: 'bg-emerald-500', 
       text: 'text-emerald-700', 
-      light: 'bg-gradient-to-br from-emerald-50 to-green-50',
-      ring: 'ring-emerald-500/20',
+      light: 'bg-emerald-50',
+      border: 'border-emerald-200',
       dot: 'bg-emerald-400'
     },
     'Unsold': { 
-      bg: 'bg-gradient-to-br from-amber-500 to-orange-600', 
-      text: 'text-amber-700', 
-      light: 'bg-gradient-to-br from-amber-50 to-orange-50',
-      ring: 'ring-amber-500/20',
-      dot: 'bg-amber-400'
+      bg: 'bg-orange-500', 
+      text: 'text-orange-700', 
+      light: 'bg-orange-50',
+      border: 'border-orange-200',
+      dot: 'bg-orange-400'
     },
     'Booked': { 
-      bg: 'bg-gradient-to-br from-blue-500 to-indigo-600', 
+      bg: 'bg-blue-500', 
       text: 'text-blue-700', 
-      light: 'bg-gradient-to-br from-blue-50 to-indigo-50',
-      ring: 'ring-blue-500/20',
+      light: 'bg-blue-50',
+      border: 'border-blue-200',
       dot: 'bg-blue-400'
     },
     'Mortgage': { 
-      bg: 'bg-gradient-to-br from-purple-500 to-violet-600', 
+      bg: 'bg-purple-500', 
       text: 'text-purple-700', 
-      light: 'bg-gradient-to-br from-purple-50 to-violet-50',
-      ring: 'ring-purple-500/20',
+      light: 'bg-purple-50',
+      border: 'border-purple-200',
       dot: 'bg-purple-400'
     },
     'Reservation': { 
-      bg: 'bg-gradient-to-br from-cyan-500 to-teal-600', 
-      text: 'text-cyan-700', 
-      light: 'bg-gradient-to-br from-cyan-50 to-teal-50',
-      ring: 'ring-cyan-500/20',
-      dot: 'bg-cyan-400'
+      bg: 'bg-indigo-500', 
+      text: 'text-indigo-700', 
+      light: 'bg-indigo-50',
+      border: 'border-indigo-200',
+      dot: 'bg-indigo-400'
     },
     'Rehab': { 
-      bg: 'bg-gradient-to-br from-orange-500 to-red-600', 
-      text: 'text-orange-700', 
-      light: 'bg-gradient-to-br from-orange-50 to-red-50',
-      ring: 'ring-orange-500/20',
-      dot: 'bg-orange-400'
-    },
-    'Land Owner/Investor Share (Not for Sale)': { 
-      bg: 'bg-gradient-to-br from-gray-500 to-slate-600', 
-      text: 'text-gray-700', 
-      light: 'bg-gradient-to-br from-gray-50 to-slate-50',
-      ring: 'ring-gray-500/20',
-      dot: 'bg-gray-400'
-    },
-    'Land Owner/Investor Share (for Sale)': { 
-      bg: 'bg-gradient-to-br from-teal-500 to-emerald-600', 
-      text: 'text-teal-700', 
-      light: 'bg-gradient-to-br from-teal-50 to-emerald-50',
-      ring: 'ring-teal-500/20',
-      dot: 'bg-teal-400'
+      bg: 'bg-amber-500', 
+      text: 'text-amber-700', 
+      light: 'bg-amber-50',
+      border: 'border-amber-200',
+      dot: 'bg-amber-400'
     }
   };
 
@@ -164,329 +139,263 @@ function Units() {
   };
 
   const handleUnitClick = (unitId) => {
-    const unit = units.find(u => u.id === unitId);
-    setSelectedUnit(unit);
+    console.log('Navigate to unit:', unitId);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-gray-100">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent absolute top-0 left-0"></div>
-        </div>
+      <div className="flex items-center justify-center min-h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-gray-100">
-      <div className="max-w-md mx-auto bg-white min-h-screen">
-        {/* Header */}
-        <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-xl border-b border-gray-100">
-          <div className="px-4 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="relative">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                    <Building2 className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                    <span className="text-xs font-bold text-white">{stats.totalUnits}</span>
-                  </div>
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-gray-900">Units</h1>
-                  <p className="text-sm text-gray-600">Project Overview</p>
-                </div>
+    <div className="w-full space-y-4 pb-6">
+      {/* Header with gradient */}
+      <div className="relative bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-3xl p-6 text-white overflow-hidden">
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="bg-white/20 backdrop-blur-sm p-2.5 rounded-2xl">
+                <Building2 className="w-6 h-6 text-white" />
               </div>
-              <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center hover:bg-gray-100 transition-colors"
-              >
-                <Filter className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="px-4 py-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 border border-blue-100">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold text-gray-900">{formatNumber(stats.totalUnits)}</div>
-                  <div className="text-sm text-gray-600">Total Units</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="flex-1 bg-blue-200 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full" style={{width: '100%'}}></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-6 border border-green-100">
-              <div className="flex items-center justify-between mb-4">
-                <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-white" />
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-gray-900">{formatCurrency(stats.totalRevenue/1000000).replace('₹', '₹')}M</div>
-                  <div className="text-sm text-gray-600">Revenue</div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="flex-1 bg-green-200 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-green-500 to-emerald-600 h-2 rounded-full" style={{width: `${stats.collectionRate}%`}}></div>
-                </div>
-                <span className="text-xs font-medium text-green-600">{stats.collectionRate.toFixed(1)}%</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-purple-50 to-violet-50 rounded-3xl p-6 border border-purple-100">
-            <div className="flex items-center justify-between mb-4">
               <div>
-                <div className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalValue/1000000).replace('₹', '₹')}M</div>
-                <div className="text-sm text-gray-600">Total Portfolio Value</div>
-              </div>
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-2xl flex items-center justify-center">
-                <IndianRupee className="w-6 h-6 text-white" />
+                <h1 className="text-2xl font-bold">Units</h1>
+                <p className="text-white/80 text-sm">Property Management</p>
               </div>
             </div>
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                <span className="text-gray-600">Pending: {formatCurrency(stats.balanceAmount/1000000).replace('₹', '₹')}M</span>
+            <button className="bg-white/20 backdrop-blur-sm p-2.5 rounded-2xl hover:bg-white/30 transition-colors">
+              <Plus className="w-5 h-5 text-white" />
+            </button>
+          </div>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 text-white/80" />
+                <span className="text-xs text-white/80 uppercase tracking-wider">Revenue</span>
               </div>
+              <p className="text-xl font-bold">{formatCurrency(stats.totalRevenue)}</p>
+              <p className="text-xs text-white/60 mt-1">{stats.collectionRate.toFixed(1)}% collected</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Building2 className="w-4 h-4 text-white/80" />
+                <span className="text-xs text-white/80 uppercase tracking-wider">Total Units</span>
+              </div>
+              <p className="text-xl font-bold">{formatNumber(stats.totalUnits)}</p>
+              <p className="text-xs text-white/60 mt-1">{formatCurrency(stats.totalValue)} worth</p>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Quick Status Overview */}
-        <div className="px-4 pb-6">
-          <div className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Overview</h3>
-            <div className="grid grid-cols-3 gap-4">
-              {[
-                { label: 'Sold', value: stats.soldUnits, color: 'emerald' },
-                { label: 'Available', value: stats.availableUnits, color: 'amber' },
-                { label: 'Booked', value: stats.bookedUnits, color: 'blue' }
-              ].map(({ label, value, color }) => (
-                <div key={label} className="text-center">
-                  <div className={`w-12 h-12 bg-gradient-to-br from-${color}-100 to-${color}-200 rounded-2xl flex items-center justify-center mx-auto mb-3`}>
-                    <div className={`w-6 h-6 bg-gradient-to-br from-${color}-500 to-${color}-600 rounded-full`}></div>
+      {/* Status Cards */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { key: 'Sold', icon: CheckCircle, label: 'Sold' },
+          { key: 'Unsold', icon: AlertCircle, label: 'Available' },
+          { key: 'Booked', icon: Clock, label: 'Booked' }
+        ].map(({ key, icon: Icon, label }) => {
+          const count = stats.statusCounts[key] || 0;
+          const colors = statusColors[key];
+          const percentage = stats.totalUnits > 0 ? ((count / stats.totalUnits) * 100).toFixed(0) : 0;
+          
+          return (
+            <div key={key} className={`${colors.light} ${colors.border} border rounded-2xl p-4 relative overflow-hidden`}>
+              <div className="relative z-10">
+                <div className="flex items-center justify-between mb-3">
+                  <div className={`${colors.bg} p-2 rounded-xl`}>
+                    <Icon className="w-4 h-4 text-white" />
                   </div>
-                  <div className="text-xl font-bold text-gray-900">{value}</div>
-                  <div className="text-sm text-gray-600">{label}</div>
+                  <span className={`text-xs font-medium ${colors.text}`}>{percentage}%</span>
                 </div>
-              ))}
+                <div className="space-y-1">
+                  <p className="text-2xl font-bold text-gray-900">{count}</p>
+                  <p className="text-xs text-gray-600">{label}</p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })}
+      </div>
 
-        {/* Search and Filters */}
-        <div className="px-4 pb-6">
-          <div className="relative">
-            <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+      {/* Search and Filter Bar */}
+      <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search units, type, or customer..."
-              className="w-full pl-14 pr-4 py-4 bg-gray-50 border-0 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-200"
+              placeholder="Search units..."
+              className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-2xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white border-0"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`p-3 rounded-2xl transition-colors ${showFilters ? 'bg-blue-500 text-white' : 'bg-gray-50 text-gray-600'}`}
+          >
+            <SlidersHorizontal className="w-5 h-5" />
+          </button>
+        </div>
 
-          {showFilters && (
-            <div className="mt-4 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <h4 className="font-semibold text-gray-900 mb-3">Filter by Status</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {statusOptions.slice(0, 6).map(option => (
+        {showFilters && (
+          <div className="space-y-3 pt-4 border-t border-gray-100">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-gray-700">Filter by Status</span>
+              {statusFilter !== 'All' && (
+                <button
+                  onClick={() => setStatusFilter('All')}
+                  className="text-xs text-blue-600 hover:text-blue-800"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {statusOptions.map(option => {
+                const count = stats.statusCounts[option.value] || 0;
+                const isActive = statusFilter === option.value;
+                const colors = statusColors[option.value];
+                
+                return (
                   <button
                     key={option.value}
                     onClick={() => setStatusFilter(option.value)}
-                    className={`px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
-                      statusFilter === option.value
-                        ? 'bg-blue-500 text-white shadow-lg'
+                    className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
+                      isActive
+                        ? colors?.bg + ' text-white'
                         : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                     }`}
                   >
-                    <span className="mr-2">{option.icon}</span>
-                    {option.label}
+                    {option.label} {count > 0 && `(${count})`}
                   </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Units List */}
-        <div className="px-4 pb-8">
-          <div className="space-y-4">
-            {filteredUnits.length > 0 ? (
-              filteredUnits.map((unit) => {
-                const colors = statusColors[unit.unit_status] || statusColors['Unsold'];
-                
-                return (
-                  <div
-                    key={unit.id}
-                    className="bg-white rounded-3xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-300 active:scale-95"
-                    onClick={() => handleUnitClick(unit.id)}
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center">
-                          <Home className="w-6 h-6 text-gray-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-bold text-gray-900">{unit.unit_name}</h4>
-                          <p className="text-sm text-gray-600">{unit.unit_type} • {unit.carpet_area} sq ft</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className={`px-3 py-1 ${colors.light} ${colors.ring} ring-1 rounded-full`}>
-                          <div className="flex items-center space-x-2">
-                            <div className={`w-2 h-2 ${colors.dot} rounded-full`}></div>
-                            <span className={`text-xs font-medium ${colors.text}`}>
-                              {unit.unit_status === 'Land Owner/Investor Share (Not for Sale)' ? 'Land Share' : unit.unit_status}
-                            </span>
-                          </div>
-                        </div>
-                        <ChevronRight className="w-5 h-5 text-gray-400" />
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="bg-gray-50 rounded-2xl p-3">
-                        <p className="text-xs text-gray-500 mb-1">Total Value</p>
-                        <p className="font-bold text-gray-900">{formatCurrency(unit.agreement_value/1000000).replace('₹', '₹')}M</p>
-                      </div>
-                      <div className="bg-green-50 rounded-2xl p-3">
-                        <p className="text-xs text-gray-500 mb-1">Received</p>
-                        <p className="font-bold text-green-600">{formatCurrency(unit.total_received/1000000).replace('₹', '₹')}M</p>
-                      </div>
-                    </div>
-                    
-                    {unit.balance_amount > 0 && (
-                      <div className="bg-amber-50 rounded-2xl p-3 mb-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-xs text-amber-600 mb-1">Balance Due</p>
-                            <p className="font-bold text-amber-700">{formatCurrency(unit.balance_amount/1000000).replace('₹', '₹')}M</p>
-                          </div>
-                          <div className="w-8 h-8 bg-amber-200 rounded-full flex items-center justify-center">
-                            <AlertCircle className="w-4 h-4 text-amber-600" />
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {unit.customer_name && (
-                      <div className="flex items-center space-x-3 pt-3 border-t border-gray-100">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-xs font-bold text-blue-600">{unit.customer_name.split(' ').map(n => n[0]).join('')}</span>
-                        </div>
-                        <p className="text-sm text-gray-700 font-medium">{unit.customer_name}</p>
-                      </div>
-                    )}
-                  </div>
                 );
-              })
-            ) : (
-              <div className="text-center py-16">
-                <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                  <Building2 className="w-8 h-8 text-gray-400" />
-                </div>
-                <p className="text-gray-500 font-medium">No units found</p>
-                <p className="text-gray-400 text-sm mt-1">Try adjusting your search or filters</p>
-              </div>
-            )}
+              })}
+            </div>
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Unit Detail Modal */}
-        {selectedUnit && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-            <div className="bg-white rounded-t-3xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white p-6 border-b border-gray-100">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-bold text-gray-900">Unit Details</h2>
-                  <button
-                    onClick={() => setSelectedUnit(null)}
-                    className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center"
-                  >
-                    <X className="w-5 h-5 text-gray-600" />
-                  </button>
-                </div>
-              </div>
-              
-              <div className="p-6">
-                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-6 mb-6">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center">
-                      <Home className="w-8 h-8 text-white" />
+      {/* View Mode Toggle */}
+      <div className="flex items-center justify-between">
+        <p className="text-sm text-gray-600">
+          {filteredUnits.length} of {stats.totalUnits} units
+        </p>
+        <div className="flex items-center bg-gray-50 rounded-xl p-1">
+          <button
+            onClick={() => setViewMode('grid')}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'grid' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+            }`}
+          >
+            <Grid3X3 className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => setViewMode('list')}
+            className={`p-2 rounded-lg transition-colors ${
+              viewMode === 'list' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'
+            }`}
+          >
+            <List className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Units List */}
+      <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 gap-4' : 'space-y-3'}`}>
+        {filteredUnits.length > 0 ? (
+          filteredUnits.map((unit) => {
+            const colors = statusColors[unit.unit_status] || statusColors['Unsold'];
+            const completionPercentage = ((unit.total_received / unit.agreement_value) * 100).toFixed(0);
+            
+            return (
+              <div
+                key={unit.id}
+                className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+                onClick={() => handleUnitClick(unit.id)}
+              >
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className={`${colors.light} p-3 rounded-xl`}>
+                      <Home className="w-5 h-5 text-gray-700" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900">{selectedUnit.unit_name}</h3>
-                      <p className="text-gray-600">{selectedUnit.unit_type} • {selectedUnit.carpet_area} sq ft</p>
+                      <h3 className="font-bold text-gray-900">{unit.unit_name}</h3>
+                      <p className="text-sm text-gray-600">{unit.unit_type} • {unit.carpet_area} sq ft</p>
                     </div>
                   </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <div className={`px-4 py-2 ${statusColors[selectedUnit.unit_status]?.light} rounded-full`}>
-                      <span className={`text-sm font-medium ${statusColors[selectedUnit.unit_status]?.text}`}>
-                        {selectedUnit.unit_status}
-                      </span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full ${colors.dot}`}></div>
+                    <span className={`text-xs font-medium px-2 py-1 rounded-lg ${colors.text} ${colors.light}`}>
+                      {unit.unit_status}
+                    </span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <div className="bg-gray-50 rounded-2xl p-4">
-                    <p className="text-sm text-gray-500 mb-2">Agreement Value</p>
-                    <p className="text-xl font-bold text-gray-900">{formatCurrency(selectedUnit.agreement_value)}</p>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-500 uppercase tracking-wider">Total Value</p>
+                    <p className="font-bold text-gray-900">{formatCurrency(unit.agreement_value)}</p>
                   </div>
-                  <div className="bg-green-50 rounded-2xl p-4">
-                    <p className="text-sm text-gray-500 mb-2">Amount Received</p>
-                    <p className="text-xl font-bold text-green-600">{formatCurrency(selectedUnit.total_received)}</p>
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-500 uppercase tracking-wider">Received</p>
+                    <p className="font-bold text-emerald-600">{formatCurrency(unit.total_received)}</p>
                   </div>
                 </div>
 
-                {selectedUnit.balance_amount > 0 && (
-                  <div className="bg-amber-50 rounded-2xl p-4 mb-6">
-                    <p className="text-sm text-gray-500 mb-2">Balance Amount</p>
-                    <p className="text-xl font-bold text-amber-600">{formatCurrency(selectedUnit.balance_amount)}</p>
+                {/* Progress bar */}
+                <div className="mb-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs text-gray-500">Payment Progress</span>
+                    <span className="text-xs font-medium text-gray-700">{completionPercentage}%</span>
                   </div>
-                )}
+                  <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div 
+                      className="bg-emerald-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${Math.min(completionPercentage, 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
 
-                {selectedUnit.customer_name && (
-                  <div className="bg-blue-50 rounded-2xl p-4 mb-6">
-                    <p className="text-sm text-gray-500 mb-2">Customer</p>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-blue-200 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-bold text-blue-600">{selectedUnit.customer_name.split(' ').map(n => n[0]).join('')}</span>
+                {unit.customer_name && (
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-xs font-bold">
+                          {unit.customer_name.split(' ').map(n => n[0]).join('')}
+                        </span>
                       </div>
-                      <p className="text-lg font-semibold text-gray-900">{selectedUnit.customer_name}</p>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{unit.customer_name}</p>
+                        <p className="text-xs text-gray-500">Customer</p>
+                      </div>
                     </div>
+                    <ChevronRight className="w-5 h-5 text-gray-400" />
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <button className="bg-blue-500 text-white py-4 rounded-2xl font-semibold hover:bg-blue-600 transition-colors">
-                    Edit Unit
-                  </button>
-                  <button className="bg-gray-100 text-gray-700 py-4 rounded-2xl font-semibold hover:bg-gray-200 transition-colors">
-                    View History
-                  </button>
-                </div>
+                {!unit.customer_name && (
+                  <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                    <span className="text-sm text-gray-500">No customer assigned</span>
+                    <ChevronRight className="w-5 h-5 text-gray-400" />
+                  </div>
+                )}
               </div>
+            );
+          })
+        ) : (
+          <div className="text-center py-16">
+            <div className="bg-gray-50 rounded-full p-6 w-24 h-24 flex items-center justify-center mx-auto mb-4">
+              <Building2 className="w-12 h-12 text-gray-300" />
             </div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No units found</h3>
+            <p className="text-gray-500 text-sm">Try adjusting your search or filter criteria</p>
           </div>
         )}
       </div>
