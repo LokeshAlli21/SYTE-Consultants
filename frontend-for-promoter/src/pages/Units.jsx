@@ -4,7 +4,7 @@ import {
   Lock, CalendarCheck, Hammer, Ban, Tag, IndianRupee, Search, Filter, 
   ArrowUpRight, Eye, MoreVertical, ChevronRight, Home, MapPin, X, Menu
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import databaseService from '../backend-services/database/database';
 
 function Units() {
