@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { ArrowLeft, Download, Eye, FileText, Calendar, DollarSign, Home, User, MapPin, CheckCircle, XCircle, Clock } from 'lucide-react'
+import { ArrowLeft, Download, Eye, FileText, Calendar, DollarSign, Home, User, MapPin, CheckCircle, XCircle, Clock, TrendingUp, CreditCard, Building } from 'lucide-react'
 import databaseService from '../backend-services/database/database'
 import { useParams } from 'react-router-dom'
 
-
 function ViewProjectUnit() {
   const {id} = useParams()
-  const navigate = () => window.history.back() // Mock navigate function
+  const navigate = () => window.history.back()
 
   const [unit, setUnit] = useState({})
   const [loading, setLoading] = useState(true)
@@ -53,10 +52,10 @@ function ViewProjectUnit() {
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
-      case 'sold': return 'bg-green-100 text-green-800 border-green-200'
-      case 'unsold': return 'bg-red-100 text-red-800 border-red-200'
-      case 'reserved': return 'bg-yellow-100 text-yellow-800 border-yellow-200'
-      default: return 'bg-gray-100 text-gray-800 border-gray-200'
+      case 'sold': return 'bg-gradient-to-r from-green-500 to-emerald-500 text-white'
+      case 'unsold': return 'bg-gradient-to-r from-red-500 to-rose-500 text-white'
+      case 'reserved': return 'bg-gradient-to-r from-amber-500 to-orange-500 text-white'
+      default: return 'bg-gradient-to-r from-gray-500 to-slate-500 text-white'
     }
   }
 
@@ -89,14 +88,14 @@ function ViewProjectUnit() {
       name: 'Agreement for Sale',
       url: unit.afs_uploaded_url,
       icon: FileText,
-      color: 'bg-blue-500',
+      color: 'from-blue-500 to-indigo-500',
       date: unit.agreement_for_sale_date
     },
     {
       name: 'Sale Deed',
       url: unit.sale_deed_uploaded_url,
       icon: FileText,
-      color: 'bg-green-500',
+      color: 'from-green-500 to-emerald-500',
       date: unit.sale_deed_date
     }
   ]
@@ -118,17 +117,18 @@ function ViewProjectUnit() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="bg-white shadow-sm border-b">
-          <div className="px-4 py-4">
-            <div className="h-6 bg-gray-200 rounded animate-pulse"></div>
+      <div className="min-h-screen">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 mb-6">
+          <div className="p-6">
+            <div className="h-8 bg-gradient-to-r from-gray-200 to-gray-300 rounded-xl animate-pulse mb-3"></div>
+            <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse w-1/2"></div>
           </div>
         </div>
-        <div className="p-4 space-y-4">
+        <div className="space-y-4">
           {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
-              <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded animate-pulse w-3/4"></div>
+            <div key={i} className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-6">
+              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse mb-3"></div>
+              <div className="h-4 bg-gradient-to-r from-gray-200 to-gray-300 rounded-lg animate-pulse w-3/4"></div>
             </div>
           ))}
         </div>
@@ -138,13 +138,16 @@ function ViewProjectUnit() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="bg-white rounded-xl p-6 shadow-sm text-center">
-          <XCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-          <p className="text-gray-900 font-medium">{error}</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-8 shadow-2xl border border-white/20 text-center max-w-sm mx-4">
+          <div className="w-20 h-20 bg-gradient-to-r from-red-500 to-rose-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <XCircle className="w-10 h-10 text-white" />
+          </div>
+          <h3 className="text-xl font-bold text-gray-900 mb-2">Oops!</h3>
+          <p className="text-gray-600 mb-6">{error}</p>
           <button
             onClick={() => navigate(-1)}
-            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg font-medium"
+            className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl py-3 px-6 font-semibold hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             Go Back
           </button>
@@ -154,151 +157,164 @@ function ViewProjectUnit() {
   }
 
   return (
-    <div className="min-h-screen ">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b sticky top-0 z-50">
-        <div className="px-4 py-4">
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => navigate(-1)}
-              className="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-700" />
-            </button>
+    <div className="min-h-screen space-y-6">
+      {/* Hero Header */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 p-6 text-white">
+          <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h1 className="text-lg font-semibold text-gray-900">{unit.unit_name}</h1>
-              <p className="text-sm text-gray-500">{unit.unit_type}</p>
+              <h1 className="text-2xl font-bold mb-2">{unit.unit_name}</h1>
+              <div className="flex items-center space-x-2 text-blue-100">
+                <Building className="w-4 h-4" />
+                <span className="text-sm font-medium">{unit.unit_type}</span>
+              </div>
             </div>
-            <div className={`px-3 py-1 rounded-full text-sm font-medium border flex items-center space-x-1 ${getStatusColor(unit.unit_status)}`}>
+            <div className={`px-4 py-2 rounded-full text-sm font-semibold flex items-center space-x-2 ${getStatusColor(unit.unit_status)} shadow-lg`}>
               {getStatusIcon(unit.unit_status)}
               <span>{unit.unit_status}</span>
             </div>
           </div>
         </div>
+        
+        {/* Quick Stats */}
+        <div className="p-6 bg-gradient-to-r from-gray-50 to-white">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <p className="text-2xl font-bold text-gray-900">{unit.carpet_area}</p>
+              <p className="text-sm text-gray-600">Sq Ft</p>
+            </div>
+            <div className="text-center">
+              <p className="text-2xl font-bold text-green-600">{formatCurrency(unit.agreement_value)}</p>
+              <p className="text-sm text-gray-600">Agreement Value</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Documents Section - Prominent placement */}
-      <div className="">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-4 border-b border-gray-100">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-              <FileText className="w-5 h-5 mr-2 text-blue-500" />
-              Documents
-            </h2>
-          </div>
-          <div className="p-4 space-y-3">
-            {documents.map((doc, index) => (
-              <div key={index} className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3 flex-1">
-                    <div className={`w-10 h-10 rounded-lg ${doc.color} flex items-center justify-center`}>
-                      <doc.icon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{doc.name}</h3>
-                      <p className="text-sm text-gray-500">
-                        {doc.date ? formatDate(doc.date) : 'Date not specified'}
-                      </p>
-                    </div>
+      {/* Documents Section */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+        <div className="bg-gradient-to-r from-slate-50 to-blue-50 p-6 border-b border-gray-100">
+          <h2 className="text-xl font-bold text-gray-900 flex items-center">
+            <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
+              <FileText className="w-4 h-4 text-white" />
+            </div>
+            Documents
+          </h2>
+        </div>
+        <div className="p-6 space-y-4">
+          {documents.map((doc, index) => (
+            <div key={index} className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 border border-gray-100 hover:shadow-md transition-all duration-200">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4 flex-1">
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${doc.color} flex items-center justify-center shadow-lg`}>
+                    <doc.icon className="w-6 h-6 text-white" />
                   </div>
-                  <div className="flex items-center space-x-2">
-                    {doc.url ? (
-                      <>
-                        <button
-                          onClick={() => handleDocumentPreview(doc.url, doc.name)}
-                          className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDocumentDownload(doc.url, doc.name)}
-                          className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-                      </>
-                    ) : (
-                      <div className="px-3 py-1 bg-gray-200 text-gray-500 rounded-lg text-sm">
-                        Not Available
-                      </div>
-                    )}
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-gray-900">{doc.name}</h3>
+                    <p className="text-sm text-gray-500 flex items-center">
+                      <Calendar className="w-3 h-3 mr-1" />
+                      {doc.date ? formatDate(doc.date) : 'Date not specified'}
+                    </p>
                   </div>
                 </div>
+                <div className="flex items-center space-x-2">
+                  {doc.url ? (
+                    <>
+                      <button
+                        onClick={() => handleDocumentPreview(doc.url, doc.name)}
+                        className="p-3 bg-gradient-to-r from-blue-500 to-indigo-500 text-white rounded-xl hover:from-blue-600 hover:to-indigo-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        <Eye className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDocumentDownload(doc.url, doc.name)}
+                        className="p-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-xl hover:from-green-600 hover:to-emerald-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+                      >
+                        <Download className="w-4 h-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="px-4 py-2 bg-gradient-to-r from-gray-200 to-gray-300 text-gray-600 rounded-xl text-sm font-medium">
+                      Not Available
+                    </div>
+                  )}
+                </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className=" mb-4">
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="flex">
-            {[
-              { id: 'overview', label: 'Overview', icon: Home },
-              { id: 'financial', label: 'Financial', icon: DollarSign },
-              { id: 'payments', label: 'Payments', icon: Calendar }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex-1 py-3 px-4 text-center font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? 'text-blue-600 border-b-2 border-blue-600'
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                <tab.icon className="w-4 h-4 mx-auto mb-1" />
-                <span className="text-sm">{tab.label}</span>
-              </button>
-            ))}
-          </div>
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+        <div className="flex">
+          {[
+            { id: 'overview', label: 'Overview', icon: Home, color: 'from-blue-500 to-indigo-500' },
+            { id: 'financial', label: 'Financial', icon: TrendingUp, color: 'from-green-500 to-emerald-500' },
+            { id: 'payments', label: 'Payments', icon: CreditCard, color: 'from-purple-500 to-pink-500' }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex-1 py-4 px-4 text-center font-semibold transition-all duration-200 ${
+                activeTab === tab.id
+                  ? `bg-gradient-to-r ${tab.color} text-white shadow-lg`
+                  : 'text-gray-600 hover:bg-gray-50'
+              }`}
+            >
+              <tab.icon className="w-5 h-5 mx-auto mb-2" />
+              <span className="text-sm">{tab.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Content based on active tab */}
-      <div className=" pb-6">
+      <div className="pb-6">
         {activeTab === 'overview' && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                  <Home className="w-5 h-5 mr-2 text-blue-500" />
+          <div className="space-y-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 border-b border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-lg flex items-center justify-center mr-3">
+                    <Home className="w-4 h-4 text-white" />
+                  </div>
                   Unit Details
                 </h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Unit Name</p>
-                    <p className="font-medium text-gray-900">{unit.unit_name}</p>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 gap-6">
+                  <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 border border-gray-100">
+                    <p className="text-sm font-medium text-gray-500 mb-1">Unit Name</p>
+                    <p className="text-lg font-bold text-gray-900">{unit.unit_name}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Unit Type</p>
-                    <p className="font-medium text-gray-900">{unit.unit_type}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Carpet Area</p>
-                    <p className="font-medium text-gray-900">{unit.carpet_area} sq ft</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Status</p>
-                    <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(unit.unit_status)}`}>
-                      {getStatusIcon(unit.unit_status)}
-                      <span className="ml-1">{unit.unit_status}</span>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 border border-gray-100">
+                      <p className="text-sm font-medium text-gray-500 mb-1">Type</p>
+                      <p className="font-semibold text-gray-900">{unit.unit_type}</p>
+                    </div>
+                    <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 border border-gray-100">
+                      <p className="text-sm font-medium text-gray-500 mb-1">Carpet Area</p>
+                      <p className="font-semibold text-gray-900">{unit.carpet_area} sq ft</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                  <User className="w-5 h-5 mr-2 text-green-500" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 border-b border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mr-3">
+                    <User className="w-4 h-4 text-white" />
+                  </div>
                   Customer Information
                 </h3>
-                <div>
-                  <p className="text-sm text-gray-500">Customer Name</p>
-                  <p className="font-medium text-gray-900">{unit.customer_name || 'Not assigned'}</p>
+              </div>
+              <div className="p-6">
+                <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 border border-gray-100">
+                  <p className="text-sm font-medium text-gray-500 mb-1">Customer Name</p>
+                  <p className="text-lg font-bold text-gray-900">{unit.customer_name || 'Not assigned'}</p>
                 </div>
               </div>
             </div>
@@ -306,46 +322,54 @@ function ViewProjectUnit() {
         )}
 
         {activeTab === 'financial' && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                  <DollarSign className="w-5 h-5 mr-2 text-green-500" />
+          <div className="space-y-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 border-b border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-emerald-500 rounded-lg flex items-center justify-center mr-3">
+                    <TrendingUp className="w-4 h-4 text-white" />
+                  </div>
                   Financial Summary
                 </h3>
-                <div className="grid grid-cols-1 gap-4">
-                  <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-                    <p className="text-sm text-blue-700">Agreement Value</p>
-                    <p className="text-xl font-bold text-blue-900">{formatCurrency(unit.agreement_value)}</p>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl p-6 text-white shadow-lg">
+                  <p className="text-blue-100 text-sm font-medium mb-2">Agreement Value</p>
+                  <p className="text-3xl font-bold">{formatCurrency(unit.agreement_value)}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gradient-to-r from-green-500 to-emerald-500 rounded-xl p-4 text-white shadow-lg">
+                    <p className="text-green-100 text-sm font-medium mb-2">Total Received</p>
+                    <p className="text-xl font-bold">{formatCurrency(unit.total_received)}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                      <p className="text-sm text-green-700">Total Received</p>
-                      <p className="text-lg font-bold text-green-900">{formatCurrency(unit.total_received)}</p>
-                    </div>
-                    <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-                      <p className="text-sm text-red-700">Balance Amount</p>
-                      <p className="text-lg font-bold text-red-900">{formatCurrency(unit.balance_amount)}</p>
-                    </div>
+                  <div className="bg-gradient-to-r from-red-500 to-rose-500 rounded-xl p-4 text-white shadow-lg">
+                    <p className="text-red-100 text-sm font-medium mb-2">Balance Amount</p>
+                    <p className="text-xl font-bold">{formatCurrency(unit.balance_amount)}</p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                  <Calendar className="w-5 h-5 mr-2 text-purple-500" />
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 border-b border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                    <Calendar className="w-4 h-4 text-white" />
+                  </div>
                   Important Dates
                 </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center py-2 border-b border-gray-100">
-                    <span className="text-gray-600">Agreement Date</span>
-                    <span className="font-medium">{formatDate(unit.agreement_for_sale_date)}</span>
+              </div>
+              <div className="p-6 space-y-4">
+                <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 border border-gray-100">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-gray-600">Agreement Date</span>
+                    <span className="font-bold text-gray-900">{formatDate(unit.agreement_for_sale_date)}</span>
                   </div>
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-600">Sale Deed Date</span>
-                    <span className="font-medium">{formatDate(unit.sale_deed_date)}</span>
+                </div>
+                <div className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 border border-gray-100">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium text-gray-600">Sale Deed Date</span>
+                    <span className="font-bold text-gray-900">{formatDate(unit.sale_deed_date)}</span>
                   </div>
                 </div>
               </div>
@@ -354,26 +378,39 @@ function ViewProjectUnit() {
         )}
 
         {activeTab === 'payments' && (
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-4 flex items-center">
-                  <Calendar className="w-5 h-5 mr-2 text-purple-500" />
+          <div className="space-y-6">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 border-b border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 flex items-center">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center mr-3">
+                    <CreditCard className="w-4 h-4 text-white" />
+                  </div>
                   Payment History
                 </h3>
+              </div>
+              <div className="p-6">
                 {paymentYears.length > 0 ? (
                   <div className="space-y-3">
                     {paymentYears.map((payment, index) => (
-                      <div key={index} className="flex justify-between items-center py-3 px-4 bg-gray-50 rounded-lg">
-                        <span className="font-medium text-gray-900">FY {payment.year}</span>
-                        <span className="text-lg font-bold text-green-600">{formatCurrency(payment.amount)}</span>
+                      <div key={index} className="bg-gradient-to-r from-gray-50 to-white rounded-xl p-4 border border-gray-100 hover:shadow-md transition-all duration-200">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+                              <span className="text-white font-bold text-sm">{payment.year.split('-')[0].slice(-2)}</span>
+                            </div>
+                            <span className="font-semibold text-gray-900">FY {payment.year}</span>
+                          </div>
+                          <span className="text-xl font-bold text-green-600">{formatCurrency(payment.amount)}</span>
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <Calendar className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                    <p>No payment history available</p>
+                  <div className="text-center py-12">
+                    <div className="w-20 h-20 bg-gradient-to-r from-gray-200 to-gray-300 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CreditCard className="w-10 h-10 text-gray-400" />
+                    </div>
+                    <p className="text-gray-500 font-medium">No payment history available</p>
                   </div>
                 )}
               </div>
