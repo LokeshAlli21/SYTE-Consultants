@@ -127,26 +127,19 @@ function Units() {
   return (
     <div className="w-full max-w-full min-w-0 overflow-x-hidden space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen p-8">
-      <div className="relative bg-white/90 backdrop-blur-md rounded-3xl shadow-md border border-white/30 p-8 max-w-4xl mx-auto hover:shadow-3xl transition-all duration-300 hover:scale-[1.02] overflow-hidden">
-        {/* Subtle gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/20 via-transparent to-indigo-50/20 pointer-events-none"></div>
-        
-        <div className="relative flex items-center justify-between mb-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-800 via-blue-700 to-indigo-700 bg-clip-text text-transparent break-words drop-shadow-sm">
-              Units Overview
-            </h1>
-            <p className="text-slate-600 mt-2 text-lg font-medium">Manage and track all project units</p>
+            <h1 className="text-2xl font-bold text-gray-900 break-words">Units Overview</h1>
+            <p className="text-gray-600 mt-1">Manage and track all project units</p>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 p-4 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-              <Building2 className="w-8 h-8 text-white drop-shadow-sm" />
+            <div className="bg-blue-50 p-2 rounded-xl">
+              <Building2 className="w-6 h-6 text-blue-600" />
             </div>
           </div>
         </div>
       </div>
-    </div>
 
       {/* Key Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
