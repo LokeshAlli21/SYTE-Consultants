@@ -152,7 +152,7 @@ function Units() {
   };
 
   const handleUnitClick = (unitId) => {
-    console.log('Navigate to unit:', unitId);
+    navigate(`../units/unit/${unitId}`);
   };
 
   if (loading) {
@@ -179,9 +179,9 @@ function Units() {
                 <p className="text-white/80 text-sm">Property Management</p>
               </div>
             </div>
-            <button className="bg-white/20 backdrop-blur-sm p-2.5 rounded-2xl hover:bg-white/30 transition-colors">
+            {/* <button className="bg-white/20 backdrop-blur-sm p-2.5 rounded-2xl hover:bg-white/30 transition-colors">
               <Plus className="w-5 h-5 text-white" />
-            </button>
+            </button> */}
           </div>
           
           {/* Quick Stats */}
@@ -283,7 +283,7 @@ function Units() {
                     className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                       isActive
                         ? colors?.bg + ' text-white'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
+                        : 'bg-gray-700 text-gray-700 hover:bg-gray-100'
                     }`}
                   >
                     {option.label} {count > 0 && `(${count})`}
@@ -296,7 +296,7 @@ function Units() {
       </div>
 
       {/* View Mode Toggle */}
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <p className="text-sm text-gray-600">
           {filteredUnits.length} of {stats.totalUnits} units
         </p>
@@ -318,7 +318,7 @@ function Units() {
             <List className="w-4 h-4" />
           </button>
         </div>
-      </div>
+      </div> */}
 
       {/* Units List */}
       <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 gap-4' : 'space-y-3'}`}>
