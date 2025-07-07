@@ -219,7 +219,7 @@ async getProjectProgress(id) {
     }
 
     const data = await this.handleResponse(response);
-    console.log("Fetched project progress:", data);
+    // console.log("Fetched project progress:", data);
     return data;
   } catch (err) {
     console.error("❌ Error fetching project Progress:", err);
