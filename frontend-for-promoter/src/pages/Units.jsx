@@ -5,10 +5,11 @@ import {
   ArrowUpRight, Eye, MoreVertical, ChevronRight, Home, MapPin
 } from 'lucide-react';
 import databaseService from '../backend-services/database/database';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 
 function Units() {
   const {projectId} = useParams()
+  const navigate = useNavigate()
   
   const [units, setUnits] = useState([])
   const [loading, setLoading] = useState(true)
@@ -112,8 +113,7 @@ function Units() {
   };
 
   const handleUnitClick = (unitId) => {
-    console.log(`Navigate to unit ${unitId}`)
-    // In your actual app: navigate(`/unit/${unitId}`);
+    navigate(`/unit/${unitId}`);
   };
 
   if (loading) {
