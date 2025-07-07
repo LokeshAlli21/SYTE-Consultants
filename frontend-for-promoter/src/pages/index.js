@@ -1,4 +1,3 @@
-import Dashboard from "./Dashboard";
 import Projects from "./Projects";
 import ViewProject from "./ViewProject";
 import ViewProjectUnit from "./ViewProjectUnit";
@@ -9,7 +8,6 @@ import Documents from "./Documents";
 import Progress from "./Progress";
 
 export {
-  Dashboard,
   Projects,
   ViewProject,
   ViewProjectUnit,

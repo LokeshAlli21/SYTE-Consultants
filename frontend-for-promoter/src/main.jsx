@@ -11,7 +11,6 @@ import { Provider } from "react-redux"
 
 
 import {
-  Dashboard,
   Projects,
   ViewProject,
   ViewProjectUnit,
@@ -31,7 +30,7 @@ const router = createBrowserRouter([
         index: true,  // This handles the root path /promoter/
         element:
         <AuthLayout authentication>
-           <Dashboard />
+           <Projects />
          </AuthLayout>,
       },
       {
@@ -40,13 +39,6 @@ const router = createBrowserRouter([
         <AuthLayout authentication={false}>
           <Login />
          </AuthLayout>,
-      },
-      {
-        path: "projects",
-        element: 
-        <AuthLayout authentication>
-          <Projects />
-         </AuthLayout>, 
       },
       {
         path: "project/:id",
