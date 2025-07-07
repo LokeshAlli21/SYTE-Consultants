@@ -283,7 +283,7 @@ function Units() {
                     className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                       isActive
                         ? colors?.bg + ' text-white'
-                        : 'bg-gray-700 text-gray-700 hover:bg-gray-100'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-700'
                     }`}
                   >
                     {option.label} {count > 0 && `(${count})`}
