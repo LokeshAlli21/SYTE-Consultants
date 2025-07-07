@@ -27,7 +27,7 @@ function Progress() {
     }
 
     fetchProjectProgress()
-  }, [projectId])
+  }, [id])
 
   return (
     <div>Progress</div>
