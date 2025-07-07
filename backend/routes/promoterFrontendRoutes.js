@@ -4,7 +4,8 @@ import { getChannelPartnerByPromoterId,
     getPromoterProjects,
     getProjectById,
     getProjectDocuments,
-    getProjectUnits
+    getProjectUnits,
+    getProjectUnitById,
 } from '../controllers/promoterFrontendController.js';
 import { upload } from '../aws/awsClient.js'; 
 
@@ -19,5 +20,7 @@ router.get('/get-project/:projectId', protectPromoter, getProjectById);
 router.get('/get-project-documents/:projectId', protectPromoter, getProjectDocuments);
 
 router.get('/get-project-units/:projectId', protectPromoter, getProjectUnits);
+
+router.get('/get-project-unit/:id', protectPromoter, getProjectUnitById);
 
 export default router;

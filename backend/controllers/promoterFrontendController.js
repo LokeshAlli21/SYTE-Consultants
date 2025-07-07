@@ -264,3 +264,84 @@ export const getProjectUnits = async (req, res) => {
     });
   }
 };
+
+export const getProjectUnitById = async (req, res) => {
+  const { id } = req.params;
+
+  if (!id || isNaN(id)) {
+    return res.status(400).json({
+      message: 'Invalid unit ID. ID must be a valid number.'
+    });
+  }
+
+  try {
+    const client = await getClient();
+    const queryText = `
+      SELECT * FROM project_units 
+      WHERE id = $1 AND status_for_delete = 'active';
+    `;
+
+    const result = await client.query(queryText, [parseInt(id)]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        message: 'No project unit found with this ID.'
+      });
+    }
+
+    const unit = result.rows[0] || {};
+
+    const unitData = {
+      id: unit?.id || '',
+      project_id: unit?.project_id  || '',
+      unit_name: unit?.unit_name || '',
+      unit_type: unit?.unit_type || '',
+      carpet_area: unit?.carpet_area || '',
+      unit_status: unit?.unit_status || '',
+      customer_name: unit?.customer_name || '',
+      agreement_value: unit?.agreement_value || '',
+      agreement_for_sale_date: unit?.agreement_for_sale_date || '',
+      sale_deed_date: unit?.sale_deed_date || '',
+
+      // Financial Years
+      received_fy_2018_19: unit?.received_fy_2018_19 || '',
+      received_fy_2019_20: unit?.received_fy_2019_20 || '',
+      received_fy_2020_21: unit?.received_fy_2020_21 || '',
+      received_fy_2021_22: unit?.received_fy_2021_22 || '',
+      received_fy_2022_23: unit?.received_fy_2022_23 || '',
+      received_fy_2023_24: unit?.received_fy_2023_24 || '',
+      received_fy_2024_25: unit?.received_fy_2024_25 || '',
+      received_fy_2025_26: unit?.received_fy_2025_26 || '',
+      received_fy_2026_27: unit?.received_fy_2026_27 || '',
+      received_fy_2027_28: unit?.received_fy_2027_28 || '',
+      received_fy_2028_29: unit?.received_fy_2028_29 || '',
+      received_fy_2029_30: unit?.received_fy_2029_30 || '',
+
+      // Totals
+      total_received: unit?.total_received || '',
+      balance_amount: unit?.balance_amount || '',
+
+      // Files
+      afs_uploaded_url: unit?.afs_uploaded_url ? getSignedUrl(unit?.afs_uploaded_url) : null,
+      sale_deed_uploaded_url: unit?.sale_deed_uploaded_url ? getSignedUrl(unit?.sale_deed_uploaded_url) : null,
+
+      // Audit
+      created_at: unit?.created_at || '',
+      updated_at: unit?.updated_at || '',
+      created_by: unit?.created_by || '',
+      updated_by: unit?.updated_by || '',
+      update_action: unit?.update_action
+    };
+
+    return res.status(200).json({
+      success: true,
+      unit: unitData
+    });
+
+  } catch (error) {
+    console.error('❌ Error fetching project unit:', error);
+    return res.status(500).json({
+      message: 'Internal server error while fetching project unit?.'
+    });
+  }
+};
