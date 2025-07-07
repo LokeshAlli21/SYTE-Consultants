@@ -63,7 +63,7 @@ const router = createBrowserRouter([
          </AuthLayout>,
       },
       {
-        path: "units/:id",
+        path: "units/:projectId",
         element: 
         <AuthLayout authentication>
           <Units />

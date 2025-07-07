@@ -149,6 +149,33 @@ async getProjectDocuments(projectId) {
 
 }
 
+async getProjectUnits(projectId) {
+  try {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/for-promoter-frontend/get-project-units/${projectId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders()
+    });
+
+    if (response.status === 404) {
+      console.warn("No units found for project ID:", projectId);
+      return { units: [] }; // Return empty array if no units found
+    }
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.message || "Fetching project units failed.");
+    }
+
+    const data = await this.handleResponse(response);
+    // console.log("Fetched project units:", data);
+    return data.units;
+  } catch (err) {
+    console.error("❌ Error fetching project units:", err);
+    throw err;
+  }
+}
+
+
 }
 
 const databaseService = new DatabaseService();

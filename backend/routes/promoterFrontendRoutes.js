@@ -3,7 +3,8 @@ import { protectPromoter } from '../middlewares/protect.js';
 import { getChannelPartnerByPromoterId,
     getPromoterProjects,
     getProjectById,
-    getProjectDocuments
+    getProjectDocuments,
+    getProjectUnits
 } from '../controllers/promoterFrontendController.js';
 import { upload } from '../aws/awsClient.js'; 
 
@@ -16,5 +17,7 @@ router.get('/get-projects-by-promoter/:promoterId', protectPromoter, getPromoter
 router.get('/get-project/:projectId', protectPromoter, getProjectById);
 
 router.get('/get-project-documents/:projectId', protectPromoter, getProjectDocuments);
+
+router.get('/get-project-units/:projectId', protectPromoter, getProjectUnits);
 
 export default router;

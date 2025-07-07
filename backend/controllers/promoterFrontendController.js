@@ -223,3 +223,44 @@ export const getProjectDocuments = async (req, res) => {
     });
   }
 };
+
+export const getProjectUnits = async (req, res) => {
+  const { projectId } = req.params;
+
+  if (!projectId || isNaN(projectId)) {
+    return res.status(400).json({ 
+      message: 'Invalid project ID. Project ID must be a valid number.' 
+    });
+  }
+
+  try {
+    const client = await getClient();
+    const queryText = `
+      SELECT id, project_id, unit_name, unit_type, carpet_area, unit_status, customer_name,
+             agreement_value, total_received, balance_amount, created_at, updated_at
+      FROM project_units
+      WHERE project_id = $1 AND status_for_delete = 'active'
+    `;
+    
+    const result = await client.query(queryText, [parseInt(projectId)]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ 
+        message: 'No units found for this project.' 
+      });
+    }
+
+    const units = result.rows
+
+    return res.status(200).json({ 
+      success: true,
+      units
+    });
+
+  } catch (error) {
+    console.error('Error fetching project units:', error);
+    return res.status(500).json({ 
+      message: 'Internal server error while fetching project units.' 
+    });
+  }
+};
