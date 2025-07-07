@@ -125,7 +125,7 @@ function Units() {
   }
 
   return (
-    <div className="space-y-6 max-w-[95%] mx-auto ">
+    <div className="space-y-6 w-full max-w-full min-w-0 overflow-x-hidden">
       {/* Header */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
         <div className="flex items-center justify-between mb-4">
