@@ -1,40 +1,28 @@
-import React, { useEffect, useState,useMemo } from 'react'
-import { useParams } from 'react-router-dom'
-import databaseService from '../backend-services/database/database'
+import React, { useEffect, useState, useMemo } from 'react'
 import {
   Building2, CheckCircle, Clock, BookOpen, DollarSign, TrendingUp, AlertCircle,
-  Lock, CalendarCheck, Hammer, Ban, Tag,IndianRupee
+  Lock, CalendarCheck, Hammer, Ban, Tag, IndianRupee, Search, Filter, 
+  ArrowUpRight, Eye, MoreVertical, ChevronRight, Home, MapPin
 } from 'lucide-react';
+import databaseService from '../backend-services/database/database';
+import { useParams } from 'react-router-dom';
 
 function Units() {
-
   const {projectId} = useParams()
-
+  
   const [units, setUnits] = useState([])
   const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState('All')
+  const [showFilters, setShowFilters] = useState(false)
   
   useEffect(() => {
-    // Simulate API call with mock data
+    // Simulate API call
     const fetchProjectUnits = async () => {
       try {
         setLoading(true)
+        // Replace with actual API call
         const result = await databaseService.getProjectUnits(projectId)
-        console.log('fetched units: ', result) /* fetched units: [
-                                                    {
-                                                        "id": 2,
-                                                        "project_id": 10,
-                                                        "unit_name": "Shop 01",
-                                                        "unit_type": "Shops",
-                                                        "carpet_area": "50.50",
-                                                        "unit_status": "Unsold",
-                                                        "customer_name": "sohel Shaikh",
-                                                        "agreement_value": "5000.00",
-                                                        "total_received": "1500.00",
-                                                        "balance_amount": "3500.00",
-                                                        "created_at": "2025-06-28T13:09:03.758Z",
-                                                        "updated_at": "2025-06-28T13:09:03.758Z"
-                                                    }
-                                                ] */
         setUnits(result)
       } catch (error) {
         console.error("Error fetching units:", error)
@@ -47,101 +35,71 @@ function Units() {
     fetchProjectUnits()
   }, [projectId])
 
-    const statusOptions = [
+  const statusOptions = [
+    { value: "All", label: "All Status" },
     { value: "Sold", label: "Sold" },
     { value: "Unsold", label: "Unsold" },
     { value: "Booked", label: "Booked" },
     { value: "Mortgage", label: "Mortgage" },
     { value: "Reservation", label: "Reservation" },
     { value: "Rehab", label: "Rehab" },
-    {
-      value: "Land Owner/Investor Share (Not for Sale)",
-      label: "Land Owner/Investor Share (Not for Sale)",
-    },
-    {
-      value: "Land Owner/Investor Share (for Sale)",
-      label: "Land Owner/Investor Share (for Sale)",
-    },
+    { value: "Land Owner/Investor Share (Not for Sale)", label: "Land Owner/Investor Share (Not for Sale)" },
+    { value: "Land Owner/Investor Share (for Sale)", label: "Land Owner/Investor Share (for Sale)" },
   ];
 
-const stats = useMemo(() => {
-  const totalUnits = units.length;
-  const totalRevenue = units.reduce((sum, u) => sum + (parseFloat(u.total_received) || 0), 0);
-  const totalValue = units.reduce((sum, u) => sum + (parseFloat(u.agreement_value) || 0), 0);
-  const balanceAmount = units.reduce((sum, u) => sum + (parseFloat(u.balance_amount) || 0), 0);
+  const filteredUnits = useMemo(() => {
+    return units.filter(unit => {
+      const matchesSearch = unit.unit_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           unit.unit_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           (unit.customer_name && unit.customer_name.toLowerCase().includes(searchTerm.toLowerCase()));
+      const matchesStatus = statusFilter === 'All' || unit.unit_status === statusFilter;
+      return matchesSearch && matchesStatus;
+    });
+  }, [units, searchTerm, statusFilter]);
 
-  const statusCounts = {};
-  statusOptions.forEach(({ value }) => {
-    statusCounts[value] = units.filter(u => u.unit_status === value).length;
-  });
+  const stats = useMemo(() => {
+    const totalUnits = units.length;
+    const totalRevenue = units.reduce((sum, u) => sum + (parseFloat(u.total_received) || 0), 0);
+    const totalValue = units.reduce((sum, u) => sum + (parseFloat(u.agreement_value) || 0), 0);
+    const balanceAmount = units.reduce((sum, u) => sum + (parseFloat(u.balance_amount) || 0), 0);
 
-  // Calculate availableUnits: a combination of Available/Unsold
-  const availableUnits = statusCounts['Unsold'] || 0;
+    const statusCounts = {};
+    statusOptions.forEach(({ value }) => {
+      if (value !== 'All') {
+        statusCounts[value] = units.filter(u => u.unit_status === value).length;
+      }
+    });
 
-  return {
-    totalUnits,
-    totalRevenue,
-    totalValue,
-    balanceAmount,
-    ...statusCounts,
-    availableUnits
+    const availableUnits = statusCounts['Unsold'] || 0;
+    const soldUnits = statusCounts['Sold'] || 0;
+    const bookedUnits = statusCounts['Booked'] || 0;
+
+    return {
+      totalUnits,
+      totalRevenue,
+      totalValue,
+      balanceAmount,
+      availableUnits,
+      soldUnits,
+      bookedUnits,
+      collectionRate: totalValue > 0 ? (totalRevenue / totalValue) * 100 : 0,
+      ...statusCounts
+    };
+  }, [units]);
+
+  const statusColors = {
+    'Sold': { bg: 'bg-green-500', text: 'text-green-700', light: 'bg-green-50' },
+    'Unsold': { bg: 'bg-amber-500', text: 'text-amber-700', light: 'bg-amber-50' },
+    'Booked': { bg: 'bg-blue-500', text: 'text-blue-700', light: 'bg-blue-50' },
+    'Mortgage': { bg: 'bg-purple-500', text: 'text-purple-700', light: 'bg-purple-50' },
+    'Reservation': { bg: 'bg-indigo-500', text: 'text-indigo-700', light: 'bg-indigo-50' },
+    'Rehab': { bg: 'bg-orange-500', text: 'text-orange-700', light: 'bg-orange-50' },
+    'Land Owner/Investor Share (Not for Sale)': { bg: 'bg-gray-500', text: 'text-gray-700', light: 'bg-gray-50' },
+    'Land Owner/Investor Share (for Sale)': { bg: 'bg-teal-500', text: 'text-teal-700', light: 'bg-teal-50' }
   };
-}, [units]);
-
-
-const statusCardStyles = {
-  Sold: {
-    icon: CheckCircle,
-    color: 'text-green-700',
-    bgGradient: 'from-green-50 to-green-100',
-    iconBg: 'bg-green-500'
-  },
-  Unsold: {
-    icon: Clock,
-    color: 'text-amber-700',
-    bgGradient: 'from-amber-50 to-amber-100',
-    iconBg: 'bg-amber-500'
-  },
-  Booked: {
-    icon: BookOpen,
-    color: 'text-indigo-700',
-    bgGradient: 'from-indigo-50 to-indigo-100',
-    iconBg: 'bg-indigo-500'
-  },
-  Mortgage: {
-    icon: Lock,
-    color: 'text-yellow-700',
-    bgGradient: 'from-yellow-50 to-yellow-100',
-    iconBg: 'bg-yellow-500'
-  },
-  Reservation: {
-    icon: CalendarCheck,
-    color: 'text-blue-700',
-    bgGradient: 'from-blue-50 to-blue-100',
-    iconBg: 'bg-blue-500'
-  },
-  Rehab: {
-    icon: Hammer,
-    color: 'text-orange-700',
-    bgGradient: 'from-orange-50 to-orange-100',
-    iconBg: 'bg-orange-500'
-  },
-  "Land Owner/Investor Share (Not for Sale)": {
-    icon: Ban,
-    color: 'text-gray-700',
-    bgGradient: 'from-gray-50 to-gray-100',
-    iconBg: 'bg-gray-500'
-  },
-  "Land Owner/Investor Share (for Sale)": {
-    icon: Tag,
-    color: 'text-teal-700',
-    bgGradient: 'from-teal-50 to-teal-100',
-    iconBg: 'bg-teal-500'
-  },
-};
 
   const formatCurrency = (value) => {
-    if (!value) return 'NA';
+    if (!value || value === 0) return '₹0';
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency: 'INR',
@@ -153,168 +111,213 @@ const statusCardStyles = {
     return new Intl.NumberFormat('en-IN').format(num);
   };
 
-  const getPercentage = (value, total) => {
-    return ((value / total) * 100).toFixed(1);
+  const handleUnitClick = (unitId) => {
+    console.log(`Navigate to unit ${unitId}`)
+    // In your actual app: navigate(`/unit/${unitId}`);
   };
 
-const cardData = [
-  {
-    title: 'Total Units',
-    value: formatNumber(stats.totalUnits),
-    icon: Building2,
-    color: 'blue',
-    bgGradient: 'from-blue-50 to-blue-100',
-    iconBg: 'bg-blue-500',
-    textColor: 'text-blue-700',
-    subtitle: 'Unites listed'
-  },
-  {
-    title: 'Total Value',
-    value: formatCurrency(stats.totalValue),
-    icon: IndianRupee,
-    color: 'purple',
-    bgGradient: 'from-purple-50 to-purple-100',
-    iconBg: 'bg-purple-500',
-    textColor: 'text-purple-700',
-    subtitle: 'Total worth',
-    isLarge: true
-  },
-  {
-    title: 'Revenue',
-    value: formatCurrency(stats.totalRevenue),
-    icon: TrendingUp,
-    color: 'emerald',
-    bgGradient: 'from-emerald-50 to-emerald-100',
-    iconBg: 'bg-emerald-500',
-    textColor: 'text-emerald-700',
-    subtitle: 'Total Amount received',
-    trend: '+15%',
-    isLarge: true
-  },
-  {
-    title: 'Balance Due',
-    value: formatCurrency(stats.balanceAmount),
-    icon: AlertCircle,
-    color: 'rose',
-    bgGradient: 'from-rose-50 to-rose-100',
-    iconBg: 'bg-rose-500',
-    textColor: 'text-rose-700',
-    subtitle: 'Pending amount',
-    isLarge: true
-  },
-  {
-    title: 'Unsold',
-    value: formatNumber(stats.availableUnits),
-    icon: Clock,
-    color: 'amber',
-    bgGradient: 'from-amber-50 to-amber-100',
-    iconBg: 'bg-amber-500',
-    textColor: 'text-amber-700',
-    subtitle: `${getPercentage(stats.availableUnits, stats.totalUnits)}% Unsold`
-  },
-  // Dynamically add status cards
-  ...statusOptions.map(({ value: status }) => {
-    const count = stats[status] || 0;
-    const style = statusCardStyles[status] || {};
-    return {
-      title: status,
-      value: formatNumber(count),
-      icon: style.icon || AlertCircle,
-      color: style.color || 'slate',
-      bgGradient: `${style.bgGradient}`,
-      iconBg: `${style.iconBg || 'slate'}`,
-      textColor: `text-${style.bg || 'slate'}-700`,
-      subtitle: `${getPercentage(count, stats.totalUnits)}% of total`
-    };
-  })
-];
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
-    <div>
-
-      <div className="flex max-w-6xl gap-4 overflow-x-scroll py-4 mb-2 mx-auto" style={{
-    scrollbarWidth: 'none',        // Firefox
-    msOverflowStyle: 'none'        // IE 10+
-  }}>
-      {cardData.map((card, index) => (
-        <div
-          key={index}
-          className={`
-            min-w-[200px] w-fit max-w-[400px] flex-shrink-0
-            group relative overflow-hidden rounded-2xl shadow-sm border border-gray-200/50 
-            bg-gradient-to-br ${card.bgGradient} backdrop-blur-sm
-            hover:shadow-lg hover:shadow-${card.color}-500/10 hover:-translate-y-1 
-            transition-all duration-300 cursor-pointer
-            ${card.isLarge ? 'md:col-span-1' : ''}
-          `}
-        >
-          {/* Subtle background pattern */}
-          <div className="absolute inset-0 opacity-5">
-            <div className="absolute inset-0 bg-grid-pattern"></div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Units Overview</h1>
+            <p className="text-gray-600 mt-1">Manage and track all project units</p>
           </div>
-          
-          <div className="relative p-5">
-            <div className="flex items-start justify-between mb-3">
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-1">
-                  {card.title}
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <p className={`text-2xl font-bold ${card.textColor} group-hover:scale-105 transition-transform duration-200`}>
-                    {card.value}
-                  </p>
-                  {card.trend && (
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white/50 text-green-700">
-                      ↗ {card.trend}
-                    </span>
+          <div className="flex items-center gap-2">
+            <div className="bg-blue-50 p-2 rounded-xl">
+              <Building2 className="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Key Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="bg-blue-50 p-2 rounded-xl">
+              <Building2 className="w-5 h-5 text-blue-600" />
+            </div>
+            <span className="text-sm font-medium text-gray-500">Total</span>
+          </div>
+          <div className="space-y-1">
+            <p className="text-2xl font-bold text-gray-900">{formatNumber(stats.totalUnits)}</p>
+            <p className="text-sm text-gray-600">Units</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="bg-green-50 p-2 rounded-xl">
+              <TrendingUp className="w-5 h-5 text-green-600" />
+            </div>
+            <span className="text-sm font-medium text-green-600">
+              {stats.collectionRate.toFixed(1)}%
+            </span>
+          </div>
+          <div className="space-y-1">
+            <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
+            <p className="text-sm text-gray-600">Revenue</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="bg-purple-50 p-2 rounded-xl">
+              <IndianRupee className="w-5 h-5 text-purple-600" />
+            </div>
+            <span className="text-sm font-medium text-gray-500">Total Worth</span>
+          </div>
+          <div className="space-y-1">
+            <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalValue)}</p>
+            <p className="text-sm text-gray-600">Value</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="bg-amber-50 p-2 rounded-xl">
+              <AlertCircle className="w-5 h-5 text-amber-600" />
+            </div>
+            <span className="text-sm font-medium text-amber-600">Pending</span>
+          </div>
+          <div className="space-y-1">
+            <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.balanceAmount)}</p>
+            <p className="text-sm text-gray-600">Balance</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Overview */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Distribution</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {Object.entries(stats).filter(([key]) => 
+            ['soldUnits', 'availableUnits', 'bookedUnits'].includes(key)
+          ).map(([key, value]) => {
+            const statusName = key === 'soldUnits' ? 'Sold' : key === 'availableUnits' ? 'Unsold' : 'Booked';
+            const colors = statusColors[statusName];
+            const percentage = ((value / stats.totalUnits) * 100).toFixed(1);
+            
+            return (
+              <div key={key} className="text-center">
+                <div className={`${colors.light} rounded-xl p-4 mb-2`}>
+                  <div className={`w-3 h-3 ${colors.bg} rounded-full mx-auto mb-2`}></div>
+                  <p className="text-xl font-bold text-gray-900">{value}</p>
+                  <p className="text-sm text-gray-600">{statusName}</p>
+                </div>
+                <p className="text-xs text-gray-500">{percentage}% of total</p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Search and Filter */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder="Search units, type, or customer..."
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <div className="flex gap-2">
+            <select
+              className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+            >
+              {statusOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Units List */}
+        <div className="space-y-4">
+          {filteredUnits.length > 0 ? (
+            filteredUnits.map((unit) => {
+              const colors = statusColors[unit.unit_status] || statusColors['Unsold'];
+              
+              return (
+                <div
+                  key={unit.id}
+                  className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-blue-200"
+                  onClick={() => handleUnitClick(unit.id)}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="bg-gray-50 p-2 rounded-lg">
+                        <Home className="w-5 h-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold text-gray-900">{unit.unit_name}</h4>
+                        <p className="text-sm text-gray-600">{unit.unit_type}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${colors.text} ${colors.light}`}>
+                        {unit.unit_status}
+                      </span>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+                    <div>
+                      <p className="text-gray-500">Area</p>
+                      <p className="font-medium text-gray-900">{unit.carpet_area} sq ft</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Value</p>
+                      <p className="font-medium text-gray-900">{formatCurrency(unit.agreement_value)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Received</p>
+                      <p className="font-medium text-green-600">{formatCurrency(unit.total_received)}</p>
+                    </div>
+                    <div>
+                      <p className="text-gray-500">Balance</p>
+                      <p className="font-medium text-amber-600">{formatCurrency(unit.balance_amount)}</p>
+                    </div>
+                  </div>
+                  
+                  {unit.customer_name && (
+                    <div className="mt-3 pt-3 border-t border-gray-100">
+                      <p className="text-sm text-gray-600">
+                        <span className="font-medium">Customer:</span> {unit.customer_name}
+                      </p>
+                    </div>
                   )}
                 </div>
-              </div>
-              
-              <div className={`
-                ${card.iconBg} p-3 rounded-xl shadow-sm
-                group-hover:scale-110 group-hover:rotate-3 
-                transition-all duration-300
-              `}>
-                <card.icon className="w-5 h-5 text-white" />
-              </div>
+              );
+            })
+          ) : (
+            <div className="text-center py-12">
+              <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">No units found matching your criteria</p>
             </div>
-            
-            {card.subtitle && (
-              <p className="text-xs text-gray-600 font-medium">
-                {card.subtitle}
-              </p>
-            )}
-            
-            {/* Progress bar for percentage-based cards */}
-            {(card.title === 'Sold' || card.title === 'Available' || card.title === 'Booked') && (
-              <div className="mt-3">
-                <div className="w-full bg-white/60 rounded-full h-1.5">
-                  <div 
-                    className={`h-1.5 rounded-full bg-gradient-to-r ${
-                      card.color === 'green' ? 'from-green-400 to-green-600' :
-                      card.color === 'amber' ? 'from-amber-400 to-amber-600' :
-                      'from-indigo-400 to-indigo-600'
-                    } transition-all duration-1000`}
-                    style={{
-                      width: `${
-                        card.title === 'Sold' ? getPercentage(stats.soldUnits, stats.totalUnits) :
-                        card.title === 'Available' ? getPercentage(stats.availableUnits, stats.totalUnits) :
-                        getPercentage(stats.bookedUnits, stats.totalUnits)
-                      }%`
-                    }}
-                  ></div>
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Hover effect overlay */}
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+          )}
         </div>
-      ))}
-    </div>
-
+      </div>
     </div>
   )
 }
