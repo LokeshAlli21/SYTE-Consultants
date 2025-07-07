@@ -125,83 +125,83 @@ function Units() {
   }
 
   return (
-    <div className="space-y-6 w-full max-w-full min-w-0 overflow-x-hidden">
+    <div className="w-full max-w-full min-w-0 overflow-x-hidden space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Units Overview</h1>
-            <p className="text-gray-600 mt-1">Manage and track all project units</p>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">Units Overview</h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage and track all project units</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <div className="bg-blue-50 p-2 rounded-xl">
-              <Building2 className="w-6 h-6 text-blue-600" />
+              <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Key Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 min-w-0">
           <div className="flex items-center justify-between mb-3">
-            <div className="bg-blue-50 p-2 rounded-xl">
-              <Building2 className="w-5 h-5 text-blue-600" />
+            <div className="bg-blue-50 p-2 rounded-xl flex-shrink-0">
+              <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             </div>
-            <span className="text-sm font-medium text-gray-500">Total</span>
+            <span className="text-xs sm:text-sm font-medium text-gray-500 break-words">Total</span>
           </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-gray-900">{formatNumber(stats.totalUnits)}</p>
-            <p className="text-sm text-gray-600">Units</p>
+          <div className="space-y-1 min-w-0">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{formatNumber(stats.totalUnits)}</p>
+            <p className="text-xs sm:text-sm text-gray-600">Units</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 min-w-0">
           <div className="flex items-center justify-between mb-3">
-            <div className="bg-green-50 p-2 rounded-xl">
-              <TrendingUp className="w-5 h-5 text-green-600" />
+            <div className="bg-green-50 p-2 rounded-xl flex-shrink-0">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
             </div>
-            <span className="text-sm font-medium text-green-600">
+            <span className="text-xs sm:text-sm font-medium text-green-600 break-words">
               {stats.collectionRate.toFixed(1)}%
             </span>
           </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalRevenue)}</p>
-            <p className="text-sm text-gray-600">Revenue</p>
+          <div className="space-y-1 min-w-0">
+            <p className="text-lg sm:text-2xl font-bold text-gray-900 break-words">{formatCurrency(stats.totalRevenue)}</p>
+            <p className="text-xs sm:text-sm text-gray-600">Revenue</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 min-w-0">
           <div className="flex items-center justify-between mb-3">
-            <div className="bg-purple-50 p-2 rounded-xl">
-              <IndianRupee className="w-5 h-5 text-purple-600" />
+            <div className="bg-purple-50 p-2 rounded-xl flex-shrink-0">
+              <IndianRupee className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
             </div>
-            <span className="text-sm font-medium text-gray-500">Total Worth</span>
+            <span className="text-xs sm:text-sm font-medium text-gray-500 break-words">Total Worth</span>
           </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.totalValue)}</p>
-            <p className="text-sm text-gray-600">Value</p>
+          <div className="space-y-1 min-w-0">
+            <p className="text-lg sm:text-2xl font-bold text-gray-900 break-words">{formatCurrency(stats.totalValue)}</p>
+            <p className="text-xs sm:text-sm text-gray-600">Value</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 min-w-0">
           <div className="flex items-center justify-between mb-3">
-            <div className="bg-amber-50 p-2 rounded-xl">
-              <AlertCircle className="w-5 h-5 text-amber-600" />
+            <div className="bg-amber-50 p-2 rounded-xl flex-shrink-0">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
             </div>
-            <span className="text-sm font-medium text-amber-600">Pending</span>
+            <span className="text-xs sm:text-sm font-medium text-amber-600 break-words">Pending</span>
           </div>
-          <div className="space-y-1">
-            <p className="text-2xl font-bold text-gray-900">{formatCurrency(stats.balanceAmount)}</p>
-            <p className="text-sm text-gray-600">Balance</p>
+          <div className="space-y-1 min-w-0">
+            <p className="text-lg sm:text-2xl font-bold text-gray-900 break-words">{formatCurrency(stats.balanceAmount)}</p>
+            <p className="text-xs sm:text-sm text-gray-600">Balance</p>
           </div>
         </div>
       </div>
 
       {/* Status Overview */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Distribution</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {Object.entries(stats).filter(([key]) => 
             ['soldUnits', 'availableUnits', 'bookedUnits'].includes(key)
           ).map(([key, value]) => {
@@ -210,13 +210,13 @@ function Units() {
             const percentage = ((value / stats.totalUnits) * 100).toFixed(1);
             
             return (
-              <div key={key} className="text-center">
+              <div key={key} className="text-center min-w-0">
                 <div className={`${colors.light} rounded-xl p-4 mb-2`}>
                   <div className={`w-3 h-3 ${colors.bg} rounded-full mx-auto mb-2`}></div>
                   <p className="text-xl font-bold text-gray-900">{value}</p>
                   <p className="text-sm text-gray-600">{statusName}</p>
                 </div>
-                <p className="text-xs text-gray-500">{percentage}% of total</p>
+                <p className="text-xs text-gray-500 break-words">{percentage}% of total</p>
               </div>
             );
           })}
@@ -224,21 +224,21 @@ function Units() {
       </div>
 
       {/* Search and Filter */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="w-full relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search units, type, or customer..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
+          <div className="w-full">
             <select
-              className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -252,7 +252,7 @@ function Units() {
         </div>
 
         {/* Units List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredUnits.length > 0 ? (
             filteredUnits.map((unit) => {
               const colors = statusColors[unit.unit_status] || statusColors['Unsold'];
@@ -260,49 +260,49 @@ function Units() {
               return (
                 <div
                   key={unit.id}
-                  className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-blue-200"
+                  className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-blue-200 min-w-0"
                   onClick={() => handleUnitClick(unit.id)}
                 >
                   <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="bg-gray-50 p-2 rounded-lg">
-                        <Home className="w-5 h-5 text-gray-600" />
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="bg-gray-50 p-2 rounded-lg flex-shrink-0">
+                        <Home className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                       </div>
-                      <div>
-                        <h4 className="font-semibold text-gray-900">{unit.unit_name}</h4>
-                        <p className="text-sm text-gray-600">{unit.unit_type}</p>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-semibold text-gray-900 break-words text-sm sm:text-base">{unit.unit_name}</h4>
+                        <p className="text-xs sm:text-sm text-gray-600 break-words">{unit.unit_type}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${colors.text} ${colors.light}`}>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${colors.text} ${colors.light} break-words`}>
                         {unit.unit_status}
                       </span>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
-                    <div>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
+                    <div className="min-w-0">
                       <p className="text-gray-500">Area</p>
-                      <p className="font-medium text-gray-900">{unit.carpet_area} sq ft</p>
+                      <p className="font-medium text-gray-900 break-words">{unit.carpet_area} sq ft</p>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-gray-500">Value</p>
-                      <p className="font-medium text-gray-900">{formatCurrency(unit.agreement_value)}</p>
+                      <p className="font-medium text-gray-900 break-words">{formatCurrency(unit.agreement_value)}</p>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-gray-500">Received</p>
-                      <p className="font-medium text-green-600">{formatCurrency(unit.total_received)}</p>
+                      <p className="font-medium text-green-600 break-words">{formatCurrency(unit.total_received)}</p>
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-gray-500">Balance</p>
-                      <p className="font-medium text-amber-600">{formatCurrency(unit.balance_amount)}</p>
+                      <p className="font-medium text-amber-600 break-words">{formatCurrency(unit.balance_amount)}</p>
                     </div>
                   </div>
                   
                   {unit.customer_name && (
-                    <div className="mt-3 pt-3 border-t border-gray-100">
-                      <p className="text-sm text-gray-600">
+                    <div className="mt-3 pt-3 border-t border-gray-100 min-w-0">
+                      <p className="text-xs sm:text-sm text-gray-600 break-words">
                         <span className="font-medium">Customer:</span> {unit.customer_name}
                       </p>
                     </div>
