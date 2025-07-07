@@ -7,6 +7,7 @@ import { login, logout} from './store/authSlice'
 import databaseService from './backend-services/database/database';
 import Header from './components/Header';
 import Login from './pages/Login';
+import Footer from './components/Footer';
 
 function App() {
   const dispatch = useDispatch();
@@ -75,6 +76,7 @@ useEffect(() => {
       <div className=" flex-1 flex-grow mx-auto max-w-6xl  px-4 pb-8 pt-4">
         <Outlet />
       </div>
+      <Footer />
     </div>
   );
 }
