@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react'
 import {
   Building2, CheckCircle, Clock, BookOpen, DollarSign, TrendingUp, AlertCircle,
   Lock, CalendarCheck, Hammer, Ban, Tag, IndianRupee, Search, Filter, 
-  ArrowUpRight, Eye, MoreVertical, ChevronRight, Home, MapPin, Zap, Target
+  ArrowUpRight, Eye, MoreVertical, ChevronRight, Home, MapPin
 } from 'lucide-react';
 import databaseService from '../backend-services/database/database';
 import { useParams } from 'react-router-dom';
@@ -17,9 +17,11 @@ function Units() {
   const [showFilters, setShowFilters] = useState(false)
   
   useEffect(() => {
+    // Simulate API call
     const fetchProjectUnits = async () => {
       try {
         setLoading(true)
+        // Replace with actual API call
         const result = await databaseService.getProjectUnits(projectId)
         setUnits(result)
       } catch (error) {
@@ -36,13 +38,13 @@ function Units() {
   const statusOptions = [
     { value: "All", label: "All Status" },
     { value: "Sold", label: "Sold" },
-    { value: "Unsold", label: "Available" },
+    { value: "Unsold", label: "Unsold" },
     { value: "Booked", label: "Booked" },
     { value: "Mortgage", label: "Mortgage" },
-    { value: "Reservation", label: "Reserved" },
+    { value: "Reservation", label: "Reservation" },
     { value: "Rehab", label: "Rehab" },
-    { value: "Land Owner/Investor Share (Not for Sale)", label: "Investor Share" },
-    { value: "Land Owner/Investor Share (for Sale)", label: "Investor (Sale)" },
+    { value: "Land Owner/Investor Share (Not for Sale)", label: "Land Owner/Investor Share (Not for Sale)" },
+    { value: "Land Owner/Investor Share (for Sale)", label: "Land Owner/Investor Share (for Sale)" },
   ];
 
   const filteredUnits = useMemo(() => {
@@ -86,62 +88,14 @@ function Units() {
   }, [units]);
 
   const statusColors = {
-    'Sold': { 
-      bg: 'bg-gradient-to-r from-emerald-500 to-green-500', 
-      text: 'text-emerald-800', 
-      light: 'bg-gradient-to-br from-emerald-50 to-green-50',
-      border: 'border-emerald-200',
-      glow: 'shadow-emerald-100'
-    },
-    'Unsold': { 
-      bg: 'bg-gradient-to-r from-amber-500 to-orange-500', 
-      text: 'text-amber-800', 
-      light: 'bg-gradient-to-br from-amber-50 to-orange-50',
-      border: 'border-amber-200',
-      glow: 'shadow-amber-100'
-    },
-    'Booked': { 
-      bg: 'bg-gradient-to-r from-blue-500 to-cyan-500', 
-      text: 'text-blue-800', 
-      light: 'bg-gradient-to-br from-blue-50 to-cyan-50',
-      border: 'border-blue-200',
-      glow: 'shadow-blue-100'
-    },
-    'Mortgage': { 
-      bg: 'bg-gradient-to-r from-purple-500 to-indigo-500', 
-      text: 'text-purple-800', 
-      light: 'bg-gradient-to-br from-purple-50 to-indigo-50',
-      border: 'border-purple-200',
-      glow: 'shadow-purple-100'
-    },
-    'Reservation': { 
-      bg: 'bg-gradient-to-r from-indigo-500 to-purple-500', 
-      text: 'text-indigo-800', 
-      light: 'bg-gradient-to-br from-indigo-50 to-purple-50',
-      border: 'border-indigo-200',
-      glow: 'shadow-indigo-100'
-    },
-    'Rehab': { 
-      bg: 'bg-gradient-to-r from-orange-500 to-red-500', 
-      text: 'text-orange-800', 
-      light: 'bg-gradient-to-br from-orange-50 to-red-50',
-      border: 'border-orange-200',
-      glow: 'shadow-orange-100'
-    },
-    'Land Owner/Investor Share (Not for Sale)': { 
-      bg: 'bg-gradient-to-r from-gray-500 to-slate-500', 
-      text: 'text-gray-800', 
-      light: 'bg-gradient-to-br from-gray-50 to-slate-50',
-      border: 'border-gray-200',
-      glow: 'shadow-gray-100'
-    },
-    'Land Owner/Investor Share (for Sale)': { 
-      bg: 'bg-gradient-to-r from-teal-500 to-cyan-500', 
-      text: 'text-teal-800', 
-      light: 'bg-gradient-to-br from-teal-50 to-cyan-50',
-      border: 'border-teal-200',
-      glow: 'shadow-teal-100'
-    }
+    'Sold': { bg: 'bg-green-500', text: 'text-green-700', light: 'bg-green-50' },
+    'Unsold': { bg: 'bg-amber-500', text: 'text-amber-700', light: 'bg-amber-50' },
+    'Booked': { bg: 'bg-blue-500', text: 'text-blue-700', light: 'bg-blue-50' },
+    'Mortgage': { bg: 'bg-purple-500', text: 'text-purple-700', light: 'bg-purple-50' },
+    'Reservation': { bg: 'bg-indigo-500', text: 'text-indigo-700', light: 'bg-indigo-50' },
+    'Rehab': { bg: 'bg-orange-500', text: 'text-orange-700', light: 'bg-orange-50' },
+    'Land Owner/Investor Share (Not for Sale)': { bg: 'bg-gray-500', text: 'text-gray-700', light: 'bg-gray-50' },
+    'Land Owner/Investor Share (for Sale)': { bg: 'bg-teal-500', text: 'text-teal-700', light: 'bg-teal-50' }
   };
 
   const formatCurrency = (value) => {
@@ -159,104 +113,95 @@ function Units() {
 
   const handleUnitClick = (unitId) => {
     console.log(`Navigate to unit ${unitId}`)
+    // In your actual app: navigate(`/unit/${unitId}`);
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-200"></div>
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent absolute top-0 left-0"></div>
-        </div>
+      <div className="flex items-center justify-center min-h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="w-full max-w-full min-w-0 overflow-x-hidden space-y-6">
+    <div className="w-full max-w-full min-w-0 overflow-x-hidden space-y-4 sm:space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-r from-white to-blue-50/50 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-6 lg:p-8">
-        <div className="flex items-center justify-between">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="min-w-0 flex-1">
-            <h1 className="text-3xl lg:text-4xl font-black text-gray-900 break-words bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-              Units Overview
-            </h1>
-            <p className="text-gray-600 mt-2 text-base lg:text-lg">Manage and track all project units</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900 break-words">Units Overview</h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage and track all project units</p>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-3 rounded-2xl shadow-lg">
-              <Building2 className="w-7 h-7 text-white" />
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="bg-blue-50 p-2 rounded-xl">
+              <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
             </div>
           </div>
         </div>
       </div>
 
       {/* Key Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-6">
-        <div className="group bg-gradient-to-br from-white to-blue-50/50 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-              <Building2 className="w-6 h-6 text-white" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 min-w-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="bg-blue-50 p-2 rounded-xl flex-shrink-0">
+              <Building2 className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             </div>
-            <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Total</span>
+            <span className="text-xs sm:text-sm font-medium text-gray-500 break-words">Total</span>
           </div>
-          <div className="space-y-1">
-            <p className="text-3xl lg:text-4xl font-black text-gray-900">{formatNumber(stats.totalUnits)}</p>
-            <p className="text-base text-gray-600 font-medium">Units</p>
+          <div className="space-y-1 min-w-0">
+            <p className="text-xl sm:text-2xl font-bold text-gray-900 break-words">{formatNumber(stats.totalUnits)}</p>
+            <p className="text-xs sm:text-sm text-gray-600">Units</p>
           </div>
         </div>
 
-        <div className="group bg-gradient-to-br from-white to-emerald-50/50 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-gradient-to-r from-emerald-500 to-green-500 p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-              <TrendingUp className="w-6 h-6 text-white" />
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 min-w-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="bg-green-50 p-2 rounded-xl flex-shrink-0">
+              <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
             </div>
-            <span className="text-sm font-semibold text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">
+            <span className="text-xs sm:text-sm font-medium text-green-600 break-words">
               {stats.collectionRate.toFixed(1)}%
             </span>
           </div>
-          <div className="space-y-1">
-            <p className="text-2xl lg:text-3xl font-black text-gray-900 break-words">{formatCurrency(stats.totalRevenue)}</p>
-            <p className="text-base text-gray-600 font-medium">Revenue</p>
+          <div className="space-y-1 min-w-0">
+            <p className="text-lg sm:text-2xl font-bold text-gray-900 break-words">{formatCurrency(stats.totalRevenue)}</p>
+            <p className="text-xs sm:text-sm text-gray-600">Revenue</p>
           </div>
         </div>
 
-        <div className="group bg-gradient-to-br from-white to-purple-50/50 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-gradient-to-r from-purple-500 to-indigo-500 p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-              <IndianRupee className="w-6 h-6 text-white" />
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 min-w-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="bg-purple-50 p-2 rounded-xl flex-shrink-0">
+              <IndianRupee className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
             </div>
-            <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Total Worth</span>
+            <span className="text-xs sm:text-sm font-medium text-gray-500 break-words">Total Worth</span>
           </div>
-          <div className="space-y-1">
-            <p className="text-2xl lg:text-3xl font-black text-gray-900 break-words">{formatCurrency(stats.totalValue)}</p>
-            <p className="text-base text-gray-600 font-medium">Value</p>
+          <div className="space-y-1 min-w-0">
+            <p className="text-lg sm:text-2xl font-bold text-gray-900 break-words">{formatCurrency(stats.totalValue)}</p>
+            <p className="text-xs sm:text-sm text-gray-600">Value</p>
           </div>
         </div>
 
-        <div className="group bg-gradient-to-br from-white to-amber-50/50 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-6 hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
-          <div className="flex items-center justify-between mb-4">
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-3 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
-              <AlertCircle className="w-6 h-6 text-white" />
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 min-w-0">
+          <div className="flex items-center justify-between mb-3">
+            <div className="bg-amber-50 p-2 rounded-xl flex-shrink-0">
+              <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600" />
             </div>
-            <span className="text-sm font-semibold text-amber-700 bg-amber-100 px-3 py-1 rounded-full">Pending</span>
+            <span className="text-xs sm:text-sm font-medium text-amber-600 break-words">Pending</span>
           </div>
-          <div className="space-y-1">
-            <p className="text-2xl lg:text-3xl font-black text-gray-900 break-words">{formatCurrency(stats.balanceAmount)}</p>
-            <p className="text-base text-gray-600 font-medium">Balance</p>
+          <div className="space-y-1 min-w-0">
+            <p className="text-lg sm:text-2xl font-bold text-gray-900 break-words">{formatCurrency(stats.balanceAmount)}</p>
+            <p className="text-xs sm:text-sm text-gray-600">Balance</p>
           </div>
         </div>
       </div>
 
       {/* Status Overview */}
-      <div className="bg-gradient-to-br from-white to-slate-50/50 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-6 lg:p-8">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="bg-gradient-to-r from-slate-600 to-gray-600 p-2 rounded-xl">
-            <Target className="w-6 h-6 text-white" />
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900">Status Distribution</h3>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 lg:gap-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Status Distribution</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {Object.entries(stats).filter(([key]) => 
             ['soldUnits', 'availableUnits', 'bookedUnits'].includes(key)
           ).map(([key, value]) => {
@@ -265,13 +210,13 @@ function Units() {
             const percentage = ((value / stats.totalUnits) * 100).toFixed(1);
             
             return (
-              <div key={key} className="group text-center">
-                <div className={`${colors.light} ${colors.border} border-2 rounded-2xl p-6 mb-3 group-hover:shadow-lg transition-all duration-300 group-hover:-translate-y-1`}>
-                  <div className={`w-4 h-4 ${colors.bg} rounded-full mx-auto mb-3 shadow-md`}></div>
-                  <p className="text-3xl font-black text-gray-900 mb-1">{value}</p>
-                  <p className="text-base font-semibold text-gray-600">{statusName}</p>
+              <div key={key} className="text-center min-w-0">
+                <div className={`${colors.light} rounded-xl p-4 mb-2`}>
+                  <div className={`w-3 h-3 ${colors.bg} rounded-full mx-auto mb-2`}></div>
+                  <p className="text-xl font-bold text-gray-900">{value}</p>
+                  <p className="text-sm text-gray-600">{statusName}</p>
                 </div>
-                <p className="text-sm text-gray-500 font-medium">{percentage}% of total</p>
+                <p className="text-xs text-gray-500 break-words">{percentage}% of total</p>
               </div>
             );
           })}
@@ -279,21 +224,21 @@ function Units() {
       </div>
 
       {/* Search and Filter */}
-      <div className="bg-gradient-to-br from-white to-slate-50/50 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-6 lg:p-8">
-        <div className="flex flex-col lg:flex-row gap-4 mb-6">
-          <div className="flex-1 relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="w-full relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search units, type, or customer..."
-              className="w-full pl-12 pr-4 py-4 bg-white/70 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 text-base font-medium placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="lg:w-64">
+          <div className="w-full">
             <select
-              className="w-full px-4 py-4 bg-white/70 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 text-base font-medium"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -307,7 +252,7 @@ function Units() {
         </div>
 
         {/* Units List */}
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredUnits.length > 0 ? (
             filteredUnits.map((unit) => {
               const colors = statusColors[unit.unit_status] || statusColors['Unsold'];
@@ -315,50 +260,50 @@ function Units() {
               return (
                 <div
                   key={unit.id}
-                  className="group bg-gradient-to-r from-white to-slate-50/30 backdrop-blur-sm border-2 border-gray-200 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 cursor-pointer hover:border-blue-300 hover:-translate-y-1 min-w-0"
+                  className="border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all duration-200 cursor-pointer hover:border-blue-200 min-w-0"
                   onClick={() => handleUnitClick(unit.id)}
                 >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-4 min-w-0 flex-1">
-                      <div className="bg-gradient-to-r from-gray-100 to-slate-100 p-3 rounded-xl group-hover:scale-110 transition-transform duration-300">
-                        <Home className="w-6 h-6 text-gray-600" />
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="bg-gray-50 p-2 rounded-lg flex-shrink-0">
+                        <Home className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
                       </div>
                       <div className="min-w-0 flex-1">
-                        <h4 className="font-bold text-gray-900 break-words text-lg">{unit.unit_name}</h4>
-                        <p className="text-gray-600 break-words font-medium">{unit.unit_type}</p>
+                        <h4 className="font-semibold text-gray-900 break-words text-sm sm:text-base">{unit.unit_name}</h4>
+                        <p className="text-xs sm:text-sm text-gray-600 break-words">{unit.unit_type}</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                      <span className={`px-4 py-2 rounded-full text-sm font-bold ${colors.text} ${colors.light} ${colors.border} border-2 shadow-sm`}>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`px-2 sm:px-3 py-1 rounded-full text-xs font-medium ${colors.text} ${colors.light} break-words`}>
                         {unit.unit_status}
                       </span>
-                      <ChevronRight className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors duration-300" />
+                      <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div className="min-w-0 bg-gray-50/50 rounded-xl p-3">
-                      <p className="text-gray-500 font-medium text-sm">Area</p>
-                      <p className="font-bold text-gray-900 break-words text-lg">{unit.carpet_area} sq ft</p>
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm">
+                    <div className="min-w-0">
+                      <p className="text-gray-500">Area</p>
+                      <p className="font-medium text-gray-900 break-words">{unit.carpet_area} sq ft</p>
                     </div>
-                    <div className="min-w-0 bg-gray-50/50 rounded-xl p-3">
-                      <p className="text-gray-500 font-medium text-sm">Value</p>
-                      <p className="font-bold text-gray-900 break-words text-lg">{formatCurrency(unit.agreement_value)}</p>
+                    <div className="min-w-0">
+                      <p className="text-gray-500">Value</p>
+                      <p className="font-medium text-gray-900 break-words">{formatCurrency(unit.agreement_value)}</p>
                     </div>
-                    <div className="min-w-0 bg-emerald-50/50 rounded-xl p-3">
-                      <p className="text-gray-500 font-medium text-sm">Received</p>
-                      <p className="font-bold text-emerald-700 break-words text-lg">{formatCurrency(unit.total_received)}</p>
+                    <div className="min-w-0">
+                      <p className="text-gray-500">Received</p>
+                      <p className="font-medium text-green-600 break-words">{formatCurrency(unit.total_received)}</p>
                     </div>
-                    <div className="min-w-0 bg-amber-50/50 rounded-xl p-3">
-                      <p className="text-gray-500 font-medium text-sm">Balance</p>
-                      <p className="font-bold text-amber-700 break-words text-lg">{formatCurrency(unit.balance_amount)}</p>
+                    <div className="min-w-0">
+                      <p className="text-gray-500">Balance</p>
+                      <p className="font-medium text-amber-600 break-words">{formatCurrency(unit.balance_amount)}</p>
                     </div>
                   </div>
                   
                   {unit.customer_name && (
-                    <div className="mt-4 pt-4 border-t-2 border-gray-100">
-                      <p className="text-gray-600 font-medium break-words">
-                        <span className="font-bold text-gray-900">Customer:</span> {unit.customer_name}
+                    <div className="mt-3 pt-3 border-t border-gray-100 min-w-0">
+                      <p className="text-xs sm:text-sm text-gray-600 break-words">
+                        <span className="font-medium">Customer:</span> {unit.customer_name}
                       </p>
                     </div>
                   )}
@@ -366,11 +311,9 @@ function Units() {
               );
             })
           ) : (
-            <div className="text-center py-16">
-              <div className="bg-gradient-to-r from-gray-100 to-slate-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Building2 className="w-10 h-10 text-gray-400" />
-              </div>
-              <p className="text-gray-500 text-lg font-medium">No units found matching your criteria</p>
+            <div className="text-center py-12">
+              <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-500">No units found matching your criteria</p>
             </div>
           )}
         </div>
