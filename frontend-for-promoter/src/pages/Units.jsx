@@ -94,6 +94,9 @@ function Units() {
   }, [units]);
 
   const statusColors = {
+    'All': { 
+      bg: 'bg-gray-700',
+    },
     'Sold': { 
       bg: 'bg-emerald-500', 
       text: 'text-emerald-700', 
@@ -283,7 +286,7 @@ function Units() {
                     className={`px-3 py-2 rounded-xl text-sm font-medium transition-colors ${
                       isActive
                         ? colors?.bg + ' text-white'
-                        : 'bg-gray-50 text-gray-700 hover:bg-gray-700'
+                        : 'bg-gray-50 text-gray-700 hover:bg-gray-100'
                     }`}
                   >
                     {option.label} {count > 0 && `(${count})`}
