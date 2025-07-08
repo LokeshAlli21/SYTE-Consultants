@@ -66,6 +66,7 @@ const SyteDocuments = () => {
     try {
       const response = await bucketService.listFilesInFolder(currentFolder);
       // Access the files from response.data
+      console.log('loadFiles: ',response)
       setFiles(response.data?.files || []);
     } catch (err) {
       setError('Failed to load files: ' + err.message);
@@ -79,6 +80,7 @@ const SyteDocuments = () => {
     try {
       const response = await bucketService.getFolderStructure(currentFolder);
       // Access folders from response.data
+      console.log('loadFolderStructure: ',response)
       setFolders(response.data?.folders || []);
     } catch (err) {
       console.error('Failed to load folder structure:', err);
@@ -90,6 +92,7 @@ const SyteDocuments = () => {
     try {
       const response = await bucketService.getBucketInfo();
       // Access bucket info from response.data
+      console.log('loadBucketInfo: ',response)
       setBucketInfo(response.data || null);
     } catch (err) {
       console.error('Failed to load bucket info:', err);
