@@ -41,6 +41,7 @@ import {
   healthCheck,
 } from '../controllers/bucketController.js';
 import { protect } from '../middlewares/protect.js';
+import { upload } from '../aws/awsClient.js';
 
 const router = express.Router();
 
