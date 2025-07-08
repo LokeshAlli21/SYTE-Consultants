@@ -275,10 +275,6 @@ router.get(
 router.get(
   '/folders/root/files',
   protect,
-  (req, res, next) => {
-    req.params.folder = '';
-    next();
-  },
   listFilesInFolderController
 );
 

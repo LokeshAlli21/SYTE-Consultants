@@ -693,10 +693,14 @@ export const listFiles = async (req, res) => {
  */
 export const listFilesInFolderController = async (req, res) => {
   try {
-    const { folder = '' } = req.params;
+    let { folder = '' } = req.params;
+    if(folder === 'root'){
+      folder = ''
+    }
     const { maxKeys = 1000, continuationToken = null } = req.query;
     
     const result = await listFilesInFolder(folder, parseInt(maxKeys), continuationToken);
+    console.log(result)
     
     res.status(200).json({
       success: true,
