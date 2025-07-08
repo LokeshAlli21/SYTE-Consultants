@@ -700,7 +700,7 @@ export const listFilesInFolderController = async (req, res) => {
     const { maxKeys = 1000, continuationToken = null } = req.query;
     
     const result = await listFilesInFolder(folder, parseInt(maxKeys), continuationToken);
-    console.log(result)
+    // console.log(result)
     
     res.status(200).json({
       success: true,
