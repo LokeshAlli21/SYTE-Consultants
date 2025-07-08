@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   FolderOpen
 } from 'lucide-react';
+import bucketService from '../backend-services/database/bucket';
 
 const SyteDocuments = () => {
   const [files, setFiles] = useState([]);
@@ -54,77 +55,6 @@ const SyteDocuments = () => {
   const [folderTree, setFolderTree] = useState([]);
   
   const fileInputRef = useRef(null);
-
-  // Mock bucket service for demonstration
-  const bucketService = {
-    listFilesInFolder: async (folderPath) => {
-      // Mock response - replace with actual API call
-      const mockFiles = [
-        {
-          key: `${folderPath}/document1.pdf`,
-          size: 1260917,
-          lastModified: new Date().toISOString(),
-          etag: "mock-etag-1",
-          fileName: "document1.pdf",
-          folder: folderPath
-        },
-        {
-          key: `${folderPath}/image1.png`,
-          size: 543210,
-          lastModified: new Date().toISOString(),
-          etag: "mock-etag-2",
-          fileName: "image1.png",
-          folder: folderPath
-        }
-      ];
-      return { data: { files: mockFiles } };
-    },
-    
-    getFolderStructure: async (folderPath) => {
-      // Mock folder structure - replace with actual API call
-      const mockFolders = [
-        { name: "Documents", fullPath: "Documents" },
-        { name: "Images", fullPath: "Images" },
-        { name: "Videos", fullPath: "Videos" },
-        { name: "Projects", fullPath: "Projects" }
-      ];
-      return { data: { folders: mockFolders } };
-    },
-    
-    createFolder: async (folderPath) => {
-      return { success: true };
-    },
-    
-    deleteMultipleFiles: async (fileKeys) => {
-      return { success: true };
-    },
-    
-    uploadWithProgress: async (file, folder, progressCallback) => {
-      // Mock upload with progress
-      for (let i = 0; i <= 100; i += 10) {
-        setTimeout(() => progressCallback(i, i, 100), i * 10);
-      }
-      return { success: true };
-    },
-    
-    downloadAndSave: async (fileKey, fileName) => {
-      // Mock download
-      const link = document.createElement('a');
-      link.href = '#';
-      link.download = fileName;
-      link.click();
-      return { success: true };
-    },
-    
-    searchFiles: async (term, folder) => {
-      // Mock search
-      return { data: { files: [] } };
-    },
-    
-    getBucketInfo: async () => {
-      return { data: { totalSize: 1073741824, totalFiles: 25 } };
-    }
-  };
 
   // Load initial data
   useEffect(() => {
