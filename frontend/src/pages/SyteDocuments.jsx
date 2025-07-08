@@ -53,6 +53,7 @@ const SyteDocuments = () => {
   const [success, setSuccess] = useState('');
   const [expandedFolders, setExpandedFolders] = useState(new Set());
   const [folderTree, setFolderTree] = useState([]);
+  const [fileUrl, setFileUrl] = useState(null)
   
   const fileInputRef = useRef(null);
 
@@ -188,6 +189,20 @@ const SyteDocuments = () => {
       setError('Failed to delete items: ' + err.message);
     }
   };
+
+  const handleView = async (fileKey, fileName) => {
+    try {
+      setIsLoading(true)
+      const url = await bucketService.getSignedUrl(fileKey);
+      console.log('url: ',url)
+      setFileUrl(url)
+      setSuccess('File downloaded successfully!');
+    } catch (err) {
+      setError('Failed to download file: ' + err.message);
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   // Download file
   const handleDownload = async (fileKey, fileName) => {
@@ -633,6 +648,15 @@ const SyteDocuments = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
+                                handleView(item.key, item.fileName);
+                              }}
+                              className="p-1 bg-white rounded-full shadow-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
                                 handleDownload(item.key, item.fileName);
                               }}
                               className="p-1 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
@@ -780,6 +804,53 @@ const SyteDocuments = () => {
           </div>
         </div>
       </div>
+
+      {fileUrl && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 w-full max-w-5xl h-5/6 flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              
+              <button
+                onClick={setFileUrl(null)}
+                className="text-gray-400 hover:text-gray-600 flex-shrink-0"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="flex-1 bg-gray-50 rounded-lg overflow-hidden">
+              { (
+                <iframe
+                  src={fileUrl}
+                  className="w-full h-full border-0"
+                  title={'file'}
+                  style={{ minHeight: '80vh', maxWidth: '80vw' }}
+                />
+              ) 
+              // : (
+              //   <div className="flex items-center justify-center h-full">
+              //     <div className="text-center">
+              //       <File size={64} className="mx-auto mb-4 text-gray-400" />
+              //       <p className="text-gray-600 mb-4">
+              //         Preview not available for this file type
+              //       </p>
+              //       <a
+              //         href={fileUrl}
+              //         download={fileName}
+              //         className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors inline-flex items-center gap-2"
+              //       >
+              //         <Download size={20} />
+              //         Download File
+              //       </a>
+              //     </div>
+              //   </div>
+              // )
+              }
+            </div>
+          </div>
+        </div>
+      )}
+    
 
       {/* Upload Modal */}
       {showUploadModal && (

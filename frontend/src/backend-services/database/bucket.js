@@ -161,7 +161,7 @@ class BucketService {
    */
   async deleteFile(key) {
     try {
-      toast.warn('File delete is not allowed !')
+      toast.warn('Delete is not allowed !')
       return 
       const response = await authenticatedFetch(`${this.baseUrl}/api/bucket/files/${encodeURIComponent(key)}`, {
         method: 'DELETE',
@@ -182,7 +182,7 @@ class BucketService {
    */
   async deleteMultipleFiles(keys) {
     try {
-      toast.warn('File delete is not allowed !')
+      toast.warn('Delete is not allowed !')
       return 
       const response = await authenticatedFetch(`${this.baseUrl}/api/bucket/files/bulk`, {
         method: 'DELETE',
