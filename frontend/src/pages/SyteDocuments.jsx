@@ -68,8 +68,10 @@ const SyteDocuments = () => {
     setIsLoading(true);
     setError('');
     try {
-      const response = await bucketService.listFilesInFolder(currentFolder);
-      setFiles(response.data?.files || []);
+      if(currentFolder !== ''){
+        const response = await bucketService.listFilesInFolder(currentFolder);
+        setFiles(response.data?.files || []);
+      }
     } catch (err) {
       setError('Failed to load files: ' + err.message);
     } finally {
@@ -576,7 +578,7 @@ const SyteDocuments = () => {
             )}
 
             {/* Grid View */}
-            {!isLoading && viewMode === 'grid' && filteredItems.length > 0 && (currentFolder !== '') &&(
+            {!isLoading && viewMode === 'grid' && filteredItems.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                 {filteredItems.map((item) => (
                   <div
