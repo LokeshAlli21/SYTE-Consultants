@@ -39,9 +39,9 @@ import {
   
   // Health check
   healthCheck,
+  upload,
 } from '../controllers/bucketController.js';
 import { protect } from '../middlewares/protect.js';
-import { upload } from '../aws/awsClient.js';
 
 const router = express.Router();
 
@@ -96,7 +96,7 @@ router.post(
  * @access Protected
  */
 router.delete(
-  '/files/:key(*)',
+  '/files/:key',
   protect,
   deleteFile
 );
@@ -118,7 +118,7 @@ router.delete(
  * @access Protected
  */
 router.get(
-  '/files/:key(*)/download',
+  '/files/:key/download',
   protect,
   downloadFile
 );
@@ -129,7 +129,7 @@ router.get(
  * @access Protected
  */
 router.get(
-  '/files/:key(*)/metadata',
+  '/files/:key/metadata',
   protect,
   getFileMetadataController
 );
@@ -140,7 +140,7 @@ router.get(
  * @access Protected
  */
 router.get(
-  '/files/:key(*)/signed-url',
+  '/files/:key/signed-url',
   protect,
   getSignedUrlController
 );
@@ -151,7 +151,7 @@ router.get(
  * @access Protected
  */
 router.get(
-  '/files/:key(*)/presigned-url',
+  '/files/:key/presigned-url',
   protect,
   generatePresignedUrlController
 );
@@ -188,7 +188,7 @@ router.post(
  * @access Protected
  */
 router.get(
-  '/files/:key(*)/exists',
+  '/files/:key/exists',
   protect,
   checkFileExists
 );
@@ -214,7 +214,7 @@ router.post(
  * @access Protected
  */
 router.delete(
-  '/folders/:folderPath(*)',
+  '/folders/:folderPath',
   protect,
   deleteFolderController
 );
@@ -236,7 +236,7 @@ router.get(
  * @access Protected
  */
 router.get(
-  '/folders/:folderPath(*)/size',
+  '/folders/:folderPath/size',
   protect,
   getFolderSizeController
 );
@@ -262,7 +262,7 @@ router.get(
  * @access Protected
  */
 router.get(
-  '/folders/:folder(*)/files',
+  '/folders/:folder/files',
   protect,
   listFilesInFolderController
 );

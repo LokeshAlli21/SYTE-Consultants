@@ -2,6 +2,8 @@ backend build commands:
 
 npm i
 
+pm2 flush
+
 pm2 list
 
 pm2 stop all
