@@ -203,6 +203,12 @@ export const getSignedUrl = (key, expires = 3600) => {
   };
 
   try {
+    let url = s3.getSignedUrl('getObject',{
+       Bucket: bucketName,
+      Key:"channel-partner-files/photo/1751536312298-sample_Photo_2025-07-03T09-51-51-828Z.png",
+      Expires: expires
+    })
+    console.log('url: ',url)
     return s3.getSignedUrl('getObject', params);
   } catch (error) {
     console.error('Error generating signed URL:', error);
