@@ -4,6 +4,8 @@ const { Pool } = pkg;
 import AWS from 'aws-sdk';
 import multer from 'multer';
 import dotenv from 'dotenv';
+import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
 
 dotenv.config();
 
@@ -342,6 +344,453 @@ export const getBucketStats = async () => {
   }
 };
 
+// ================================================================================================================================================
+// FILE LISTING & BROWSING ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// ================================================================================================================================================
+
+// List all files in a folder with pagination
+export const listFilesInFolder = async (folder = '', maxKeys = 1000, continuationToken = null) => {
+  const params = {
+    Bucket: bucketName,
+    Prefix: folder ? `${folder}/` : '',
+    MaxKeys: maxKeys,
+    ContinuationToken: continuationToken
+  };
+
+  try {
+    const result = await s3.listObjectsV2(params).promise();
+    
+    const files = result.Contents.map(obj => ({
+      key: obj.Key,
+      size: obj.Size,
+      lastModified: obj.LastModified,
+      etag: obj.ETag,
+      fileName: path.basename(obj.Key),
+      folder: path.dirname(obj.Key) === '.' ? '' : path.dirname(obj.Key)
+    }));
+
+    return {
+      files,
+      isTruncated: result.IsTruncated,
+      nextContinuationToken: result.NextContinuationToken,
+      totalCount: result.KeyCount
+    };
+  } catch (err) {
+    throw new Error(`Failed to list files: ${err.message}`);
+  }
+};
+
+// Get folder structure (directories only)
+export const getFolderStructure = async (prefix = '') => {
+  const params = {
+    Bucket: bucketName,
+    Prefix: prefix ? `${prefix}/` : '',
+    Delimiter: '/'
+  };
+
+  try {
+    const result = await s3.listObjectsV2(params).promise();
+    
+    const folders = result.CommonPrefixes ? result.CommonPrefixes.map(obj => ({
+      name: obj.Prefix.replace(prefix ? `${prefix}/` : '', '').replace('/', ''),
+      fullPath: obj.Prefix.slice(0, -1) // Remove trailing slash
+    })) : [];
+
+    return folders;
+  } catch (err) {
+    throw new Error(`Failed to get folder structure: ${err.message}`);
+  }
+};
+
+// ========================
+// FILE OPERATIONS
+// ========================
+
+// Download file from S3
+export const downloadFromS3 = async (key) => {
+  const params = {
+    Bucket: bucketName,
+    Key: key
+  };
+
+  try {
+    const result = await s3.getObject(params).promise();
+    return {
+      buffer: result.Body,
+      contentType: result.ContentType,
+      metadata: result.Metadata,
+      lastModified: result.LastModified,
+      size: result.ContentLength
+    };
+  } catch (err) {
+    throw new Error(`Failed to download file: ${err.message}`);
+  }
+};
+
+// Check if file exists
+export const fileExists = async (key) => {
+  try {
+    await s3.headObject({
+      Bucket: bucketName,
+      Key: key
+    }).promise();
+    return true;
+  } catch (err) {
+    if (err.code === 'NotFound') {
+      return false;
+    }
+    throw new Error(`Error checking file existence: ${err.message}`);
+  }
+};
+
+// Generate presigned URL for file download
+export const generatePresignedUrl = async (key, expiresIn = 3600) => {
+  const params = {
+    Bucket: bucketName,
+    Key: key,
+    Expires: expiresIn // URL expires in seconds (default 1 hour)
+  };
+
+  try {
+    const url = await s3.getSignedUrlPromise('getObject', params);
+    return url;
+  } catch (err) {
+    throw new Error(`Failed to generate presigned URL: ${err.message}`);
+  }
+};
+
+// ========================
+// FILE COPYING & MOVING
+// ========================
+
+// Copy file within the same bucket
+export const copyFile = async (sourceKey, destinationKey) => {
+  const params = {
+    Bucket: bucketName,
+    CopySource: `${bucketName}/${sourceKey}`,
+    Key: destinationKey
+  };
+
+  try {
+    await s3.copyObject(params).promise();
+    console.log(`✅ Copied file from ${sourceKey} to ${destinationKey}`);
+    return true;
+  } catch (err) {
+    throw new Error(`Failed to copy file: ${err.message}`);
+  }
+};
+
+// Move file (copy + delete original)
+export const moveFile = async (sourceKey, destinationKey) => {
+  try {
+    await copyFile(sourceKey, destinationKey);
+    await deleteFromS3(sourceKey);
+    console.log(`✅ Moved file from ${sourceKey} to ${destinationKey}`);
+    return true;
+  } catch (err) {
+    throw new Error(`Failed to move file: ${err.message}`);
+  }
+};
+
+// ========================
+// FOLDER OPERATIONS
+// ========================
+
+// Create folder (by uploading an empty object)
+export const createFolder = async (folderPath) => {
+  const params = {
+    Bucket: bucketName,
+    Key: `${folderPath}/`,
+    Body: '',
+    ContentType: 'application/x-directory'
+  };
+
+  try {
+    await s3.upload(params).promise();
+    console.log(`✅ Created folder: ${folderPath}`);
+    return true;
+  } catch (err) {
+    throw new Error(`Failed to create folder: ${err.message}`);
+  }
+};
+
+// Delete folder and all its contents
+export const deleteFolder = async (folderPath) => {
+  try {
+    // First, list all objects in the folder
+    const listParams = {
+      Bucket: bucketName,
+      Prefix: `${folderPath}/`
+    };
+
+    const listedObjects = await s3.listObjectsV2(listParams).promise();
+
+    if (listedObjects.Contents.length === 0) {
+      console.log(`Folder ${folderPath} is empty or doesn't exist`);
+      return true;
+    }
+
+    // Delete all objects in the folder
+    const deleteParams = {
+      Bucket: bucketName,
+      Delete: {
+        Objects: listedObjects.Contents.map(obj => ({ Key: obj.Key }))
+      }
+    };
+
+    await s3.deleteObjects(deleteParams).promise();
+    console.log(`✅ Deleted folder and all contents: ${folderPath}`);
+    return true;
+  } catch (err) {
+    throw new Error(`Failed to delete folder: ${err.message}`);
+  }
+};
+
+// ========================
+// BULK OPERATIONS
+// ========================
+
+// Delete multiple files
+export const deleteMultipleFiles = async (keys) => {
+  if (!Array.isArray(keys) || keys.length === 0) {
+    throw new Error('Keys must be a non-empty array');
+  }
+
+  const params = {
+    Bucket: bucketName,
+    Delete: {
+      Objects: keys.map(key => ({ Key: key }))
+    }
+  };
+
+  try {
+    const result = await s3.deleteObjects(params).promise();
+    console.log(`✅ Deleted ${result.Deleted.length} files`);
+    return {
+      deleted: result.Deleted,
+      errors: result.Errors || []
+    };
+  } catch (err) {
+    throw new Error(`Failed to delete multiple files: ${err.message}`);
+  }
+};
+
+// Search files by name pattern
+export const searchFiles = async (searchTerm, folder = '') => {
+  try {
+    const { files } = await listFilesInFolder(folder, 1000);
+    
+    const matchingFiles = files.filter(file => 
+      file.fileName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return matchingFiles;
+  } catch (err) {
+    throw new Error(`Failed to search files: ${err.message}`);
+  }
+};
+
+// ========================
+// UPLOAD UTILITIES
+// ========================
+
+// Upload multiple files
+export const uploadMultipleFiles = async (files, folder = null) => {
+  if (!Array.isArray(files)) {
+    throw new Error('Files must be an array');
+  }
+
+  const results = [];
+  const errors = [];
+
+  for (const file of files) {
+    try {
+      const uniqueKey = `${uuidv4()}-${file.originalname}`;
+      const uploadResult = await uploadToS3(file, uniqueKey, folder);
+      results.push(uploadResult);
+    } catch (err) {
+      errors.push({
+        fileName: file.originalname,
+        error: err.message
+      });
+    }
+  }
+
+  return {
+    successful: results,
+    failed: errors,
+    totalUploaded: results.length,
+    totalFailed: errors.length
+  };
+};
+
+// Upload with progress tracking (for large files)
+export const uploadWithProgress = async (file, key, folder = null, onProgress) => {
+  const fullKey = folder ? `${folder}/${key}` : key;
+  
+  const params = {
+    Bucket: bucketName,
+    Key: fullKey,
+    Body: file.buffer,
+    ContentType: file.mimetype,
+    Metadata: {
+      originalName: file.originalname,
+      uploadDate: new Date().toISOString(),
+      fileSize: file.size.toString()
+    }
+  };
+
+  try {
+    const upload = s3.upload(params);
+    
+    // Track upload progress
+    upload.on('httpUploadProgress', (progress) => {
+      if (onProgress) {
+        const percentage = Math.round((progress.loaded / progress.total) * 100);
+        onProgress(percentage, progress.loaded, progress.total);
+      }
+    });
+
+    const result = await upload.promise();
+    console.log(`✅ Uploaded with progress tracking: ${fullKey}`);
+    return {
+      url: result.Location,
+      key: fullKey,
+      bucket: bucketName,
+      size: file.size,
+      mimetype: file.mimetype
+    };
+  } catch (err) {
+    throw new Error(`S3 upload with progress failed: ${err.message}`);
+  }
+};
+
+// ========================
+// STORAGE ANALYTICS
+// ========================
+
+// Get bucket storage info
+export const getBucketInfo = async () => {
+  try {
+    const listParams = {
+      Bucket: bucketName
+    };
+
+    const result = await s3.listObjectsV2(listParams).promise();
+    
+    let totalSize = 0;
+    let fileCount = 0;
+    const fileTypes = {};
+
+    for (const obj of result.Contents) {
+      totalSize += obj.Size;
+      fileCount++;
+      
+      const ext = path.extname(obj.Key).toLowerCase();
+      fileTypes[ext] = (fileTypes[ext] || 0) + 1;
+    }
+
+    return {
+      totalFiles: fileCount,
+      totalSize,
+      totalSizeFormatted: formatBytes(totalSize),
+      fileTypes,
+      bucketName
+    };
+  } catch (err) {
+    throw new Error(`Failed to get bucket info: ${err.message}`);
+  }
+};
+
+// Get folder size
+export const getFolderSize = async (folderPath) => {
+  try {
+    const listParams = {
+      Bucket: bucketName,
+      Prefix: `${folderPath}/`
+    };
+
+    const result = await s3.listObjectsV2(listParams).promise();
+    
+    let totalSize = 0;
+    let fileCount = 0;
+
+    for (const obj of result.Contents) {
+      totalSize += obj.Size;
+      fileCount++;
+    }
+
+    return {
+      folderPath,
+      fileCount,
+      totalSize,
+      totalSizeFormatted: formatBytes(totalSize)
+    };
+  } catch (err) {
+    throw new Error(`Failed to get folder size: ${err.message}`);
+  }
+};
+
+// ========================
+// UTILITY FUNCTIONS
+// ========================
+
+// Format bytes to human readable format
+export const formatBytes = (bytes, decimals = 2) => {
+  if (bytes === 0) return '0 Bytes';
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+};
+
+// Generate unique file name
+export const generateUniqueFileName = (originalName) => {
+  const ext = path.extname(originalName);
+  const name = path.basename(originalName, ext);
+  const timestamp = Date.now();
+  const uuid = uuidv4().substring(0, 8);
+  
+  return `${name}_${timestamp}_${uuid}${ext}`;
+};
+
+// Validate file type
+export const validateFileType = (mimetype, allowedTypes = []) => {
+  if (allowedTypes.length === 0) {
+    // Default allowed types
+    allowedTypes = [
+      'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+      'application/pdf', 'application/msword',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'text/plain', 'text/csv',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+  }
+
+  return allowedTypes.includes(mimetype);
+};
+
+// Initialize all connections
+export const initializeServices = async () => {
+  console.log('🔄 Initializing AWS services...');
+  
+  const dbConnected = await testConnection();
+  const s3Connected = await testS3Connection();
+  
+  if (dbConnected && s3Connected) {
+    console.log('✅ All services initialized successfully');
+    return true;
+  } else {
+    console.log('❌ Some services failed to initialize');
+    return false;
+  }
+};
+
 // Export the main clients
 export { pool as db, s3, bucketName };
 export default { 
@@ -361,5 +810,24 @@ export default {
   query,
   getClient,
   initializeConnections,
-  closeConnections
+  closeConnections,
+  listFilesInFolder,
+  getFolderStructure,
+  downloadFromS3,
+  fileExists,
+  generatePresignedUrl,
+  copyFile,
+  moveFile,
+  createFolder,
+  deleteFolder,
+  deleteMultipleFiles,
+  searchFiles,
+  uploadMultipleFiles,
+  uploadWithProgress,
+  getBucketInfo,
+  getFolderSize,
+  formatBytes,
+  generateUniqueFileName,
+  validateFileType,
+  initializeServices
 };

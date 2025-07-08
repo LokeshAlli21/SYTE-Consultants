@@ -1,683 +1,977 @@
-// bucketController.js - Updated for single S3 bucket (rera-dev)
-import { query, db, listS3Files, deleteFromS3, getBucketStats as getS3Stats } from '../aws/awsClient.js';
+// bucketController.js
+import {
+  upload,
+  uploadToS3,
+  deleteFromS3,
+  moveFileInS3,
+  listS3Files,
+  getSignedUrl,
+  getFileMetadata,
+  listFilesInFolder,
+  getFolderStructure,
+  downloadFromS3,
+  fileExists,
+  generatePresignedUrl,
+  copyFile,
+  moveFile,
+  createFolder,
+  deleteFolder,
+  deleteMultipleFiles,
+  searchFiles,
+  uploadMultipleFiles,
+  uploadWithProgress,
+  getBucketInfo,
+  getFolderSize,
+  formatBytes,
+  generateUniqueFileName,
+  validateFileType,
+  bucketName
+} from '../aws/awsClient.js';
 
-// ===== SINGLE BUCKET FUNCTIONS - RERA-DEV =====
+// ========================
+// SINGLE FILE OPERATIONS
+// ========================
 
-// Get all files from rera-dev bucket organized by categories
-export const getAllFiles = async (req, res) => {
+/**
+ * Upload a single file to S3
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const uploadSingleFile = async (req, res) => {
   try {
-    const { page = 1, limit = 100, category = null, folder = null } = req.query;
-    
-    // Use the paginated function from the database
-    const filesResult = await query(
-      'SELECT * FROM get_rera_dev_files_paginated($1, $2, $3, $4)',
-      [parseInt(page), parseInt(limit), category, folder]
-    );
-    
-    const allFiles = filesResult.rows;
-    const totalFiles = allFiles.length > 0 ? parseInt(allFiles[0].total_count) : 0;
-
-    // Get category summary for organization
-    const categorySummaryResult = await query('SELECT * FROM rera_dev_category_summary');
-    const categorySummary = categorySummaryResult.rows;
-
-    // Organize files by category
-    const organizedFiles = {};
-    
-    // Group files by category
-    allFiles.forEach(file => {
-      const cat = file.category || 'root';
-      if (!organizedFiles[cat]) {
-        organizedFiles[cat] = [];
-      }
-      organizedFiles[cat].push({
-        id: file.id,
-        name: file.name,
-        fullPath: file.folder_path ? `${file.folder_path}/${file.name}`.replace(/^\//, '') : file.name,
-        category: file.category,
-        folderPath: file.folder_path,
-        size: parseInt(file.size) || 0,
-        lastModified: file.updated_at || file.created_at,
-        mimeType: file.mime_type,
-        publicUrl: file.public_url,
-        bucket: 'rera-dev',
-        level: file.depth_level
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file provided'
       });
-    });
-
-    // Create category breakdown from summary
-    const categoryBreakdown = {};
-    categorySummary.forEach(cat => {
-      categoryBreakdown[cat.category_name] = {
-        fileCount: cat.file_count,
-        totalSize: cat.total_size,
-        originalFolder: cat.original_folder,
-        mimeTypes: cat.mime_types,
-        subfolders: cat.subfolders || []
-      };
-    });
-
-    return res.status(200).json({
-      success: true,
-      bucket: 'rera-dev',
-      totalFiles: totalFiles,
-      organizedByCategory: organizedFiles,
-      allFiles: allFiles.map(file => ({
-        id: file.id,
-        name: file.name,
-        fullPath: file.folder_path ? `${file.folder_path}/${file.name}`.replace(/^\//, '') : file.name,
-        category: file.category,
-        folderPath: file.folder_path,
-        size: parseInt(file.size) || 0,
-        lastModified: file.updated_at || file.created_at,
-        mimeType: file.mime_type,
-        publicUrl: file.public_url,
-        bucket: 'rera-dev',
-        level: file.depth_level
-      })),
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        hasMore: allFiles.length === parseInt(limit),
-        totalPages: Math.ceil(totalFiles / parseInt(limit))
-      },
-      summary: {
-        totalCategories: categorySummary.length,
-        categoryBreakdown: categoryBreakdown
-      }
-    });
-
-  } catch (error) {
-    console.error('Unexpected error in getAllFiles:', error);
-    return res.status(500).json({ error: 'Server error while fetching files' });
-  }
-};
-
-// Get files from specific category in rera-dev bucket
-export const getFilesByCategory = async (req, res) => {
-  try {
-    const { category } = req.params;
-    const { page = 1, limit = 50, folder = null } = req.query;
-    
-    if (!category) {
-      return res.status(400).json({ error: 'Category is required' });
     }
 
-    // Use the paginated function with category filter
-    const filesResult = await query(
-      'SELECT * FROM get_rera_dev_files_paginated($1, $2, $3, $4)',
-      [parseInt(page), parseInt(limit), category, folder]
-    );
+    const { folder } = req.body;
+    const uniqueKey = generateUniqueFileName(req.file.originalname);
     
-    const allFiles = filesResult.rows;
-    const totalFiles = allFiles.length > 0 ? parseInt(allFiles[0].total_count) : 0;
-
-    return res.status(200).json({
+    const result = await uploadToS3(req.file, uniqueKey, folder);
+    
+    res.status(201).json({
       success: true,
-      bucket: 'rera-dev',
-      category: category,
-      totalFiles: totalFiles,
-      files: allFiles.map(file => ({
-        id: file.id,
-        name: file.name,
-        fullPath: file.folder_path ? `${file.folder_path}/${file.name}`.replace(/^\//, '') : file.name,
-        category: file.category,
-        folderPath: file.folder_path,
-        size: parseInt(file.size) || 0,
-        lastModified: file.updated_at || file.created_at,
-        mimeType: file.mime_type,
-        publicUrl: file.public_url,
-        bucket: 'rera-dev',
-        level: file.depth_level
-      })),
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        hasMore: allFiles.length === parseInt(limit),
-        totalPages: Math.ceil(totalFiles / parseInt(limit))
-      }
+      message: 'File uploaded successfully',
+      data: result
     });
-
   } catch (error) {
-    console.error('Unexpected error in getFilesByCategory:', error);
-    return res.status(500).json({ error: 'Server error while fetching category files' });
+    console.error('Upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'File upload failed',
+      error: error.message
+    });
   }
 };
 
-// Get documents specifically from rera-dev bucket
-export const getAllDocuments = async (req, res) => {
+/**
+ * Upload multiple files to S3
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const uploadMultipleFilesController = async (req, res) => {
   try {
-    const { page = 1, limit = 100, subfolder = null } = req.query;
-    
-    // Use the documents paginated function
-    const documentsResult = await query(
-      'SELECT * FROM get_rera_dev_documents_paginated($1, $2, $3)',
-      [parseInt(page), parseInt(limit), subfolder]
-    );
-    
-    const allDocuments = documentsResult.rows;
-    const totalDocuments = allDocuments.length > 0 ? parseInt(allDocuments[0].total_count) : 0;
-
-    return res.status(200).json({
-      success: true,
-      bucket: 'rera-dev',
-      category: 'documents',
-      totalDocuments: totalDocuments,
-      documents: allDocuments.map(doc => ({
-        id: doc.id,
-        name: doc.name,
-        fullPath: doc.folder_path ? `${doc.folder_path}/${doc.name}`.replace(/^\//, '') : doc.name,
-        mainFolder: doc.main_folder,
-        subFolder: doc.sub_folder,
-        folderPath: doc.folder_path,
-        size: parseInt(doc.size) || 0,
-        lastModified: doc.updated_at || doc.created_at,
-        mimeType: doc.mime_type,
-        publicUrl: doc.public_url,
-        bucket: 'rera-dev',
-        level: doc.depth_level
-      })),
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        hasMore: allDocuments.length === parseInt(limit),
-        totalPages: Math.ceil(totalDocuments / parseInt(limit))
-      }
-    });
-
-  } catch (error) {
-    console.error('Unexpected error in getAllDocuments:', error);
-    return res.status(500).json({ error: 'Server error while fetching documents' });
-  }
-};
-
-// Get photos specifically from rera-dev bucket
-export const getAllPhotos = async (req, res) => {
-  try {
-    const { page = 1, limit = 100, role = null } = req.query;
-    
-    // Use the photos paginated function
-    const photosResult = await query(
-      'SELECT * FROM get_rera_dev_photos_paginated($1, $2, $3)',
-      [parseInt(page), parseInt(limit), role]
-    );
-    
-    const allPhotos = photosResult.rows;
-    const totalPhotos = allPhotos.length > 0 ? parseInt(allPhotos[0].total_count) : 0;
-
-    return res.status(200).json({
-      success: true,
-      bucket: 'rera-dev',
-      category: 'photos',
-      totalPhotos: totalPhotos,
-      photos: allPhotos.map(photo => ({
-        id: photo.id,
-        name: photo.name,
-        fullPath: photo.folder_path ? `${photo.folder_path}/${photo.name}`.replace(/^\//, '') : photo.name,
-        mainFolder: photo.main_folder,
-        roleOrCategory: photo.role_or_category,
-        folderPath: photo.folder_path,
-        size: parseInt(photo.size) || 0,
-        lastModified: photo.updated_at || photo.created_at,
-        mimeType: photo.mime_type,
-        publicUrl: photo.public_url,
-        bucket: 'rera-dev',
-        level: photo.depth_level
-      })),
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        hasMore: allPhotos.length === parseInt(limit),
-        totalPages: Math.ceil(totalPhotos / parseInt(limit))
-      }
-    });
-
-  } catch (error) {
-    console.error('Unexpected error in getAllPhotos:', error);
-    return res.status(500).json({ error: 'Server error while fetching photos' });
-  }
-};
-
-// Get bucket structure and statistics
-export const getBucketStructure = async (req, res) => {
-  try {
-    const { detailed = false } = req.query;
-
-    // Get category summary
-    const categorySummaryResult = await query('SELECT * FROM rera_dev_category_summary');
-    const categorySummary = categorySummaryResult.rows;
-
-    // Get overall statistics
-    const statisticsResult = await query('SELECT * FROM rera_dev_statistics');
-    const statistics = statisticsResult.rows[0];
-
-    // Build structure
-    const structure = {
-      bucketName: 'rera-dev',
-      totalFiles: statistics.total_files,
-      totalSize: {
-        bytes: statistics.total_size_bytes,
-        mb: statistics.total_size_mb,
-        gb: statistics.total_size_gb
-      },
-      totalMainFolders: statistics.total_main_folders,
-      totalSubfolders: statistics.total_subfolders,
-      oldestFile: statistics.oldest_file,
-      newestFile: statistics.newest_file,
-      allMimeTypes: statistics.all_mime_types,
-      fileTypeCounts: {
-        images: statistics.image_files,
-        pdfs: statistics.pdf_files,
-        office: statistics.office_files,
-        text: statistics.text_files
-      },
-      categories: {}
-    };
-
-    // Organize categories
-    categorySummary.forEach(cat => {
-      structure.categories[cat.category_name] = {
-        originalFolder: cat.original_folder,
-        fileCount: cat.file_count,
-        totalSize: cat.total_size,
-        oldestFile: cat.oldest_file,
-        newestFile: cat.newest_file,
-        mimeTypes: cat.mime_types,
-        subfolders: cat.subfolders || []
-      };
-
-      // If detailed view is requested, get files for each category
-      if (detailed === 'true') {
-        structure.categories[cat.category_name].files = [];
-      }
-    });
-
-    // If detailed view is requested, fetch sample files for each category
-    if (detailed === 'true') {
-      for (const category of Object.keys(structure.categories)) {
-        const filesResult = await query(
-          'SELECT * FROM get_rera_dev_files_paginated($1, $2, $3, $4)',
-          [1, 100, category, null]
-        );
-        
-        structure.categories[category].files = filesResult.rows.map(file => ({
-          id: file.id,
-          name: file.name,
-          fullPath: file.folder_path ? `${file.folder_path}/${file.name}`.replace(/^\//, '') : file.name,
-          folderPath: file.folder_path,
-          size: parseInt(file.size) || 0,
-          lastModified: file.updated_at || file.created_at,
-          mimeType: file.mime_type,
-          publicUrl: file.public_url,
-          level: file.depth_level
-        }));
-      }
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No files provided'
+      });
     }
 
-    return res.status(200).json({
+    const { folder } = req.body;
+    const result = await uploadMultipleFiles(req.files, folder);
+    
+    res.status(201).json({
       success: true,
-      structure: structure
+      message: `${result.totalUploaded} files uploaded successfully`,
+      data: result
     });
-
   } catch (error) {
-    console.error('Unexpected error in getBucketStructure:', error);
-    return res.status(500).json({ error: 'Server error while fetching bucket structure' });
+    console.error('Multiple upload error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Multiple file upload failed',
+      error: error.message
+    });
   }
 };
 
-// Get bucket statistics
-export const getBucketStats = async (req, res) => {
+/**
+ * Upload file with progress tracking
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const uploadWithProgressController = async (req, res) => {
   try {
-    // Get statistics from the view
-    const statisticsResult = await query('SELECT * FROM rera_dev_statistics');
-    const statistics = statisticsResult.rows[0];
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No file provided'
+      });
+    }
 
-    // Get category summary
-    const categorySummaryResult = await query('SELECT * FROM rera_dev_category_summary');
-    const categorySummary = categorySummaryResult.rows;
-
-    // Get S3 bucket stats as well
-    const s3Stats = await getS3Stats();
-
-    return res.status(200).json({
-      success: true,
-      bucketName: 'rera-dev',
-      statistics: {
-        database: {
-          totalFiles: statistics.total_files,
-          totalSize: {
-            bytes: statistics.total_size_bytes,
-            mb: statistics.total_size_mb,
-            gb: statistics.total_size_gb
-          },
-          totalMainFolders: statistics.total_main_folders,
-          totalSubfolders: statistics.total_subfolders,
-          oldestFile: statistics.oldest_file,
-          newestFile: statistics.newest_file,
-          fileTypeCounts: {
-            images: statistics.image_files,
-            pdfs: statistics.pdf_files,
-            office: statistics.office_files,
-            text: statistics.text_files
-          },
-          allMimeTypes: statistics.all_mime_types,
-          categoryBreakdown: categorySummary.map(cat => ({
-            category: cat.category_name,
-            originalFolder: cat.original_folder,
-            fileCount: cat.file_count,
-            totalSize: cat.total_size,
-            mimeTypes: cat.mime_types,
-            subfolders: cat.subfolders || []
-          }))
-        },
-        s3: s3Stats
+    const { folder } = req.body;
+    const uniqueKey = generateUniqueFileName(req.file.originalname);
+    
+    const result = await uploadWithProgress(
+      req.file,
+      uniqueKey,
+      folder,
+      (percentage, loaded, total) => {
+        console.log(`Upload progress: ${percentage}% (${loaded}/${total} bytes)`);
       }
-    });
-
-  } catch (error) {
-    console.error('Unexpected error in getBucketStats:', error);
-    return res.status(500).json({ error: 'Server error while fetching bucket statistics' });
-  }
-};
-
-// Search files in rera-dev bucket
-export const searchFiles = async (req, res) => {
-  try {
-    const { 
-      search = null, 
-      category = null, 
-      mimeType = null, 
-      page = 1, 
-      limit = 50 
-    } = req.query;
-
-    // Use the search function
-    const searchResult = await query(
-      'SELECT * FROM search_rera_dev_files($1, $2, $3, $4, $5)',
-      [search, category, mimeType, parseInt(page), parseInt(limit)]
     );
     
-    const results = searchResult.rows;
-    const totalResults = results.length > 0 ? parseInt(results[0].total_count) : 0;
-
-    return res.status(200).json({
+    res.status(201).json({
       success: true,
-      bucket: 'rera-dev',
-      searchTerm: search,
-      filters: { category, mimeType },
-      totalResults: totalResults,
-      results: results.map(file => ({
-        id: file.id,
-        name: file.name,
-        category: file.category,
-        fullPath: file.full_path,
-        size: parseInt(file.size) || 0,
-        lastModified: file.updated_at || file.created_at,
-        mimeType: file.mime_type,
-        publicUrl: file.public_url
-      })),
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        hasMore: results.length === parseInt(limit),
-        totalPages: Math.ceil(totalResults / parseInt(limit))
-      }
+      message: 'File uploaded with progress tracking',
+      data: result
     });
-
   } catch (error) {
-    console.error('Unexpected error in searchFiles:', error);
-    return res.status(500).json({ error: 'Server error while searching files' });
+    console.error('Upload with progress error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'File upload with progress failed',
+      error: error.message
+    });
   }
 };
 
-// Delete file from rera-dev bucket
+/**
+ * Delete a single file from S3
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
 export const deleteFile = async (req, res) => {
   try {
-    const { fileId } = req.params;
-    const { filePath } = req.body;
-
-    if (!fileId && !filePath) {
-      return res.status(400).json({ error: 'File ID or file path is required' });
+    const { key } = req.params;
+    
+    if (!key) {
+      return res.status(400).json({
+        success: false,
+        message: 'File key is required'
+      });
     }
 
-    let fileToDelete;
-
-    // Get file information first
-    if (fileId) {
-      const fileResult = await query(
-        'SELECT * FROM rera_dev_files WHERE id = $1',
-        [fileId]
-      );
-      
-      if (fileResult.rows.length === 0) {
-        return res.status(404).json({ error: 'File not found' });
-      }
-      
-      fileToDelete = fileResult.rows[0];
-    } else {
-      // Use file path to find the file
-      const fileResult = await query(
-        'SELECT * FROM rera_dev_files WHERE CONCAT(folder_path, \'/\', name) = $1 OR name = $1',
-        [filePath]
-      );
-      
-      if (fileResult.rows.length === 0) {
-        return res.status(404).json({ error: 'File not found' });
-      }
-      
-      fileToDelete = fileResult.rows[0];
+    const exists = await fileExists(key);
+    if (!exists) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
     }
 
-    // Construct the S3 key from path_tokens
-    const s3Key = Array.isArray(fileToDelete.full_path_array) 
-      ? fileToDelete.full_path_array.join('/')
-      : fileToDelete.name;
-
-    // Delete from S3
-    await deleteFromS3(s3Key);
-
-    // Delete from database (this will be handled by the storage.objects delete cascade)
-    await query('DELETE FROM storage.objects WHERE id = $1', [fileToDelete.id]);
-
-    return res.status(200).json({
+    await deleteFromS3(key);
+    
+    res.status(200).json({
       success: true,
-      message: 'File deleted successfully from rera-dev bucket',
-      deletedFile: {
-        id: fileToDelete.id,
-        name: fileToDelete.name,
-        category: fileToDelete.category,
-        s3Key: s3Key,
-        bucket: 'rera-dev'
-      }
+      message: 'File deleted successfully'
     });
-
   } catch (error) {
-    console.error('Unexpected error in deleteFile:', error);
-    return res.status(500).json({ error: 'Server error while deleting file' });
+    console.error('Delete error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'File deletion failed',
+      error: error.message
+    });
   }
 };
 
-// Get files by folder path
-export const getFilesByFolder = async (req, res) => {
+/**
+ * Delete multiple files from S3
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const deleteMultipleFilesController = async (req, res) => {
   try {
-    const folderPath = decodeURIComponent(req.params.folderPath);
-    const { page = 1, limit = 50, category = null } = req.query;
+    const { keys } = req.body;
+    
+    if (!Array.isArray(keys) || keys.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Keys array is required'
+      });
+    }
+
+    const result = await deleteMultipleFiles(keys);
+    
+    res.status(200).json({
+      success: true,
+      message: `${result.deleted.length} files deleted successfully`,
+      data: result
+    });
+  } catch (error) {
+    console.error('Multiple delete error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Multiple file deletion failed',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Download a file from S3
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const downloadFile = async (req, res) => {
+  try {
+    const { key } = req.params;
+    
+    if (!key) {
+      return res.status(400).json({
+        success: false,
+        message: 'File key is required'
+      });
+    }
+
+    const exists = await fileExists(key);
+    if (!exists) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
+    }
+
+    const file = await downloadFromS3(key);
+    
+    res.set({
+      'Content-Type': file.contentType,
+      'Content-Length': file.size,
+      'Content-Disposition': `attachment; filename="${key.split('/').pop()}"`
+    });
+    
+    res.send(file.buffer);
+  } catch (error) {
+    console.error('Download error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'File download failed',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get file metadata
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const getFileMetadataController = async (req, res) => {
+  try {
+    const { key } = req.params;
+    
+    if (!key) {
+      return res.status(400).json({
+        success: false,
+        message: 'File key is required'
+      });
+    }
+
+    const exists = await fileExists(key);
+    if (!exists) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
+    }
+
+    const metadata = await getFileMetadata(key);
+    
+    res.status(200).json({
+      success: true,
+      message: 'File metadata retrieved successfully',
+      data: metadata
+    });
+  } catch (error) {
+    console.error('Metadata error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get file metadata',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Get signed URL for file access
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const getSignedUrlController = async (req, res) => {
+  try {
+    const { key } = req.params;
+    const { expires = 3600 } = req.query;
+    
+    if (!key) {
+      return res.status(400).json({
+        success: false,
+        message: 'File key is required'
+      });
+    }
+
+    const exists = await fileExists(key);
+    if (!exists) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
+    }
+
+    const signedUrl = getSignedUrl(key, parseInt(expires));
+    
+    res.status(200).json({
+      success: true,
+      message: 'Signed URL generated successfully',
+      data: {
+        url: signedUrl,
+        expires: expires,
+        key: key
+      }
+    });
+  } catch (error) {
+    console.error('Signed URL error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate signed URL',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Generate presigned URL for file download
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const generatePresignedUrlController = async (req, res) => {
+  try {
+    const { key } = req.params;
+    const { expiresIn = 3600 } = req.query;
+    
+    if (!key) {
+      return res.status(400).json({
+        success: false,
+        message: 'File key is required'
+      });
+    }
+
+    const exists = await fileExists(key);
+    if (!exists) {
+      return res.status(404).json({
+        success: false,
+        message: 'File not found'
+      });
+    }
+
+    const url = await generatePresignedUrl(key, parseInt(expiresIn));
+    
+    res.status(200).json({
+      success: true,
+      message: 'Presigned URL generated successfully',
+      data: {
+        url: url,
+        expiresIn: expiresIn,
+        key: key
+      }
+    });
+  } catch (error) {
+    console.error('Presigned URL error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate presigned URL',
+      error: error.message
+    });
+  }
+};
+
+// ========================
+// FILE OPERATIONS
+// ========================
+
+/**
+ * Copy a file within S3
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const copyFileController = async (req, res) => {
+  try {
+    const { sourceKey, destinationKey } = req.body;
+    
+    if (!sourceKey || !destinationKey) {
+      return res.status(400).json({
+        success: false,
+        message: 'Source key and destination key are required'
+      });
+    }
+
+    const exists = await fileExists(sourceKey);
+    if (!exists) {
+      return res.status(404).json({
+        success: false,
+        message: 'Source file not found'
+      });
+    }
+
+    await copyFile(sourceKey, destinationKey);
+    
+    res.status(200).json({
+      success: true,
+      message: 'File copied successfully',
+      data: {
+        sourceKey,
+        destinationKey
+      }
+    });
+  } catch (error) {
+    console.error('Copy error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'File copy failed',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Move a file within S3
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const moveFileController = async (req, res) => {
+  try {
+    const { sourceKey, destinationKey } = req.body;
+    
+    if (!sourceKey || !destinationKey) {
+      return res.status(400).json({
+        success: false,
+        message: 'Source key and destination key are required'
+      });
+    }
+
+    const exists = await fileExists(sourceKey);
+    if (!exists) {
+      return res.status(404).json({
+        success: false,
+        message: 'Source file not found'
+      });
+    }
+
+    await moveFile(sourceKey, destinationKey);
+    
+    res.status(200).json({
+      success: true,
+      message: 'File moved successfully',
+      data: {
+        sourceKey,
+        destinationKey
+      }
+    });
+  } catch (error) {
+    console.error('Move error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'File move failed',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Check if file exists
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const checkFileExists = async (req, res) => {
+  try {
+    const { key } = req.params;
+    
+    if (!key) {
+      return res.status(400).json({
+        success: false,
+        message: 'File key is required'
+      });
+    }
+
+    const exists = await fileExists(key);
+    
+    res.status(200).json({
+      success: true,
+      message: 'File existence check completed',
+      data: {
+        key,
+        exists
+      }
+    });
+  } catch (error) {
+    console.error('File exists check error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'File existence check failed',
+      error: error.message
+    });
+  }
+};
+
+// ========================
+// FOLDER OPERATIONS
+// ========================
+
+/**
+ * Create a folder in S3
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const createFolderController = async (req, res) => {
+  try {
+    const { folderPath } = req.body;
     
     if (!folderPath) {
-      return res.status(400).json({ error: 'Folder path is required' });
+      return res.status(400).json({
+        success: false,
+        message: 'Folder path is required'
+      });
     }
 
-    // Use the paginated function with folder filter
-    const filesResult = await query(
-      'SELECT * FROM get_rera_dev_files_paginated($1, $2, $3, $4)',
-      [parseInt(page), parseInt(limit), category, folderPath]
-    );
+    await createFolder(folderPath);
     
-    const allFiles = filesResult.rows;
-    const totalFiles = allFiles.length > 0 ? parseInt(allFiles[0].total_count) : 0;
-
-    return res.status(200).json({
+    res.status(201).json({
       success: true,
-      bucket: 'rera-dev',
-      folderPath: folderPath,
-      totalFiles: totalFiles,
-      files: allFiles.map(file => ({
-        id: file.id,
-        name: file.name,
-        fullPath: file.folder_path ? `${file.folder_path}/${file.name}`.replace(/^\//, '') : file.name,
-        category: file.category,
-        folderPath: file.folder_path,
-        size: parseInt(file.size) || 0,
-        lastModified: file.updated_at || file.created_at,
-        mimeType: file.mime_type,
-        publicUrl: file.public_url,
-        bucket: 'rera-dev',
-        level: file.depth_level
-      })),
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        hasMore: allFiles.length === parseInt(limit),
-        totalPages: Math.ceil(totalFiles / parseInt(limit))
+      message: 'Folder created successfully',
+      data: {
+        folderPath
       }
     });
-
   } catch (error) {
-    console.error('Unexpected error in getFilesByFolder:', error);
-    return res.status(500).json({ error: 'Server error while fetching folder files' });
+    console.error('Create folder error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Folder creation failed',
+      error: error.message
+    });
   }
 };
 
-// Get category summary
-export const getCategorySummary = async (req, res) => {
+/**
+ * Delete a folder and all its contents
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const deleteFolderController = async (req, res) => {
   try {
-    const categorySummaryResult = await query('SELECT * FROM rera_dev_category_summary');
-    const categorySummary = categorySummaryResult.rows;
+    const { folderPath } = req.params;
+    
+    if (!folderPath) {
+      return res.status(400).json({
+        success: false,
+        message: 'Folder path is required'
+      });
+    }
 
-    return res.status(200).json({
+    await deleteFolder(folderPath);
+    
+    res.status(200).json({
       success: true,
-      bucket: 'rera-dev',
-      totalCategories: categorySummary.length,
-      categories: categorySummary.map(cat => ({
-        categoryName: cat.category_name,
-        originalFolder: cat.original_folder,
-        fileCount: cat.file_count,
-        totalSize: cat.total_size,
-        oldestFile: cat.oldest_file,
-        newestFile: cat.newest_file,
-        mimeTypes: cat.mime_types,
-        subfolders: cat.subfolders || []
-      }))
+      message: 'Folder deleted successfully',
+      data: {
+        folderPath
+      }
     });
-
   } catch (error) {
-    console.error('Unexpected error in getCategorySummary:', error);
-    return res.status(500).json({ error: 'Server error while fetching category summary' });
+    console.error('Delete folder error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Folder deletion failed',
+      error: error.message
+    });
   }
 };
 
-// Get files by specific subfolder (for documents)
-export const getDocumentsBySubfolder = async (req, res) => {
+/**
+ * Get folder structure
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const getFolderStructureController = async (req, res) => {
   try {
-    const { subfolder } = req.params;
-    const { page = 1, limit = 50 } = req.query;
+    const { prefix = '' } = req.query;
     
-    if (!subfolder) {
-      return res.status(400).json({ error: 'Subfolder is required' });
-    }
-
-    // Use the documents paginated function with subfolder filter
-    const documentsResult = await query(
-      'SELECT * FROM get_rera_dev_documents_paginated($1, $2, $3)',
-      [parseInt(page), parseInt(limit), subfolder]
-    );
+    const folders = await getFolderStructure(prefix);
     
-    const allDocuments = documentsResult.rows;
-    const totalDocuments = allDocuments.length > 0 ? parseInt(allDocuments[0].total_count) : 0;
-
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      bucket: 'rera-dev',
-      category: 'documents',
-      subfolder: subfolder,
-      totalDocuments: totalDocuments,
-      documents: allDocuments.map(doc => ({
-        id: doc.id,
-        name: doc.name,
-        fullPath: doc.folder_path ? `${doc.folder_path}/${doc.name}`.replace(/^\//, '') : doc.name,
-        mainFolder: doc.main_folder,
-        subFolder: doc.sub_folder,
-        folderPath: doc.folder_path,
-        size: parseInt(doc.size) || 0,
-        lastModified: doc.updated_at || doc.created_at,
-        mimeType: doc.mime_type,
-        publicUrl: doc.public_url,
-        bucket: 'rera-dev',
-        level: doc.depth_level
-      })),
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        hasMore: allDocuments.length === parseInt(limit),
-        totalPages: Math.ceil(totalDocuments / parseInt(limit))
+      message: 'Folder structure retrieved successfully',
+      data: {
+        prefix,
+        folders
       }
     });
-
   } catch (error) {
-    console.error('Unexpected error in getDocumentsBySubfolder:', error);
-    return res.status(500).json({ error: 'Server error while fetching subfolder documents' });
+    console.error('Folder structure error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get folder structure',
+      error: error.message
+    });
   }
 };
 
-// Get photos by specific role/category
-export const getPhotosByRole = async (req, res) => {
+/**
+ * Get folder size
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const getFolderSizeController = async (req, res) => {
   try {
-    const { role } = req.params;
-    const { page = 1, limit = 50 } = req.query;
+    const { folderPath } = req.params;
     
-    if (!role) {
-      return res.status(400).json({ error: 'Role is required' });
+    if (!folderPath) {
+      return res.status(400).json({
+        success: false,
+        message: 'Folder path is required'
+      });
     }
 
-    // Use the photos paginated function with role filter
-    const photosResult = await query(
-      'SELECT * FROM get_rera_dev_photos_paginated($1, $2, $3)',
-      [parseInt(page), parseInt(limit), role]
-    );
+    const sizeInfo = await getFolderSize(folderPath);
     
-    const allPhotos = photosResult.rows;
-    const totalPhotos = allPhotos.length > 0 ? parseInt(allPhotos[0].total_count) : 0;
-
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
-      bucket: 'rera-dev',
-      category: 'photos',
-      role: role,
-      totalPhotos: totalPhotos,
-      photos: allPhotos.map(photo => ({
-        id: photo.id,
-        name: photo.name,
-        fullPath: photo.folder_path ? `${photo.folder_path}/${photo.name}`.replace(/^\//, '') : photo.name,
-        mainFolder: photo.main_folder,
-        roleOrCategory: photo.role_or_category,
-        folderPath: photo.folder_path,
-        size: parseInt(photo.size) || 0,
-        lastModified: photo.updated_at || photo.created_at,
-        mimeType: photo.mime_type,
-        publicUrl: photo.public_url,
-        bucket: 'rera-dev',
-        level: photo.depth_level
-      })),
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        hasMore: allPhotos.length === parseInt(limit),
-        totalPages: Math.ceil(totalPhotos / parseInt(limit))
+      message: 'Folder size retrieved successfully',
+      data: sizeInfo
+    });
+  } catch (error) {
+    console.error('Folder size error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get folder size',
+      error: error.message
+    });
+  }
+};
+
+// ========================
+// LISTING OPERATIONS
+// ========================
+
+/**
+ * List all files in S3
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const listFiles = async (req, res) => {
+  try {
+    const { prefix = '', maxKeys = 1000 } = req.query;
+    
+    const files = await listS3Files(prefix, parseInt(maxKeys));
+    
+    res.status(200).json({
+      success: true,
+      message: 'Files listed successfully',
+      data: {
+        files,
+        count: files.length,
+        prefix
       }
     });
-
   } catch (error) {
-    console.error('Unexpected error in getPhotosByRole:', error);
-    return res.status(500).json({ error: 'Server error while fetching role photos' });
+    console.error('List files error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to list files',
+      error: error.message
+    });
   }
+};
+
+/**
+ * List files in a specific folder
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const listFilesInFolderController = async (req, res) => {
+  try {
+    const { folder = '' } = req.params;
+    const { maxKeys = 1000, continuationToken = null } = req.query;
+    
+    const result = await listFilesInFolder(folder, parseInt(maxKeys), continuationToken);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Folder files listed successfully',
+      data: result
+    });
+  } catch (error) {
+    console.error('List folder files error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to list folder files',
+      error: error.message
+    });
+  }
+};
+
+// ========================
+// SEARCH OPERATIONS
+// ========================
+
+/**
+ * Search files by name
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const searchFilesController = async (req, res) => {
+  try {
+    const { searchTerm } = req.params;
+    const { folder = '' } = req.query;
+    
+    if (!searchTerm) {
+      return res.status(400).json({
+        success: false,
+        message: 'Search term is required'
+      });
+    }
+
+    const files = await searchFiles(searchTerm, folder);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Search completed successfully',
+      data: {
+        searchTerm,
+        folder,
+        files,
+        count: files.length
+      }
+    });
+  } catch (error) {
+    console.error('Search error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Search failed',
+      error: error.message
+    });
+  }
+};
+
+// ========================
+// ANALYTICS OPERATIONS
+// ========================
+
+/**
+ * Get bucket information and analytics
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const getBucketInfoController = async (req, res) => {
+  try {
+    const bucketInfo = await getBucketInfo();
+    
+    res.status(200).json({
+      success: true,
+      message: 'Bucket information retrieved successfully',
+      data: bucketInfo
+    });
+  } catch (error) {
+    console.error('Bucket info error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get bucket information',
+      error: error.message
+    });
+  }
+};
+
+// ========================
+// UTILITY OPERATIONS
+// ========================
+
+/**
+ * Validate file type
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const validateFileTypeController = async (req, res) => {
+  try {
+    const { mimetype } = req.body;
+    const { allowedTypes = [] } = req.body;
+    
+    if (!mimetype) {
+      return res.status(400).json({
+        success: false,
+        message: 'Mimetype is required'
+      });
+    }
+
+    const isValid = validateFileType(mimetype, allowedTypes);
+    
+    res.status(200).json({
+      success: true,
+      message: 'File type validation completed',
+      data: {
+        mimetype,
+        isValid,
+        allowedTypes
+      }
+    });
+  } catch (error) {
+    console.error('File type validation error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'File type validation failed',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Generate unique filename
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const generateUniqueFileNameController = async (req, res) => {
+  try {
+    const { originalName } = req.body;
+    
+    if (!originalName) {
+      return res.status(400).json({
+        success: false,
+        message: 'Original filename is required'
+      });
+    }
+
+    const uniqueName = generateUniqueFileName(originalName);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Unique filename generated successfully',
+      data: {
+        originalName,
+        uniqueName
+      }
+    });
+  } catch (error) {
+    console.error('Generate unique filename error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to generate unique filename',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Format bytes to human readable format
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const formatBytesController = async (req, res) => {
+  try {
+    const { bytes } = req.body;
+    const { decimals = 2 } = req.body;
+    
+    if (bytes === undefined || bytes === null) {
+      return res.status(400).json({
+        success: false,
+        message: 'Bytes value is required'
+      });
+    }
+
+    const formatted = formatBytes(parseInt(bytes), decimals);
+    
+    res.status(200).json({
+      success: true,
+      message: 'Bytes formatted successfully',
+      data: {
+        originalBytes: bytes,
+        formatted,
+        decimals
+      }
+    });
+  } catch (error) {
+    console.error('Format bytes error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to format bytes',
+      error: error.message
+    });
+  }
+};
+
+// ========================
+// HEALTH CHECK
+// ========================
+
+/**
+ * Health check endpoint
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ */
+export const healthCheck = async (req, res) => {
+  try {
+    res.status(200).json({
+      success: true,
+      message: 'S3 Bucket Controller is healthy',
+      timestamp: new Date().toISOString(),
+      bucketName: bucketName
+    });
+  } catch (error) {
+    console.error('Health check error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Health check failed',
+      error: error.message
+    });
+  }
+};
+
+// Export multer upload middleware
+export { upload };
+
+// Export all controller functions
+export default {
+  // Single file operations
+  uploadSingleFile,
+  uploadMultipleFilesController,
+  uploadWithProgressController,
+  deleteFile,
+  deleteMultipleFilesController,
+  downloadFile,
+  getFileMetadataController,
+  getSignedUrlController,
+  generatePresignedUrlController,
+  
+  // File operations
+  copyFileController,
+  moveFileController,
+  checkFileExists,
+  
+  // Folder operations
+  createFolderController,
+  deleteFolderController,
+  getFolderStructureController,
+  getFolderSizeController,
+  
+  // Listing operations
+  listFiles,
+  listFilesInFolderController,
+  
+  // Search operations
+  searchFilesController,
+  
+  // Analytics operations
+  getBucketInfoController,
+  
+  // Utility operations
+  validateFileTypeController,
+  generateUniqueFileNameController,
+  formatBytesController,
+  
+  // Health check
+  healthCheck,
+  
+  // Multer middleware
+  upload
 };

@@ -211,10 +211,10 @@ const router = createBrowserRouter([
       {
         path: "/syte-documents",
         element: 
-        <AuthLayout authentication>
-          {" "}
-          {/* <SyteDocuments /> TODO: update this component as per BUCKET METHODS (RERA-DEV) in databaseService */}
-         </AuthLayout>,
+        // <AuthLayout authentication>
+        //   {" "}
+          <SyteDocuments /> 
+        //  </AuthLayout>,
       },
     ],
     errorElement: <NotFoundPage />

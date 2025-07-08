@@ -1,951 +1,732 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { 
-  Search, 
-  FolderOpen, 
+  Upload, 
   File, 
+  Folder, 
+  Search, 
+  Grid, 
+  List, 
   Download, 
   Trash2, 
+  Copy, 
+  Move, 
   Eye, 
-  Filter,
-  RefreshCw,
-  Grid,
-  List,
-  Upload,
-  Image,
-  FileText,
-  Archive,
-  Users,
-  Calendar,
-  HardDrive,
+  MoreVertical,
   X,
+  Plus,
+  FolderPlus,
   ChevronRight,
-  Home,
+  ChevronDown,
+  Filter,
   SortAsc,
   SortDesc,
-  MoreVertical,
-  Share2,
-  Copy,
-  Star,
-  StarOff,
-  Clock,
-  Loader2,
-  AlertCircle
+  RefreshCw,
+  Cloud,
+  HardDrive,
+  AlertCircle,
+  CheckCircle,
+  Loader
 } from 'lucide-react';
-import databaseService from '../backend-services/database/database';
-import env from '../env/env';
-
-// Loading Skeleton Components
-const StatCardSkeleton = () => (
-  <div className="bg-white p-6 rounded-2xl border border-slate-200 animate-pulse">
-    <div className="flex items-center">
-      <div className="p-3 bg-slate-200 rounded-xl w-12 h-12"></div>
-      <div className="ml-4 flex-1">
-        <div className="h-4 bg-slate-200 rounded w-20 mb-2"></div>
-        <div className="h-8 bg-slate-200 rounded w-16"></div>
-      </div>
-    </div>
-  </div>
-);
-
-const FolderCardSkeleton = () => (
-  <div className="bg-white rounded-2xl border border-slate-200 animate-pulse">
-    <div className="p-6">
-      <div className="flex items-center mb-6">
-        <div className="p-3 bg-slate-200 rounded-xl w-12 h-12 mr-4"></div>
-        <div className="flex-1">
-          <div className="h-6 bg-slate-200 rounded w-32 mb-2"></div>
-          <div className="h-4 bg-slate-200 rounded w-24"></div>
-        </div>
-      </div>
-      <div className="space-y-3">
-        {[...Array(3)].map((_, i) => (
-          <div key={i} className="border border-slate-200 rounded-xl p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center flex-1">
-                <div className="w-5 h-5 bg-slate-200 rounded mr-3"></div>
-                <div className="flex-1">
-                  <div className="h-5 bg-slate-200 rounded w-24 mb-2"></div>
-                  <div className="h-3 bg-slate-200 rounded w-32"></div>
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="bg-slate-200 rounded-full w-8 h-6"></div>
-                <div className="w-5 h-5 bg-slate-200 rounded"></div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
-
-const FileCardSkeleton = ({ viewMode }) => (
-  <div className={`border border-slate-200 rounded-xl animate-pulse ${
-    viewMode === 'list' ? 'flex items-center p-4' : 'p-4'
-  }`}>
-    <div className={`flex items-center ${viewMode === 'list' ? 'flex-1' : 'mb-3'}`}>
-      <div className="w-4 h-4 bg-slate-200 rounded mr-3"></div>
-      <div className="flex-1">
-        <div className="h-4 bg-slate-200 rounded w-32 mb-2"></div>
-        <div className="h-3 bg-slate-200 rounded w-24"></div>
-      </div>
-    </div>
-    <div className="flex items-center space-x-1">
-      {[...Array(5)].map((_, i) => (
-        <div key={i} className="w-8 h-8 bg-slate-200 rounded-lg"></div>
-      ))}
-    </div>
-  </div>
-);
+import bucketService from '../backend-services/database/bucket';
 
 const SyteDocuments = () => {
-  // State management
-  const [documents, setDocuments] = useState(null);
-  const [userPhotos, setUserPhotos] = useState(null);
-  const [bucketStats, setBucketStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedBucket, setSelectedBucket] = useState('all');
+  const [files, setFiles] = useState([]);
+  const [folders, setFolders] = useState([]);
+  const [currentFolder, setCurrentFolder] = useState('');
+  const [selectedItems, setSelectedItems] = useState(new Set());
   const [viewMode, setViewMode] = useState('grid');
-  const [selectedFolder, setSelectedFolder] = useState(null);
-  const [folderFiles, setFolderFiles] = useState([]);
-  const [refreshing, setRefreshing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState({});
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showCreateFolder, setShowCreateFolder] = useState(false);
+  const [newFolderName, setNewFolderName] = useState('');
   const [sortBy, setSortBy] = useState('name');
   const [sortOrder, setSortOrder] = useState('asc');
-  const [fullScreenPreview, setFullScreenPreview] = useState(null);
-  const [favorites, setFavorites] = useState(new Set());
-  const [recentFiles, setRecentFiles] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState(new Set());
-  const [showDropdown, setShowDropdown] = useState(null);
-  const [folderLoading, setFolderLoading] = useState(false);
-  const [statsLoading, setStatsLoading] = useState(true);
-  const [documentsLoading, setDocumentsLoading] = useState(true);
-  const [photosLoading, setPhotosLoading] = useState(true);
+  const [isDragging, setIsDragging] = useState(false);
+  const [contextMenu, setContextMenu] = useState(null);
+  const [bucketInfo, setBucketInfo] = useState(null);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  
+  const fileInputRef = useRef(null);
+  const folderInputRef = useRef(null);
 
   // Load initial data
   useEffect(() => {
-    loadAllData();
-  }, []);
+    loadFiles();
+    loadFolderStructure();
+    loadBucketInfo();
+  }, [currentFolder]);
 
-  const loadAllData = useCallback(async () => {
+  // Load files in current folder
+  const loadFiles = async () => {
+    setIsLoading(true);
+    setError('');
     try {
-      setLoading(true);
-      setError(null);
-      setStatsLoading(true);
-      setDocumentsLoading(true);
-      setPhotosLoading(true);
-      
-      const [docsResponse, photosResponse, statsResponse] = await Promise.all([
-        databaseService.getAllProjectFiles().finally(() => setDocumentsLoading(false)),
-        databaseService.getAllUserPhotos().finally(() => setPhotosLoading(false)),
-        databaseService.getBucketStats().finally(() => setStatsLoading(false))
-      ]);
+      const response = await bucketService.listFilesInFolder(currentFolder);
+      setFiles(response.files || []);
+    } catch (err) {
+      setError('Failed to load files: ' + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      if (!docsResponse || !photosResponse || !statsResponse) {
-        throw new Error('Failed to fetch one or more resources');
+  // Load folder structure
+  const loadFolderStructure = async () => {
+    try {
+      const response = await bucketService.getFolderStructure(currentFolder);
+      setFolders(response.folders || []);
+    } catch (err) {
+      console.error('Failed to load folder structure:', err);
+    }
+  };
+
+  // Load bucket info
+  const loadBucketInfo = async () => {
+    try {
+      const response = await bucketService.getBucketInfo();
+      setBucketInfo(response);
+    } catch (err) {
+      console.error('Failed to load bucket info:', err);
+    }
+  };
+
+  // Handle file upload
+  const handleFileUpload = useCallback(async (uploadFiles) => {
+    if (!uploadFiles || uploadFiles.length === 0) return;
+
+    const fileArray = Array.from(uploadFiles);
+    setShowUploadModal(false);
+    
+    // Initialize progress for each file
+    const progressMap = {};
+    fileArray.forEach(file => {
+      progressMap[file.name] = 0;
+    });
+    setUploadProgress(progressMap);
+
+    try {
+      if (fileArray.length === 1) {
+        await bucketService.uploadWithProgress(
+          fileArray[0], 
+          currentFolder,
+          (percent, loaded, total) => {
+            setUploadProgress(prev => ({
+              ...prev,
+              [fileArray[0].name]: percent
+            }));
+          }
+        );
+      } else {
+        await bucketService.uploadMultipleFiles(fileArray, currentFolder);
       }
       
-      setDocuments(docsResponse);
-      setUserPhotos(photosResponse);
-      setBucketStats(statsResponse);
-      
-      // Set recent files
-      const allFiles = [...(docsResponse.allFiles || []), ...(photosResponse.allPhotos || [])];
-      const recent = allFiles
-        .sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))
-        .slice(0, 5);
-      setRecentFiles(recent);
-      
+      setSuccess('Files uploaded successfully!');
+      loadFiles();
+      loadBucketInfo();
     } catch (err) {
-      setError('Failed to load documents: ' + err.message);
-      console.error('Error loading documents:', err);
+      setError('Upload failed: ' + err.message);
     } finally {
-      setLoading(false);
+      setUploadProgress({});
+    }
+  }, [currentFolder]);
+
+  // Handle drag and drop
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleFileUpload(e.dataTransfer.files);
+  }, [handleFileUpload]);
+
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setIsDragging(false);
     }
   }, []);
 
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await loadAllData();
-    setRefreshing(false);
-  }, [loadAllData]);
-
-  const handleFolderClick = useCallback(async (folderPath, bucket) => {
-    try {
-      setFolderLoading(true);
-      setSelectedFolder({ path: folderPath, bucket });
-      
-      let files = [];
-      if (bucket === 'uploaded-documents') {
-        const response = await databaseService.getProjectFilesByFolder(folderPath);
-        files = response.files || [];
-      } else if (bucket === 'user-profile-photos') {
-        const response = await databaseService.getUserPhotosByRole(folderPath);
-        files = response.photos || [];
-      }
-      
-      setFolderFiles(files);
-    } catch (err) {
-      console.error('Error fetching folder files:', err);
-    } finally {
-      setFolderLoading(false);
-    }
-  }, []);
-
-  const handleDeleteFile = useCallback(async (bucket, filePath) => {
-    if (!confirm('Are you sure you want to delete this file?')) return;
+  // Create new folder
+  const handleCreateFolder = async () => {
+    if (!newFolderName.trim()) return;
     
     try {
-      await databaseService.deleteFile(bucket, filePath);
-      // Refresh the current view
-      if (selectedFolder) {
-        handleFolderClick(selectedFolder.path, selectedFolder.bucket);
-      } else {
-        loadAllData();
-      }
+      const folderPath = currentFolder ? `${currentFolder}/${newFolderName}` : newFolderName;
+      await bucketService.createFolder(folderPath);
+      setSuccess('Folder created successfully!');
+      setNewFolderName('');
+      setShowCreateFolder(false);
+      loadFolderStructure();
     } catch (err) {
-      alert('Error deleting file: ' + err.message);
+      setError('Failed to create folder: ' + err.message);
     }
-  }, [selectedFolder, handleFolderClick, loadAllData]);
+  };
 
-  const handlePreview = useCallback((fileUrl) => {
-    setFullScreenPreview(fileUrl);
-  }, []);
-
-  const closeFullScreen = useCallback(() => {
-    setFullScreenPreview(null);
-  }, []);
-
-  const toggleFavorite = useCallback((filePath) => {
-    setFavorites(prev => {
-      const newFavorites = new Set(prev);
-      if (newFavorites.has(filePath)) {
-        newFavorites.delete(filePath);
-      } else {
-        newFavorites.add(filePath);
-      }
-      return newFavorites;
-    });
-  }, []);
-
-  const handleDownload = useCallback((fileUrl, fileName) => {
-    console.log('Downloading file:', fileUrl);
-    const link = document.createElement('a');
-    link.href = fileUrl;
-    link.download = fileName;
-    link.click();
-  }, []);
-
-  const copyToClipboard = useCallback(async (text) => {
+  // Delete selected items
+  const handleDelete = async () => {
+    if (selectedItems.size === 0) return;
+    
     try {
-      await navigator.clipboard.writeText(text);
-      alert('Link copied to clipboard!');
+      const itemsArray = Array.from(selectedItems);
+      await bucketService.deleteMultipleFiles(itemsArray);
+      setSuccess('Items deleted successfully!');
+      setSelectedItems(new Set());
+      loadFiles();
+      loadBucketInfo();
     } catch (err) {
-      console.error('Failed to copy:', err);
+      setError('Failed to delete items: ' + err.message);
     }
-  }, []);
+  };
 
-  // Utility functions
-  const formatFileSize = useCallback((bytes) => {
+  // Download file
+  const handleDownload = async (fileKey, fileName) => {
+    try {
+      await bucketService.downloadAndSave(fileKey, fileName);
+      setSuccess('File downloaded successfully!');
+    } catch (err) {
+      setError('Failed to download file: ' + err.message);
+    }
+  };
+
+  // Search files
+  const handleSearch = async (term) => {
+    if (!term.trim()) {
+      loadFiles();
+      return;
+    }
+    
+    try {
+      const response = await bucketService.searchFiles(term, currentFolder);
+      setFiles(response.files || []);
+    } catch (err) {
+      setError('Search failed: ' + err.message);
+    }
+  };
+
+  // Sort files
+  const sortedFiles = [...files].sort((a, b) => {
+    const aVal = a[sortBy];
+    const bVal = b[sortBy];
+    const result = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+    return sortOrder === 'asc' ? result : -result;
+  });
+
+  // Filter files
+  const filteredFiles = sortedFiles.filter(file => 
+    file.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Format file size
+  const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  }, []);
+  };
 
-  const getFileIcon = useCallback((filename) => {
-    const extension = filename.split('.').pop().toLowerCase();
-    const iconMap = {
-      'jpg': <Image className="w-4 h-4 text-emerald-500" />,
-      'jpeg': <Image className="w-4 h-4 text-emerald-500" />,
-      'png': <Image className="w-4 h-4 text-emerald-500" />,
-      'gif': <Image className="w-4 h-4 text-emerald-500" />,
-      'webp': <Image className="w-4 h-4 text-emerald-500" />,
-      'svg': <Image className="w-4 h-4 text-emerald-500" />,
-      'pdf': <FileText className="w-4 h-4 text-red-500" />,
-      'doc': <FileText className="w-4 h-4 text-blue-600" />,
-      'docx': <FileText className="w-4 h-4 text-blue-600" />,
-      'xls': <FileText className="w-4 h-4 text-green-600" />,
-      'xlsx': <FileText className="w-4 h-4 text-green-600" />,
-      'zip': <Archive className="w-4 h-4 text-amber-600" />,
-      'rar': <Archive className="w-4 h-4 text-amber-600" />,
-    };
-    
-    return iconMap[extension] || <File className="w-4 h-4 text-slate-500" />;
-  }, []);
-
-  const isImageFile = useCallback((filename) => {
-    const extension = filename.split('.').pop().toLowerCase();
-    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension);
-  }, []);
-
-  const isPdfFile = useCallback((filename) => {
-    return filename.toLowerCase().endsWith('.pdf');
-  }, []);
-
-  // Filtered and sorted data
-  const filteredAndSortedData = useMemo(() => {
-    let files = [];
-    
-    if (selectedFolder) {
-      files = [...folderFiles];
-    } else {
-      const allFiles = [];
-      if (documents && (selectedBucket === 'all' || selectedBucket === 'uploaded-documents')) {
-        allFiles.push(...documents.allFiles);
-      }
-      if (userPhotos && (selectedBucket === 'all' || selectedBucket === 'user-profile-photos')) {
-        allFiles.push(...userPhotos.allPhotos);
-      }
-      files = allFiles;
-    }
-
-    // Filter by search query
-    if (searchQuery) {
-      const searchLower = searchQuery.toLowerCase();
-      files = files.filter(file => 
-        file.name.toLowerCase().includes(searchLower) ||
-        (file.folder && file.folder.toLowerCase().includes(searchLower)) ||
-        (file.roleFolder && file.roleFolder.toLowerCase().includes(searchLower))
-      );
-    }
-
-    // Sort files
-    files.sort((a, b) => {
-      let aValue, bValue;
-      
-      switch (sortBy) {
-        case 'name':
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-          break;
-        case 'size':
-          aValue = a.size;
-          bValue = b.size;
-          break;
-        case 'date':
-          aValue = new Date(a.lastModified);
-          bValue = new Date(b.lastModified);
-          break;
-        default:
-          aValue = a.name.toLowerCase();
-          bValue = b.name.toLowerCase();
-      }
-
-      if (sortOrder === 'asc') {
-        return aValue > bValue ? 1 : -1;
-      } else {
-        return aValue < bValue ? 1 : -1;
-      }
+  // Format date
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
+  };
 
-    return files;
-  }, [folderFiles, documents, userPhotos, selectedBucket, selectedFolder, searchQuery, sortBy, sortOrder]);
+  // Get file icon
+  const getFileIcon = (fileName) => {
+    const ext = fileName.split('.').pop().toLowerCase();
+    const iconMap = {
+      pdf: '📄',
+      doc: '📝',
+      docx: '📝',
+      xls: '📊',
+      xlsx: '📊',
+      ppt: '📊',
+      pptx: '📊',
+      txt: '📄',
+      jpg: '🖼️',
+      jpeg: '🖼️',
+      png: '🖼️',
+      gif: '🖼️',
+      mp4: '🎬',
+      mp3: '🎵',
+      zip: '📦',
+      rar: '📦'
+    };
+    return iconMap[ext] || '📄';
+  };
 
-  // Loading state
-  if (loading) {
-    return (
-      <div className="min-h-screen">
-        {/* Header Skeleton */}
-        <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 sticky top-0 z-40">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="h-8 bg-slate-200 rounded w-48 mb-2 animate-pulse"></div>
-                <div className="h-4 bg-slate-200 rounded w-32 animate-pulse"></div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="h-10 bg-slate-200 rounded-xl w-24 animate-pulse"></div>
-                <div className="h-10 bg-slate-200 rounded-xl w-24 animate-pulse"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Skeleton */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            {[...Array(4)].map((_, i) => <StatCardSkeleton key={i} />)}
-          </div>
-
-          {/* Controls Skeleton */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl border border-slate-200/60 p-6 mb-8">
-            <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0 lg:space-x-6">
-              <div className="h-12 bg-slate-200 rounded-xl w-full max-w-md animate-pulse"></div>
-              <div className="flex items-center space-x-4">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-12 bg-slate-200 rounded-xl w-32 animate-pulse"></div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Content Skeleton */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <FolderCardSkeleton />
-            <FolderCardSkeleton />
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <div className="bg-white/80 backdrop-blur-sm border border-red-200 rounded-2xl p-8 shadow-xl shadow-gray-300/30">
-            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <AlertCircle className="w-8 h-8 text-red-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-slate-900 mb-2">Something went wrong</h3>
-            <p className="text-slate-600 mb-6">{error}</p>
-            <button 
-              onClick={loadAllData}
-              className="inline-flex items-center px-6 py-3 bg-red-600 text-white font-medium rounded-xl hover:bg-red-700 focus:outline-none focus:ring-4 outline-none focus:ring-red-200 transition-all duration-200"
-            >
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Breadcrumb navigation
+  const breadcrumbs = currentFolder.split('/').filter(Boolean);
 
   return (
-    <div className="min-h-screen ">
-      {/* Header */}
-      <div className=" top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-0">
-          <div className="flex items-center justify-between">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-6 mb-6">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-[#2F4C92] tracking-tight">Syte Documents</h1>
-              <p className="text-slate-600 mt-1">Manage and organize your files with ease</p>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Syte Documents
+              </h1>
+              <p className="text-gray-600 mt-1">Modern file management system</p>
             </div>
-            <div className="flex items-center space-x-3">
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="inline-flex items-center px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-xl focus:outline-none focus:ring-4 outline-none focus:ring-teal-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-lg shadow-gray-300/30 hover:shadow-xl "
-              >
-                <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
-                {refreshing ? 'Refreshing...' : 'Refresh'}
-              </button>
-              {/* <button className="inline-flex items-center px-5 py-2.5 bg-white border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 hover:border-slate-400 focus:outline-none focus:ring-4 outline-none focus:ring-slate-200 transition-all duration-200 shadow-sm hover:shadow-lg shadow-gray-300/30">
-                <Upload className="w-4 h-4 mr-2" />
-                Upload
-              </button> */}
-            </div>
+            
+            {/* Bucket Info */}
+            {bucketInfo && (
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <HardDrive size={16} />
+                  <span>{formatFileSize(bucketInfo.totalSize || 0)}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <File size={16} />
+                  <span>{bucketInfo.totalFiles || 0} files</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Cloud size={16} className="text-blue-500" />
+                  <span>Cloud Storage</span>
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      </div>
 
-      {/* Stats Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {statsLoading ? (
-            [...Array(4)].map((_, i) => <StatCardSkeleton key={i} />)
-          ) : bucketStats ? (
-            <>
-              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 p-6 rounded-2xl shadow-sm hover:shadow-xl shadow-gray-300/30 hover:scale-105 transition-all duration-300">
-                <div className="flex items-center">
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg shadow-gray-300/30">
-                    <HardDrive className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-slate-600">Total Files</p>
-                    <p className="text-2xl font-bold text-slate-900">{bucketStats.statistics.overall.totalFiles}</p>
-                    <p className="text-xs text-slate-500 mt-1">All buckets</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 p-6 rounded-2xl shadow-sm hover:shadow-xl shadow-gray-300/30 hover:scale-105 transition-all duration-300">
-                <div className="flex items-center">
-                  <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg shadow-gray-300/30">
-                    <FileText className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-slate-600">Documents</p>
-                    <p className="text-2xl font-bold text-slate-900">{bucketStats.statistics['uploaded-documents'].totalFiles}</p>
-                    <p className="text-xs text-slate-500 mt-1">Project files</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 p-6 rounded-2xl shadow-sm hover:shadow-xl shadow-gray-300/30 hover:scale-105 transition-all duration-300">
-                <div className="flex items-center">
-                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg shadow-gray-300/30">
-                    <Users className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-slate-600">Profile Photos</p>
-                    <p className="text-2xl font-bold text-slate-900">{bucketStats.statistics['user-profile-photos'].totalPhotos}</p>
-                    <p className="text-xs text-slate-500 mt-1">User avatars</p>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 p-6 rounded-2xl shadow-sm hover:shadow-xl shadow-gray-300/30 hover:scale-105 transition-all duration-300">
-                <div className="flex items-center">
-                  <div className="p-3 bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl shadow-lg shadow-gray-300/30">
-                    <Archive className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="ml-4">
-                    <p className="text-sm font-medium text-slate-600">Total Size</p>
-                    <p className="text-2xl font-bold text-slate-900">{formatFileSize(bucketStats.statistics.overall.totalSize)}</p>
-                    <p className="text-xs text-slate-500 mt-1">Storage used</p>
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : null}
-        </div>
+          {/* Breadcrumb Navigation */}
+          <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
+            <button
+              onClick={() => setCurrentFolder('')}
+              className="hover:text-blue-600 transition-colors"
+            >
+              Root
+            </button>
+            {breadcrumbs.map((folder, index) => (
+              <React.Fragment key={index}>
+                <ChevronRight size={16} />
+                <button
+                  onClick={() => setCurrentFolder(breadcrumbs.slice(0, index + 1).join('/'))}
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  {folder}
+                </button>
+              </React.Fragment>
+            ))}
+          </div>
 
-{/* Controls */}
-        <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm p-6 mb-8">
-          <div className="flex flex-col lg:flex-row items-center justify-between space-y-4 lg:space-y-0 lg:space-x-6">
-            {/* Search */}
-            <div className="relative flex-1 max-w-md w-full">
-              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-900 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search files and folders..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-12 pr-4 py-3 w-full border border-slate-300 rounded-xl focus:ring-4 outline-none focus:ring-teal-100  transition-all duration-200 bg-white/50 backdrop-blur-sm"
-              />
+          {/* Toolbar */}
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200 shadow-lg hover:shadow-xl"
+              >
+                <Upload size={18} />
+                Upload
+              </button>
+              
+              <button
+                onClick={() => setShowCreateFolder(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <FolderPlus size={18} />
+                New Folder
+              </button>
+              
+              <button
+                onClick={loadFiles}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                <RefreshCw size={18} />
+                Refresh
+              </button>
             </div>
 
-            {/* Filters and Controls */}
-            <div className="flex items-center space-x-3">
-              {/* Bucket Filter */}
-              <select
-                value={selectedBucket}
-                onChange={(e) => setSelectedBucket(e.target.value)}
-                className="px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 outline-none focus:ring-teal-100  transition-all duration-200 bg-white/50 backdrop-blur-sm font-medium"
-              >
-                <option value="all">All Buckets</option>
-                <option value="uploaded-documents">Documents</option>
-                <option value="user-profile-photos">Profile Photos</option>
-              </select>
-
-              {/* Sort Controls */}
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-3 border border-slate-300 rounded-xl focus:ring-4 outline-none focus:ring-teal-100  transition-all duration-200 bg-white/50 backdrop-blur-sm font-medium"
-              >
-                <option value="name">Sort by Name</option>
-                <option value="size">Sort by Size </option>
-                <option value="date">Sort by Date</option>
-              </select>
-
-              <button
-                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="p-3 border border-slate-300 rounded-xl hover:bg-slate-50 focus:ring-4 outline-none focus:ring-teal-100 transition-all duration-200 bg-white/50 backdrop-blur-sm"
-              >
-                {sortOrder === 'asc' ? 
-                  <SortAsc className="w-5 h-5 text-slate-600" /> : 
-                  <SortDesc className="w-5 h-5 text-slate-600" />
-                }
-              </button>
+            <div className="flex items-center gap-3">
+              {/* Search */}
+              <div className="relative">
+                <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search files..."
+                  value={searchTerm}
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    handleSearch(e.target.value);
+                  }}
+                  className="pl-10 pr-4 py-2 w-64 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
 
               {/* View Mode Toggle */}
-              <div className="flex items-center bg-white/50 backdrop-blur-sm border border-slate-300 rounded-xl p-1">
+              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
-                    viewMode === 'grid' 
-                      ? 'bg-blue-600 text-white shadow-lg shadow-gray-300/30' 
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }`}
+                  className={`p-2 ${viewMode === 'grid' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600'} transition-colors`}
                 >
-                  <Grid className="w-4 h-4" />
+                  <Grid size={18} />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-lg transition-all duration-200 ${
-                    viewMode === 'list' 
-                      ? 'bg-blue-600 text-white shadow-lg shadow-gray-300/30' 
-                      : 'text-slate-600 hover:bg-slate-100'
-                  }`}
+                  className={`p-2 ${viewMode === 'list' ? 'bg-blue-500 text-white' : 'bg-white text-gray-600'} transition-colors`}
                 >
-                  <List className="w-4 h-4" />
+                  <List size={18} />
                 </button>
               </div>
+
+              {/* Sort */}
+              <select
+                value={`${sortBy}-${sortOrder}`}
+                onChange={(e) => {
+                  const [field, order] = e.target.value.split('-');
+                  setSortBy(field);
+                  setSortOrder(order);
+                }}
+                className="px-3 py-2 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="name-asc">Name A-Z</option>
+                <option value="name-desc">Name Z-A</option>
+                <option value="size-asc">Size (Small)</option>
+                <option value="size-desc">Size (Large)</option>
+                <option value="lastModified-desc">Recent</option>
+                <option value="lastModified-asc">Oldest</option>
+              </select>
             </div>
           </div>
         </div>
 
-        {/* Breadcrumb */}
-        {selectedFolder && (
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-4 mb-6 shadow-sm">
-            <div className="flex items-center space-x-2 text-sm">
-              <button
-                onClick={() => setSelectedFolder(null)}
-                className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
-              >
-                <Home className="w-4 h-4 mr-1" />
-                Home
-              </button>
-              <ChevronRight className="w-4 h-4 text-slate-400" />
-              <span className="text-slate-900 font-medium">{selectedFolder.path}</span>
-            </div>
+        {/* Status Messages */}
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 flex items-center gap-2">
+            <AlertCircle size={20} />
+            {error}
+            <button onClick={() => setError('')} className="ml-auto">
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 flex items-center gap-2">
+            <CheckCircle size={20} />
+            {success}
+            <button onClick={() => setSuccess('')} className="ml-auto">
+              <X size={16} />
+            </button>
+          </div>
+        )}
+
+        {/* Upload Progress */}
+        {Object.keys(uploadProgress).length > 0 && (
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <h3 className="font-semibold mb-2">Uploading Files...</h3>
+            {Object.entries(uploadProgress).map(([fileName, progress]) => (
+              <div key={fileName} className="mb-2">
+                <div className="flex justify-between text-sm mb-1">
+                  <span>{fileName}</span>
+                  <span>{Math.round(progress)}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         {/* Main Content */}
-        {selectedFolder ? (
-          // Folder Content View
-          <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-slate-200/60">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <FolderOpen className="w-6 h-6 text-amber-500 mr-3" />
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900">{selectedFolder.path}</h3>
-                    <p className="text-slate-600 text-sm mt-1">
-                      {folderLoading ? 'Loading...' : `${filteredAndSortedData.length} files`}
+        <div 
+          className={`bg-white/80 backdrop-blur-md rounded-2xl shadow-xl border border-white/20 p-6 min-h-96 ${
+            isDragging ? 'border-blue-400 bg-blue-50/50' : ''
+          }`}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+        >
+          {/* Drag & Drop Overlay */}
+          {isDragging && (
+            <div className="absolute inset-0 bg-blue-100/80 backdrop-blur-sm rounded-2xl border-2 border-dashed border-blue-400 flex items-center justify-center z-10">
+              <div className="text-center">
+                <Upload size={48} className="mx-auto text-blue-500 mb-4" />
+                <p className="text-xl font-semibold text-blue-700">Drop files here to upload</p>
+                <p className="text-blue-600">Files will be uploaded to {currentFolder || 'root folder'}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <Loader className="animate-spin mr-2" size={24} />
+              <span>Loading files...</span>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!isLoading && filteredFiles.length === 0 && (
+            <div className="text-center py-12">
+              <Cloud size={64} className="mx-auto text-gray-400 mb-4" />
+              <h3 className="text-xl font-semibold text-gray-600 mb-2">No files found</h3>
+              <p className="text-gray-500 mb-4">
+                {searchTerm ? 'Try adjusting your search term' : 'Upload some files to get started'}
+              </p>
+              <button
+                onClick={() => setShowUploadModal(true)}
+                className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:from-blue-600 hover:to-purple-600 transition-all duration-200"
+              >
+                Upload Files
+              </button>
+            </div>
+          )}
+
+          {/* Files Grid View */}
+          {!isLoading && viewMode === 'grid' && filteredFiles.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              {filteredFiles.map((file) => (
+                <div
+                  key={file.key}
+                  className="group relative bg-white rounded-xl border border-gray-200 p-4 hover:shadow-lg transition-all duration-200 cursor-pointer"
+                  onClick={() => {
+                    const newSelected = new Set(selectedItems);
+                    if (newSelected.has(file.key)) {
+                      newSelected.delete(file.key);
+                    } else {
+                      newSelected.add(file.key);
+                    }
+                    setSelectedItems(newSelected);
+                  }}
+                >
+                  <div className={`absolute inset-0 rounded-xl border-2 transition-all duration-200 ${
+                    selectedItems.has(file.key) ? 'border-blue-500 bg-blue-50' : 'border-transparent'
+                  }`} />
+                  
+                  <div className="relative">
+                    <div className="text-4xl mb-3 text-center">
+                      {getFileIcon(file.name)}
+                    </div>
+                    
+                    <h3 className="font-medium text-sm text-gray-900 mb-1 truncate" title={file.name}>
+                      {file.name}
+                    </h3>
+                    
+                    <p className="text-xs text-gray-500 mb-2">
+                      {formatFileSize(file.size)}
                     </p>
+                    
+                    <p className="text-xs text-gray-400">
+                      {formatDate(file.lastModified)}
+                    </p>
+
+                    {/* Action Buttons */}
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex gap-1">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDownload(file.key, file.name);
+                          }}
+                          className="p-1 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
+                        >
+                          <Download size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedItems(new Set([file.key]));
+                            handleDelete();
+                          }}
+                          className="p-1 bg-white rounded-full shadow-md hover:bg-red-50 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              ))}
+            </div>
+          )}
+
+          {/* Files List View */}
+          {!isLoading && viewMode === 'list' && filteredFiles.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Name</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Size</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Modified</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredFiles.map((file) => (
+                    <tr
+                      key={file.key}
+                      className={`border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                        selectedItems.has(file.key) ? 'bg-blue-50' : ''
+                      }`}
+                    >
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedItems.has(file.key)}
+                            onChange={(e) => {
+                              const newSelected = new Set(selectedItems);
+                              if (e.target.checked) {
+                                newSelected.add(file.key);
+                              } else {
+                                newSelected.delete(file.key);
+                              }
+                              setSelectedItems(newSelected);
+                            }}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-xl">{getFileIcon(file.name)}</span>
+                          <span className="font-medium text-gray-900">{file.name}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">
+                        {formatFileSize(file.size)}
+                      </td>
+                      <td className="py-3 px-4 text-gray-600">
+                        {formatDate(file.lastModified)}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => handleDownload(file.key, file.name)}
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          >
+                            <Download size={16} />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedItems(new Set([file.key]));
+                              handleDelete();
+                            }}
+                            className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Selection Actions */}
+        {selectedItems.size > 0 && (
+          <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-white rounded-full shadow-2xl border border-gray-200 px-6 py-3 flex items-center gap-4">
+            <span className="text-sm font-medium text-gray-700">
+              {selectedItems.size} item{selectedItems.size > 1 ? 's' : ''} selected
+            </span>
+            <button
+              onClick={handleDelete}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            >
+              <Trash2 size={16} />
+              Delete
+            </button>
+            <button
+              onClick={() => setSelectedItems(new Set())}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+            >
+              <X size={16} />
+              Cancel
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Upload Modal */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-semibold mb-4">Upload Files</h2>
+            <div className="space-y-4">
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full flex items-center justify-center gap-2 p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 hover:bg-blue-50 transition-colors"
+              >
+                <Upload size={24} />
+                <span>Choose Files</span>
+              </button>
+              
+              <div className="flex justify-end gap-2">
                 <button
-                  onClick={() => setSelectedFolder(null)}
-                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
+                  onClick={() => setShowUploadModal(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  Cancel
                 </button>
               </div>
             </div>
-
-            <div className="p-6">
-              {folderLoading ? (
-                <div className="space-y-4">
-                  {[...Array(3)].map((_, i) => (
-                    <FileCardSkeleton key={i} viewMode={viewMode} />
-                  ))}
-                </div>
-              ) : filteredAndSortedData.length === 0 ? (
-                <div className="text-center py-16">
-                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <File className="w-8 h-8 text-slate-400" />
-                  </div>
-                  <h3 className="text-lg font-medium text-slate-900 mb-2">No files found</h3>
-                  <p className="text-slate-500">This folder appears to be empty or no files match your search.</p>
-                </div>
-              ) : (
-                <div className={`${viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' : 'space-y-3'}`}>
-                  {filteredAndSortedData.map((file, index) => (
-                    <div
-                      key={index}
-                      className={`border border-slate-200/60 rounded-xl bg-white/50 backdrop-blur-sm hover:shadow-lg shadow-gray-300/30 hover:scale-[1.02] transition-all duration-200 ${
-                        viewMode === 'list' ? 'flex items-center p-4' : 'p-4'
-                      }`}
-                    >
-                      <div className={`flex items-center ${viewMode === 'list' ? 'flex-1' : 'mb-3'}`}>
-                        {getFileIcon(file.name)}
-                        <div className="ml-3 flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
-                          <p className="text-xs text-slate-500">
-                            {formatFileSize(file.size)} • {new Date(file.lastModified).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-1">
-                        <button
-                          onClick={() => toggleFavorite(file.fullPath)}
-                          className={`p-2 rounded-lg transition-all duration-200 ${
-                            favorites.has(file.fullPath)
-                              ? 'text-amber-500 bg-amber-50 hover:bg-amber-100'
-                              : 'text-slate-400 hover:text-amber-500 hover:bg-amber-50'
-                          }`}
-                        >
-                          {favorites.has(file.fullPath) ? 
-                            <Star className="w-4 h-4 fill-current" /> : 
-                            <StarOff className="w-4 h-4" />
-                          }
-                        </button>
-                        
-                        {(isImageFile(file.name) || isPdfFile(file.name)) && (
-                          <button
-                            onClick={() => handlePreview(file.publicUrl)}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        )}
-                        
-                        <button
-                          onClick={() => handleDownload(file.publicUrl, file.name)}
-                          className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-                        
-                        <button
-                          onClick={() => copyToClipboard(file.publicUrl)}
-                          className="p-2 text-slate-400 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
-                        >
-                          <Copy className="w-4 h-4" />
-                        </button>
-                        
-                        {/* <button
-                          onClick={() => handleDeleteFile(selectedFolder.bucket, file.fullPath)}
-                          className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button> */}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
           </div>
-        ) : (
-          // Folder Overview
-          <div className="space-y-8">
-            {/* Recent Files */}
-            {recentFiles.length > 0 && (
-              <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm p-6">
-                <div className="flex items-center mb-6">
-                  <div className="p-3 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-xl shadow-lg shadow-gray-300/30 mr-4">
-                    <Clock className="w-6 h-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-slate-900">Recent Files</h3>
-                    <p className="text-slate-600 text-sm">Your most recently modified files</p>
-                  </div>
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {recentFiles.map((file, index) => (
-                    <div
-                      key={index}
-                      className="border border-slate-200/60 rounded-xl p-4 bg-white/50 backdrop-blur-sm hover:shadow-lg shadow-gray-300/30 hover:scale-[1.02] transition-all duration-200"
-                    >
-                      <div className="flex items-center mb-3">
-                        {getFileIcon(file.name)}
-                        <div className="ml-3 flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
-                          <p className="text-xs text-slate-500">
-                            {formatFileSize(file.size)} • {new Date(file.lastModified).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-1">
-                        {(isImageFile(file.name) || isPdfFile(file.name)) && (
-                          <button
-                            onClick={() => handlePreview(file.publicUrl)}
-                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </button>
-                        )}
-                        
-                        <button
-                          onClick={() => handleDownload(file.publicUrl, file.name)}
-                          className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+        </div>
+      )}
+
+      {/* Create Folder Modal */}
+      {showCreateFolder && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <h2 className="text-xl font-semibold mb-4">Create New Folder</h2>
+            <div className="space-y-4">
+              <input
+                type="text"
+                value={newFolderName}
+                onChange={(e) => setNewFolderName(e.target.value)}
+                placeholder="Folder name"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                onKeyPress={(e) => e.key === 'Enter' && handleCreateFolder()}
+              />
+              
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => {
+                    setShowCreateFolder(false);
+                    setNewFolderName('');
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleCreateFolder}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Create
+                </button>
               </div>
-            )}
-
-            {/* Folders Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Documents Folder */}
-              {(documentsLoading || (documents && documents.organizedByFolder)) && (
-                <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm hover:shadow-xl shadow-gray-300/30 transition-all duration-300">
-                  {documentsLoading ? (
-                    <FolderCardSkeleton />
-                  ) : (
-                    <>
-                      <div className="p-6 border-b border-slate-200/60">
-                        <div className="flex items-center justify-between mb-6">
-                          <div className="flex items-center">
-                            <div className="p-3 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-xl shadow-lg shadow-gray-300/30 mr-4">
-                              <FileText className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-slate-900">Project Documents</h3>
-                              <p className="text-slate-600 text-sm">Organized project files and documents</p>
-                            </div>
-                          </div>
-                          <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-sm font-medium rounded-full">
-                            {documents.totalFiles} files
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="p-6">
-                        <div className="space-y-3">
-                          {Object.entries(documents.organizedByFolder).map(([folder, files]) => (
-                            <button
-                              key={folder}
-                              onClick={() => handleFolderClick(folder, 'uploaded-documents')}
-                              className="w-full border border-slate-200/60 rounded-xl p-4 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 bg-white/50 backdrop-blur-sm group"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center flex-1">
-                                  <FolderOpen className="w-5 h-5 text-amber-500 mr-3" />
-                                  <div className="text-left flex-1">
-                                    <p className="font-medium text-slate-900 capitalize">{folder}</p>
-                                    <p className="text-sm text-slate-500">{files.length} files</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
-                                    {files.length}
-                                  </span>
-                                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors" />
-                                </div>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {/* User Photos Folder */}
-              {(photosLoading || (userPhotos && userPhotos.organizedByRole)) && (
-                <div className="bg-white/80 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-sm hover:shadow-xl shadow-gray-300/30 transition-all duration-300">
-                  {photosLoading ? (
-                    <FolderCardSkeleton />
-                  ) : (
-                    <>
-                      <div className="p-6 border-b border-slate-200/60">
-                        <div className="flex items-center justify-between mb-6">
-                          <div className="flex items-center">
-                            <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg shadow-gray-300/30 mr-4">
-                              <Users className="w-6 h-6 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="text-xl font-bold text-slate-900">User Profile Photos</h3>
-                              <p className="text-slate-600 text-sm">Profile pictures organized by role</p>
-                            </div>
-                          </div>
-                          <span className="px-3 py-1 bg-purple-100 text-purple-700 text-sm font-medium rounded-full">
-                            {userPhotos.totalPhotos} photos
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="p-6">
-                        <div className="space-y-3">
-                          {Object.entries(userPhotos.organizedByRole).map(([role, photos]) => (
-                            <button
-                              key={role}
-                              onClick={() => handleFolderClick(role, 'user-profile-photos')}
-                              className="w-full border border-slate-200/60 rounded-xl p-4 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 bg-white/50 backdrop-blur-sm group"
-                            >
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center flex-1">
-                                  <Users className="w-5 h-5 text-purple-500 mr-3" />
-                                  <div className="text-left flex-1">
-                                    <p className="font-medium text-slate-900 capitalize">{role}</p>
-                                    <p className="text-sm text-slate-500">{photos.length} photos</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center space-x-2">
-                                  <span className="px-2 py-1 bg-slate-100 text-slate-600 text-xs font-medium rounded-full">
-                                    {photos.length}
-                                  </span>
-                                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-slate-600 transition-colors" />
-                                </div>
-                              </div>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Full Screen Preview Modal (original) */}
-      {/* {fullScreenPreview && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="relative max-w-7xl max-h-full">
-            <button
-              onClick={closeFullScreen}
-              className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-200 z-10"
-            >
-              <X className="w-6 h-6 text-white" />
-            </button>
-            
-            <div className="bg-white rounded-2xl shadow-2xl shadow-gray-300/30 max-h-[90vh] overflow-auto">
-              {isImageFile(fullScreenPreview) ? (
-                <img
-                  src={fullScreenPreview}
-                  alt="Preview"
-                  className="max-w-full max-h-[80vh] object-contain"
-                />
-              ) : isPdfFile(fullScreenPreview) ? (
-                <iframe
-                  src={fullScreenPreview}
-                  className="w-full h-[80vh]"
-                  title="PDF Preview"
-                />
-              ) : (
-                <div className="p-8 text-center">
-                  <p className="text-slate-600">Preview not available for this file type</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
-      )} */}
-{/* Duplicate */}
-      {fullScreenPreview && (
-  <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div className="relative max-w-7xl max-h-full">
-      <button
-        onClick={closeFullScreen}
-        className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 rounded-full transition-all duration-200 z-10"
-      >
-        <X className="w-6 h-6 text-white" />
-      </button>
+      )}
 
-      <div className="bg-white rounded-2xl shadow-2xl shadow-gray-300/30 max-h-[90vh] overflow-auto">
-        {isImageFile(fullScreenPreview) ? (
-          <img
-            src={fullScreenPreview}
-            alt="Preview"
-            className="max-w-fit max-h-[80vh] object-contain"
-          />
-        ) : isPdfFile(fullScreenPreview) ? (
-          <iframe
-            src={fullScreenPreview}
-            className="w-[80vw] h-[80vh]"
-            title="PDF Preview"
-          />
-        ) : (
-          <div className="p-8 text-center">
-            <p className="text-slate-600">Preview not available for this file type</p>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-)}
-
+      {/* Hidden File Input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        onChange={(e) => handleFileUpload(e.target.files)}
+        className="hidden"
+      />
     </div>
   );
 };
