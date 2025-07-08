@@ -145,7 +145,7 @@ class BucketService {
         xhr.onerror = () => reject(new Error('Network error'));
 
         xhr.open('POST', `${this.baseUrl}/api/bucket/upload/progress`);
-        xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
+        xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('authToken')}`);
         xhr.send(formData);
       });
     } catch (error) {
