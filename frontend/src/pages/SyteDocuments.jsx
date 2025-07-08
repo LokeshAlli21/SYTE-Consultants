@@ -71,6 +71,8 @@ const SyteDocuments = () => {
       if(currentFolder !== ''){
         const response = await bucketService.listFilesInFolder(currentFolder);
         setFiles(response.data?.files || []);
+      } else {
+        setFiles([]);
       }
     } catch (err) {
       setError('Failed to load files: ' + err.message);
