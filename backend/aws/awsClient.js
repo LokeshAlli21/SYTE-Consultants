@@ -173,6 +173,8 @@ export const getSignedUrl = (key, expires = 3600) => {
     return null;
   }
 
+  console.log('key: ',key)
+
   let actualKey = key;
   
   try {
