@@ -29,7 +29,7 @@ class BucketService {
   // ✅ Utility to handle responses globally
   async handleResponse(response) {
     const data = await response.json();
-
+console.log(data)
     if (response.status === 401) {
       localStorage.removeItem('authToken');
       localStorage.removeItem('authTokenForPromoter');
