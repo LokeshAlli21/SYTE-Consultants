@@ -226,7 +226,7 @@ const SyteDocuments = () => {
 
   // Filter files
   const filteredFiles = sortedFiles.filter(file => 
-    file.name.toLowerCase().includes(searchTerm.toLowerCase())
+    file?.fileName?.toLowerCase()?.includes(searchTerm?.toLowerCase())
   );
 
   // Format file size
@@ -251,7 +251,7 @@ const SyteDocuments = () => {
 
   // Get file icon
   const getFileIcon = (fileName) => {
-    const ext = fileName.split('.').pop().toLowerCase();
+    const ext = fileName?.split('.')?.pop()?.toLowerCase();
     const iconMap = {
       pdf: '📄',
       doc: '📝',
@@ -520,11 +520,11 @@ const SyteDocuments = () => {
                   
                   <div className="relative">
                     <div className="text-4xl mb-3 text-center">
-                      {getFileIcon(file.name)}
+                      {getFileIcon(file.fileName)}
                     </div>
                     
-                    <h3 className="font-medium text-sm text-gray-900 mb-1 truncate" title={file.name}>
-                      {file.name}
+                    <h3 className="font-medium text-sm text-gray-900 mb-1 truncate" title={file.fileName}>
+                      {file.fileName}
                     </h3>
                     
                     <p className="text-xs text-gray-500 mb-2">
@@ -541,7 +541,7 @@ const SyteDocuments = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDownload(file.key, file.name);
+                            handleDownload(file.key, file.fileName);
                           }}
                           className="p-1 bg-white rounded-full shadow-md hover:bg-gray-50 transition-colors"
                         >
@@ -601,8 +601,8 @@ const SyteDocuments = () => {
                             }}
                             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                           />
-                          <span className="text-xl">{getFileIcon(file.name)}</span>
-                          <span className="font-medium text-gray-900">{file.name}</span>
+                          <span className="text-xl">{getFileIcon(file.fileName)}</span>
+                          <span className="font-medium text-gray-900">{file.fileName}</span>
                         </div>
                       </td>
                       <td className="py-3 px-4 text-gray-600">
@@ -614,7 +614,7 @@ const SyteDocuments = () => {
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => handleDownload(file.key, file.name)}
+                            onClick={() => handleDownload(file.key, file.fileName)}
                             className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                           >
                             <Download size={16} />
