@@ -53,7 +53,7 @@ const SyteDocuments = () => {
   const [success, setSuccess] = useState('');
   const [expandedFolders, setExpandedFolders] = useState(new Set());
   const [folderTree, setFolderTree] = useState([]);
-  const [fileUrl, setFileUrl] = useState(null)
+  const [fileUrl, setFileUrl] = useState({})
   
   const fileInputRef = useRef(null);
 
@@ -195,7 +195,15 @@ const SyteDocuments = () => {
       setIsLoading(true)
       const url = await bucketService.getSignedUrl(fileKey);
       console.log('url: ',url)
-      setFileUrl(url)
+      if (url?.success && url?.data) {
+        const urlObj = {
+          ...url.data,
+          fileName
+        };
+        setFileUrl(urlObj);
+      } else {
+        console.error("Invalid signed URL response", url);
+      }
       setSuccess('File downloaded successfully!');
     } catch (err) {
       setError('Failed to download file: ' + err.message);
@@ -805,13 +813,13 @@ const SyteDocuments = () => {
         </div>
       </div>
 
-      {fileUrl && (
+      {fileUrl?.url && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-5xl h-5/6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
-              
+              <h3 className="text-lg font-semibold truncate pr-4">{fileUrl?.fileName}</h3>
               <button
-                onClick={setFileUrl(null)}
+                onClick={setFileUrl({})}
                 className="text-gray-400 hover:text-gray-600 flex-shrink-0"
               >
                 <X size={20} />
@@ -821,9 +829,9 @@ const SyteDocuments = () => {
             <div className="flex-1 bg-gray-50 rounded-lg overflow-hidden">
               { (
                 <iframe
-                  src={fileUrl}
+                  src={fileUrl.url}
                   className="w-full h-full border-0"
-                  title={'file'}
+                  title={fileUrl?.fileName || 'file'}
                   style={{ minHeight: '80vh', maxWidth: '80vw' }}
                 />
               ) 
