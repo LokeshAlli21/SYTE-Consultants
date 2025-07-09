@@ -33,6 +33,9 @@ import {
 import bucketService from '../backend-services/database/bucket';
 
 const SyteDocuments = () => {
+
+  const userData = useSelector((state) => state.auth.userData);
+  
   const [files, setFiles] = useState([]);
   const [folders, setFolders] = useState([]);
   const [currentFolder, setCurrentFolder] = useState('');
@@ -302,6 +305,27 @@ const SyteDocuments = () => {
       minute: '2-digit'
     });
   };
+
+    // Permission check
+    if (userData && userData.role !== 'admin') {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="bg-white p-8 rounded-xl shadow-lg text-center max-w-md">
+            <div className="w-20 h-20 mx-auto mb-6 bg-red-100 rounded-full flex items-center justify-center">
+              <FaUserShield className="text-red-600 text-3xl" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-3">Access Restricted</h2>
+            <p className="text-gray-600 mb-6">Administrator privileges required to access this panel.</p>
+            <button 
+              onClick={() => window.history.back()}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Go Back
+            </button>
+          </div>
+        </div>
+      );
+    }
 
   // Get file icon
   const getFileIcon = (fileName) => {
