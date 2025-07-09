@@ -176,7 +176,7 @@ const Login = () => {
                   name="password"
                   inputMode="numeric"       // 📱 opens number pad on mobile
                   pattern="\d*"             // ✅ suggests digits only to browsers
-                  type={showPassword ? 'text' : 'password'}
+                  type={showPassword ? 'number' : 'password'}
                   autoComplete="current-password"
                   required
                   value={formData.password}
