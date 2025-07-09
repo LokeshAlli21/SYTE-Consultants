@@ -176,7 +176,7 @@ const Login = () => {
                   name="password"
                   inputMode="numeric"       // 📱 opens number pad on mobile
                   pattern="\d*"             // ✅ suggests digits only to browsers
-                  type={showPassword ? 'tel' : 'password'}
+                  type={showPassword ? 'number' : 'password'}
                   autoComplete="current-password"
                   required
                   value={formData.password}
@@ -189,10 +189,21 @@ const Login = () => {
                   `}
                   placeholder="Enter your password"
                   style={{
+                    // Hide spinner arrows for number input
+                    MozAppearance: 'textfield',
+                    WebkitAppearance: 'none',
+                    // Apply password styling when not showing password
                     WebkitTextSecurity: showPassword ? 'none' : 'disc',
                     textSecurity: showPassword ? 'none' : 'disc'
                   }}
                 />
+                 <style jsx>{`
+                  input[type="number"]::-webkit-outer-spin-button,
+                  input[type="number"]::-webkit-inner-spin-button {
+                    -webkit-appearance: none;
+                    margin: 0;
+                  }
+                `}</style>
                 <button
                   type="button"
                   onClick={togglePasswordVisibility}
