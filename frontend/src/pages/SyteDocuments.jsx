@@ -54,6 +54,7 @@ const SyteDocuments = () => {
   const [expandedFolders, setExpandedFolders] = useState(new Set());
   const [folderTree, setFolderTree] = useState([]);
   const [fileUrl, setFileUrl] = useState({})
+  const [showPreviewModal, setShowPreviewModal] = useState(false)
   
   const fileInputRef = useRef(null);
 
@@ -201,6 +202,7 @@ const SyteDocuments = () => {
           fileName
         };
         setFileUrl(urlObj);
+        setShowPreviewModal(true)
       } else {
         console.error("Invalid signed URL response", url);
       }
@@ -710,7 +712,7 @@ const SyteDocuments = () => {
                           selectedItems.has(item.key) ? 'bg-blue-50' : ''
                         }`}
                       >
-<td className="py-3 px-4">
+                        <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             {item.type === 'file' && (
                               <input
@@ -757,8 +759,17 @@ const SyteDocuments = () => {
                           {item.type === 'file' && (
                             <div className="flex items-center gap-2">
                               <button
+                                onClick={(e) => {
+                                  handleView(item.key, item.fileName);
+                                }}
+                                title="View"
+                                className="p-1 bg-white rounded-full shadow-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                              >
+                                <Eye size={14} />
+                              </button>
+                              <button
                                 onClick={() => handleDownload(item.key, item.fileName)}
-                                className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
+                                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                                 title="Download"
                               >
                                 <Download size={16} />
@@ -813,13 +824,16 @@ const SyteDocuments = () => {
         </div>
       </div>
 
-      {fileUrl?.url && (
+      {showPreviewModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-5xl h-5/6 flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold truncate pr-4">{fileUrl?.fileName}</h3>
               <button
-                onClick={setFileUrl({})}
+                onClick={() => {
+                  setFileUrl({})
+                  setShowPreviewModal(false)
+                }}
                 className="text-gray-400 hover:text-gray-600 flex-shrink-0"
               >
                 <X size={20} />
