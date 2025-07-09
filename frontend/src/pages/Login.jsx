@@ -171,12 +171,13 @@ const Login = () => {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
                 </div>
+                
                 <input
                   id="password"
                   name="password"
-                  inputMode="numeric"       // 📱 opens number pad on mobile
-                  pattern="\d*"             // ✅ suggests digits only to browsers
-                  type={showPassword ? 'number' : 'password'}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  type="tel"  // This is the key - tel type always opens numeric keypad
                   autoComplete="current-password"
                   required
                   value={formData.password}
@@ -189,21 +190,13 @@ const Login = () => {
                   `}
                   placeholder="Enter your password"
                   style={{
-                    // Hide spinner arrows for number input
-                    MozAppearance: 'textfield',
-                    WebkitAppearance: 'none',
-                    // Apply password styling when not showing password
+                    // Apply password masking unless showing password
                     WebkitTextSecurity: showPassword ? 'none' : 'disc',
-                    textSecurity: showPassword ? 'none' : 'disc'
+                    textSecurity: showPassword ? 'none' : 'disc',
+                    fontFamily: showPassword ? 'inherit' : 'monospace'
                   }}
                 />
-                 <style jsx>{`
-                  input[type="number"]::-webkit-outer-spin-button,
-                  input[type="number"]::-webkit-inner-spin-button {
-                    -webkit-appearance: none;
-                    margin: 0;
-                  }
-                `}</style>
+                
                 <button
                   type="button"
                   onClick={togglePasswordVisibility}
