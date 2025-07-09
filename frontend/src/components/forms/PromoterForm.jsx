@@ -192,6 +192,17 @@ const [prevUsername, setPrevUsername] = useState(''); // Store previous username
   const handleSubmit = async (e) => {
   e.preventDefault();
 
+  if (formData.password) {
+    const isValid = /^\d{6,}$/.test(formData.password);
+
+    if (!isValid) {
+      toast.error("❌ Password must be at least 6 digits and contain digits only");
+      return; // stop further processing
+    }
+
+    // Continue processing here
+  }
+
   if (!formData.promoter_type) {
     toast.error("⚠️ Please select promoter type");
     return;
@@ -1068,7 +1079,17 @@ disabled={disabled}
                   type={showPassword ? "text" : "password"}
                   name="password"
                   value={formData.password || ''}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    const {value} = e.target
+                    const hasNonDigits = /\D/.test(value);
+
+                    if (hasNonDigits) {
+                      toast.warn("❌ Only digits are allowed");
+                      return
+                    }
+
+                    handleChange(e)
+                  }}
                   disabled={disabled}
                   onKeyDown={handleKeyDown}
                   className={`${commonInputClass} pr-10`}
