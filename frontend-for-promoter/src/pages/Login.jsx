@@ -162,7 +162,7 @@ const Login = () => {
                     <Lock className="h-5 w-5" />
                   </div>
                   <input
-                    type={showPassword ? 'text' : 'password'}
+                    type={showPassword ? 'tel' : 'password'}
                     name="password"
                     inputMode="numeric"
                     pattern="\d*"
