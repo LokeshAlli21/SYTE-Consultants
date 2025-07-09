@@ -188,6 +188,10 @@ const Login = () => {
                     ${errors.password ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-gray-400'}
                   `}
                   placeholder="Enter your password"
+                  style={{
+                    WebkitTextSecurity: showPassword ? 'none' : 'disc',
+                    textSecurity: showPassword ? 'none' : 'disc'
+                  }}
                 />
                 <button
                   type="button"
