@@ -30,6 +30,10 @@ import {
   ArrowLeft,
   FolderOpen
 } from 'lucide-react';
+import { 
+  FaUserShield
+
+} from 'react-icons/fa';
 import bucketService from '../backend-services/database/bucket';
 import { useSelector } from 'react-redux';
 
