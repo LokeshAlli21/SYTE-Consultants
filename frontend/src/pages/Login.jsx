@@ -175,9 +175,9 @@ const Login = () => {
                 <input
                   id="password"
                   name="password"
-                  inputMode="numeric"
+                  inputMode="decimal" 
+                  type={showPassword ? 'text' : 'number'}
                   pattern="[0-9]*"
-                  type="tel"  // This is the key - tel type always opens numeric keypad
                   autoComplete="current-password"
                   required
                   value={formData.password}
@@ -193,9 +193,18 @@ const Login = () => {
                     // Apply password masking unless showing password
                     WebkitTextSecurity: showPassword ? 'none' : 'disc',
                     textSecurity: showPassword ? 'none' : 'disc',
-                    fontFamily: showPassword ? 'inherit' : 'monospace'
+                    fontFamily: showPassword ? 'inherit' : 'monospace',
+                    // Hide number input spinners
+                    MozAppearance: 'textfield',
                   }}
                 />
+                <style jsx>{`
+                input[type="number"]::-webkit-outer-spin-button,
+                input[type="number"]::-webkit-inner-spin-button {
+                  -webkit-appearance: none;
+                  margin: 0;
+                }
+              `}</style>
                 
                 <button
                   type="button"
