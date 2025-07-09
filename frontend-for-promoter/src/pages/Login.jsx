@@ -167,7 +167,17 @@ const Login = () => {
                     inputMode="numeric"
                     pattern="\d*"
                     value={formData.password}
-                    onChange={handleInputChange}
+                    onChange={(e) => {
+                      const { name, value } = e.target;
+
+                      // Check for non-digit characters
+                      const hasNonDigits = /\D/.test(value);
+
+                      if (hasNonDigits) {
+                        return
+                      }
+                      handleInputChange(e)
+                    }}
                     onFocus={() => setFocusedField('password')}
                     onBlur={() => setFocusedField(null)}
                     placeholder="Enter your password"
