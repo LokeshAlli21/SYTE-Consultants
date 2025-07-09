@@ -211,10 +211,10 @@ const router = createBrowserRouter([
       {
         path: "/syte-documents",
         element: 
-        // <AuthLayout authentication>
-        //   {" "}
+        <AuthLayout authentication>
+           {" "}
           <SyteDocuments /> 
-        //  </AuthLayout>,
+         </AuthLayout>,
       },
     ],
     errorElement: <NotFoundPage />

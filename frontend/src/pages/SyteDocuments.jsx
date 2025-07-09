@@ -763,7 +763,7 @@ const SyteDocuments = () => {
                                   handleView(item.key, item.fileName);
                                 }}
                                 title="View"
-                                className="p-1 bg-white rounded-full shadow-md hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                                className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
                               >
                                 <Eye size={14} />
                               </button>
