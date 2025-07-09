@@ -162,7 +162,7 @@ const Login = () => {
                     <Lock className="h-5 w-5" />
                   </div>
                   <input
-                    type={showPassword ? 'tel' : 'password'}
+                    type={showPassword ? 'number' : 'password'}
                     name="password"
                     inputMode="numeric"
                     pattern="\d*"
@@ -178,7 +178,22 @@ const Login = () => {
                         ? 'border-blue-400/50 focus:border-blue-400 shadow-lg shadow-blue-500/20'
                         : 'border-gray-200 hover:border-gray-300'
                     }`}
+                    style={{
+                      // Hide spinner arrows for number input
+                      MozAppearance: 'textfield',
+                      WebkitAppearance: 'none',
+                      // Apply password styling when not showing password
+                      WebkitTextSecurity: showPassword ? 'none' : 'disc',
+                      textSecurity: showPassword ? 'none' : 'disc'
+                    }}
                   />
+                  <style jsx>{`
+                    input[type="number"]::-webkit-outer-spin-button,
+                    input[type="number"]::-webkit-inner-spin-button {
+                      -webkit-appearance: none;
+                      margin: 0;
+                    }
+                  `}</style>
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
