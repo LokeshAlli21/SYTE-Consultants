@@ -164,6 +164,8 @@ const Login = () => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     name="password"
+                    inputMode="numeric"
+                    pattern="\d*"
                     value={formData.password}
                     onChange={handleInputChange}
                     onFocus={() => setFocusedField('password')}
