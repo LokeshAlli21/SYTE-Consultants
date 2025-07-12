@@ -475,7 +475,7 @@ const AddProject = ({ forUpdate = false, viewOnly = false }) => {
       
       // Only show toast if response indicates success or if it's not a "no changes" scenario
       if (response && (!response.message || response.message !== "No changes to update")) {
-        toast.success(successMsg);
+        // toast.success(successMsg);
       }
       
       // Execute reset/callback function if provided
