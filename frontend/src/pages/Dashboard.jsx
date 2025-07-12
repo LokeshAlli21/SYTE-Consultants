@@ -765,16 +765,28 @@ function Dashboard() {
 
         {/* Charts Row 1 */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          {/* Monthly Trends Chart */}
-          <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Monthly Addition Trends
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={monthlyTrendsData}>
+          {/* Monthly Trends Chart with Dynamic Height */}
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            Monthly Addition Trends
+          </h3>
+          <div className="min-h-[300px] w-full">
+            <ResponsiveContainer width="100%" height="100%" aspect={2}>
+              <LineChart 
+                data={monthlyTrendsData} 
+                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              >
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="month" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
+                <XAxis 
+                  dataKey="month" 
+                  stroke="#6b7280" 
+                  tick={{ fontSize: 12 }}
+                  interval={0}
+                  angle={-45}
+                  textAnchor="end"
+                  height={50}
+                />
+                <YAxis stroke="#6b7280" tick={{ fontSize: 12 }} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: "#fff",
@@ -783,13 +795,14 @@ function Dashboard() {
                     boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
                   }}
                 />
-                <Legend />
+                <Legend wrapperStyle={{ paddingTop: '20px' }} />
                 <Line
                   type="monotone"
                   dataKey="promoters"
                   stroke="#3B82F6"
                   strokeWidth={3}
                   name="Promoters"
+                  dot={{ r: 4 }}
                 />
                 <Line
                   type="monotone"
@@ -797,6 +810,7 @@ function Dashboard() {
                   stroke="#10B981"
                   strokeWidth={3}
                   name="Channel Partners"
+                  dot={{ r: 4 }}
                 />
                 <Line
                   type="monotone"
@@ -804,6 +818,7 @@ function Dashboard() {
                   stroke="#F59E0B"
                   strokeWidth={3}
                   name="Projects"
+                  dot={{ r: 4 }}
                 />
                 <Line
                   type="monotone"
@@ -811,10 +826,12 @@ function Dashboard() {
                   stroke="#EF4444"
                   strokeWidth={3}
                   name="Assignments"
+                  dot={{ r: 4 }}
                 />
               </LineChart>
             </ResponsiveContainer>
           </div>
+        </div>
 
           {/* Assignment Status Distribution */}
           <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
