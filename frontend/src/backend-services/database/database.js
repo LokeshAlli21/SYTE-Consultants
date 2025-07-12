@@ -3516,7 +3516,6 @@ async getAssignmentStatusSummary() {
       throw new Error(errorData.message || "Failed to fetch assignment status summary.");
     }
 
-    console.log(response)
     const data = await response.json();
     return data.data;
   } catch (error) {

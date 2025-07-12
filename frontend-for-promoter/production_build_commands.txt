@@ -2,6 +2,8 @@ syte-frontend-for-promoter build commands:
 
 npm i
 
+cd node-apps/SYTE-Consultants/frontend-for-promoter
+
 git pull origin main
 
 npm run build

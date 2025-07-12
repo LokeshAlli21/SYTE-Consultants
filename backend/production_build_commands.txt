@@ -2,6 +2,8 @@ backend build commands:
 
 npm i
 
+cd node-apps/SYTE-Consultants/backend
+
 pm2 flush
 
 pm2 list

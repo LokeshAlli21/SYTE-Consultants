@@ -824,7 +824,10 @@ function Dashboard() {
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
-                  data={assignmentStatusSummary}
+                  data={assignmentStatusSummary.map(item => ({
+                    ...item,
+                    assignment_count: Number(item.assignment_count) // Convert string to number
+                  }))}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}

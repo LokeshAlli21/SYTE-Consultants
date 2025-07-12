@@ -2,6 +2,8 @@ frontend build commands:
 
 npm i
 
+cd node-apps/SYTE-Consultants/frontend
+
 git pull origin main
 
 npm run build
