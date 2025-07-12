@@ -12,6 +12,9 @@ function ViewProject() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
+  const [isDownloading, setIsDownloading] = useState(false);
+  const [downloadError, setDownloadError] = useState(null);
+
   useEffect(() => {
     const fetchProjectDetails = async (id) => {
       try {
@@ -96,6 +99,33 @@ function ViewProject() {
     }
     navigate(`${route}/${id}`)
   }
+
+const handleDownload = async (s3Key) => {
+    if (!s3Key) {
+      console.error('No S3 key provided for download');
+      setDownloadError('Download URL not available');
+      return;
+    }
+
+    setIsDownloading(true);
+    setDownloadError(null);
+
+    try {
+      // Extract filename from S3 key or use default
+      const filename = s3Key.split('/').pop() || 'certificate.pdf';
+      
+      // Download and save file directly
+      await databaseService.downloadAndSaveFile(s3Key, filename);
+      
+      console.log('✅ File downloaded successfully');
+      
+    } catch (error) {
+      console.error('❌ Download failed:', error);
+      setDownloadError(error.message || 'Download failed');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -308,15 +338,33 @@ function ViewProject() {
               </div>
             </div>
             
-            <a 
-              href={project.rera_details.rera_certificate_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center space-x-2 w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              <Download className="w-5 h-5" />
-              <span>Download Certificate</span>
-            </a>
+            <div className="relative">
+              <div 
+                onClick={() => handleDownload(project.rera_details.rera_certificate_url)}
+                className={`flex items-center justify-center space-x-2 w-full bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl cursor-pointer ${
+                  isDownloading ? 'opacity-75 cursor-not-allowed' : ''
+                }`}
+                disabled={isDownloading}
+              >
+                {isDownloading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Downloading...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download className="w-5 h-5" />
+                    <span>Download Certificate</span>
+                  </>
+                )}
+              </div>
+              
+              {downloadError && (
+                <div className="mt-2 text-red-600 text-sm text-center">
+                  {downloadError}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}

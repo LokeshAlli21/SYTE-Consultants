@@ -1,4 +1,4 @@
-import { query, getClient, getSignedUrl } from '../aws/awsClient.js';
+import { query, getClient, getSignedUrl, downloadFromS3 } from '../aws/awsClient.js';
 
 export const getChannelPartnerByPromoterId = async (req, res) => {
   const promoterId = req.params.promoterId;
@@ -374,5 +374,46 @@ export const getProjectProgress = async (req, res) => {
   } catch (error) {
     console.error("❌ Unexpected error fetching site progress:", error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+export const downloadFileFromS3 = async (req, res) => {
+  try {
+    const { key } = req.params;
+    const { filename } = req.query; // Optional custom filename for download
+
+    // Validate required parameters
+    if (!key) {
+      return res.status(400).json({ error: "File key is required" });
+    }
+
+    // Download file from S3
+    const fileData = await downloadFromS3(key);
+
+    // Set response headers for file download
+    res.setHeader('Content-Type', fileData.contentType || 'application/octet-stream');
+    res.setHeader('Content-Length', fileData.size);
+    res.setHeader('Last-Modified', fileData.lastModified);
+    
+    // Set Content-Disposition header for download
+    const downloadFilename = filename || key.split('/').pop(); // Use custom filename or extract from key
+    res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
+
+    // Send file buffer
+    res.send(fileData.buffer);
+
+  } catch (error) {
+    console.error("❌ Error downloading file from S3:", error);
+    
+    // Handle specific S3 errors
+    if (error.code === 'NoSuchKey') {
+      return res.status(404).json({ error: "File not found" });
+    }
+    
+    if (error.code === 'AccessDenied') {
+      return res.status(403).json({ error: "Access denied to file" });
+    }
+
+    res.status(500).json({ error: "Failed to download file" });
   }
 };

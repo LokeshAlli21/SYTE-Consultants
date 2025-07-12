@@ -7,6 +7,7 @@ import { getChannelPartnerByPromoterId,
     getProjectUnits,
     getProjectUnitById,
     getProjectProgress,
+    downloadFileFromS3,
 } from '../controllers/promoterFrontendController.js';
 
 const router = express.Router();
@@ -24,5 +25,7 @@ router.get('/get-project-units/:projectId', protectPromoter, getProjectUnits);
 router.get('/get-project-unit/:id', protectPromoter, getProjectUnitById);
 
 router.get('/get-project-progress/:id', protectPromoter, getProjectProgress);
+
+router.get('/download/:key', protectPromoter, downloadFileFromS3);
 
 export default router;
