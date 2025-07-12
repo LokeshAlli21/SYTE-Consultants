@@ -494,6 +494,8 @@ function Dashboard() {
           databaseService.getReraExpiryAlerts(),
         ]);
 
+        console.log('statusSummaryData: ',statusSummaryData)
+
         // Set all state
         setGeneralStats(statsData);
         setMonthlyPromoters(promotersData);
