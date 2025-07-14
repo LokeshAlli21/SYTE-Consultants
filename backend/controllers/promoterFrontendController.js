@@ -379,23 +379,22 @@ export const getProjectProgress = async (req, res) => {
 
 export const downloadFileFromS3 = async (req, res) => {
   try {
-    const { key } = req.params; /**
-     * key: 'https://rera-dev.s3.ap-south-1.amazonaws.com/project-files/rera_certificate/Chhatrapati_Heights_P52200080709_2025-06-28_05-51-59.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAW77ERHTQK3CIVE7F%2F20250714%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Date=20250714T062941Z&X-Amz-Expires=3600&X-Amz-Signature=fbfec95beebdb22987d6ae93cdc0b1ab3154c483d53838f86b87e9e75ddd8b6d&X-Amz-SignedHeaders=host'
-     */
-    const { filename } = req.query; // Optional custom filename for download
+    const { key } = req.params;
+    const decodedKey = decodeURIComponent(key);
+    const actualKey = extractS3Key(decodedKey); // Extract key from URL if needed
+    const { filename } = req.query;
 
-    console.log('req.params: ',req.params)
+    console.log('Original key:', key);
+    console.log('Decoded key:', decodedKey);
+    console.log('Actual S3 key:', actualKey);
 
     // Validate required parameters
-    if (!key) {
+    if (!actualKey) {
       return res.status(400).json({ error: "File key is required" });
     }
 
-    // Download file from S3
-
-    const decodedKey = decodeURIComponent(key);
-
-    const fileData = await downloadFromS3(decodedKey);
+    // Download file from S3 using the extracted key
+    const fileData = await downloadFromS3(actualKey);
 
     // Set response headers for file download
     res.setHeader('Content-Type', fileData.contentType || 'application/octet-stream');
@@ -403,7 +402,7 @@ export const downloadFileFromS3 = async (req, res) => {
     res.setHeader('Last-Modified', fileData.lastModified);
     
     // Set Content-Disposition header for download
-    const downloadFilename = filename || key.split('/').pop(); // Use custom filename or extract from key
+    const downloadFilename = filename || actualKey.split('/').pop();
     res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
 
     // Send file buffer
@@ -424,3 +423,49 @@ export const downloadFileFromS3 = async (req, res) => {
     res.status(500).json({ error: "Failed to download file" });
   }
 };
+
+/**
+ * Extract S3 key from presigned URL or return the key as-is if it's already a key
+ * @param {string} keyOrUrl - S3 key or presigned URL
+ * @returns {string} - S3 key
+ */
+export const extractS3Key = (keyOrUrl) => {
+  // If it's not a URL, return as-is
+  if (!keyOrUrl.startsWith('https://')) {
+    return keyOrUrl;
+  }
+  
+  try {
+    const url = new URL(keyOrUrl);
+    
+    // Extract the pathname and remove the leading slash
+    let key = url.pathname.substring(1);
+    
+    // For S3 URLs, the key is everything after the bucket name
+    // Format: https://bucket-name.s3.region.amazonaws.com/key
+    // OR: https://s3.region.amazonaws.com/bucket-name/key
+    
+    if (url.hostname.includes('.s3.') || url.hostname.includes('.s3-')) {
+      // Format: https://bucket-name.s3.region.amazonaws.com/key
+      // Key is the entire pathname (minus leading slash)
+      return key;
+    } else if (url.hostname.includes('s3.') && url.pathname.includes('/')) {
+      // Format: https://s3.region.amazonaws.com/bucket-name/key
+      // Need to remove bucket name from path
+      const pathParts = key.split('/');
+      return pathParts.slice(1).join('/'); // Remove first part (bucket name)
+    }
+    
+    return key;
+  } catch (error) {
+    console.error('Error parsing S3 URL:', error);
+    return keyOrUrl; // Return original if parsing fails
+  }
+};
+
+// Usage examples:
+// extractS3Key('project-files/rera_certificate/file.pdf') 
+// → 'project-files/rera_certificate/file.pdf'
+
+// extractS3Key('https://rera-dev.s3.ap-south-1.amazonaws.com/project-files/rera_certificate/Chhatrapati_Heights_P52200080709_2025-06-28_05-51-59.pdf?X-Amz-Algorithm=...')
+// → 'project-files/rera_certificate/Chhatrapati_Heights_P52200080709_2025-06-28_05-51-59.pdf'
