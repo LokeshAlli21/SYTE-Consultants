@@ -7,8 +7,9 @@ const formatTimeAgo = (dateString) => {
   
   // Convert both dates to IST (Asia/Kolkata)
   const nowIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
-  const updatedIST = updatedDate.toLocaleString('en-US');
+  const updatedIST = updatedDate
 
+  console.log("formData.updated_at:", dateString);
   console.log("Now IST:", nowIST);
   console.log("Updated IST:", updatedIST);
 
