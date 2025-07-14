@@ -107,13 +107,48 @@ function ViewProjectUnit() {
   }
 
   const handleDocumentDownload = (url, name) => {
-    if (url) {
-      const link = document.createElement('a')
-      link.href = url
-      link.download = name
-      link.click()
+    // Input validation
+    if (!url) {
+      console.error('No URL provided for download');
+      return;
     }
-  }
+
+    // Validate filename
+    const filename = name || 'document.pdf';
+    
+    console.log('Downloading document:', filename);
+
+    try {
+      // Create and configure download link
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      
+      // Temporarily add to DOM for cross-browser compatibility
+      document.body.appendChild(link);
+      
+      // Trigger download
+      link.click();
+      
+      // Clean up
+      document.body.removeChild(link);
+      
+      console.log('✅ Document download initiated:', filename);
+      
+    } catch (error) {
+      console.error('❌ Document download failed:', error);
+      
+      // Fallback: Open in new tab
+      try {
+        window.open(url, '_blank', 'noopener,noreferrer');
+        console.log('📂 Opened document in new tab as fallback');
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+      }
+    }
+  };  
 
   if (loading) {
     return (

@@ -384,9 +384,9 @@ export const downloadFileFromS3 = async (req, res) => {
     const actualKey = extractS3Key(decodedKey); // Extract key from URL if needed
     const { filename } = req.query;
 
-    console.log('Original key:', key);
-    console.log('Decoded key:', decodedKey);
-    console.log('Actual S3 key:', actualKey);
+    // console.log('Original key:', key);
+    // console.log('Decoded key:', decodedKey);
+    // console.log('Actual S3 key:', actualKey);
 
     // Validate required parameters
     if (!actualKey) {

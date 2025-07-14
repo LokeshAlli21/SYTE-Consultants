@@ -112,30 +112,48 @@ function Documents() {
     setZoom(100)
   }
 
-  const handleDownload = async (url, docType) => {
-    try {
-      setDownloadingDoc(docType)
-      
-      // Simulate download
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Create download link
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `${documentTypes[docType]?.name || 'Document'}.pdf`
-      link.target = '_blank'
-      
-      // Trigger download
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    } catch (error) {
-      console.error('Download error:', error)
-      window.open(url, '_blank', 'noopener,noreferrer')
-    } finally {
-      setDownloadingDoc(null)
-    }
+  const handleDownload = async (s3Key, docType) => {
+  // Input validation
+  if (!s3Key) {
+    console.error('No S3 key provided for download');
+    setDownloadError('Download URL not available');
+    return;
   }
+
+  // Set loading state
+  setDownloadingDoc(docType);
+  setDownloadError(null);
+
+  console.log('Downloading file with S3 key:', s3Key);
+
+  try {
+    // Extract filename from S3 key or use document type name
+    const s3Filename = s3Key.split('/').pop();
+    const docTypeName = documentTypes[docType]?.name || 'Document';
+    const filename = s3Filename || `${docTypeName}.pdf`;
+    
+    // Download and save file using database service
+    await databaseService.downloadAndSaveFile(s3Key, filename);
+    
+    console.log('✅ File downloaded successfully:', filename);
+    
+  } catch (error) {
+    console.error('❌ Download failed:', error);
+    
+    // Set user-friendly error message
+    const errorMessage = error.message || 'Download failed. Please try again.';
+    setDownloadError(errorMessage);
+    
+    // Optional: Fallback to direct URL opening if available
+    // if (fallbackUrl) {
+    //   window.open(fallbackUrl, '_blank', 'noopener,noreferrer');
+    // }
+    
+  } finally {
+    // Always clear loading state
+    setDownloadingDoc(null);
+  }
+};
 
   const closeViewer = () => {
     setViewingDocument(null)
