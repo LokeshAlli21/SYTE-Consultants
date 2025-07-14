@@ -709,7 +709,7 @@ export const uploadProjectDocuments = async (req, res) => {
 
     const filtered = {};
     Object.entries(documentData).forEach(([key, value]) => {
-      if (!value || value === 'null' || value === 'undefined') return;
+      if (value === 'undefined') return;
       filtered[key] = value;
     });
 
