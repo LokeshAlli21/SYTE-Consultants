@@ -3,31 +3,26 @@ import React from 'react';
 const UpdateInfoComponent = ({formData}) => {
 
 const formatTimeAgo = (dateString) => {
+  // Since the dateString is already in IST from PostgreSQL, 
+  // we can directly create Date objects without timezone conversion
   const updatedDate = new Date(dateString);
-  
-  // Convert both dates to IST (Asia/Kolkata)
-  const nowIST = new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' });
-  const updatedIST = updatedDate
+  const now = new Date();
 
-  console.log("formData.updated_at:", dateString);
-  console.log("Now IST:", nowIST);
-  console.log("Updated IST:", updatedIST);
+  console.log("Now:", now);
+  console.log("Updated Date:", updatedDate);
 
-  // Parse back to Date objects
-  const now = new Date(nowIST);
-  const updated = new Date(updatedIST);
-
-  const diffTime = now - updated;
+  const diffTime = now - updatedDate;
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays <= 6) return `${diffDays} days ago`;
 
-  return updated.toLocaleDateString('en-IN', { dateStyle: 'medium' });
+  return updatedDate.toLocaleDateString('en-IN', { dateStyle: 'medium' });
 };
 
   const formatTime = (dateString) => {
+    // Since the dateString is already in IST, no need for timezone conversion
     const updatedDate = new Date(dateString);
     return updatedDate.toLocaleTimeString('en-IN', {
       hour: '2-digit',
