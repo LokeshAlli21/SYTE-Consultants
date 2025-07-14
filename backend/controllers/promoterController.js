@@ -262,7 +262,7 @@ export const softDeletePromoterById = async (req, res) => {
   try {
     const softDeleteQuery = `
       UPDATE promoters 
-      SET status_for_delete = 'inactive', updated_at = $1
+      SET status_for_delete = 'inactive'
       WHERE id = $2
     `;
 
@@ -422,8 +422,8 @@ export const updatePromoter = async (req, res) => {
       UPDATE promoters 
       SET promoter_name = $1, contact_number = $2, email_id = $3, 
           district = $4, city = $5, promoter_type = $6, 
-          updated_by = $7, update_action = $8, updated_at = $9,
-          username = $10, password = $11
+          updated_by = $7, update_action = $8,
+          username = $9, password = $10
       WHERE id = $12
       RETURNING id
     `;
@@ -437,7 +437,6 @@ export const updatePromoter = async (req, res) => {
       promoter_type,
       userId,
       update_action,
-      new Date().toISOString(),
       username,
       password,
       id
@@ -483,7 +482,7 @@ export const updatePromoter = async (req, res) => {
       const updateDetailsQuery = `
         UPDATE promoter_details 
         SET ${updatePlaceholders}, updated_by = $${updateValues.length + 1}, 
-            update_action = $${updateValues.length + 2}, updated_at = $${updateValues.length + 3}
+            update_action = $${updateValues.length + 2}
         WHERE id = $${updateValues.length + 4}
         RETURNING id
       `;
