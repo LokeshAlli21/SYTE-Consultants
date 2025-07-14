@@ -12,6 +12,9 @@ function ViewProjectUnit() {
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
 
+    const [isDownloading, setIsDownloading] = useState(false);
+    const [downloadError, setDownloadError] = useState(null);
+
   useEffect(() => {
     const fetchUnit = async () => {
       try {
@@ -106,49 +109,47 @@ function ViewProjectUnit() {
     }
   }
 
-  const handleDocumentDownload = (url, name) => {
-    // Input validation
-    if (!url) {
-      console.error('No URL provided for download');
-      return;
-    }
+const handleDocumentDownload = async (s3Key, filename) => {
+  // Input validation
+  if (!s3Key) {
+    console.error('No S3 key provided for download');
+    return;
+  }
 
-    // Validate filename
-    const filename = name || 'document.pdf';
+  // Set loading state (assuming you have these state variables)
+  setIsDownloading(true);
+  setDownloadError(null);
+
+  console.log('Downloading document with S3 key:', s3Key);
+
+  try {
+    // Use provided filename or extract from S3 key
+    const downloadFilename = filename || s3Key.split('/').pop() || 'document.pdf';
     
-    console.log('Downloading document:', filename);
-
-    try {
-      // Create and configure download link
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.target = '_blank';
-      link.rel = 'noopener noreferrer';
-      
-      // Temporarily add to DOM for cross-browser compatibility
-      document.body.appendChild(link);
-      
-      // Trigger download
-      link.click();
-      
-      // Clean up
-      document.body.removeChild(link);
-      
-      console.log('✅ Document download initiated:', filename);
-      
-    } catch (error) {
-      console.error('❌ Document download failed:', error);
-      
-      // Fallback: Open in new tab
-      try {
-        window.open(url, '_blank', 'noopener,noreferrer');
-        console.log('📂 Opened document in new tab as fallback');
-      } catch (fallbackError) {
-        console.error('❌ Fallback also failed:', fallbackError);
-      }
-    }
-  };  
+    // Download and save file using database service
+    await databaseService.downloadAndSaveFile(s3Key, downloadFilename);
+    
+    console.log('✅ Document downloaded successfully:', downloadFilename);
+    
+  } catch (error) {
+    console.error('❌ Document download failed:', error);
+    
+    // Set error state for user feedback
+    setDownloadError(error.message || 'Download failed. Please try again.');
+    
+    // Optional: Fallback to direct URL download if s3Key is actually a URL
+    // if (s3Key.startsWith('http')) {
+    //   const link = document.createElement('a');
+    //   link.href = s3Key;
+    //   link.download = filename || 'document.pdf';
+    //   link.click();
+    // }
+    
+  } finally {
+    // Always clear loading state
+    setIsDownloading(false);
+  }
+};
 
   if (loading) {
     return (
