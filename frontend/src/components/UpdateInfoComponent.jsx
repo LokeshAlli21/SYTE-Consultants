@@ -18,13 +18,23 @@ const formatTimeAgo = (dateString) => {
   console.log("Corrected Updated Date:", correctedDate);
 
   const diffTime = now - correctedDate;
+  const diffMinutes = Math.floor(diffTime / (1000 * 60));
+  const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'Today';
+  // More granular time labels
+  if (diffMinutes < 1) return 'Just now';
+  if (diffMinutes < 60) return `${diffMinutes}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
   if (diffDays === 1) return 'Yesterday';
-  if (diffDays <= 6) return `${diffDays} days ago`;
+  if (diffDays <= 7) return `${diffDays} days ago`;
+  if (diffDays <= 30) return `${Math.floor(diffDays / 7)} week${Math.floor(diffDays / 7) > 1 ? 's' : ''} ago`;
 
-  return correctedDate.toLocaleDateString('en-IN', { dateStyle: 'medium' });
+  return correctedDate.toLocaleDateString('en-IN', { 
+    day: 'numeric',
+    month: 'short',
+    year: correctedDate.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+  });
 };
 
   const formatTime = (dateString) => {
@@ -33,10 +43,31 @@ const formatTimeAgo = (dateString) => {
     const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
     const correctedDate = new Date(updatedDate.getTime() - istOffset);
     
-    return correctedDate.toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+    const now = new Date();
+    const isToday = correctedDate.toDateString() === now.toDateString();
+    const isYesterday = correctedDate.toDateString() === new Date(now.getTime() - 24 * 60 * 60 * 1000).toDateString();
+    
+    if (isToday) {
+      return correctedDate.toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } else if (isYesterday) {
+      return correctedDate.toLocaleTimeString('en-IN', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    } else {
+      return correctedDate.toLocaleString('en-IN', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
+    }
   };
 
   const parseUpdatedFields = (updateAction) => {
@@ -83,10 +114,14 @@ pointer-events-none right-full mr-3 opacity-0 group-hover:opacity-100 z-50"
           
           <div className="flex-1">
             <div className="text-gray-700 text-sm leading-relaxed">
-              <span className="text-teal-600 font-semibold">Last updated:</span>{' '}
-              <span className="text-orange-500 font-semibold">{dateLabel}</span>{' '}
-              <span className="text-gray-600">at</span>{' '}
-              <span className="text-orange-500 font-semibold">{timeLabel}</span>
+              <span className="text-teal-600 font-semibold">Last updated</span>{' '}
+              <span className="text-orange-500 font-semibold">{dateLabel}</span>
+              {(dateLabel.includes('ago') || dateLabel === 'Just now') && (
+                <>
+                  <span className="text-gray-600"> at </span>
+                  <span className="text-orange-500 font-medium">{timeLabel}</span>
+                </>
+              )}
               {formData.updated_by && formData.updated_user?.name && (
                 <>
                   <span className="text-gray-600"> by </span>
