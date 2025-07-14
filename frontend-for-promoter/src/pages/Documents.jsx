@@ -116,13 +116,13 @@ function Documents() {
   // Input validation
   if (!s3Key) {
     console.error('No S3 key provided for download');
-    setDownloadError('Download URL not available');
+    console.log('Download URL not available');
     return;
   }
 
   // Set loading state
   setDownloadingDoc(docType);
-  setDownloadError(null);
+  console.log(null);
 
   console.log('Downloading file with S3 key:', s3Key);
 
@@ -142,7 +142,7 @@ function Documents() {
     
     // Set user-friendly error message
     const errorMessage = error.message || 'Download failed. Please try again.';
-    setDownloadError(errorMessage);
+    console.log(errorMessage);
     
     // Optional: Fallback to direct URL opening if available
     // if (fallbackUrl) {
