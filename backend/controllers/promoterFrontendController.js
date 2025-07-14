@@ -379,7 +379,9 @@ export const getProjectProgress = async (req, res) => {
 
 export const downloadFileFromS3 = async (req, res) => {
   try {
-    const { key } = req.params;
+    const { key } = req.params; /**
+     * key: 'https://rera-dev.s3.ap-south-1.amazonaws.com/project-files/rera_certificate/Chhatrapati_Heights_P52200080709_2025-06-28_05-51-59.pdf?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAW77ERHTQK3CIVE7F%2F20250714%2Fap-south-1%2Fs3%2Faws4_request&X-Amz-Date=20250714T062941Z&X-Amz-Expires=3600&X-Amz-Signature=fbfec95beebdb22987d6ae93cdc0b1ab3154c483d53838f86b87e9e75ddd8b6d&X-Amz-SignedHeaders=host'
+     */
     const { filename } = req.query; // Optional custom filename for download
 
     console.log('req.params: ',req.params)
@@ -390,7 +392,10 @@ export const downloadFileFromS3 = async (req, res) => {
     }
 
     // Download file from S3
-    const fileData = await downloadFromS3(key);
+
+    const decodedKey = decodeURIComponent(key);
+
+    const fileData = await downloadFromS3(decodedKey);
 
     // Set response headers for file download
     res.setHeader('Content-Type', fileData.contentType || 'application/octet-stream');
