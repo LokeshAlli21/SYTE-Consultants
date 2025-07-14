@@ -3,28 +3,37 @@ import React from 'react';
 const UpdateInfoComponent = ({formData}) => {
 
 const formatTimeAgo = (dateString) => {
-  // Since the dateString is already in IST from PostgreSQL, 
-  // we can directly create Date objects without timezone conversion
+  // The timestamp from PostgreSQL is stored in IST but JavaScript treats it as UTC
+  // We need to adjust for this timezone difference
   const updatedDate = new Date(dateString);
+  
+  // Convert to IST by subtracting the timezone offset
+  const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+  const correctedDate = new Date(updatedDate.getTime() - istOffset);
+  
   const now = new Date();
 
   console.log("Now:", now);
-  console.log("Updated Date:", updatedDate);
+  console.log("Original Updated Date:", updatedDate);
+  console.log("Corrected Updated Date:", correctedDate);
 
-  const diffTime = now - updatedDate;
+  const diffTime = now - correctedDate;
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
   if (diffDays === 0) return 'Today';
   if (diffDays === 1) return 'Yesterday';
   if (diffDays <= 6) return `${diffDays} days ago`;
 
-  return updatedDate.toLocaleDateString('en-IN', { dateStyle: 'medium' });
+  return correctedDate.toLocaleDateString('en-IN', { dateStyle: 'medium' });
 };
 
   const formatTime = (dateString) => {
-    // Since the dateString is already in IST, no need for timezone conversion
+    // Apply the same timezone correction for time display
     const updatedDate = new Date(dateString);
-    return updatedDate.toLocaleTimeString('en-IN', {
+    const istOffset = 5.5 * 60 * 60 * 1000; // 5.5 hours in milliseconds
+    const correctedDate = new Date(updatedDate.getTime() - istOffset);
+    
+    return correctedDate.toLocaleTimeString('en-IN', {
       hour: '2-digit',
       minute: '2-digit',
     });
