@@ -382,6 +382,8 @@ export const downloadFileFromS3 = async (req, res) => {
     const { key } = req.params;
     const { filename } = req.query; // Optional custom filename for download
 
+    console.log('req.params: ',req.params)
+
     // Validate required parameters
     if (!key) {
       return res.status(400).json({ error: "File key is required" });

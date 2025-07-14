@@ -290,6 +290,7 @@ async downloadFileFromS3(key, filename = null) {
 // Helper method to trigger file download in browser
 async downloadAndSaveFile(key, filename = null) {
   try {
+    
     const fileData = await this.downloadFileFromS3(key, filename);
     
     if (!fileData) {

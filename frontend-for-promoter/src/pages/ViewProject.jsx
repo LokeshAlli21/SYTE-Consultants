@@ -110,6 +110,8 @@ const handleDownload = async (s3Key) => {
     setIsDownloading(true);
     setDownloadError(null);
 
+    console.log('s3Key: ',s3Key)
+
     try {
       // Extract filename from S3 key or use default
       const filename = s3Key.split('/').pop() || 'certificate.pdf';
