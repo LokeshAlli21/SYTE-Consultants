@@ -729,8 +729,7 @@ export const uploadProjectDocuments = async (req, res) => {
       INSERT INTO project_documents (${columns.join(', ')})
       VALUES (${placeholders})
       ON CONFLICT (project_id) DO UPDATE SET
-        ${updateSet},
-        updated_at = NOW()
+        ${updateSet}
       RETURNING *
     `;
 
