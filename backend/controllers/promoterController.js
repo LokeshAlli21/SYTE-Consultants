@@ -424,7 +424,7 @@ export const updatePromoter = async (req, res) => {
           district = $4, city = $5, promoter_type = $6, 
           updated_by = $7, update_action = $8,
           username = $9, password = $10
-      WHERE id = $12
+      WHERE id = $11
       RETURNING id
     `;
 
