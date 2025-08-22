@@ -41,6 +41,24 @@ ALTER TABLE promoters
 ADD COLUMN username VARCHAR(100) UNIQUE,
 ADD COLUMN password VARCHAR(100);
 
+ALTER TABLE promoters
+ALTER COLUMN username SET DEFAULT NULL;
+
+CREATE OR REPLACE FUNCTION normalize_username()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.username = '' THEN
+        NEW.username := NULL;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER normalize_username_trigger
+BEFORE INSERT OR UPDATE ON promoters
+FOR EACH ROW
+EXECUTE FUNCTION normalize_username();
+
 -- Creating the PromoteDetails table with foreign key to Promoters
 CREATE TABLE promoter_details (
     id SERIAL PRIMARY KEY,
