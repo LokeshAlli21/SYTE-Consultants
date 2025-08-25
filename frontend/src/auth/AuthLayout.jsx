@@ -23,7 +23,8 @@ function AuthLayout({ children, authentication = true }) {
         '/qpr': 'qpr',
         '/aa': 'aa',
         '/reports': 'reports',
-        '/accounts': 'accounts'
+        '/accounts': 'accounts',
+        '/telecalling': 'telecalling'
     };
 
     // Function to get required access field based on current route

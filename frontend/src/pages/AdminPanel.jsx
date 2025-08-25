@@ -102,7 +102,8 @@ const accessOptions = [
   'qpr',
   'aa',
   'reports',
-  'accounts'
+  'accounts',
+  'telecalling'
 ];
 
 const handleAccessToggle = (option) => {

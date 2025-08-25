@@ -8,6 +8,8 @@ import { IoMdClose } from 'react-icons/io';
 import { IoIosArrowDown, IoIosArrowForward } from 'react-icons/io';
 import LogoutButton from '../components/LogoutButton'
 import { useSelector } from 'react-redux';
+import { FaPhoneAlt } from "react-icons/fa";
+
 
 const tabs = [
   { id: 'Dashboard', label: 'Dashboard', icon: <FaHome />, route: '/', accessKey: 'dashboard' },
@@ -63,6 +65,7 @@ const tabs = [
   { id: 'AA', label: 'AA', icon: <FaRegCalendarAlt />, route: '/aa', accessKey: 'aa' },
   { id: 'Reports', label: 'Reports', icon: <BiBarChartSquare />, route: '/reports', accessKey: 'reports' },
   { id: 'Accounts', label: 'Accounts', icon: <FaWallet />, route: '/accounts', accessKey: 'accounts' },
+  { id: 'Telecalling', label: 'Telecalling', icon: <FaPhoneAlt />, route: '/telecalling', accessKey: 'telecalling' },
 ];
 
 // Admin-only menu items

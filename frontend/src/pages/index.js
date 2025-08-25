@@ -16,6 +16,7 @@ import AdminPanel from "./AdminPanel";
 import Accounts from "./Accounts";
 import SyteDocuments from "./SyteDocuments";
 import NotFoundPage from "./NotFoundPage";
+import Telecalling from "./Telecalling";
 
 export {
     Dashboard,
@@ -36,4 +37,5 @@ export {
     Accounts,
     SyteDocuments,
     NotFoundPage,
+    Telecalling,
 }

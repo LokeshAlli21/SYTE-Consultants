@@ -29,6 +29,7 @@ import {
   Accounts,
   SyteDocuments,
   NotFoundPage,
+  Telecalling,
 } from './pages/index.js'
 
 const router = createBrowserRouter([
@@ -198,6 +199,14 @@ const router = createBrowserRouter([
         <AuthLayout authentication>
           {" "}
           <Accounts />
+         </AuthLayout>,
+      },
+      {
+        path: "/telecalling",
+        element: 
+        <AuthLayout authentication>
+          {" "}
+          <Telecalling />
          </AuthLayout>,
       },
       {
