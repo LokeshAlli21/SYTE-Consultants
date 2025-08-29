@@ -160,8 +160,16 @@ function Telecalling() {
     );
   }
 
+    const handleContextMenu = (e) => e.preventDefault();
+  const handleCopy = (e) => e.preventDefault();
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 select-none"
+     onContextMenu={handleContextMenu}                 // disables right click
+      onCopy={handleCopy}                               // prevents copy
+      role="region"
+      aria-label="Telecalling module"
+      >
       <div className="max-w-7xl mx-auto p-6">
         {/* Enhanced Header */}
         <div className="mb-8">
@@ -195,7 +203,7 @@ function Telecalling() {
                   placeholder="Search by name, project, district, or phone number..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all"
+                  className="w-full pl-12 pr-4 py-3 border outline-none border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all"
                 />
               </div>
             </div>
@@ -207,7 +215,7 @@ function Telecalling() {
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-gray-50 focus:bg-white transition-all"
+                  className="w-full pl-12 pr-4 py-3 border outline-none border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-gray-50 focus:bg-white transition-all"
                 >
                   {statusOptions.map(option => (
                     <option key={option.value} value={option.value}>

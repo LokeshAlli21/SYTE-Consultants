@@ -555,3 +555,57 @@ BEGIN
     ORDER BY d.id;
 END;
 $$ LANGUAGE plpgsql;
+
+--  Trigger function to insert/remove leads
+CREATE OR REPLACE FUNCTION sync_leads_with_status()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_user_id INT;
+BEGIN
+    -- Get who owns this telecalling_data through its batch
+    SELECT b.assigned_to INTO v_user_id
+    FROM telecalling_batches b
+    WHERE b.id = NEW.batch_id;
+
+    -- Case 1: Status changed TO 'interested' → insert if not exists
+    IF NEW.status = 'interested' AND (OLD.status IS DISTINCT FROM NEW.status) THEN
+        INSERT INTO leads (
+            telecalling_data_id,
+            promoter_name,
+            project_name,
+            profile_mobile_number,
+            registration_mobile_number,
+            profile_email,
+            registration_email,
+            district,
+            generated_by
+        )
+        VALUES (
+            NEW.id,
+            NEW.promoter_name,
+            NEW.project_name,
+            NEW.profile_mobile_number,
+            NEW.registration_mobile_number,
+            NEW.profile_email,
+            NEW.registration_email,
+            NEW.district,
+            v_user_id
+        )
+        ON CONFLICT (telecalling_data_id) DO NOTHING;
+
+    -- Case 2: Status changed FROM 'interested' → delete lead
+    ELSIF OLD.status = 'interested' AND NEW.status <> 'interested' THEN
+        DELETE FROM leads WHERE telecalling_data_id = NEW.id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 3. Trigger on telecalling_data
+DROP TRIGGER IF EXISTS trg_sync_leads ON telecalling_data;
+
+CREATE TRIGGER trg_sync_leads
+AFTER UPDATE OF status ON telecalling_data
+FOR EACH ROW
+EXECUTE FUNCTION sync_leads_with_status();

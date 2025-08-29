@@ -674,6 +674,20 @@ CREATE TABLE telecalling_data (
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );
 
+CREATE TABLE leads (
+    id SERIAL PRIMARY KEY,
+    telecalling_data_id INT UNIQUE REFERENCES telecalling_data(id) ON DELETE CASCADE,
+    promoter_name VARCHAR(255),
+    project_name VARCHAR(255),
+    profile_mobile_number VARCHAR(15),
+    registration_mobile_number VARCHAR(15),
+    profile_email VARCHAR(255),
+    registration_email VARCHAR(255),
+    district VARCHAR(100),
+    generated_by INT REFERENCES users(id), -- user who generated this lead
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
+);
+
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
