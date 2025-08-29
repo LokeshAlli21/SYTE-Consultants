@@ -54,12 +54,12 @@ function Telecalling() {
 
     // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = filtered.filter(item => item.status === statusFilter);
+      filtered = filtered?.filter(item => item.status === statusFilter);
     }
 
     // Apply search filter
     if (searchTerm) {
-      filtered = filtered.filter(item =>
+      filtered = filtered?.filter(item =>
         item.promoter_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.district.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -185,19 +185,19 @@ function Telecalling() {
             </div>
             <div className="text-center p-3 bg-yellow-50 rounded-lg">
               <div className="text-2xl font-bold text-yellow-800">
-                {batchData.filter(item => item.status === 'pending').length}
+                {batchData?.filter(item => item.status === 'pending').length}
               </div>
               <div className="text-sm text-yellow-700">Pending</div>
             </div>
             <div className="text-center p-3 bg-green-50 rounded-lg">
               <div className="text-2xl font-bold text-green-800">
-                {batchData.filter(item => item.status === 'interested').length}
+                {batchData?.filter(item => item.status === 'interested').length}
               </div>
               <div className="text-sm text-green-700">Interested</div>
             </div>
             <div className="text-center p-3 bg-red-50 rounded-lg">
               <div className="text-2xl font-bold text-red-800">
-                {batchData.filter(item => item.status === 'not_interested').length}
+                {batchData?.filter(item => item.status === 'not_interested').length}
               </div>
               <div className="text-sm text-red-700">Not Interested</div>
             </div>
