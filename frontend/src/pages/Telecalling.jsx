@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Phone, User, MapPin, Mail, Clock, Filter, Search, CheckCircle, XCircle, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, Eye, Calendar } from 'lucide-react';
 import databaseService from '../backend-services/database/database';
+import { useSelector } from 'react-redux';
 
 function Telecalling() {
   const [batchData, setBatchData] = useState([]);
@@ -14,8 +15,7 @@ function Telecalling() {
   const [currentPage, setCurrentPage] = useState(1);
   const [recordsPerPage] = useState(10);
 
-  // Mock user data
-  const userData = { role: 'admin', access_fields: ['telecalling'], id: 1 };
+  const userData = useSelector(state => state.auth.userData);
   const isAdmin = userData && userData.role === 'admin';
   const userAccessFields = userData?.access_fields || [];
 
