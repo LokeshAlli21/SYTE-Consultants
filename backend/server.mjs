@@ -36,6 +36,7 @@ app.use('/api/promoters', promoterRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/channel-partners',channelPartnerRoutes );
+app.use('/api/telecalling',telecallingRoutes );
 app.use('/api/dashboard',dashboardRoutes );
 app.use('/api/bucket',bucketRoutes );
 
