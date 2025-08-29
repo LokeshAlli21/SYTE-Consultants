@@ -31,6 +31,8 @@ export const updateTelecallingStatus = async (req, res) => {
     const { recordId } = req.params; // telecalling_data.id
     const { status } = req.body;     // new status
 
+    console.log(`Updating status for ${recordId} to ${status}`);
+
     if (!recordId || !status) {
       return res.status(400).json({ error: 'recordId and status are required' });
     }
