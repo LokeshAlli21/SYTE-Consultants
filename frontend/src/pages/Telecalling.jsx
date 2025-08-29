@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, User, MapPin, Mail, Clock, Filter, Search, CheckCircle, XCircle, AlertCircle, RefreshCw } from 'lucide-react';
+import { Phone, User, MapPin, Mail, Clock, Filter, Search, CheckCircle, XCircle, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, Eye, Calendar } from 'lucide-react';
 import databaseService from '../backend-services/database/database';
-
 
 function Telecalling() {
   const [batchData, setBatchData] = useState([]);
@@ -10,9 +9,12 @@ function Telecalling() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [confirmationModal, setConfirmationModal] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [recordsPerPage] = useState(10);
 
-  // Mock user data - replace with your actual useSelector
+  // Mock user data
   const userData = { role: 'admin', access_fields: ['telecalling'], id: 1 };
   const isAdmin = userData && userData.role === 'admin';
   const userAccessFields = userData?.access_fields || [];
@@ -20,9 +22,10 @@ function Telecalling() {
   // Access control
   if (!isAdmin && !userAccessFields.includes('telecalling')) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center p-8 bg-white rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold text-gray-800 mb-2">Access Denied</h2>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
+          <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Access Denied</h2>
           <p className="text-gray-600">You don't have permission to access Telecalling.</p>
         </div>
       </div>
@@ -34,10 +37,11 @@ function Telecalling() {
     const fetchBatchData = async () => {
       try {
         setLoading(true);
-        // Replace with your actual API call
         const data = await databaseService.getBatchDataByUserId(userData.id);
-        setBatchData(data);
-        setFilteredData(data);
+        console.log("Fetched batch data:", data);
+        const batchData = data?.batchData || [];
+        setBatchData(batchData);
+        setFilteredData(batchData);
       } catch (error) {
         console.error("Error fetching batch data:", error);
       } finally {
@@ -52,14 +56,12 @@ function Telecalling() {
   useEffect(() => {
     let filtered = batchData;
 
-    // Apply status filter
     if (statusFilter !== 'all') {
-      filtered = filtered?.filter(item => item.status === statusFilter);
+      filtered = filtered.filter(item => item.status === statusFilter);
     }
 
-    // Apply search filter
     if (searchTerm) {
-      filtered = filtered?.filter(item =>
+      filtered = filtered.filter(item =>
         item.promoter_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.project_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.district.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -68,23 +70,45 @@ function Telecalling() {
     }
 
     setFilteredData(filtered);
+    setCurrentPage(1);
   }, [searchTerm, statusFilter, batchData]);
 
-  // Update status function
-  const updateStatus = async (recordId, newStatus) => {
+  // Pagination
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(filteredData.length / recordsPerPage);
+
+  // Status update with confirmation
+  const handleStatusUpdate = (record, newStatus) => {
+    console.log(`Updating status for ${record.promoter_name} to ${newStatus}`);
+    
+    setConfirmationModal({
+      record,
+      newStatus,
+      title: 'Confirm Status Update',
+      message: `Are you sure you want to update ${record.promoter_name}'s status to "${newStatus.replace('_', ' ').toUpperCase()}"?`
+    });
+  };
+
+  const confirmStatusUpdate = async () => {
+    if (!confirmationModal) return;
+    console.log(`Confirming status update for ${confirmationModal.record} to ${confirmationModal.newStatus}`);
+
     try {
       setIsUpdating(true);
-      await databaseService.updateTelecallingStatus(recordId, newStatus);
 
-      // Update local state
-      setBatchData(prev => 
-        prev.map(item => 
-          item.promoter_id === recordId 
-            ? { ...item, status: newStatus, updated_at: new Date().toISOString() }
+      await databaseService.updateTelecallingStatus(confirmationModal.record.id, confirmationModal.newStatus);
+
+      setBatchData(prev =>
+        prev.map(item =>
+          item.promoter_id === confirmationModal.record.promoter_id
+            ? { ...item, status: confirmationModal.newStatus, updated_at: new Date().toISOString() }
             : item
         )
       );
       
+      setConfirmationModal(null);
       setSelectedRecord(null);
     } catch (error) {
       console.error("Error updating status:", error);
@@ -95,11 +119,11 @@ function Telecalling() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'interested': return 'bg-green-100 text-green-800 border-green-200';
-      case 'not_interested': return 'bg-red-100 text-red-800 border-red-200';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case 'pending': return 'bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-800 border-yellow-200';
+      case 'in_progress': return 'bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-800 border-blue-200';
+      case 'interested': return 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 border-green-200';
+      case 'not_interested': return 'bg-gradient-to-r from-red-50 to-pink-50 text-red-800 border-red-200';
+      default: return 'bg-gradient-to-r from-gray-50 to-slate-50 text-gray-800 border-gray-200';
     }
   };
 
@@ -123,49 +147,67 @@ function Telecalling() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="text-center">
-          <RefreshCw className="w-8 h-8 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading telecalling data...</p>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+        <div className="text-center bg-white rounded-2xl p-8 shadow-xl">
+          <div className="relative">
+            <RefreshCw className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
+            <div className="absolute inset-0 w-12 h-12 border-4 border-blue-200 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          </div>
+          <p className="text-gray-700 font-medium">Loading telecalling data...</p>
+          <p className="text-gray-500 text-sm mt-1">Please wait while we fetch your records</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Enhanced Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Telecalling Dashboard</h1>
-          <p className="text-gray-600">Manage and track your telecalling activities</p>
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 bg-gradient-to-r from-white to-blue-50">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-blue-800 bg-clip-text text-transparent mb-3">
+              Telecalling Dashboard
+            </h1>
+            <p className="text-gray-600 text-lg">Manage and track your telecalling activities with ease</p>
+            <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
+              <Calendar className="w-4 h-4" />
+              Last updated: {new Date().toLocaleDateString('en-IN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+              })}
+            </div>
+          </div>
         </div>
 
-        {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* Search */}
+        {/* Enhanced Filters and Stats */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 mb-8">
+          {/* Search and Filter Row */}
+          <div className="flex flex-col lg:flex-row gap-6 mb-8">
             <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Search Records</label>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search by name, project, district, or phone..."
+                  placeholder="Search by name, project, district, or phone number..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all"
                 />
               </div>
             </div>
 
-            {/* Status Filter */}
-            <div className="md:w-64">
+            <div className="lg:w-72">
+              <label className="block text-sm font-medium text-gray-700 mb-2">Filter by Status</label>
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Filter className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none bg-gray-50 focus:bg-white transition-all"
                 >
                   {statusOptions.map(option => (
                     <option key={option.value} value={option.value}>
@@ -177,98 +219,142 @@ function Telecalling() {
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="text-center p-3 bg-gray-50 rounded-lg">
+          {/* Enhanced Stats Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
               <div className="text-2xl font-bold text-gray-900">{batchData.length}</div>
-              <div className="text-sm text-gray-600">Total Records</div>
+              <div className="text-sm text-gray-600 font-medium">Total Records</div>
             </div>
-            <div className="text-center p-3 bg-yellow-50 rounded-lg">
+            <div className="bg-gradient-to-br from-yellow-50 to-amber-100 p-4 rounded-xl border border-yellow-200">
               <div className="text-2xl font-bold text-yellow-800">
-                {batchData?.filter(item => item.status === 'pending').length}
+                {batchData.filter(item => item.status === 'pending').length}
               </div>
-              <div className="text-sm text-yellow-700">Pending</div>
+              <div className="text-sm text-yellow-700 font-medium">Pending</div>
             </div>
-            <div className="text-center p-3 bg-green-50 rounded-lg">
+            <div className="bg-gradient-to-br from-blue-50 to-cyan-100 p-4 rounded-xl border border-blue-200">
+              <div className="text-2xl font-bold text-blue-800">
+                {batchData.filter(item => item.status === 'in_progress').length}
+              </div>
+              <div className="text-sm text-blue-700 font-medium">In Progress</div>
+            </div>
+            <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-4 rounded-xl border border-green-200">
               <div className="text-2xl font-bold text-green-800">
-                {batchData?.filter(item => item.status === 'interested').length}
+                {batchData.filter(item => item.status === 'interested').length}
               </div>
-              <div className="text-sm text-green-700">Interested</div>
+              <div className="text-sm text-green-700 font-medium">Interested</div>
             </div>
-            <div className="text-center p-3 bg-red-50 rounded-lg">
+            <div className="bg-gradient-to-br from-red-50 to-pink-100 p-4 rounded-xl border border-red-200">
               <div className="text-2xl font-bold text-red-800">
-                {batchData?.filter(item => item.status === 'not_interested').length}
+                {batchData.filter(item => item.status === 'not_interested').length}
               </div>
-              <div className="text-sm text-red-700">Not Interested</div>
+              <div className="text-sm text-red-700 font-medium">Not Interested</div>
             </div>
           </div>
         </div>
 
-        {/* Records List */}
-        <div className="space-y-4">
-          {filteredData.length === 0 ? (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-              <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No records found matching your criteria</p>
+        {/* Results Header */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="text-gray-700">
+            <span className="text-lg font-semibold">{filteredData.length}</span>
+            <span className="text-gray-500 ml-1">records found</span>
+          </div>
+          <div className="text-sm text-gray-500">
+            Page {currentPage} of {totalPages}
+          </div>
+        </div>
+
+        {/* Enhanced Records List */}
+        <div className="space-y-4 mb-8">
+          {currentRecords.length === 0 ? (
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-16 text-center">
+              <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Records Found</h3>
+              <p className="text-gray-600">No records match your current search criteria. Try adjusting your filters.</p>
             </div>
           ) : (
-            filteredData.map((record) => (
-              <div key={record.promoter_id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+            currentRecords.map((record) => (
+              <div key={record.promoter_id} className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 group">
                 <div className="p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                    {/* Main Info */}
-                    <div className="flex-1 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span className="font-semibold text-gray-900">{record.promoter_name}</span>
+                  <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+                    {/* Enhanced Main Info */}
+                    <div className="flex-1">
+                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-blue-100 rounded-lg">
+                              <User className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-gray-900 text-lg">{record.promoter_name}</div>
+                              <div className="text-sm text-gray-500">ID: {record.promoter_id}</div>
+                            </div>
+                          </div>
+                          <div className="ml-12">
+                            <div className="text-gray-700 font-medium">{record.project_name}</div>
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-600">{record.project_name}</div>
-                      </div>
 
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-900">{record.profile_mobile_number}</span>
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-green-100 rounded-lg">
+                              <Phone className="w-5 h-5 text-green-600" />
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">{record.profile_mobile_number}</div>
+                              <div className="text-sm text-gray-500">Profile Number</div>
+                            </div>
+                          </div>
+                          <div className="ml-12">
+                            <div className="flex items-center gap-2">
+                              <Mail className="w-4 h-4 text-gray-400" />
+                              <span className="text-sm text-gray-600 truncate">{record.profile_email}</span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-600 truncate">{record.profile_email}</span>
-                        </div>
-                      </div>
 
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-900">{record.district}</span>
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          Updated: {new Date(record.updated_at).toLocaleDateString()}
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-purple-100 rounded-lg">
+                              <MapPin className="w-5 h-5 text-purple-600" />
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-900">{record.district}</div>
+                              <div className="text-sm text-gray-500">District</div>
+                            </div>
+                          </div>
+                          <div className="ml-12">
+                            <div className="text-xs text-gray-500">
+                              Updated: {new Date(record.updated_at).toLocaleDateString('en-IN')}
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    {/* Status and Actions */}
-                    <div className="flex items-center gap-4">
-                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(record.status)}`}>
+                    {/* Enhanced Status and Actions */}
+                    <div className="flex flex-col sm:flex-row xl:flex-col items-center gap-4">
+                      <div className={`flex items-center gap-3 px-4 py-2 rounded-full border text-sm font-semibold shadow-sm ${getStatusColor(record.status)}`}>
                         {getStatusIcon(record.status)}
                         {record.status.replace('_', ' ').toUpperCase()}
                       </div>
 
-                      <button
-                        onClick={() => setSelectedRecord(record)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
-                      >
-                        Update Status
-                      </button>
+                      <div className="flex gap-3">
+                        <button
+                          onClick={() => setSelectedRecord(record)}
+                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium"
+                        >
+                          <Eye className="w-4 h-4" />
+                          Update
+                        </button>
 
-                      <a
-                        href={`tel:${record.profile_mobile_number}`}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                        title="Call"
-                      >
-                        <Phone className="w-5 h-5" />
-                      </a>
+                        <a
+                          href={`tel:${record.profile_mobile_number}`}
+                          className="flex items-center justify-center p-3 text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 border border-green-200 hover:border-green-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                          title="Call Now"
+                        >
+                          <Phone className="w-5 h-5" />
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -277,43 +363,156 @@ function Telecalling() {
           )}
         </div>
 
-        {/* Status Update Modal */}
-        {selectedRecord && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
-              <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                  Update Status for {selectedRecord.promoter_name}
-                </h3>
+        {/* Enhanced Pagination */}
+        {totalPages > 1 && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredData.length)} of {filteredData.length} records
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </button>
                 
-                <div className="space-y-3">
+                <div className="flex gap-1">
+                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                    const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
+                    if (page > totalPages) return null;
+                    
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 rounded-xl font-medium transition-all ${
+                          currentPage === page
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Status Update Modal */}
+        {selectedRecord && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full transform transition-all">
+              <div className="p-8">
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <User className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                    Update Status
+                  </h3>
+                  <p className="text-gray-600">
+                    Change status for <span className="font-semibold">{selectedRecord.promoter_name}</span>
+                  </p>
+                </div>
+                
+                <div className="space-y-3 mb-8">
                   {['pending', 'in_progress', 'interested', 'not_interested'].map((status) => (
                     <button
                       key={status}
-                      onClick={() => updateStatus(selectedRecord.promoter_id, status)}
+                      onClick={() => handleStatusUpdate(selectedRecord, status)}
                       disabled={isUpdating}
-                      className={`w-full p-3 text-left rounded-lg border transition-colors ${
+                      className={`w-full p-4 text-left rounded-xl border transition-all duration-200 transform hover:scale-[1.02] ${
                         selectedRecord.status === status
-                          ? 'bg-blue-50 border-blue-200 text-blue-800'
-                          : 'hover:bg-gray-50 border-gray-200'
+                          ? 'bg-blue-50 border-blue-200 text-blue-800 shadow-md'
+                          : 'hover:bg-gray-50 border-gray-200 hover:shadow-md'
                       } ${isUpdating ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
-                      <div className="flex items-center gap-3">
-                        {getStatusIcon(status)}
-                        <span className="font-medium">
-                          {status.replace('_', ' ').toUpperCase()}
-                        </span>
+                      <div className="flex items-center gap-4">
+                        <div className={`p-2 rounded-lg ${selectedRecord.status === status ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                          {getStatusIcon(status)}
+                        </div>
+                        <div>
+                          <div className="font-semibold">
+                            {status.replace('_', ' ').toUpperCase()}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {status === 'pending' && 'Awaiting contact'}
+                            {status === 'in_progress' && 'Currently being contacted'}
+                            {status === 'interested' && 'Showed interest in project'}
+                            {status === 'not_interested' && 'Not interested at this time'}
+                          </div>
+                        </div>
                       </div>
                     </button>
                   ))}
                 </div>
 
-                <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setSelectedRecord(null)}
+                  className="w-full px-6 py-3 text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Enhanced Confirmation Modal */}
+        {confirmationModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
+              <div className="p-8 text-center">
+                <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <AlertCircle className="w-8 h-8 text-amber-600" />
+                </div>
+                
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">
+                  {confirmationModal.title}
+                </h3>
+                
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                  {confirmationModal.message}
+                </p>
+
+                <div className="flex gap-4">
                   <button
-                    onClick={() => setSelectedRecord(null)}
-                    className="flex-1 px-4 py-2 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    onClick={() => setConfirmationModal(null)}
+                    disabled={isUpdating}
+                    className="flex-1 px-6 py-3 text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-medium disabled:opacity-50"
                   >
                     Cancel
+                  </button>
+                  <button
+                    onClick={confirmStatusUpdate}
+                    disabled={isUpdating}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all font-medium disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {isUpdating ? (
+                      <>
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      'Confirm Update'
+                    )}
                   </button>
                 </div>
               </div>
