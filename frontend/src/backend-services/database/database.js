@@ -4013,6 +4013,37 @@ async updateTelecallingStatus (recordId, status) {
   }
 }
 
+async getLeadsByUserId(userId, { page = 1, limit = 20, search = "" } = {}) {
+  try {
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      search: search,
+    });
+
+    const response = await authenticatedFetch(
+      `${this.baseUrl}/api/telecalling/get-leads/${userId}?${queryParams.toString()}`,
+      {
+        method: "GET",
+        headers: this.getAuthHeaders(),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch leads.");
+    }
+
+    const data = await response.json();
+    // console.log("Leads fetched successfully:", data);
+
+    return data;
+  } catch (error) {
+    console.error("❌ Error fetching leads:", error);
+    throw error;
+  }
+}
+
 }
 
 const databaseService = new DatabaseService();
