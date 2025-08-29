@@ -115,7 +115,6 @@ export const getLeadsByUser = async (req, res) => {
         OR l.profile_email ILIKE $${paramIndex}
         OR l.registration_email ILIKE $${paramIndex}
         OR l.district ILIKE $${paramIndex}
-        OR l.status ILIKE $${paramIndex}
       )`;
       queryParams.push(`%${search}%`);
       paramIndex++;
