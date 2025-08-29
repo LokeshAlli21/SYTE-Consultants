@@ -38,7 +38,7 @@ export const updateTelecallingStatus = async (req, res) => {
     }
 
     // Allowed statuses (you can customize this)
-    const allowedStatuses = ['pending', 'in_progress', 'completed', 'not_interested'];
+    const allowedStatuses = ['pending', 'in_progress', 'interested', 'not_interested'];
     if (!allowedStatuses.includes(status)) {
       return res.status(400).json({ error: 'Invalid status value' });
     }
