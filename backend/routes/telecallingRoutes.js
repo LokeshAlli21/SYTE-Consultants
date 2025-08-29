@@ -9,6 +9,6 @@ const router = express.Router();
 
   router.get('/get-batch-data/:userId', protect, getBatchDataByUserId);
 
-  router.put('/update-status/:recordId', protect, updateTelecallingStatus);
+  router.patch('/update-status/:recordId', protect, updateTelecallingStatus);
 
 export default router;
