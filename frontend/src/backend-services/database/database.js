@@ -3971,7 +3971,7 @@ async getQuickStats() {
   
 async getBatchDataByUserId (userId) {
   try {
-    const response = await authenticatedFetch(`${this.baseUrl}/api/telecalling//get-batch-data/${userId}`, {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/telecalling/get-batch-data/${userId}`, {
       method: "GET",
       headers: this.getAuthHeaders(),
     });
