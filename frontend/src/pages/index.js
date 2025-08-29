@@ -17,6 +17,7 @@ import Accounts from "./Accounts";
 import SyteDocuments from "./SyteDocuments";
 import NotFoundPage from "./NotFoundPage";
 import Telecalling from "./Telecalling";
+import Leads from "./Leads";
 
 export {
     Dashboard,
@@ -38,4 +39,5 @@ export {
     SyteDocuments,
     NotFoundPage,
     Telecalling,
+    Leads,
 }

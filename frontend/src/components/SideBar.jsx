@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { FaBars, FaHome, FaClipboardList, FaRegCalendarAlt, FaUser, FaWallet, FaPlus, FaUsers, FaCog, FaFileAlt, FaChartLine } from 'react-icons/fa';
+import { FaBars, FaHome, FaClipboardList, FaRegCalendarAlt, FaUser, FaWallet, FaPlus, FaUsers, FaCog, FaFileAlt, FaChartLine, FaUserPlus  } from 'react-icons/fa';
 import { HiUserGroup } from 'react-icons/hi';
 import { BiTask, BiBarChartSquare } from 'react-icons/bi';
 import { MdOutlinePeopleAlt, MdAdminPanelSettings } from 'react-icons/md';
@@ -66,6 +66,7 @@ const tabs = [
   { id: 'Reports', label: 'Reports', icon: <BiBarChartSquare />, route: '/reports', accessKey: 'reports' },
   { id: 'Accounts', label: 'Accounts', icon: <FaWallet />, route: '/accounts', accessKey: 'accounts' },
   { id: 'Telecalling', label: 'Telecalling', icon: <FaPhoneAlt />, route: '/telecalling', accessKey: 'telecalling' },
+  { id: 'Leads', label: 'Leads', icon: <FaUserPlus  />, route: '/leads', accessKey: 'leads' },
 ];
 
 // Admin-only menu items

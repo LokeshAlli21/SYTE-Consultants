@@ -24,7 +24,8 @@ function AuthLayout({ children, authentication = true }) {
         '/aa': 'aa',
         '/reports': 'reports',
         '/accounts': 'accounts',
-        '/telecalling': 'telecalling'
+        '/telecalling': 'telecalling',
+        '/leads': 'leads'
     };
 
     // Function to get required access field based on current route

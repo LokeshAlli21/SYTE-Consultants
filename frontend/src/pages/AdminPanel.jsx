@@ -103,7 +103,8 @@ const accessOptions = [
   'aa',
   'reports',
   'accounts',
-  'telecalling'
+  'telecalling',
+  'leads'
 ];
 
 const handleAccessToggle = (option) => {
