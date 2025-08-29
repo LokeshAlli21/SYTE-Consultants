@@ -484,7 +484,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 CREATE TRIGGER trg_check_and_assign_next_batch
-AFTER INSERT OR UPDATE OF status ON telecalling_data
+AFTER UPDATE OF status ON telecalling_data
 FOR EACH ROW
 EXECUTE FUNCTION check_and_assign_next_batch();
 
@@ -508,10 +508,10 @@ DECLARE
     v_batch_id INT;
 BEGIN
     -- 1. Check for existing incomplete batch
-    SELECT id INTO v_batch_id
-    FROM telecalling_batches
-    WHERE assigned_to = p_user_id AND is_completed = false
-    ORDER BY created_at DESC
+    SELECT b.id INTO v_batch_id
+    FROM telecalling_batches b
+    WHERE b.assigned_to = p_user_id AND b.is_completed = false
+    ORDER BY b.created_at DESC
     LIMIT 1;
 
     -- 2. If no batch found, create a new one
@@ -522,10 +522,10 @@ BEGIN
 
         -- Assign next 100 unassigned rows
         WITH next_batch AS (
-            SELECT id
-            FROM telecalling_data
-            WHERE batch_id IS NULL
-            ORDER BY id
+            SELECT td.id
+            FROM telecalling_data td
+            WHERE td.batch_id IS NULL
+            ORDER BY td.id
             LIMIT 100
             FOR UPDATE SKIP LOCKED
         )

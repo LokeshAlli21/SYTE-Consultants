@@ -669,7 +669,7 @@ CREATE TABLE telecalling_data (
     registration_email VARCHAR(255),
     district VARCHAR(100),
     status VARCHAR(50) DEFAULT 'pending',
-    batch_id INT REFERENCES telecalling_batches(id),
+    batch_id INT REFERENCES telecalling_batches(id) DEFAULT NULL,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
     updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );

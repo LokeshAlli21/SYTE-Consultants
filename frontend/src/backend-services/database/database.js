@@ -3982,15 +3982,37 @@ async getBatchDataByUserId (userId) {
     }
 
     const data = await response.json();
-    console.log("Batch data fetched successfully:", data);
+    // console.log("Batch data fetched successfully:", data);
 
-    return data.data;
+    return data;
   } catch (error) {
     console.error("❌ Error fetching batch data:", error);
     throw error;
   }
 }
-  
+
+async updateTelecallingStatus (recordId, status) {
+  try {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/telecalling/update-status/${recordId}`, {
+      method: "PATCH",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to update telecalling status.");
+    }
+
+    const data = await response.json();
+    console.log("Telecalling status updated successfully:", data);
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error updating telecalling status:", error);
+    throw error;
+  }
+}
+
 }
 
 const databaseService = new DatabaseService();
