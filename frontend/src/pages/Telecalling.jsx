@@ -93,12 +93,12 @@ function Telecalling() {
 
   const confirmStatusUpdate = async () => {
     if (!confirmationModal) return;
-    console.log(`Confirming status update for ${confirmationModal.record} to ${confirmationModal.newStatus}`);
+    console.log(`Confirming status update for ${confirmationModal.record.promoter_id} to ${confirmationModal.newStatus}`);
 
     try {
       setIsUpdating(true);
 
-      await databaseService.updateTelecallingStatus(confirmationModal.record.id, confirmationModal.newStatus);
+      await databaseService.updateTelecallingStatus(confirmationModal.record.promoter_id, confirmationModal.newStatus);
 
       setBatchData(prev =>
         prev.map(item =>
