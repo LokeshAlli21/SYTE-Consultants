@@ -1,242 +1,367 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Search, RefreshCw, Users, Phone, Mail, MapPin, Calendar, User, Building, ChevronLeft, ChevronRight, Filter, TrendingUp } from "lucide-react";
+import { Search, Filter, RefreshCw, Users, Phone, Mail, MapPin, Calendar, User, Building, ChevronLeft, ChevronRight } from "lucide-react";
 import databaseService from "../backend-services/database/database";
 
 function Leads() {
   const userData = useSelector((state) => state.auth.userData);
-  const hasAccess = useMemo(() => 
-    userData?.role === "admin" || userData?.access_fields?.includes("leads"), 
-    [userData]
-  );
+  const isAdmin = userData && userData.role === "admin";
+  const userAccessFields = userData?.access_fields || [];
 
-  const [state, setState] = useState({
-    leads: [],
-    loading: false,
-    error: null,
-    page: 1,
-    search: "",
-    pagination: { totalRecords: 0, totalPages: 0, currentPage: 1 }
+  // Local state
+  const [leads, setLeads] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [limit] = useState(10);
+  const [search, setSearch] = useState("");
+  const [pagination, setPagination] = useState({ 
+    totalRecords: 0, 
+    totalPages: 0, 
+    currentPage: 1 
   });
 
-  const updateState = (updates) => setState(prev => ({ ...prev, ...updates }));
-
-  if (!hasAccess) {
+  // Permission check
+  if (!isAdmin && !userAccessFields.includes("leads")) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
-        <div className="relative overflow-hidden bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl p-8 text-center border border-white/20">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-pink-500/20 rounded-3xl"></div>
-          <div className="relative">
-            <div className="w-20 h-20 bg-gradient-to-br from-red-400 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
-              <Users className="w-10 h-10 text-white" />
-            </div>
-            <h2 className="text-3xl font-bold text-white mb-3">Access Denied</h2>
-            <p className="text-white/80">You don't have permission to access the Leads module.</p>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-8 text-center max-w-md">
+          <div className="w-20 h-20 bg-gradient-to-br from-red-50 to-red-100 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <Users className="w-10 h-10 text-red-500" />
           </div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Access Restricted</h2>
+          <p className="text-gray-600 leading-relaxed">You don't have permission to access the Leads module. Contact your administrator for access.</p>
         </div>
       </div>
     );
   }
 
+  // Fetch leads
   const fetchLeads = async (resetPage = false) => {
-    updateState({ loading: true, error: null });
+    setLoading(true);
+    setError(null);
     try {
-      const currentPage = resetPage ? 1 : state.page;
+      const currentPage = resetPage ? 1 : page;
       const response = await databaseService.getLeadsByUserId(userData.id, {
-        page: currentPage, limit: 10, search: state.search,
+        page: currentPage,
+        limit,
+        search,
       });
-      updateState({
-        leads: response.leads || [],
-        pagination: response.pagination || { totalRecords: 0, totalPages: 0, currentPage: 1 },
-        page: resetPage ? 1 : currentPage,
-        loading: false
-      });
+      setLeads(response.leads || []);
+      setPagination(response.pagination || { totalRecords: 0, totalPages: 0, currentPage: 1 });
+      if (resetPage) setPage(1);
     } catch (err) {
-      updateState({ error: err.message || "Failed to fetch leads.", loading: false });
+      setError(err.message || "Failed to fetch leads.");
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (userData?.id) fetchLeads();
-  }, [userData?.id, state.page]);
+    if (userData?.id) {
+      fetchLeads();
+    }
+  }, [userData?.id, page, limit]);
 
+  // Handle search
   const handleSearch = (value) => {
-    updateState({ search: value });
-    if (value !== state.search) fetchLeads(true);
+    setSearch(value);
+    if (value !== search) {
+      fetchLeads(true);
+    }
   };
 
+  // Clear search
   const clearSearch = () => {
-    updateState({ search: "" });
+    setSearch("");
     fetchLeads(true);
   };
 
-  const formatDate = (dateString) => 
-    dateString ? new Date(dateString).toLocaleDateString("en-IN", {
-      day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit"
-    }) : "N/A";
+  // Refresh data
+  const refreshData = () => {
+    fetchLeads();
+  };
 
-  const ContactCard = ({ icon: Icon, value, label, gradient }) => (
-    <div className="group flex items-center gap-3 p-3 rounded-xl bg-gradient-to-r from-white/50 to-white/30 hover:from-white/70 hover:to-white/50 transition-all duration-300 border border-white/20">
-      <div className={`w-12 h-12 bg-gradient-to-br ${gradient} rounded-xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-        <Icon className="w-5 h-5 text-white" />
+  // Format date
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    });
+  };
+
+  // Pagination component
+  const renderPagination = () => {
+    if (pagination.totalPages <= 1) return null;
+
+    const pages = [];
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(pagination.totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage + 1 < maxVisiblePages) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      pages.push(i);
+    }
+
+    return (
+      <div className="flex flex-col sm:flex-row items-center justify-between mt-8 space-y-4 sm:space-y-0">
+        <div className="text-sm text-gray-600">
+          Showing <span className="font-medium">{Math.min((page - 1) * limit + 1, pagination.totalRecords)}</span> to{" "}
+          <span className="font-medium">{Math.min(page * limit, pagination.totalRecords)}</span> of{" "}
+          <span className="font-medium">{pagination.totalRecords}</span> leads
+        </div>
+        
+        <div className="flex items-center space-x-1">
+          <button
+            disabled={page === 1}
+            onClick={() => setPage(prev => Math.max(prev - 1, 1))}
+            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+
+          {pages.map(pageNum => (
+            <button
+              key={pageNum}
+              onClick={() => setPage(pageNum)}
+              className={`px-3 py-2 text-sm rounded-lg border transition-all duration-200 ${
+                pageNum === page
+                  ? "bg-blue-600 text-white border-blue-600 shadow-md"
+                  : "bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+              }`}
+            >
+              {pageNum}
+            </button>
+          ))}
+
+          <button
+            disabled={page === pagination.totalPages}
+            onClick={() => setPage(prev => Math.min(prev + 1, pagination.totalPages))}
+            className="p-2 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-      <div className="min-w-0 flex-1">
-        <p className="font-semibold text-gray-900 truncate">{value || "N/A"}</p>
-        <p className="text-sm text-gray-600">{label}</p>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="relative overflow-hidden bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-3xl"></div>
-          <div className="relative flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center mb-2">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
-                  <Users className="w-6 h-6 text-white" />
+              <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 flex items-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4">
+                  <Users className="w-7 h-7 text-white" />
                 </div>
-                Leads Management
+                Leads
               </h1>
-              <p className="text-white/80 text-lg">Manage and track your lead generation activities</p>
+              <p className="text-gray-600 mt-2 text-lg">
+                Track and manage your lead generation pipeline
+              </p>
             </div>
-            
-            <div className="flex items-center gap-6">
-              <div className="text-center">
-                <div className="flex items-center gap-2 mb-1">
-                  <TrendingUp className="w-5 h-5 text-emerald-400" />
-                  <p className="text-3xl font-bold text-white">{state.pagination.totalRecords}</p>
-                </div>
-                <p className="text-white/70 text-sm">Total Leads</p>
+            <div className="flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  {pagination.totalRecords}
+                </p>
+                <p className="text-sm text-gray-500 font-medium">Total Leads</p>
               </div>
-              
               <button
-                onClick={() => fetchLeads()}
-                disabled={state.loading}
-                className="group p-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 disabled:opacity-50 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
+                onClick={refreshData}
+                disabled={loading}
+                className="p-3 bg-white text-gray-700 rounded-xl hover:bg-gray-50 border border-gray-200 disabled:opacity-50 transition-all duration-200 shadow-sm"
               >
-                <RefreshCw className={`w-6 h-6 ${state.loading ? "animate-spin" : "group-hover:rotate-180"} transition-transform duration-300`} />
+                <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Search */}
-        <div className="relative overflow-hidden bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-6">
-          <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-cyan-500/10 rounded-3xl"></div>
-          <div className="relative">
-            <div className="relative group">
-              <Search className="absolute left-6 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/60 group-focus-within:text-white transition-colors" />
+        {/* Search Bar */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search promoters, projects, contacts, or districts..."
-                className="w-full pl-14 pr-12 py-4 bg-white/20 border border-white/30 rounded-2xl focus:ring-2 focus:ring-blue-400/50 focus:border-blue-400/50 outline-none transition-all duration-300 text-white placeholder-white/60 backdrop-blur-sm"
-                value={state.search}
+                placeholder="Search promoter, project, phone, email, or district..."
+                className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
+                value={search}
                 onChange={(e) => handleSearch(e.target.value)}
               />
-              {state.search && (
-                <button
-                  onClick={clearSearch}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-xl flex items-center justify-center text-white/80 hover:text-white transition-all duration-200"
-                >
-                  ✕
-                </button>
-              )}
             </div>
+            {search && (
+              <button
+                onClick={clearSearch}
+                className="px-6 py-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 flex items-center font-medium"
+              >
+                <Filter className="w-4 h-4 mr-2" />
+                Clear
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Error */}
-        {state.error && (
-          <div className="relative overflow-hidden bg-red-500/20 backdrop-blur-xl rounded-2xl border border-red-400/30 p-6">
-            <div className="absolute inset-0 bg-gradient-to-r from-red-500/10 to-pink-500/10 rounded-2xl"></div>
-            <p className="relative text-red-200 font-medium flex items-center">
-              <span className="w-6 h-6 bg-red-500/30 rounded-full flex items-center justify-center mr-3 text-xs">⚠</span>
-              {state.error}
-            </p>
-          </div>
-        )}
-
-        {/* Loading */}
-        {state.loading && (
-          <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-16 text-center">
-            <div className="relative">
-              <div className="w-16 h-16 border-4 border-white/20 border-t-blue-400 rounded-full animate-spin mx-auto mb-4"></div>
-              <p className="text-white/80 text-lg">Loading leads...</p>
+        {/* Error State */}
+        {error && (
+          <div className="bg-gradient-to-r from-red-50 to-red-50 border border-red-200 rounded-2xl p-6 mb-6">
+            <div className="flex items-start space-x-4">
+              <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                <span className="text-red-600 text-lg font-bold">!</span>
+              </div>
+              <div>
+                <h3 className="text-red-900 font-semibold text-lg mb-1">Unable to Load Leads</h3>
+                <p className="text-red-700">{error}</p>
+              </div>
             </div>
           </div>
         )}
 
-        {/* Leads Cards */}
-        {!state.loading && state.leads.length > 0 && (
-          <div className="space-y-4">
-            {state.leads.map((lead) => (
-              <div key={lead.id} className="group relative overflow-hidden bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 hover:bg-white/15 transition-all duration-500 hover:scale-[1.02] hover:shadow-3xl">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                
-                <div className="relative grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-12">
+            <div className="flex flex-col items-center justify-center">
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4">
+                <RefreshCw className="w-6 h-6 text-blue-600 animate-spin" />
+              </div>
+              <span className="text-gray-700 font-medium">Loading your leads...</span>
+            </div>
+          </div>
+        )}
+
+        {/* Leads Cards - Modern Card Layout */}
+        {!loading && leads.length > 0 && (
+          <div className="grid gap-6">
+            {leads.map((lead, index) => (
+              <div 
+                key={lead.id} 
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300 hover:border-gray-200"
+              >
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                  {/* Lead Details */}
                   <div className="space-y-4">
-                    <ContactCard 
-                      icon={User} 
-                      value={lead.promoter_name} 
-                      label="Promoter" 
-                      gradient="from-blue-500 to-cyan-500" 
-                    />
-                    <ContactCard 
-                      icon={Building} 
-                      value={lead.project_name} 
-                      label="Project" 
-                      gradient="from-purple-500 to-pink-500" 
-                    />
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <User className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 text-lg leading-tight">
+                          {lead.promoter_name || "Unknown Promoter"}
+                        </p>
+                        <p className="text-sm text-gray-500 font-medium">Promoter</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Building className="w-5 h-5 text-white" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-800 leading-tight">
+                          {lead.project_name || "No Project"}
+                        </p>
+                        <p className="text-sm text-gray-500 font-medium">Project</p>
+                      </div>
+                    </div>
                   </div>
-                  
+
+                  {/* Profile Contact */}
                   <div className="space-y-4">
-                    <ContactCard 
-                      icon={Phone} 
-                      value={lead.profile_mobile_number} 
-                      label="Profile Phone" 
-                      gradient="from-emerald-500 to-teal-500" 
-                    />
-                    <ContactCard 
-                      icon={Mail} 
-                      value={lead.profile_email} 
-                      label="Profile Email" 
-                      gradient="from-blue-500 to-indigo-500" 
-                    />
+                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Profile Contact</h4>
+                    
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Phone className="w-4 h-4 text-green-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900">
+                          {lead.profile_mobile_number || "Not provided"}
+                        </p>
+                        <p className="text-xs text-gray-500">Mobile</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Mail className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-800 text-sm break-all">
+                          {lead.profile_email || "Not provided"}
+                        </p>
+                        <p className="text-xs text-gray-500">Email</p>
+                      </div>
+                    </div>
                   </div>
-                  
+
+                  {/* Registration Contact */}
                   <div className="space-y-4">
-                    <ContactCard 
-                      icon={Phone} 
-                      value={lead.registration_mobile_number} 
-                      label="Registration Phone" 
-                      gradient="from-orange-500 to-red-500" 
-                    />
-                    <ContactCard 
-                      icon={Mail} 
-                      value={lead.registration_email} 
-                      label="Registration Email" 
-                      gradient="from-violet-500 to-purple-500" 
-                    />
+                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Registration Contact</h4>
+                    
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Phone className="w-4 h-4 text-orange-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900">
+                          {lead.registration_mobile_number || "Not provided"}
+                        </p>
+                        <p className="text-xs text-gray-500">Mobile</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Mail className="w-4 h-4 text-purple-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-800 text-sm break-all">
+                          {lead.registration_email || "Not provided"}
+                        </p>
+                        <p className="text-xs text-gray-500">Email</p>
+                      </div>
+                    </div>
                   </div>
-                  
+
+                  {/* Location & Date */}
                   <div className="space-y-4">
-                    <ContactCard 
-                      icon={MapPin} 
-                      value={lead.district} 
-                      label="District" 
-                      gradient="from-red-500 to-rose-500" 
-                    />
-                    <ContactCard 
-                      icon={Calendar} 
-                      value={formatDate(lead.created_at)} 
-                      label="Created" 
-                      gradient="from-gray-500 to-slate-500" 
-                    />
+                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Details</h4>
+                    
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <MapPin className="w-4 h-4 text-red-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900">
+                          {lead.district || "Not specified"}
+                        </p>
+                        <p className="text-xs text-gray-500">District</p>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start space-x-3">
+                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <Calendar className="w-4 h-4 text-gray-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-800">
+                          {formatDate(lead.created_at)}
+                        </p>
+                        <p className="text-xs text-gray-500">Created</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -245,87 +370,72 @@ function Leads() {
         )}
 
         {/* Empty State */}
-        {!state.loading && state.leads.length === 0 && (
-          <div className="relative overflow-hidden bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-16 text-center">
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-500/10 to-gray-500/10 rounded-3xl"></div>
-            <div className="relative">
-              <div className="w-32 h-32 bg-gradient-to-br from-slate-600/30 to-gray-600/30 rounded-full flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                <Users className="w-16 h-16 text-white/60" />
-              </div>
-              <h3 className="text-3xl font-bold text-white mb-4">
-                {state.search ? "No leads found" : "No leads yet"}
-              </h3>
-              <p className="text-white/70 text-lg mb-8 max-w-md mx-auto">
-                {state.search ? `No leads match "${state.search}"` : "Your leads will appear here once they're generated"}
-              </p>
-              {state.search && (
-                <button
-                  onClick={clearSearch}
-                  className="group px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105"
-                >
-                  <span className="flex items-center">
-                    <Filter className="w-5 h-5 mr-2 group-hover:rotate-180 transition-transform duration-300" />
-                    Clear Search
-                  </span>
-                </button>
-              )}
+        {!loading && leads.length === 0 && (
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-16 text-center">
+            <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Users className="w-12 h-12 text-gray-400" />
             </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              {search ? "No matching leads" : "No leads yet"}
+            </h3>
+            <p className="text-gray-600 mb-6 text-lg max-w-md mx-auto leading-relaxed">
+              {search 
+                ? `We couldn't find any leads matching "${search}". Try adjusting your search terms.`
+                : "Your leads will appear here once they start coming in. Start generating leads to see them here."
+              }
+            </p>
+            {search && (
+              <button
+                onClick={clearSearch}
+                className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
+              >
+                Clear Search
+              </button>
+            )}
           </div>
         )}
 
-        {/* Enhanced Pagination */}
-        {state.pagination.totalPages > 1 && (
-          <div className="relative overflow-hidden bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 p-6">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 to-purple-500/5 rounded-2xl"></div>
-            <div className="relative flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="text-white/80 text-sm font-medium">
-                <span className="text-white font-semibold">
-                  {Math.min((state.page - 1) * 10 + 1, state.pagination.totalRecords)}-{Math.min(state.page * 10, state.pagination.totalRecords)}
-                </span>
-                {" "} of {" "}
-                <span className="text-blue-400 font-semibold">{state.pagination.totalRecords}</span> leads
+        {/* Pagination */}
+        {renderPagination()}
+
+        {/* Stats Footer */}
+        {leads.length > 0 && (
+          <div className="mt-8 bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-blue-50 to-blue-100">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-2xl font-bold text-blue-700">{pagination.totalRecords}</p>
+                <p className="text-sm text-blue-600 font-medium">Total Leads</p>
               </div>
               
-              <div className="flex items-center gap-2">
-                <button
-                  disabled={state.page === 1}
-                  onClick={() => updateState({ page: state.page - 1 })}
-                  className="group p-3 rounded-xl bg-white/20 hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 border border-white/20"
-                >
-                  <ChevronLeft className="w-5 h-5 text-white group-hover:-translate-x-0.5 transition-transform" />
-                </button>
-                
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, state.pagination.totalPages) }, (_, i) => {
-                    const pageNum = Math.max(1, Math.min(state.pagination.totalPages - 4, state.page - 2)) + i;
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => updateState({ page: pageNum })}
-                        className={`w-12 h-12 rounded-xl text-sm font-bold transition-all duration-300 border ${
-                          pageNum === state.page
-                            ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg scale-110 border-blue-400/50"
-                            : "bg-white/20 text-white/80 hover:bg-white/30 border-white/20 hover:scale-105"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
+              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-green-50 to-green-100">
+                <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Calendar className="w-6 h-6 text-white" />
                 </div>
-
-                <button
-                  disabled={state.page === state.pagination.totalPages}
-                  onClick={() => updateState({ page: state.page + 1 })}
-                  className="group p-3 rounded-xl bg-white/20 hover:bg-white/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all duration-200 border border-white/20"
-                >
-                  <ChevronRight className="w-5 h-5 text-white group-hover:translate-x-0.5 transition-transform" />
-                </button>
+                <p className="text-2xl font-bold text-green-700">{pagination.currentPage}</p>
+                <p className="text-sm text-green-600 font-medium">Current Page</p>
+              </div>
+              
+              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-purple-50 to-purple-100">
+                <div className="w-12 h-12 bg-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Filter className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-2xl font-bold text-purple-700">{pagination.totalPages}</p>
+                <p className="text-sm text-purple-600 font-medium">Total Pages</p>
+              </div>
+              
+              <div className="text-center p-4 rounded-xl bg-gradient-to-br from-orange-50 to-orange-100">
+                <div className="w-12 h-12 bg-orange-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                  <Building className="w-6 h-6 text-white" />
+                </div>
+                <p className="text-2xl font-bold text-orange-700">{limit}</p>
+                <p className="text-sm text-orange-600 font-medium">Per Page</p>
               </div>
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
