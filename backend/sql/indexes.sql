@@ -82,3 +82,8 @@ CREATE INDEX IF NOT EXISTS idx_assignment_timeline_created_at ON assignment_time
 CREATE INDEX IF NOT EXISTS idx_assignment_reminders_assignment_id ON assignment_reminders(assignment_id);
 CREATE INDEX IF NOT EXISTS idx_assignment_reminders_date_time ON assignment_reminders(date_and_time);
 CREATE INDEX IF NOT EXISTS idx_assignment_reminders_status ON assignment_reminders(status);
+
+-- Telecalling indexes
+CREATE INDEX idx_telecalling_data_batch ON telecalling_data(batch_id);
+CREATE INDEX idx_telecalling_data_status ON telecalling_data(status);
+CREATE INDEX idx_telecalling_batches_employee ON telecalling_batches(assigned_to);

@@ -649,3 +649,40 @@ CREATE TABLE assignment_statuses (
     created_by INT NOT NULL,
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );
+
+----------------------------------------------------TABLE telecalling_data-------------------------------------------------------------------------
+
+CREATE TABLE telecalling_batches (
+    id SERIAL PRIMARY KEY,
+    assigned_to INT REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+    is_completed BOOLEAN DEFAULT false
+);
+
+CREATE TABLE telecalling_data (
+    id SERIAL PRIMARY KEY,
+    promoter_name VARCHAR(255),
+    project_name VARCHAR(255),
+    profile_mobile_number VARCHAR(15),
+    registration_mobile_number VARCHAR(15),
+    profile_email VARCHAR(255),
+    registration_email VARCHAR(255),
+    district VARCHAR(100),
+    status VARCHAR(50) DEFAULT 'pending',
+    batch_id INT REFERENCES telecalling_batches(id),
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata'),
+    updated_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
+);
+
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+   NEW.updated_at = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata');
+   RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER set_updated_at
+BEFORE UPDATE ON telecalling_data
+FOR EACH ROW
+EXECUTE FUNCTION update_updated_at_column();

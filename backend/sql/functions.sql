@@ -426,3 +426,132 @@ $$ LANGUAGE plpgsql;
 
 -- Usage Example:
 -- SELECT * FROM get_project_details(10);
+
+---------------------------------------------------- telecalling -------------------------------------------------------------------------
+
+CREATE OR REPLACE FUNCTION check_and_assign_next_batch()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_batch_id INT;
+    v_employee_id INT;
+    v_pending_count INT;
+    v_new_batch_id INT;
+BEGIN
+    -- Get batch ID from current row
+    v_batch_id := NEW.batch_id;
+
+    -- Get employee for this batch
+    SELECT assigned_to INTO v_employee_id
+    FROM telecalling_batches
+    WHERE id = v_batch_id;
+
+    -- Count records still pending or in progress
+    SELECT COUNT(*) INTO v_pending_count
+    FROM telecalling_data
+    WHERE batch_id = v_batch_id
+      AND status IN ('pending', 'in_progress');
+
+    -- If none are pending/in_progress -> batch is complete
+    IF v_pending_count = 0 THEN
+        -- Mark batch as completed
+        UPDATE telecalling_batches
+        SET is_completed = true
+        WHERE id = v_batch_id;
+
+        -- Create a new batch for the same employee
+        INSERT INTO telecalling_batches (assigned_to)
+        VALUES (v_employee_id)
+        RETURNING id INTO v_new_batch_id;
+
+        -- Assign next 100 unassigned telecalling_data to this new batch
+        WITH next_batch AS (
+            SELECT id
+            FROM telecalling_data
+            WHERE batch_id IS NULL
+            ORDER BY id
+            LIMIT 100
+            FOR UPDATE SKIP LOCKED
+        )
+        UPDATE telecalling_data t
+        SET batch_id = v_new_batch_id,
+            updated_at = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
+        FROM next_batch nb
+        WHERE t.id = nb.id;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_and_assign_next_batch
+AFTER INSERT OR UPDATE OF status ON telecalling_data
+FOR EACH ROW
+EXECUTE FUNCTION check_and_assign_next_batch();
+
+
+CREATE OR REPLACE FUNCTION get_or_create_batch(p_user_id INT)
+RETURNS TABLE (
+    batch_id INT,
+    promoter_id INT,
+    promoter_name VARCHAR,
+    project_name VARCHAR,
+    profile_mobile_number VARCHAR,
+    registration_mobile_number VARCHAR,
+    profile_email VARCHAR,
+    registration_email VARCHAR,
+    district VARCHAR,
+    status VARCHAR,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+) AS $$
+DECLARE
+    v_batch_id INT;
+BEGIN
+    -- 1. Check for existing incomplete batch
+    SELECT id INTO v_batch_id
+    FROM telecalling_batches
+    WHERE assigned_to = p_user_id AND is_completed = false
+    ORDER BY created_at DESC
+    LIMIT 1;
+
+    -- 2. If no batch found, create a new one
+    IF v_batch_id IS NULL THEN
+        INSERT INTO telecalling_batches (assigned_to)
+        VALUES (p_user_id)
+        RETURNING id INTO v_batch_id;
+
+        -- Assign next 100 unassigned rows
+        WITH next_batch AS (
+            SELECT id
+            FROM telecalling_data
+            WHERE batch_id IS NULL
+            ORDER BY id
+            LIMIT 100
+            FOR UPDATE SKIP LOCKED
+        )
+        UPDATE telecalling_data t
+        SET batch_id = v_batch_id,
+            updated_at = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
+        FROM next_batch nb
+        WHERE t.id = nb.id;
+    END IF;
+
+    -- 3. Return batch data
+    RETURN QUERY
+    SELECT v_batch_id,
+           d.id,
+           d.promoter_name,
+           d.project_name,
+           d.profile_mobile_number,
+           d.registration_mobile_number,
+           d.profile_email,
+           d.registration_email,
+           d.district,
+           d.status,
+           d.created_at,
+           d.updated_at
+    FROM telecalling_data d
+    WHERE d.batch_id = v_batch_id
+    ORDER BY d.id;
+END;
+$$ LANGUAGE plpgsql;
