@@ -13,6 +13,7 @@ import assignmentRoutes from './routes/assignmentRoutes.js'
 import dashboardRoutes from './routes/dashboardRoutes.js'
 import bucketRoutes from './routes/bucketRoutes.js';
 import promoterFrontendRoutes from './routes/promoterFrontendRoutes.js';
+import telecallingRoutes from './routes/telecallingRoutes.js';
 
 dotenv.config();
 
