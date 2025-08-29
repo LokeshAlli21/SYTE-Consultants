@@ -1,5 +1,6 @@
 import React from 'react'
 import { useSelector } from 'react-redux';
+import databaseService from '../backend-services/database/database';
 
 function Telecalling() {
 
@@ -17,6 +18,14 @@ function Telecalling() {
       </div>
     );
   }
+
+databaseService.getBatchDataByUserId(userData.id)
+  .then(batchData => {
+    console.log("Batch data for user:", batchData);
+  })
+  .catch(error => {
+    console.error("Error fetching batch data:", error);
+  });
 
   return (
     <div>Telecalling</div>

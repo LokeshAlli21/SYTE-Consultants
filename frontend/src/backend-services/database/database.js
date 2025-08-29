@@ -3969,6 +3969,27 @@ async getQuickStats() {
   }
 }
   
+async getBatchDataByUserId (userId) {
+  try {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/telecalling//get-batch-data/${userId}`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to fetch batch data.");
+    }
+
+    const data = await response.json();
+    console.log("Batch data fetched successfully:", data);
+
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error fetching batch data:", error);
+    throw error;
+  }
+}
   
 }
 
