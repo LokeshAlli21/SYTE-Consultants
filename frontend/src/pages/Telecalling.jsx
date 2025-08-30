@@ -280,7 +280,9 @@ function Telecalling() {
               <p className="text-gray-600">No records match your current search criteria. Try adjusting your filters.</p>
             </div>
           ) : (
-            currentRecords.map((record) => (
+            currentRecords
+            .filter(record => record.status !== 'interested') // 👈 hide interested ones
+            .map((record) => (
               <div key={record.promoter_id} className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 group">
                 <div className="p-6">
                   <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
