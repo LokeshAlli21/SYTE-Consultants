@@ -556,7 +556,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
---  Trigger function to insert/remove leads
+-- Trigger function to insert leads when status becomes 'interested'
 CREATE OR REPLACE FUNCTION sync_leads_with_status()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -567,7 +567,7 @@ BEGIN
     FROM telecalling_batches b
     WHERE b.id = NEW.batch_id;
 
-    -- Case 1: Status changed TO 'interested' → insert if not exists
+    -- Only insert when status changes TO 'interested'
     IF NEW.status = 'interested' AND (OLD.status IS DISTINCT FROM NEW.status) THEN
         INSERT INTO leads (
             telecalling_data_id,
@@ -592,17 +592,13 @@ BEGIN
             v_user_id
         )
         ON CONFLICT (telecalling_data_id) DO NOTHING;
-
-    -- Case 2: Status changed FROM 'interested' → delete lead
-    ELSIF OLD.status = 'interested' AND NEW.status <> 'interested' THEN
-        DELETE FROM leads WHERE telecalling_data_id = NEW.id;
     END IF;
 
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- 3. Trigger on telecalling_data
+-- Recreate the trigger
 DROP TRIGGER IF EXISTS trg_sync_leads ON telecalling_data;
 
 CREATE TRIGGER trg_sync_leads
