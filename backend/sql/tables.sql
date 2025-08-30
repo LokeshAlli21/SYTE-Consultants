@@ -676,7 +676,7 @@ CREATE TABLE telecalling_data (
 
 CREATE TABLE leads (
     id SERIAL PRIMARY KEY,
-    telecalling_data_id INT UNIQUE REFERENCES telecalling_data(id) ON DELETE CASCADE,
+    telecalling_data_id INT UNIQUE REFERENCES telecalling_data(id) ON DELETE SET NULL,
     promoter_name VARCHAR(255),
     project_name VARCHAR(255),
     profile_mobile_number VARCHAR(15),

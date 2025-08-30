@@ -1,26 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, User, MapPin, Mail, Clock, Filter, Search, CheckCircle, XCircle, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, Eye, Calendar, ArrowRight, Target } from 'lucide-react';
+import { Phone, User, MapPin, Mail, Clock, Filter, Search, CheckCircle, XCircle, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, Eye, Calendar } from 'lucide-react';
 import databaseService from '../backend-services/database/database';
 import { useSelector } from 'react-redux';
 
 function Telecalling() {
-  const [allBatchData, setAllBatchData] = useState([]); // All 100 records
-  const [currentBatch, setCurrentBatch] = useState([]); // Current 20 records being displayed
-  const [processedRecords, setProcessedRecords] = useState([]); // Completed records
-  const [currentBatchIndex, setCurrentBatchIndex] = useState(0);
+  const [batchData, setBatchData] = useState([]);
+  const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [selectedRecord, setSelectedRecord] = useState(null);
   const [confirmationModal, setConfirmationModal] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
-  const [showNextBatchConfirm, setShowNextBatchConfirm] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [recordsPerPage] = useState(10);
 
   const userData = useSelector(state => state.auth.userData);
   const isAdmin = userData && userData.role === 'admin';
   const userAccessFields = userData?.access_fields || [];
-
-  const RECORDS_PER_BATCH = 20;
 
   // Access control
   if (!isAdmin && !userAccessFields.includes('telecalling')) {
@@ -35,7 +32,7 @@ function Telecalling() {
     );
   }
 
-  // Fetch all 100 records on component mount
+  // Fetch data on component mount
   useEffect(() => {
     const fetchBatchData = async () => {
       try {
@@ -43,11 +40,8 @@ function Telecalling() {
         const data = await databaseService.getBatchDataByUserId(userData.id);
         console.log("Fetched batch data:", data);
         const batchData = data?.batchData || [];
-        setAllBatchData(batchData);
-        
-        // Initialize first batch (first 20 records)
-        const firstBatch = batchData.slice(0, RECORDS_PER_BATCH);
-        setCurrentBatch(firstBatch);
+        setBatchData(batchData);
+        setFilteredData(batchData);
       } catch (error) {
         console.error("Error fetching batch data:", error);
       } finally {
@@ -58,34 +52,9 @@ function Telecalling() {
     fetchBatchData();
   }, [userData.id]);
 
-  // Check if current batch is complete and show next batch confirmation
+  // Filter and search functionality
   useEffect(() => {
-    const pendingOrInProgressRecords = currentBatch.filter(record => 
-      record.status === 'pending' || record.status === 'in_progress'
-    );
-    
-    const hasMoreBatches = (currentBatchIndex + 1) * RECORDS_PER_BATCH < allBatchData.length;
-    
-    if (pendingOrInProgressRecords.length === 0 && currentBatch.length > 0 && hasMoreBatches) {
-      setShowNextBatchConfirm(true);
-    }
-  }, [currentBatch, currentBatchIndex, allBatchData.length]);
-
-  // Load next batch of records
-  const loadNextBatch = () => {
-    const nextBatchIndex = currentBatchIndex + 1;
-    const startIndex = nextBatchIndex * RECORDS_PER_BATCH;
-    const endIndex = startIndex + RECORDS_PER_BATCH;
-    const nextBatch = allBatchData.slice(startIndex, endIndex);
-    
-    setCurrentBatch(nextBatch);
-    setCurrentBatchIndex(nextBatchIndex);
-    setShowNextBatchConfirm(false);
-  };
-
-  // Filter current batch based on search and status
-  const getFilteredBatch = () => {
-    let filtered = currentBatch;
+    let filtered = batchData;
 
     if (statusFilter !== 'all') {
       filtered = filtered.filter(item => item.status === statusFilter);
@@ -100,10 +69,15 @@ function Telecalling() {
       );
     }
 
-    return filtered;
-  };
+    setFilteredData(filtered);
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter, batchData]);
 
-  const filteredBatch = getFilteredBatch();
+  // Pagination
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = filteredData.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(filteredData.length / recordsPerPage);
 
   // Status update with confirmation
   const handleStatusUpdate = (record, newStatus) => {
@@ -126,39 +100,13 @@ function Telecalling() {
 
       await databaseService.updateTelecallingStatus(confirmationModal.record.promoter_id, confirmationModal.newStatus);
 
-      const updatedRecord = {
-        ...confirmationModal.record,
-        status: confirmationModal.newStatus,
-        updated_at: new Date().toISOString()
-      };
-
-      // Update the record in allBatchData
-      setAllBatchData(prev =>
+      setBatchData(prev =>
         prev.map(item =>
           item.promoter_id === confirmationModal.record.promoter_id
-            ? updatedRecord
+            ? { ...item, status: confirmationModal.newStatus, updated_at: new Date().toISOString() }
             : item
         )
       );
-
-      // If status is "interested", remove from current batch immediately
-      if (confirmationModal.newStatus === 'interested') {
-        setCurrentBatch(prev =>
-          prev.filter(item => item.promoter_id !== confirmationModal.record.promoter_id)
-        );
-        
-        // Add to processed records
-        setProcessedRecords(prev => [...prev, updatedRecord]);
-      } else {
-        // Update the record in current batch
-        setCurrentBatch(prev =>
-          prev.map(item =>
-            item.promoter_id === confirmationModal.record.promoter_id
-              ? updatedRecord
-              : item
-          )
-        );
-      }
       
       setConfirmationModal(null);
       setSelectedRecord(null);
@@ -197,18 +145,6 @@ function Telecalling() {
     { value: 'not_interested', label: 'Not Interested' }
   ];
 
-  // Calculate progress stats
-  const totalRecords = allBatchData.length;
-  const currentBatchNumber = currentBatchIndex + 1;
-  const totalBatches = Math.ceil(totalRecords / RECORDS_PER_BATCH);
-  const interestedCount = allBatchData.filter(item => item.status === 'interested').length + 
-                         processedRecords.filter(item => item.status === 'interested').length;
-  const notInterestedCount = allBatchData.filter(item => item.status === 'not_interested').length;
-  const pendingCount = currentBatch.filter(item => item.status === 'pending' || item.status === 'in_progress').length;
-
-  const handleContextMenu = (e) => e.preventDefault();
-  const handleCopy = (e) => e.preventDefault();
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -224,49 +160,25 @@ function Telecalling() {
     );
   }
 
+    const handleContextMenu = (e) => e.preventDefault();
+  const handleCopy = (e) => e.preventDefault();
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 select-none"
-     onContextMenu={handleContextMenu}
-      onCopy={handleCopy}
+     onContextMenu={handleContextMenu}                 // disables right click
+      onCopy={handleCopy}                               // prevents copy
       role="region"
       aria-label="Telecalling module"
       >
       <div className="max-w-7xl mx-auto p-6">
-        {/* Enhanced Header with Batch Progress */}
+        {/* Enhanced Header */}
         <div className="mb-8">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 bg-gradient-to-r from-white to-blue-50">
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-blue-800 bg-clip-text text-transparent mb-3">
-                  Telecalling Dashboard
-                </h1>
-                <p className="text-gray-600 text-lg">Manage and track your telecalling activities with ease</p>
-              </div>
-              <div className="text-right">
-                <div className="text-2xl font-bold text-blue-600">
-                  Batch {currentBatchNumber} of {totalBatches}
-                </div>
-                <div className="text-sm text-gray-500">
-                  {currentBatch.length} records in current batch
-                </div>
-              </div>
-            </div>
-            
-            {/* Progress Bar */}
-            <div className="mb-4">
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Batch Progress</span>
-                <span>{Math.round(((currentBatchNumber) / totalBatches) * 100)}% Complete</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${((currentBatchNumber) / totalBatches) * 100}%` }}
-                ></div>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-blue-800 bg-clip-text text-transparent mb-3">
+              Telecalling Dashboard
+            </h1>
+            <p className="text-gray-600 text-lg">Manage and track your telecalling activities with ease</p>
+            <div className="flex items-center gap-2 mt-2 text-sm text-gray-500">
               <Calendar className="w-4 h-4" />
               Last updated: {new Date().toLocaleDateString('en-IN', { 
                 weekday: 'long', 
@@ -283,7 +195,7 @@ function Telecalling() {
           {/* Search and Filter Row */}
           <div className="flex flex-col lg:flex-row gap-6 mb-8">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Search Current Batch</label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Search Records</label>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
@@ -318,23 +230,31 @@ function Telecalling() {
           {/* Enhanced Stats Cards */}
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4 rounded-xl border border-gray-200">
-              <div className="text-2xl font-bold text-gray-900">{totalRecords}</div>
+              <div className="text-2xl font-bold text-gray-900">{batchData.length}</div>
               <div className="text-sm text-gray-600 font-medium">Total Records</div>
             </div>
             <div className="bg-gradient-to-br from-yellow-50 to-amber-100 p-4 rounded-xl border border-yellow-200">
-              <div className="text-2xl font-bold text-yellow-800">{pendingCount}</div>
-              <div className="text-sm text-yellow-700 font-medium">Pending in Batch</div>
+              <div className="text-2xl font-bold text-yellow-800">
+                {batchData.filter(item => item.status === 'pending').length}
+              </div>
+              <div className="text-sm text-yellow-700 font-medium">Pending</div>
             </div>
             <div className="bg-gradient-to-br from-blue-50 to-cyan-100 p-4 rounded-xl border border-blue-200">
-              <div className="text-2xl font-bold text-blue-800">{currentBatch.length}</div>
-              <div className="text-sm text-blue-700 font-medium">Current Batch</div>
+              <div className="text-2xl font-bold text-blue-800">
+                {batchData.filter(item => item.status === 'in_progress').length}
+              </div>
+              <div className="text-sm text-blue-700 font-medium">In Progress</div>
             </div>
             <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-4 rounded-xl border border-green-200">
-              <div className="text-2xl font-bold text-green-800">{interestedCount}</div>
-              <div className="text-sm text-green-700 font-medium">Interested (Total)</div>
+              <div className="text-2xl font-bold text-green-800">
+                {batchData.filter(item => item.status === 'interested').length}
+              </div>
+              <div className="text-sm text-green-700 font-medium">Interested</div>
             </div>
             <div className="bg-gradient-to-br from-red-50 to-pink-100 p-4 rounded-xl border border-red-200">
-              <div className="text-2xl font-bold text-red-800">{notInterestedCount}</div>
+              <div className="text-2xl font-bold text-red-800">
+                {batchData.filter(item => item.status === 'not_interested').length}
+              </div>
               <div className="text-sm text-red-700 font-medium">Not Interested</div>
             </div>
           </div>
@@ -343,35 +263,24 @@ function Telecalling() {
         {/* Results Header */}
         <div className="flex justify-between items-center mb-6">
           <div className="text-gray-700">
-            <span className="text-lg font-semibold">{filteredBatch.length}</span>
-            <span className="text-gray-500 ml-1">records in current batch</span>
+            <span className="text-lg font-semibold">{filteredData.length}</span>
+            <span className="text-gray-500 ml-1">records found</span>
           </div>
           <div className="text-sm text-gray-500">
-            Batch {currentBatchNumber} of {totalBatches}
+            Page {currentPage} of {totalPages}
           </div>
         </div>
 
         {/* Enhanced Records List */}
         <div className="space-y-4 mb-8">
-          {filteredBatch.length === 0 ? (
+          {currentRecords.length === 0 ? (
             <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-16 text-center">
-              <Target className="w-16 h-16 text-gray-400 mx-auto mb-6" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {currentBatch.length === 0 ? "Batch Complete!" : "No Records Found"}
-              </h3>
-              <p className="text-gray-600">
-                {currentBatch.length === 0 
-                  ? "All records in this batch have been processed. Ready for the next batch!" 
-                  : "No records match your current search criteria. Try adjusting your filters."
-                }
-              </p>
+              <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-6" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">No Records Found</h3>
+              <p className="text-gray-600">No records match your current search criteria. Try adjusting your filters.</p>
             </div>
           ) : (
-            filteredBatch
-              .filter(record => record.status !== 'interested') // 👈 hide interested ones
-              .map((record) => {
-              console.log(record);
-              return (
+            currentRecords.map((record) => (
               <div key={record.promoter_id} className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 group">
                 <div className="p-6">
                   <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
@@ -458,50 +367,57 @@ function Telecalling() {
                   </div>
                 </div>
               </div>
-            )})
+            ))
           )}
         </div>
 
-        {/* Next Batch Confirmation Modal */}
-        {showNextBatchConfirm && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full transform transition-all">
-              <div className="p-8 text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle className="w-8 h-8 text-green-600" />
+        {/* Enhanced Pagination */}
+        {totalPages > 1 && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Showing {indexOfFirstRecord + 1} to {Math.min(indexOfLastRecord, filteredData.length)} of {filteredData.length} records
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  Previous
+                </button>
+                
+                <div className="flex gap-1">
+                  {[...Array(Math.min(5, totalPages))].map((_, i) => {
+                    const page = currentPage <= 3 ? i + 1 : currentPage - 2 + i;
+                    if (page > totalPages) return null;
+                    
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-10 h-10 rounded-xl font-medium transition-all ${
+                          currentPage === page
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : 'text-gray-600 hover:bg-gray-100'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
                 </div>
                 
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Batch Complete!
-                </h3>
-                
-                <p className="text-gray-600 mb-6 leading-relaxed">
-                  You've finished processing all records in batch {currentBatchNumber}. 
-                  Ready to load the next {Math.min(RECORDS_PER_BATCH, totalRecords - (currentBatchIndex + 1) * RECORDS_PER_BATCH)} records?
-                </p>
-
-                <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <div>Progress: {currentBatchNumber} of {totalBatches} batches</div>
-                    <div>Records processed: {(currentBatchNumber) * RECORDS_PER_BATCH} of {totalRecords}</div>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <button
-                    onClick={() => setShowNextBatchConfirm(false)}
-                    className="flex-1 px-6 py-3 text-gray-700 border border-gray-300 rounded-xl hover:bg-gray-50 transition-all font-medium"
-                  >
-                    Stay Here
-                  </button>
-                  <button
-                    onClick={loadNextBatch}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl hover:from-green-700 hover:to-green-800 transition-all font-medium flex items-center justify-center gap-2"
-                  >
-                    Load Next Batch
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-2 px-4 py-2 text-gray-600 border border-gray-200 rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -547,7 +463,7 @@ function Telecalling() {
                           <div className="text-sm text-gray-500">
                             {status === 'pending' && 'Awaiting contact'}
                             {status === 'in_progress' && 'Currently being contacted'}
-                            {status === 'interested' && 'Showed interest in project (will be removed from list)'}
+                            {status === 'interested' && 'Showed interest in project'}
                             {status === 'not_interested' && 'Not interested at this time'}
                           </div>
                         </div>
@@ -580,17 +496,9 @@ function Telecalling() {
                   {confirmationModal.title}
                 </h3>
                 
-                <p className="text-gray-600 mb-4 leading-relaxed">
+                <p className="text-gray-600 mb-8 leading-relaxed">
                   {confirmationModal.message}
                 </p>
-
-                {confirmationModal.newStatus === 'interested' && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-6">
-                    <div className="text-sm text-green-700 font-medium">
-                      ✓ This record will be removed from the current batch immediately
-                    </div>
-                  </div>
-                )}
 
                 <div className="flex gap-4">
                   <button

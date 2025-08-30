@@ -469,7 +469,7 @@ BEGIN
             FROM telecalling_data
             WHERE batch_id IS NULL
             ORDER BY id
-            LIMIT 100
+            LIMIT 20
             FOR UPDATE SKIP LOCKED
         )
         UPDATE telecalling_data t
@@ -526,7 +526,7 @@ BEGIN
             FROM telecalling_data td
             WHERE td.batch_id IS NULL
             ORDER BY td.id
-            LIMIT 100
+            LIMIT 20
             FOR UPDATE SKIP LOCKED
         )
         UPDATE telecalling_data t
