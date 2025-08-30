@@ -367,7 +367,11 @@ function Telecalling() {
               </p>
             </div>
           ) : (
-            filteredBatch.map((record) => (
+            filteredBatch
+              .filter(record => record.status !== 'interested') // 👈 hide interested ones
+              .map((record) => {
+              console.log(record);
+              return (
               <div key={record.promoter_id} className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 group">
                 <div className="p-6">
                   <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
@@ -454,7 +458,7 @@ function Telecalling() {
                   </div>
                 </div>
               </div>
-            ))
+            )})
           )}
         </div>
 
