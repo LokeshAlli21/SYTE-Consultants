@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, User, MapPin, Mail, Clock, Filter, Search, CheckCircle, XCircle, AlertCircle, RefreshCw, ChevronLeft, ChevronRight, Eye, Calendar } from 'lucide-react';
+import { Phone, User, MapPin, Mail, Clock, Filter, Search, CheckCircle, XCircle, AlertCircle, RefreshCw, ChevronLeft,MessageCircle,Briefcase, RotateCcw, ChevronRight, Eye, Calendar } from 'lucide-react';
 import databaseService from '../backend-services/database/database';
 import { useSelector } from 'react-redux';
 
@@ -162,7 +162,7 @@ function Telecalling() {
     );
   }
 
-    const handleContextMenu = (e) => e.preventDefault();
+  const handleContextMenu = (e) => e.preventDefault();
   const handleCopy = (e) => e.preventDefault();
   
   return (
@@ -317,7 +317,12 @@ function Telecalling() {
                           <div className="ml-12">
                             <div className="flex items-center gap-2">
                               <Mail className="w-4 h-4 text-gray-400" />
-                              <span className="text-sm text-gray-600 truncate">{record.profile_email}</span>
+                              <a
+                                href={`mailto:${record.profile_email}`}
+                                className="text-sm text-blue-600 truncate hover:underline"
+                              >
+                                {record.profile_email}
+                              </a>
                             </div>
                           </div>
                         </div>
@@ -364,6 +369,42 @@ function Telecalling() {
                         >
                           <Phone className="w-5 h-5" />
                         </a>
+
+                        {/* WhatsApp Buttons */}
+                        <div className="flex gap-2">
+                          {/* General Introduction */}
+                          <a
+                            href={`https://wa.me/${record.profile_mobile_number.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(record.profile_name || 'there')}!%20I%20hope%20you're%20doing%20well.%20I'm%20reaching%20out%20to%20introduce%20myself%20and%20discuss%20potential%20opportunities%20that%20might%20interest%20you.%20Would%20you%20be%20available%20for%20a%20brief%20conversation?`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center p-3 text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 border border-green-200 hover:border-green-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                            title="WhatsApp - General Introduction"
+                          >
+                            <MessageCircle className="w-5 h-5" />
+                          </a>
+
+                          {/* Business Introduction */}
+                          <a
+                            href={`https://wa.me/${record.profile_mobile_number.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(record.profile_name || 'there')}!%20I%20represent%20a%20growing%20business%20and%20came%20across%20your%20profile.%20I%20believe%20there%20might%20be%20some%20exciting%20business%20opportunities%20we%20could%20explore%20together.%20Would%20you%20be%20interested%20in%20learning%20more?`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 border border-blue-200 hover:border-blue-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                            title="WhatsApp - Business Introduction"
+                          >
+                            <Briefcase className="w-5 h-5" />
+                          </a>
+
+                          {/* Follow-up Introduction */}
+                          <a
+                            href={`https://wa.me/${record.profile_mobile_number.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(record.profile_name || 'there')}!%20I%20wanted%20to%20follow%20up%20on%20our%20previous%20conversation.%20I%20have%20some%20updates%20that%20I%20think%20you'll%20find%20interesting.%20When%20would%20be%20a%20good%20time%20to%20chat?`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center p-3 text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-200 border border-purple-200 hover:border-purple-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
+                            title="WhatsApp - Follow-up"
+                          >
+                            <RotateCcw className="w-5 h-5" />
+                          </a>
+                        </div>
                       </div>
                     </div>
                   </div>
