@@ -35,7 +35,7 @@ function Leads() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({ 
     totalRecords: 0, 
@@ -184,24 +184,15 @@ function Leads() {
     }
   }, [userData?.id, page, limit]);
 
-  // Handle search
-  const handleSearch = (value) => {
-    setSearch(value);
-    if (value !== search) {
-      fetchLeads(true);
+  // Handle search with debouncing
+  useEffect(() => {
+    if (userData?.id) {
+      const timeoutId = setTimeout(() => {
+        fetchLeads(true);
+      }, 300);
+      return () => clearTimeout(timeoutId);
     }
-  };
-
-  // Clear search
-  const clearSearch = () => {
-    setSearch("");
-    fetchLeads(true);
-  };
-
-  // Refresh data
-  const refreshData = () => {
-    fetchLeads();
-  };
+  }, [search]);
 
   // Format date
   const formatDate = (dateString) => {
@@ -363,7 +354,7 @@ function Leads() {
                 <p className="text-sm text-gray-500 font-medium">Total Leads</p>
               </div>
               <button
-                onClick={refreshData}
+                onClick={() => fetchLeads()}
                 disabled={loading}
                 className="p-3 bg-white text-gray-700 rounded-xl hover:bg-gray-50 border border-gray-200 disabled:opacity-50 transition-all duration-200 shadow-sm"
               >
@@ -383,7 +374,7 @@ function Leads() {
                 placeholder="Search promoter, project, phone, email, or district..."
                 className="w-full pl-12 pr-4 py-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200 text-gray-900 placeholder-gray-400"
                 value={search}
-                onChange={(e) => handleSearch(e.target.value)}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </div>
             
@@ -392,7 +383,11 @@ function Leads() {
               <span className="text-sm font-medium text-gray-700 whitespace-nowrap">Show:</span>
               <select
                 value={limit}
-                onChange={(e) => handleLimitChange(Number(e.target.value))}
+                onChange={(e) => {
+                  const newLimit = Number(e.target.value);
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
                 className="bg-white border border-gray-200 rounded-lg px-3 py-2 text-sm font-medium text-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200"
               >
                 <option value={5}>5</option>
@@ -407,7 +402,7 @@ function Leads() {
 
             {search && (
               <button
-                onClick={clearSearch}
+                onClick={() => setSearch("")}
                 className="px-6 py-4 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 flex items-center font-medium"
               >
                 <Filter className="w-4 h-4 mr-2" />
@@ -595,7 +590,7 @@ function Leads() {
             </p>
             {search && (
               <button
-                onClick={clearSearch}
+                onClick={() => setSearch("")}
                 className="px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
               >
                 Clear Search
