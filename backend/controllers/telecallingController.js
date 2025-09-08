@@ -152,3 +152,46 @@ export const getLeadsByUser = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const updateLeadStatus = async (req, res) => {
+  try {
+    const { leadId } = req.params;
+    const { status } = req.body;
+
+    console.log(`Updating status for lead ${leadId} to ${status}`);
+
+    if (!leadId || !status) {
+      return res.status(400).json({ error: 'leadId and status are required' });
+    }
+
+    // Allowed statuses (you can customize this)
+    const allowedStatuses = ['Lead Generated', 'Call Not Connected', 'Call Not Received', 'Call Back', 'Invalid Number', 'Call Dropped', 'Follow Up', 'Lead Closed', 'Lead Lost'];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status value' });
+    }
+
+    // Update query
+    const updateQuery = `
+      UPDATE leads
+      SET status = $1,
+          updated_at = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
+      WHERE id = $2
+      RETURNING *;
+    `;
+
+    const result = await query(updateQuery, [status, leadId]);
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Lead not found' });
+    }
+
+    res.status(200).json({
+      message: '✅ Status updated successfully',
+      updatedRecord: result.rows[0]
+    });
+
+  } catch (error) {
+    console.error('❌ Unexpected error in updateLeadStatus:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};

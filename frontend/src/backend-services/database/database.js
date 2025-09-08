@@ -4044,6 +4044,28 @@ async getLeadsByUserId(userId, { page = 1, limit = 20, search = "" } = {}) {
   }
 }
 
+async updateLeadStatus(leadId, status) {
+  try {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/telecalling/update-lead-status/${leadId}`, {
+      method: "PATCH",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ status }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to update lead status.");
+    }
+
+    const data = await response.json();
+    console.log("Lead status updated successfully:", data);
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error updating lead status:", error);
+    throw error;
+  }
+}
+
 }
 
 const databaseService = new DatabaseService();

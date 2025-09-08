@@ -1,6 +1,28 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Search, Filter, RefreshCw, Users, Phone, Mail, MapPin, Calendar, User, Building, ChevronLeft, ChevronRight } from "lucide-react";
+import { 
+  Search, 
+  Filter, 
+  RefreshCw, 
+  Users, 
+  Phone, 
+  Mail, 
+  MapPin, 
+  Calendar, 
+  User, 
+  Building, 
+  ChevronLeft, 
+  ChevronRight,
+  ChevronDown,
+  CheckCircle,
+  AlertCircle,
+  Clock,
+  XCircle,
+  PhoneOff,
+  PhoneCall,
+  UserCheck,
+  UserX
+} from "lucide-react";
 import databaseService from "../backend-services/database/database";
 
 function Leads() {
@@ -20,6 +42,79 @@ function Leads() {
     totalPages: 0, 
     currentPage: 1 
   });
+  const [updatingStatus, setUpdatingStatus] = useState({});
+
+  // Lead statuses with icons and colors
+  const leadStatuses = [
+    { 
+      value: "Lead Generated", 
+      label: "Lead Generated", 
+      icon: UserCheck, 
+      color: "bg-blue-50 text-blue-700 border-blue-200",
+      iconColor: "text-blue-600"
+    },
+    { 
+      value: "Call Not Connected", 
+      label: "Call Not Connected", 
+      icon: PhoneOff, 
+      color: "bg-red-50 text-red-700 border-red-200",
+      iconColor: "text-red-600"
+    },
+    { 
+      value: "Call Not Received", 
+      label: "Call Not Received", 
+      icon: PhoneCall, 
+      color: "bg-orange-50 text-orange-700 border-orange-200",
+      iconColor: "text-orange-600"
+    },
+    { 
+      value: "Call Back", 
+      label: "Call Back", 
+      icon: Clock, 
+      color: "bg-yellow-50 text-yellow-700 border-yellow-200",
+      iconColor: "text-yellow-600"
+    },
+    { 
+      value: "Invalid Number", 
+      label: "Invalid Number", 
+      icon: AlertCircle, 
+      color: "bg-gray-50 text-gray-700 border-gray-200",
+      iconColor: "text-gray-600"
+    },
+    { 
+      value: "Call Dropped", 
+      label: "Call Dropped", 
+      icon: XCircle, 
+      color: "bg-red-50 text-red-700 border-red-200",
+      iconColor: "text-red-600"
+    },
+    { 
+      value: "Follow Up", 
+      label: "Follow Up", 
+      icon: Calendar, 
+      color: "bg-purple-50 text-purple-700 border-purple-200",
+      iconColor: "text-purple-600"
+    },
+    { 
+      value: "Lead Closed", 
+      label: "Lead Closed", 
+      icon: CheckCircle, 
+      color: "bg-green-50 text-green-700 border-green-200",
+      iconColor: "text-green-600"
+    },
+    { 
+      value: "Lead Lost", 
+      label: "Lead Lost", 
+      icon: UserX, 
+      color: "bg-red-50 text-red-700 border-red-200",
+      iconColor: "text-red-600"
+    }
+  ];
+
+  // Get status config by value
+  const getStatusConfig = (status) => {
+    return leadStatuses.find(s => s.value === status) || leadStatuses[0];
+  };
 
   // Permission check
   if (!isAdmin && !userAccessFields.includes("leads")) {
@@ -58,6 +153,31 @@ function Leads() {
     }
   };
 
+  // Update lead status
+  const updateLeadStatus = async (leadId, newStatus) => {
+    setUpdatingStatus(prev => ({ ...prev, [leadId]: true }));
+    try {
+      await databaseService.updateLeadStatus(leadId, newStatus);
+      
+      // Update the lead in local state
+      setLeads(prev => prev.map(lead => 
+        lead.id === leadId 
+          ? { ...lead, status: newStatus }
+          : lead
+      ));
+      
+      // Show success feedback (you can add a toast notification here)
+      console.log(`Lead ${leadId} status updated to: ${newStatus}`);
+      
+    } catch (err) {
+      console.error("Failed to update lead status:", err);
+      // You can add error notification here
+      setError(`Failed to update status: ${err.message}`);
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [leadId]: false }));
+    }
+  };
+
   useEffect(() => {
     if (userData?.id) {
       fetchLeads();
@@ -93,6 +213,61 @@ function Leads() {
       hour: "2-digit",
       minute: "2-digit"
     });
+  };
+
+  // Status Dropdown Component
+  const StatusDropdown = ({ lead }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const currentStatus = getStatusConfig(lead.status);
+    const isUpdating = updatingStatus[lead.id];
+
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          disabled={isUpdating}
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-200 hover:shadow-sm ${currentStatus.color} ${
+            isUpdating ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
+          }`}
+        >
+          <div className="flex items-center space-x-2">
+            {isUpdating ? (
+              <RefreshCw className="w-4 h-4 animate-spin" />
+            ) : (
+              <currentStatus.icon className={`w-4 h-4 ${currentStatus.iconColor}`} />
+            )}
+            <span className="truncate">{currentStatus.label}</span>
+          </div>
+          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isOpen && (
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+            {leadStatuses.map((status) => (
+              <button
+                key={status.value}
+                onClick={() => {
+                  updateLeadStatus(lead.id, status.value);
+                  setIsOpen(false);
+                }}
+                disabled={status.value === lead.status || isUpdating}
+                className={`w-full flex items-center space-x-3 px-4 py-3 text-sm hover:bg-gray-50 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl ${
+                  status.value === lead.status 
+                    ? 'bg-gray-50 opacity-50 cursor-not-allowed' 
+                    : 'hover:bg-gray-50'
+                }`}
+              >
+                <status.icon className={`w-4 h-4 ${status.iconColor}`} />
+                <span className="text-gray-800 font-medium">{status.label}</span>
+                {status.value === lead.status && (
+                  <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
   };
 
   // Pagination component
@@ -161,8 +336,8 @@ function Leads() {
   
   return (
     <div className="min-h-screen bg-gray-50 select-none"
-      onContextMenu={handleContextMenu}                 // disables right click
-      onCopy={handleCopy}                               // prevents copy
+      onContextMenu={handleContextMenu}
+      onCopy={handleCopy}
       role="region"
       aria-label="Telecalling module">
       <div className="max-w-7xl mx-auto p-4 sm:p-6">
@@ -258,7 +433,7 @@ function Leads() {
                 key={lead.id} 
                 className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300 hover:border-gray-200"
               >
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
                   {/* Lead Details */}
                   <div className="space-y-4">
                     <div className="flex items-start space-x-3">
@@ -371,6 +546,12 @@ function Leads() {
                         <p className="text-xs text-gray-500">Created</p>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Status Update */}
+                  <div className="space-y-4">
+                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Lead Status</h4>
+                    <StatusDropdown lead={lead} />
                   </div>
                 </div>
               </div>

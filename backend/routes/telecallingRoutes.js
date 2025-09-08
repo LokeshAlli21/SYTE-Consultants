@@ -4,6 +4,7 @@ import {
     getBatchDataByUserId,
     updateTelecallingStatus,
     getLeadsByUser,
+    updateLeadStatus,
 } from '../controllers/telecallingController.js';
 
 const router = express.Router();
@@ -13,5 +14,7 @@ const router = express.Router();
   router.patch('/update-status/:recordId', protect, updateTelecallingStatus);
 
   router.get('/get-leads/:userId', protect, getLeadsByUser);
+
+  router.patch('/update-lead-status/:leadId', protect, updateLeadStatus);
 
 export default router;
