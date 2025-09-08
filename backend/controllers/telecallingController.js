@@ -173,8 +173,7 @@ export const updateLeadStatus = async (req, res) => {
     // Update query
     const updateQuery = `
       UPDATE leads
-      SET status = $1,
-          updated_at = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
+      SET status = $1
       WHERE id = $2
       RETURNING *;
     `;
