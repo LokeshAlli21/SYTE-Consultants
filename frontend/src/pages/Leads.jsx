@@ -47,6 +47,7 @@ function Leads() {
         limit,
         search,
       });
+      console.log("Fetched leads:", response);
       setLeads(response.leads || []);
       setPagination(response.pagination || { totalRecords: 0, totalPages: 0, currentPage: 1 });
       if (resetPage) setPage(1);

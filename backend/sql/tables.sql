@@ -688,6 +688,10 @@ CREATE TABLE leads (
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );
 
+-- Add column to leads table
+ALTER TABLE leads
+ADD COLUMN status VARCHAR(50) DEFAULT 'Lead Generated'; -- Lead lifecycle tracking
+
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
