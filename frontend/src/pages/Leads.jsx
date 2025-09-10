@@ -217,23 +217,23 @@ function Leads() {
         <button
           onClick={() => setIsOpen(!isOpen)}
           disabled={isUpdating}
-          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-sm font-medium transition-all duration-200 hover:shadow-sm ${currentStatus.color} ${
+          className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-all duration-200 hover:shadow-sm ${currentStatus.color} ${
             isUpdating ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
           }`}
         >
           <div className="flex items-center space-x-2">
             {isUpdating ? (
-              <RefreshCw className="w-4 h-4 animate-spin" />
+              <RefreshCw className="w-3 h-3 animate-spin" />
             ) : (
-              <currentStatus.icon className={`w-4 h-4 ${currentStatus.iconColor}`} />
+              <currentStatus.icon className={`w-3 h-3 ${currentStatus.iconColor}`} />
             )}
             <span className="truncate">{currentStatus.label}</span>
           </div>
-          <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
         </button>
 
         {isOpen && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto">
+          <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-64 overflow-y-auto min-w-max">
             {leadStatuses.map((status) => (
               <button
                 key={status.value}
@@ -249,7 +249,7 @@ function Leads() {
                 }`}
               >
                 <status.icon className={`w-4 h-4 ${status.iconColor}`} />
-                <span className="text-gray-800 font-medium">{status.label}</span>
+                <span className="text-gray-800 font-medium whitespace-nowrap">{status.label}</span>
                 {status.value === lead.status && (
                   <CheckCircle className="w-4 h-4 text-green-600 ml-auto" />
                 )}
@@ -321,7 +321,6 @@ function Leads() {
     );
   };
 
-  
   const handleContextMenu = (e) => e.preventDefault();
   const handleCopy = (e) => e.preventDefault();
   
@@ -439,137 +438,155 @@ function Leads() {
           </div>
         )}
 
-        {/* Leads Cards - Modern Card Layout */}
+        {/* Leads Table */}
         {!loading && leads.length > 0 && (
-          <div className="grid gap-6">
-            {leads.map((lead, index) => (
-              <div 
-                key={lead.id} 
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300 hover:border-gray-200"
-              >
-                <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-                  {/* Lead Details */}
-                  <div className="space-y-4">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <User className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-gray-900 text-lg leading-tight">
-                          {lead.promoter_name || "Unknown Promoter"}
-                        </p>
-                        <p className="text-sm text-gray-500 font-medium">Promoter</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                        <Building className="w-5 h-5 text-white" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-800 leading-tight">
-                          {lead.project_name || "No Project"}
-                        </p>
-                        <p className="text-sm text-gray-500 font-medium">Project</p>
-                      </div>
-                    </div>
-                  </div>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-100">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Sr. No.
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Promoter Details
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Project
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Profile Contact
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Registration Contact
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Location
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Created
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-100">
+                  {leads.map((lead, index) => {
+                    const serialNumber = (page - 1) * limit + index + 1;
+                    return (
+                      <tr 
+                        key={lead.id}
+                        className="hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        {/* Serial Number */}
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                              <span className="text-white text-sm font-bold">
+                                {serialNumber}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
 
-                  {/* Profile Contact */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Profile Contact</h4>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Phone className="w-4 h-4 text-green-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-900">
-                          {lead.profile_mobile_number || "Not provided"}
-                        </p>
-                        <p className="text-xs text-gray-500">Mobile</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Mail className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-800 text-sm break-all">
-                          {lead.profile_email || "Not provided"}
-                        </p>
-                        <p className="text-xs text-gray-500">Email</p>
-                      </div>
-                    </div>
-                  </div>
+                        {/* Promoter Details */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
+                              <User className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900 text-sm">
+                                {lead.promoter_name || "Unknown Promoter"}
+                              </p>
+                              <p className="text-xs text-gray-500">Promoter</p>
+                            </div>
+                          </div>
+                        </td>
 
-                  {/* Registration Contact */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Registration Contact</h4>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Phone className="w-4 h-4 text-orange-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-900">
-                          {lead.registration_mobile_number || "Not provided"}
-                        </p>
-                        <p className="text-xs text-gray-500">Mobile</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Mail className="w-4 h-4 text-purple-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-800 text-sm break-all">
-                          {lead.registration_email || "Not provided"}
-                        </p>
-                        <p className="text-xs text-gray-500">Email</p>
-                      </div>
-                    </div>
-                  </div>
+                        {/* Project */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                              <Building className="w-4 h-4 text-white" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900 text-sm">
+                                {lead.project_name || "No Project"}
+                              </p>
+                            </div>
+                          </div>
+                        </td>
 
-                  {/* Location & Date */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Details</h4>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <MapPin className="w-4 h-4 text-red-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-medium text-gray-900">
-                          {lead.district || "Not specified"}
-                        </p>
-                        <p className="text-xs text-gray-500">District</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start space-x-3">
-                      <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <Calendar className="w-4 h-4 text-gray-600" />
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-gray-800">
-                          {formatDate(lead.created_at)}
-                        </p>
-                        <p className="text-xs text-gray-500">Created</p>
-                      </div>
-                    </div>
-                  </div>
+                        {/* Profile Contact */}
+                        <td className="px-6 py-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Phone className="w-3 h-3 text-green-600" />
+                              <span className="text-sm font-medium text-gray-900">
+                                {lead.profile_mobile_number || "N/A"}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Mail className="w-3 h-3 text-blue-600" />
+                              <span className="text-xs text-gray-600 max-w-32 truncate">
+                                {lead.profile_email || "N/A"}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
 
-                  {/* Status Update */}
-                  <div className="space-y-4">
-                    <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider">Lead Status</h4>
-                    <StatusDropdown lead={lead} />
-                  </div>
-                </div>
-              </div>
-            ))}
+                        {/* Registration Contact */}
+                        <td className="px-6 py-4">
+                          <div className="space-y-2">
+                            <div className="flex items-center space-x-2">
+                              <Phone className="w-3 h-3 text-orange-600" />
+                              <span className="text-sm font-medium text-gray-900">
+                                {lead.registration_mobile_number || "N/A"}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <Mail className="w-3 h-3 text-purple-600" />
+                              <span className="text-xs text-gray-600 max-w-32 truncate">
+                                {lead.registration_email || "N/A"}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Location */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-2">
+                            <MapPin className="w-4 h-4 text-red-600" />
+                            <span className="text-sm font-medium text-gray-900">
+                              {lead.district || "Not specified"}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Created Date */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center space-x-2">
+                            <Calendar className="w-4 h-4 text-gray-600" />
+                            <span className="text-sm text-gray-700">
+                              {formatDate(lead.created_at)}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="px-6 py-4">
+                          <div className="w-48">
+                            <StatusDropdown lead={lead} />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
