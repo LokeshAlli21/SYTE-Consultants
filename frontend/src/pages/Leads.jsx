@@ -21,7 +21,8 @@ import {
   PhoneOff,
   PhoneCall,
   UserCheck,
-  UserX
+  UserX,
+  ChevronUp
 } from "lucide-react";
 import databaseService from "../backend-services/database/database";
 
@@ -43,6 +44,8 @@ function Leads() {
     currentPage: 1 
   });
   const [updatingStatus, setUpdatingStatus] = useState({});
+  const [expandedRows, setExpandedRows] = useState(new Set());
+  const [openDropdown, setOpenDropdown] = useState(null);
 
   // Lead statuses with icons and colors
   const leadStatuses = [
@@ -166,16 +169,27 @@ function Leads() {
           : lead
       ));
       
-      // Show success feedback (you can add a toast notification here)
       console.log(`Lead ${leadId} status updated to: ${newStatus}`);
       
     } catch (err) {
       console.error("Failed to update lead status:", err);
-      // You can add error notification here
       setError(`Failed to update status: ${err.message}`);
     } finally {
       setUpdatingStatus(prev => ({ ...prev, [leadId]: false }));
     }
+  };
+
+  // Toggle row expansion
+  const toggleRowExpansion = (leadId) => {
+    setExpandedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(leadId)) {
+        newSet.delete(leadId);
+      } else {
+        newSet.add(leadId);
+      }
+      return newSet;
+    });
   };
 
   useEffect(() => {
@@ -208,14 +222,19 @@ function Leads() {
 
   // Status Dropdown Component
   const StatusDropdown = ({ lead }) => {
-    const [isOpen, setIsOpen] = useState(false);
     const currentStatus = getStatusConfig(lead.status);
     const isUpdating = updatingStatus[lead.id];
+    const isOpen = openDropdown === lead.id;
+
+    const toggleDropdown = (e) => {
+      e.stopPropagation();
+      setOpenDropdown(isOpen ? null : lead.id);
+    };
 
     return (
       <div className="relative">
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={toggleDropdown}
           disabled={isUpdating}
           className={`w-full flex items-center justify-between px-3 py-2 rounded-lg border text-xs font-medium transition-all duration-200 hover:shadow-sm ${currentStatus.color} ${
             isUpdating ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-80'
@@ -237,9 +256,10 @@ function Leads() {
             {leadStatuses.map((status) => (
               <button
                 key={status.value}
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   updateLeadStatus(lead.id, status.value);
-                  setIsOpen(false);
+                  setOpenDropdown(null);
                 }}
                 disabled={status.value === lead.status || isUpdating}
                 className={`w-full flex items-center space-x-3 px-4 py-3 text-sm hover:bg-gray-50 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl ${
@@ -260,6 +280,16 @@ function Leads() {
       </div>
     );
   };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => {
+      setOpenDropdown(null);
+    };
+
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
 
   // Pagination component
   const renderPagination = () => {
@@ -449,19 +479,16 @@ function Leads() {
                       Sr. No.
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Promoter Details
+                      Promoter Name
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Project
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Profile Contact
+                      Mobile Number
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Registration Contact
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                      Location
+                      District
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Created
@@ -469,119 +496,174 @@ function Leads() {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                       Status
                     </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
                   {leads.map((lead, index) => {
                     const serialNumber = (page - 1) * limit + index + 1;
+                    const isExpanded = expandedRows.has(lead.id);
+                    
                     return (
-                      <tr 
-                        key={lead.id}
-                        className="hover:bg-gray-50 transition-colors duration-150"
-                      >
-                        {/* Serial Number */}
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
-                              <span className="text-white text-sm font-bold">
-                                {serialNumber}
-                              </span>
+                      <React.Fragment key={lead.id}>
+                        {/* Main Row */}
+                        <tr className="hover:bg-gray-50 transition-colors duration-150">
+                          {/* Serial Number */}
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                <span className="text-white text-sm font-bold">
+                                  {serialNumber}
+                                </span>
+                              </div>
                             </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        {/* Promoter Details */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                              <User className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-gray-900 text-sm">
+                          {/* Promoter Name */}
+                          <td className="px-6 py-4">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center flex-shrink-0">
+                                <User className="w-4 h-4 text-white" />
+                              </div>
+                              <span className="font-semibold text-gray-900 text-sm">
                                 {lead.promoter_name || "Unknown Promoter"}
-                              </p>
-                              <p className="text-xs text-gray-500">Promoter</p>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Project */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <Building className="w-4 h-4 text-white" />
-                            </div>
-                            <div>
-                              <p className="font-medium text-gray-900 text-sm">
-                                {lead.project_name || "No Project"}
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-
-                        {/* Profile Contact */}
-                        <td className="px-6 py-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <Phone className="w-3 h-3 text-green-600" />
-                              <span className="text-sm font-medium text-gray-900">
-                                {lead.profile_mobile_number || "N/A"}
                               </span>
                             </div>
-                            <div className="flex items-center space-x-2">
-                              <Mail className="w-3 h-3 text-blue-600" />
-                              <span className="text-xs text-gray-600 max-w-32 truncate">
-                                {lead.profile_email || "N/A"}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
+                          </td>
 
-                        {/* Registration Contact */}
-                        <td className="px-6 py-4">
-                          <div className="space-y-2">
-                            <div className="flex items-center space-x-2">
-                              <Phone className="w-3 h-3 text-orange-600" />
-                              <span className="text-sm font-medium text-gray-900">
-                                {lead.registration_mobile_number || "N/A"}
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Mail className="w-3 h-3 text-purple-600" />
-                              <span className="text-xs text-gray-600 max-w-32 truncate">
-                                {lead.registration_email || "N/A"}
-                              </span>
-                            </div>
-                          </div>
-                        </td>
+                          {/* Project */}
+                          <td className="px-6 py-4">
+                            <span className="font-medium text-gray-900 text-sm">
+                              {lead.project_name || "No Project"}
+                            </span>
+                          </td>
 
-                        {/* Location */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center space-x-2">
-                            <MapPin className="w-4 h-4 text-red-600" />
-                            <span className="text-sm font-medium text-gray-900">
+                          {/* Mobile Number */}
+                          <td className="px-6 py-4">
+                            <span className="font-medium text-gray-900 text-sm">
+                              {lead.profile_mobile_number || lead.registration_mobile_number || "N/A"}
+                            </span>
+                          </td>
+
+                          {/* District */}
+                          <td className="px-6 py-4">
+                            <span className="text-sm text-gray-700">
                               {lead.district || "Not specified"}
                             </span>
-                          </div>
-                        </td>
+                          </td>
 
-                        {/* Created Date */}
-                        <td className="px-6 py-4">
-                          <div className="flex items-center space-x-2">
-                            <Calendar className="w-4 h-4 text-gray-600" />
+                          {/* Created Date */}
+                          <td className="px-6 py-4">
                             <span className="text-sm text-gray-700">
                               {formatDate(lead.created_at)}
                             </span>
-                          </div>
-                        </td>
+                          </td>
 
-                        {/* Status */}
-                        <td className="px-6 py-4">
-                          <div className="w-48">
-                            <StatusDropdown lead={lead} />
-                          </div>
-                        </td>
-                      </tr>
+                          {/* Status */}
+                          <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+                            <div className="w-48">
+                              <StatusDropdown lead={lead} />
+                            </div>
+                          </td>
+
+                          {/* Action */}
+                          <td className="px-6 py-4">
+                            <button
+                              onClick={() => toggleRowExpansion(lead.id)}
+                              className="flex items-center justify-center w-8 h-8 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors duration-200"
+                            >
+                              {isExpanded ? (
+                                <ChevronUp className="w-4 h-4 text-gray-600" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-600" />
+                              )}
+                            </button>
+                          </td>
+                        </tr>
+
+                        {/* Expanded Row */}
+                        {isExpanded && (
+                          <tr className="bg-gray-50">
+                            <td colSpan="8" className="px-6 py-6">
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {/* Profile Contact Details */}
+                                <div className="bg-white rounded-xl p-4 shadow-sm">
+                                  <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                                    <div className="w-6 h-6 bg-blue-100 rounded-lg flex items-center justify-center mr-2">
+                                      <User className="w-3 h-3 text-blue-600" />
+                                    </div>
+                                    Profile Contact
+                                  </h4>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                      <Phone className="w-4 h-4 text-green-600" />
+                                      <span className="text-sm text-gray-700">
+                                        {lead.profile_mobile_number || "Not provided"}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Mail className="w-4 h-4 text-blue-600" />
+                                      <span className="text-sm text-gray-700 break-all">
+                                        {lead.profile_email || "Not provided"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Registration Contact Details */}
+                                <div className="bg-white rounded-xl p-4 shadow-sm">
+                                  <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                                    <div className="w-6 h-6 bg-orange-100 rounded-lg flex items-center justify-center mr-2">
+                                      <Building className="w-3 h-3 text-orange-600" />
+                                    </div>
+                                    Registration Contact
+                                  </h4>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                      <Phone className="w-4 h-4 text-orange-600" />
+                                      <span className="text-sm text-gray-700">
+                                        {lead.registration_mobile_number || "Not provided"}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Mail className="w-4 h-4 text-purple-600" />
+                                      <span className="text-sm text-gray-700 break-all">
+                                        {lead.registration_email || "Not provided"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Additional Details */}
+                                <div className="bg-white rounded-xl p-4 shadow-sm">
+                                  <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                                    <div className="w-6 h-6 bg-purple-100 rounded-lg flex items-center justify-center mr-2">
+                                      <MapPin className="w-3 h-3 text-purple-600" />
+                                    </div>
+                                    Additional Details
+                                  </h4>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center space-x-2">
+                                      <MapPin className="w-4 h-4 text-red-600" />
+                                      <span className="text-sm text-gray-700">
+                                        {lead.district || "Not specified"}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Calendar className="w-4 h-4 text-gray-600" />
+                                      <span className="text-sm text-gray-700">
+                                        {formatDate(lead.created_at)}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>
