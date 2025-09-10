@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Phone, User, MapPin, Mail, Clock, Filter, Search, CheckCircle, XCircle, AlertCircle, RefreshCw, ChevronLeft,MessageCircle,Briefcase, RotateCcw, ChevronRight, Eye, Calendar } from 'lucide-react';
+import { Phone, User, MapPin, Mail, Clock, Filter, Search, CheckCircle, XCircle, AlertCircle, RefreshCw, ChevronLeft, MessageCircle, Briefcase, RotateCcw, ChevronRight, Eye, Calendar } from 'lucide-react';
 import databaseService from '../backend-services/database/database';
 import { useSelector } from 'react-redux';
 
@@ -122,11 +122,11 @@ function Telecalling() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'pending': return 'bg-gradient-to-r from-yellow-50 to-amber-50 text-yellow-800 border-yellow-200';
-      case 'in_progress': return 'bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-800 border-blue-200';
-      case 'interested': return 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-800 border-green-200';
-      case 'not_interested': return 'bg-gradient-to-r from-red-50 to-pink-50 text-red-800 border-red-200';
-      default: return 'bg-gradient-to-r from-gray-50 to-slate-50 text-gray-800 border-gray-200';
+      case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'in_progress': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'interested': return 'bg-green-100 text-green-800 border-green-200';
+      case 'not_interested': return 'bg-red-100 text-red-800 border-red-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -167,8 +167,8 @@ function Telecalling() {
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 select-none"
-     onContextMenu={handleContextMenu}                 // disables right click
-      onCopy={handleCopy}                               // prevents copy
+     onContextMenu={handleContextMenu}
+      onCopy={handleCopy}
       role="region"
       aria-label="Telecalling module"
       >
@@ -273,144 +273,167 @@ function Telecalling() {
           </div>
         </div>
 
-        {/* Enhanced Records List */}
-        <div className="space-y-4 mb-8">
+        {/* Table Layout */}
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden mb-8">
           {currentRecords.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-16 text-center">
+            <div className="p-16 text-center">
               <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-6" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No Records Found</h3>
               <p className="text-gray-600">No records match your current search criteria. Try adjusting your filters.</p>
             </div>
           ) : (
-            currentRecords.map((record) => (
-              <div key={record.promoter_id} className="bg-white rounded-2xl shadow-lg border border-gray-100 hover:shadow-xl transition-all duration-300 group">
-                <div className="p-6">
-                  <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-                    {/* Enhanced Main Info */}
-                    <div className="flex-1">
-                      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Sr. No.
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Promoter Details
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Contact Info
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Project & Location
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {currentRecords.map((record, index) => (
+                    <tr key={record.promoter_id} className="hover:bg-gray-50 transition-colors">
+                      {/* Serial Number */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm font-semibold text-gray-900">
+                          {indexOfFirstRecord + index + 1}
+                        </div>
+                      </td>
+                      
+                      {/* Promoter Details */}
+                      <td className="px-6 py-4">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0">
                             <div className="p-2 bg-blue-100 rounded-lg">
                               <User className="w-5 h-5 text-blue-600" />
                             </div>
-                            <div>
-                              <div className="font-semibold text-gray-900 text-lg">{record.promoter_name}</div>
-                              <div className="text-sm text-gray-500">ID: {record.promoter_id}</div>
-                            </div>
                           </div>
-                          <div className="ml-12">
-                            <div className="text-gray-700 font-medium">{record.project_name}</div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-green-100 rounded-lg">
-                              <Phone className="w-5 h-5 text-green-600" />
+                          <div className="ml-4">
+                            <div className="text-sm font-semibold text-gray-900">
+                              {record.promoter_name}
                             </div>
-                            <div>
-                              <div className="font-medium text-gray-900">{record.profile_mobile_number}</div>
-                              <div className="text-sm text-gray-500">Profile Number</div>
-                            </div>
-                          </div>
-                          <div className="ml-12">
-                            <div className="flex items-center gap-2">
-                              <Mail className="w-4 h-4 text-gray-400" />
-                              <a
-                                href={`mailto:${record.profile_email}`}
-                                className="text-sm text-blue-600 truncate hover:underline"
-                              >
-                                {record.profile_email}
-                              </a>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-purple-100 rounded-lg">
-                              <MapPin className="w-5 h-5 text-purple-600" />
-                            </div>
-                            <div>
-                              <div className="font-medium text-gray-900">{record.district}</div>
-                              <div className="text-sm text-gray-500">District</div>
-                            </div>
-                          </div>
-                          <div className="ml-12">
                             <div className="text-xs text-gray-500">
-                              Updated: {new Date(record.updated_at).toLocaleDateString('en-IN')}
+                              ID: {record.promoter_id}
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      </td>
 
-                    {/* Enhanced Status and Actions */}
-                    <div className="flex flex-col sm:flex-row xl:flex-col items-center gap-4">
-                      <div className={`flex items-center gap-3 px-4 py-2 rounded-full border text-sm font-semibold shadow-sm ${getStatusColor(record.status)}`}>
-                        {getStatusIcon(record.status)}
-                        {record.status.replace('_', ' ').toUpperCase()}
-                      </div>
-
-                      <div className="flex gap-3">
-                        <button
-                          onClick={() => setSelectedRecord(record)}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium"
-                        >
-                          <Eye className="w-4 h-4" />
-                          Update
-                        </button>
-
-                        <a
-                          href={`tel:${record.profile_mobile_number}`}
-                          className="flex items-center justify-center p-3 text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 border border-green-200 hover:border-green-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                          title="Call Now"
-                        >
-                          <Phone className="w-5 h-5" />
-                        </a>
-
-                        {/* WhatsApp Buttons */}
-                        <div className="flex gap-2">
-                          {/* General Introduction */}
-                          <a
-                            href={`https://wa.me/${record.profile_mobile_number.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(record.profile_name || 'there')}!%20I%20hope%20you're%20doing%20well.%20I'm%20reaching%20out%20to%20introduce%20myself%20and%20discuss%20potential%20opportunities%20that%20might%20interest%20you.%20Would%20you%20be%20available%20for%20a%20brief%20conversation?`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center p-3 text-green-600 hover:bg-green-50 rounded-xl transition-all duration-200 border border-green-200 hover:border-green-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                            title="WhatsApp - General Introduction"
-                          >
-                            <MessageCircle className="w-5 h-5" />
-                          </a>
-
-                          {/* Business Introduction */}
-                          <a
-                            href={`https://wa.me/${record.profile_mobile_number.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(record.profile_name || 'there')}!%20I%20represent%20a%20growing%20business%20and%20came%20across%20your%20profile.%20I%20believe%20there%20might%20be%20some%20exciting%20business%20opportunities%20we%20could%20explore%20together.%20Would%20you%20be%20interested%20in%20learning%20more?`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center p-3 text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-200 border border-blue-200 hover:border-blue-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                            title="WhatsApp - Business Introduction"
-                          >
-                            <Briefcase className="w-5 h-5" />
-                          </a>
-
-                          {/* Follow-up Introduction */}
-                          <a
-                            href={`https://wa.me/${record.profile_mobile_number.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(record.profile_name || 'there')}!%20I%20wanted%20to%20follow%20up%20on%20our%20previous%20conversation.%20I%20have%20some%20updates%20that%20I%20think%20you'll%20find%20interesting.%20When%20would%20be%20a%20good%20time%20to%20chat?`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center justify-center p-3 text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-200 border border-purple-200 hover:border-purple-300 shadow-sm hover:shadow-md transform hover:-translate-y-0.5"
-                            title="WhatsApp - Follow-up"
-                          >
-                            <RotateCcw className="w-5 h-5" />
-                          </a>
+                      {/* Contact Info */}
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center text-sm text-gray-900">
+                            <Phone className="w-4 h-4 text-green-600 mr-2" />
+                            {record.profile_mobile_number}
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <Mail className="w-4 h-4 text-gray-400 mr-2" />
+                            <span className="truncate max-w-48">
+                              {record.profile_email}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))
+                      </td>
+
+                      {/* Project & Location */}
+                      <td className="px-6 py-4">
+                        <div className="space-y-1">
+                          <div className="text-sm font-medium text-gray-900">
+                            {record.project_name}
+                          </div>
+                          <div className="flex items-center text-xs text-gray-500">
+                            <MapPin className="w-4 h-4 text-purple-600 mr-1" />
+                            {record.district}
+                          </div>
+                          <div className="text-xs text-gray-400">
+                            Updated: {new Date(record.updated_at).toLocaleDateString('en-IN')}
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold border ${getStatusColor(record.status)}`}>
+                          {getStatusIcon(record.status)}
+                          {record.status.replace('_', ' ').toUpperCase()}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => setSelectedRecord(record)}
+                            className="inline-flex items-center gap-1 px-3 py-2 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                            title="Update Status"
+                          >
+                            <Eye className="w-4 h-4" />
+                            Update
+                          </button>
+
+                          <a
+                            href={`tel:${record.profile_mobile_number}`}
+                            className="inline-flex items-center justify-center p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-green-200"
+                            title="Call Now"
+                          >
+                            <Phone className="w-4 h-4" />
+                          </a>
+
+                          {/* WhatsApp Actions */}
+                          <div className="flex gap-1">
+                            <a
+                              href={`https://wa.me/${record.profile_mobile_number.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(record.profile_name || 'there')}!%20I%20hope%20you're%20doing%20well.%20I'm%20reaching%20out%20to%20introduce%20myself%20and%20discuss%20potential%20opportunities%20that%20might%20interest%20you.%20Would%20you%20be%20available%20for%20a%20brief%20conversation?`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors border border-green-200"
+                              title="WhatsApp - General"
+                            >
+                              <MessageCircle className="w-4 h-4" />
+                            </a>
+
+                            <a
+                              href={`https://wa.me/${record.profile_mobile_number.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(record.profile_name || 'there')}!%20I%20represent%20a%20growing%20business%20and%20came%20across%20your%20profile.%20I%20believe%20there%20might%20be%20some%20exciting%20business%20opportunities%20we%20could%20explore%20together.%20Would%20you%20be%20interested%20in%20learning%20more?`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-blue-200"
+                              title="WhatsApp - Business"
+                            >
+                              <Briefcase className="w-4 h-4" />
+                            </a>
+
+                            <a
+                              href={`https://wa.me/${record.profile_mobile_number.replace(/[^0-9]/g, '')}?text=Hi%20${encodeURIComponent(record.profile_name || 'there')}!%20I%20wanted%20to%20follow%20up%20on%20our%20previous%20conversation.%20I%20have%20some%20updates%20that%20I%20think%20you'll%20find%20interesting.%20When%20would%20be%20a%20good%20time%20to%20chat?`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-colors border border-purple-200"
+                              title="WhatsApp - Follow-up"
+                            >
+                              <RotateCcw className="w-4 h-4" />
+                            </a>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
 
