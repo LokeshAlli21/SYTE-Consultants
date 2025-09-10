@@ -158,21 +158,26 @@ function Leads() {
 
   // Update lead status
   const updateLeadStatus = async (leadId, newStatus) => {
+    const confirmed = window.confirm(`Are you sure you want to update this lead's status to "${newStatus}"?`);
+    if (!confirmed) return; // Exit if user cancels
+
     setUpdatingStatus(prev => ({ ...prev, [leadId]: true }));
     try {
       await databaseService.updateLeadStatus(leadId, newStatus);
-      
+
       // Update the lead in local state
       setLeads(prev => prev.map(lead => 
         lead.id === leadId 
           ? { ...lead, status: newStatus }
           : lead
       ));
-      
+
+      alert(`✅ Lead ${leadId} status updated to "${newStatus}"`); // Success message
       console.log(`Lead ${leadId} status updated to: ${newStatus}`);
-      
+
     } catch (err) {
       console.error("Failed to update lead status:", err);
+      alert(`❌ Failed to update status: ${err.message}`);
       setError(`Failed to update status: ${err.message}`);
     } finally {
       setUpdatingStatus(prev => ({ ...prev, [leadId]: false }));
