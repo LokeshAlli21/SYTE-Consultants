@@ -194,3 +194,31 @@ export const updateLeadStatus = async (req, res) => {
     res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+export const addLeadFollowupOrCallback = async (req, res) => {
+  try {
+    const { leadId } = req.params;
+    const { callback_time, remarks, status_type, userId } = req.body;
+
+    if (!leadId || !callback_time || !remarks || !status_type || !userId) {
+      return res.status(400).json({ error: 'All fields are required' });
+    }
+
+    const newFollowup = await query(
+      `
+      INSERT INTO leads_callback_and_followups (lead_id, callback_time, remarks, status_type, created_by)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING *;
+      `,
+      [leadId, callback_time, remarks, status_type, userId]
+    );
+
+    res.status(201).json({
+      message: '✅ Follow-up or callback added successfully',
+      newFollowup: newFollowup.rows[0]
+    });
+  } catch (error) {
+    console.error('❌ Unexpected error in addLeadFollowupOrCallback:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}

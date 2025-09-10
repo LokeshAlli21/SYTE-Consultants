@@ -25,6 +25,7 @@ import {
   ChevronUp
 } from "lucide-react";
 import databaseService from "../backend-services/database/database";
+import {useFollowupCallbackData} from "../components/FollowupCallbackForm";
 
 function Leads() {
   const userData = useSelector((state) => state.auth.userData);
@@ -156,12 +157,28 @@ function Leads() {
     }
   };
 
+  // Initialize the hook
+  const { getFollowupCallbackData, FormComponent } = useFollowupCallbackData();
+
   // Update lead status
   const updateLeadStatus = async (leadId, newStatus) => {
     const confirmed = window.confirm(`Are you sure you want to update this lead's status to "${newStatus}"?`);
     if (!confirmed) return; // Exit if user cancels
 
     setUpdatingStatus(prev => ({ ...prev, [leadId]: true }));
+
+    if (newStatus === "Follow Up" || newStatus === "Call Back") {
+      // Handle Follow Up and Call Back - requires additional data
+      await handleFollowupOrCallback(leadId, newStatus);
+    } else {
+      // Handle regular status updates
+      await handleRegularStatusUpdate(leadId, newStatus);
+    }
+  };
+
+    
+  // Handle regular status updates (just status change)
+  const handleRegularStatusUpdate = async (leadId, newStatus) => {
     try {
       await databaseService.updateLeadStatus(leadId, newStatus);
 
@@ -172,7 +189,7 @@ function Leads() {
           : lead
       ));
 
-      alert(`✅ Lead ${leadId} status updated to "${newStatus}"`); // Success message
+      alert(`✅ Lead ${leadId} status updated to "${newStatus}"`);
       console.log(`Lead ${leadId} status updated to: ${newStatus}`);
 
     } catch (err) {
@@ -183,6 +200,44 @@ function Leads() {
       setUpdatingStatus(prev => ({ ...prev, [leadId]: false }));
     }
   };
+
+  // Handle Follow Up and Call Back - requires additional data input
+  const handleFollowupOrCallback = async (leadId, statusType) => {
+    try {
+      // Get additional data from user
+      const callbackData = await getFollowupCallbackData(statusType);
+      
+      if (!callbackData) {
+        // User cancelled the input dialog
+        setUpdatingStatus(prev => ({ ...prev, [leadId]: false }));
+        return;
+      }
+
+      // Add the followup/callback record with additional data
+      await databaseService.addLeadFollowupOrCallback(leadId, callbackData, userData?.id);
+
+      // Also update the lead status in the main leads table
+      await databaseService.updateLeadStatus(leadId, statusType);
+
+      // Update the lead in local state
+      setLeads(prev => prev.map(lead => 
+        lead.id === leadId 
+          ? { ...lead, status: statusType }
+          : lead
+      ));
+
+      alert(`✅ Lead ${leadId} ${statusType.toLowerCase()} scheduled successfully`);
+      console.log(`Lead ${leadId} ${statusType.toLowerCase()} added:`, callbackData);
+
+    } catch (err) {
+      console.error(`Failed to add ${statusType.toLowerCase()}:`, err);
+      alert(`❌ Failed to schedule ${statusType.toLowerCase()}: ${err.message}`);
+      setError(`Failed to schedule ${statusType.toLowerCase()}: ${err.message}`);
+    } finally {
+      setUpdatingStatus(prev => ({ ...prev, [leadId]: false }));
+    }
+  };
+
 
   // Toggle row expansion
   const toggleRowExpansion = (leadId) => {
@@ -745,6 +800,7 @@ function Leads() {
           </div>
         )}
       </div>
+      <FormComponent />
     </div>
   );
 }

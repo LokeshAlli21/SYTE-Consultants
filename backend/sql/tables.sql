@@ -688,6 +688,57 @@ CREATE TABLE leads (
     created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
 );
 
+CREATE TABLE leads_callback_and_followups (
+    id SERIAL PRIMARY KEY,
+    lead_id INT REFERENCES leads(id) ON DELETE CASCADE,
+    callback_time TIMESTAMP,
+    remarks TEXT,
+    status_type VARCHAR(50),
+    created_by INT REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
+);
+
+CREATE TABLE leads_timeline (
+    id SERIAL PRIMARY KEY,
+    lead_id INT REFERENCES leads(id) ON DELETE CASCADE,
+    event_type VARCHAR(50) NOT NULL, -- e.g., 'status_update', 'callback', 'followup'
+    new_status VARCHAR(50),
+    callback_time TIMESTAMP,
+    remarks TEXT,
+    created_by INT REFERENCES users(id),
+    created_at TIMESTAMP DEFAULT (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Kolkata')
+);
+
+CREATE OR REPLACE FUNCTION log_lead_status_update()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status IS DISTINCT FROM OLD.status THEN
+        INSERT INTO leads_timeline (lead_id, event_type, new_status, created_by)
+        VALUES (NEW.id, 'status_update', NEW.status, NEW.generated_by);
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_lead_status_update
+AFTER UPDATE OF status ON leads
+FOR EACH ROW
+EXECUTE FUNCTION log_lead_status_update();
+
+CREATE OR REPLACE FUNCTION log_callback_followup()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO leads_timeline (lead_id, event_type, new_status, callback_time, remarks, created_by)
+    VALUES (NEW.lead_id, 'callback_or_followup', NEW.status_type, NEW.callback_time, NEW.remarks, NEW.created_by);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_callback_followup
+AFTER INSERT ON leads_callback_and_followups
+FOR EACH ROW
+EXECUTE FUNCTION log_callback_followup();
+
 -- Add column to leads table
 ALTER TABLE leads
 ADD COLUMN status VARCHAR(50) DEFAULT 'Lead Generated'; -- Lead lifecycle tracking

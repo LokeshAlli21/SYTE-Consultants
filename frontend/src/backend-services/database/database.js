@@ -4066,6 +4066,28 @@ async updateLeadStatus(leadId, status) {
   }
 }
 
+async addLeadFollowupOrCallback(leadId, callbackData, userId) {
+  try {
+    const response = await authenticatedFetch(`${this.baseUrl}/api/telecalling/add-lead-followup-or-callback/${leadId}`, {
+      method: "POST",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify({ ...callbackData, userId }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Failed to add lead follow-up or callback.");
+    }
+
+    const data = await response.json();
+    console.log("Lead follow-up or callback added successfully:", data);
+    return data.data;
+  } catch (error) {
+    console.error("❌ Error adding lead follow-up or callback:", error);
+    throw error;
+  }
+}
+
 }
 
 const databaseService = new DatabaseService();
